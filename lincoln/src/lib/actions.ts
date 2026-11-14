@@ -26,6 +26,7 @@ import { randomBytes } from "node:crypto";
 import { newSecret as newTotpSecret } from "./totp";
 import { seal as sealSecret } from "./secret";
 import { deleteCaseFiles, forgetFirmKey } from "./storage";
+import { toast } from "./toast";
 
 const now = () => new Date().toISOString();
 const day = (n: number) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
@@ -193,7 +194,7 @@ export async function acceptAllRecommended(approvalId: string) {
   revalidatePath("/", "layout");
 }
 
-export async function decideApproval(approvalId: string, decision: "approved" | "rejected", edit?: { subject: string; body: string }) {
+export async function decideApproval(approvalId: string, decision: "approved" | "rejected") {
   const { user, firm, viewer } = await requireUser();
   const d = db();
   const a = approvalById(firm.id, approvalId, viewer);
@@ -202,9 +203,8 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
   const payload = JSON.parse(a.payload);
 
   const tx = d.transaction(() => {
-    // An email is sent as the attorney left it; a returned one is never sent.
+    // A returned email is never sent.
     if (a.kind === "message" && payload.messageId) {
-      if (decision === "approved" && edit && edit.body.trim()) d.prepare("UPDATE messages SET subject = ?, body = ? WHERE firm_id = ? AND id = ? AND state = 'needs_approval'").run(edit.subject.trim().slice(0, 200) || "(no subject)", edit.body.trim().slice(0, 20000), F, payload.messageId);
       if (decision === "rejected") d.prepare("UPDATE messages SET state = 'returned' WHERE firm_id = ? AND id = ? AND state = 'needs_approval'").run(F, payload.messageId);
     }
     if (a.kind === "decisions" && decision === "approved") {
@@ -256,7 +256,8 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
     d.prepare("UPDATE cases SET state = ? WHERE firm_id = ? AND id = ?").run(left.n > 0 ? "needs_you" : "moving", F, a.case_id);
   });
   tx();
-  if (a.kind === "message" && decision === "approved" && !firm.demo && payload.messageId) await deliver(F, payload.messageId, { id: user.id, name: user.name });
+  const sent = a.kind === "message" && decision === "approved" && !firm.demo && payload.messageId ? await deliver(F, payload.messageId, { id: user.id, name: user.name }) : null;
+  await toast(decision === "rejected" ? "Returned" : a.kind === "message" ? (sent === false ? "Approved, not sent" : "Sent") : "Approved");
   revalidatePath("/", "layout");
 }
 
@@ -341,7 +342,8 @@ export async function updateProfile(form: FormData) {
   if (avatar === "remove") d.prepare("UPDATE users SET avatar = NULL WHERE id = ?").run(user.id);
   else if (/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(avatar) && avatar.length < 400_000) d.prepare("UPDATE users SET avatar = ? WHERE id = ?").run(avatar, user.id);
   revalidatePath("/", "layout");
-  redirect("/settings?tab=profile&saved=1");
+  await toast("Saved");
+  redirect("/settings?tab=profile");
 }
 
 export async function changePassword(form: FormData) {
@@ -358,7 +360,8 @@ export async function changePassword(form: FormData) {
     if (await breached(next)) redirect("/settings?tab=security&error=breached");
     db().prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hashPassword(next), user.id);
     await securityEvent(user.firm_id, user.id, "password_changed", "first password set");
-    redirect("/settings?tab=security&saved=1");
+    await toast("Password changed");
+    redirect("/settings?tab=security");
   }
   if (!verifyPassword(current, row.password_hash)) redirect("/settings?tab=security&error=current");
   if (!validPassword(next)) redirect("/settings?tab=security&error=password");
@@ -371,7 +374,8 @@ export async function changePassword(form: FormData) {
     d.prepare("DELETE FROM sessions WHERE user_id = ? AND id != ?").run(user.id, sha(sid));
   })();
   await securityEvent(user.firm_id, user.id, "password_changed", "other devices signed out");
-  redirect("/settings?tab=security&saved=1");
+  await toast("Password changed");
+  redirect("/settings?tab=security");
 }
 
 export async function updateFirm(form: FormData) {
@@ -381,7 +385,8 @@ export async function updateFirm(form: FormData) {
   if (!name || !/admin|managing/i.test(user.role)) redirect("/settings?tab=firm&error=1");
   db().prepare("UPDATE firms SET name = ? WHERE id = ?").run(name, firm.id);
   revalidatePath("/", "layout");
-  redirect("/settings?tab=firm&saved=1");
+  await toast("Saved");
+  redirect("/settings?tab=firm");
 }
 
 export async function clearChat(caseId: string | null) {
@@ -438,6 +443,7 @@ export async function disconnect(form: FormData) {
   if (c) await revokeAccess(provider, c.refresh_enc);
   db().prepare("DELETE FROM mailboxes WHERE firm_id = ? AND user_id = ? AND provider = ?").run(firm.id, user.id, provider);
   await securityEvent(firm.id, user.id, "disconnected", provider);
+  await toast("Disconnected");
   revalidatePath("/", "layout");
 }
 
@@ -504,6 +510,7 @@ export async function confirmTwoStep(form: FormData) {
   db().prepare("UPDATE users SET totp_enc = ?, totp_pending_enc = NULL, totp_last_step = ?, recovery = ? WHERE id = ?").run(sealSecret(secret), step, JSON.stringify(codes.map((c) => sha(c))), user.id);
   await securityEvent(firm.id, user.id, "two_step_on");
   // Shown once, never stored in readable form.
+  await toast("Two step sign in on");
   redirect(`/settings?tab=security&codes=${codes.join("-")}`);
 }
 
@@ -514,7 +521,8 @@ export async function disableTwoStep(form: FormData) {
   if (limited(`2fa:${user.id}`, 10) || !verifyPassword(String(form.get("password") ?? ""), row.password_hash)) redirect("/settings?tab=security&error=current");
   db().prepare("UPDATE users SET totp_enc = NULL, totp_pending_enc = NULL, recovery = NULL WHERE id = ?").run(user.id);
   await securityEvent(firm.id, user.id, "two_step_off");
-  redirect("/settings?tab=security&saved=1");
+  await toast("Two step sign in off");
+  redirect("/settings?tab=security");
 }
 
 export async function signOutSession(form: FormData) {
@@ -523,6 +531,7 @@ export async function signOutSession(form: FormData) {
   if (target === "others") db().prepare("DELETE FROM sessions WHERE user_id = ? AND id != ?").run(user.id, sessionId);
   else db().prepare("DELETE FROM sessions WHERE user_id = ? AND id = ? AND id != ?").run(user.id, target, sessionId);
   await securityEvent(firm.id, user.id, "sessions_signed_out", target === "others" ? "all other devices" : "one device");
+  await toast("Signed out");
   revalidatePath("/settings");
 }
 
@@ -534,7 +543,8 @@ export async function setTwoStepRequired(form: FormData) {
   if (on && !twoStep) redirect("/settings?tab=security&error=selffirst");
   db().prepare("UPDATE firms SET require_2fa = ? WHERE id = ?").run(on ? 1 : 0, firm.id);
   await securityEvent(firm.id, user.id, on ? "two_step_required" : "two_step_optional");
-  redirect("/settings?tab=security&saved=1");
+  await toast("Saved");
+  redirect("/settings?tab=security");
 }
 
 /** Permanently deletes the firm: every case, file, message, connection and account. Administrators only. */
@@ -571,6 +581,7 @@ export async function resolveIssue(issueId: string) {
   if (!row || !caseById(firm.id, row.case_id, viewer)) return;
   d.prepare("UPDATE issues SET status = 'resolved', resolution = ?, resolved_at = ? WHERE firm_id = ? AND id = ?").run(`Resolved by ${user.name}.`, now(), firm.id, issueId);
   log(firm.id, row.case_id, user.name, "decide", `Resolved: ${row.title}.`);
+  await toast("Resolved");
   revalidatePath("/", "layout");
 }
 
@@ -582,10 +593,25 @@ export async function sortMessage(form: FormData) {
   const caseId = String(form.get("case") ?? "");
   const m = d.prepare("SELECT id, party, subject FROM messages WHERE firm_id = ? AND id = ? AND state = 'unsure'").get(firm.id, messageId) as { id: string; party: string; subject: string } | undefined;
   if (!m) return;
-  if (caseId === "none") d.prepare("DELETE FROM messages WHERE firm_id = ? AND id = ?").run(firm.id, m.id);
-  else if (caseById(firm.id, caseId, viewer)) {
+  if (caseId === "none") {
+    d.prepare("DELETE FROM messages WHERE firm_id = ? AND id = ?").run(firm.id, m.id);
+    await toast("Deleted");
+  } else if (caseById(firm.id, caseId, viewer)) {
     d.prepare("UPDATE messages SET case_id = ?, state = 'filed', lincoln_note = ? WHERE firm_id = ? AND id = ?").run(caseId, `Filed by ${user.name}.`, firm.id, m.id);
     log(firm.id, caseId, user.name, "file", `Filed an email from ${m.party}: ${m.subject}.`);
+    await toast("Filed");
   }
+  revalidatePath("/", "layout");
+}
+
+/** The attorney's edits to a drafted email, saved before it is approved. */
+export async function saveMessage(approvalId: string, subject: string, body: string) {
+  const { firm, viewer } = await requireUser();
+  const a = approvalById(firm.id, approvalId, viewer);
+  if (!a || a.status !== "pending" || a.kind !== "message") return;
+  const messageId = (JSON.parse(a.payload) as { messageId?: string }).messageId;
+  if (!messageId || !body.trim()) return;
+  db().prepare("UPDATE messages SET subject = ?, body = ? WHERE firm_id = ? AND id = ? AND state = 'needs_approval'").run(subject.trim().slice(0, 200) || "(no subject)", body.trim().slice(0, 20000), firm.id, messageId);
+  await toast("Saved");
   revalidatePath("/", "layout");
 }

@@ -78,6 +78,9 @@ labels such as "For review" and "Awaiting approval". Emails Lincoln drafts to cl
 No status chatter or helper text (Ismael, 2026-11-14: "a serious software platform never talks to the user
 like this"): no "checked just now", no confirmations like "Connected. New mail is read...", no subtitles
 under names, no checklists of what works, no descriptions under rows or buttons. Errors are a few words.
+Notices after an action (Ismael, 2026-11-14) drop from the top as a soft rectangle, one or two words ("Saved",
+"Sent", "Deleted"), can be pushed up, and leave by themselves after 5 seconds. Drafted emails show Approve and Edit;
+Edit opens the text, then Save.
 
 **Lincoln on phones and manual work (Ismael, 2026-11-14).** On phones Lincoln uses the Hopkins Liquid Glass
 tab bar (Home, Cases, +, Review, More), with a lens that glides, stretches and follows a finger, and the More

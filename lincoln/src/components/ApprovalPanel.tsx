@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import clsx from "clsx";
 import { Check, FileText } from "lucide-react";
-import { acceptAllRecommended, answerQuestion, decideApproval } from "@/lib/actions";
+import { acceptAllRecommended, answerQuestion, decideApproval, saveMessage } from "@/lib/actions";
 import type { Question } from "@/lib/halasz";
 
 type Props = {
@@ -23,11 +23,27 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message }: Pr
   const [error, setError] = useState<string | null>(null);
   const [subject, setSubject] = useState(message?.subject ?? "");
   const [body, setBody] = useState(message?.body ?? "");
+  const [editing, setEditing] = useState(false);
+  const save = () =>
+    start(async () => {
+      setError(null);
+      try {
+        await saveMessage(id, subject, body);
+        setEditing(false);
+      } catch {
+        setError("Not saved.");
+      }
+    });
+  const cancel = () => {
+    setSubject(message?.subject ?? "");
+    setBody(message?.body ?? "");
+    setEditing(false);
+  };
   const decide = (d: "approved" | "rejected") =>
     start(async () => {
       setError(null);
       try {
-        await decideApproval(id, d, kind === "message" && message ? { subject, body } : undefined);
+        await decideApproval(id, d);
       } catch (e) {
         setError(e instanceof Error ? e.message : "The action failed. Nothing was changed.");
       }
@@ -38,7 +54,7 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message }: Pr
       <button disabled={pending || disabled} onClick={() => decide("approved")} className="flex h-9 items-center gap-1.5 rounded-lg bg-ink px-4 text-[13px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98] disabled:opacity-35">
         <Check size={14} /> {text}
       </button>
-      <button disabled={pending} onClick={() => decide("rejected")} className="h-9 rounded-lg border border-line bg-card px-3.5 text-[13px] font-medium transition hover:bg-panel disabled:opacity-40">{kind === "message" ? "Discard" : "Return"}</button>
+      <button disabled={pending} onClick={() => decide("rejected")} className="h-9 rounded-lg border border-line bg-card px-3.5 text-[13px] font-medium transition hover:bg-panel disabled:opacity-40">Return</button>
       {error && <span className="text-[12.5px] text-risk">{error}</span>}
     </div>
   );
@@ -84,16 +100,36 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message }: Pr
   }
 
   if (kind === "message" && message) {
+    const ghost = "h-9 rounded-lg border border-line bg-card px-3.5 text-[13px] font-medium transition hover:bg-panel disabled:opacity-40";
     return (
       <div>
-        <div className={box}>
+        <div className={clsx(box, editing && "border-edge")}>
           <div className="border-b border-line px-5 py-3 text-[13px]">
-            <div className="flex gap-3"><span className="w-14 text-faint">To</span><span>{message.party} <span className="text-faint">{message.party_role}</span></span></div>
-            <div className="flex items-center gap-3"><span className="w-14 shrink-0 text-faint">Subject</span><input value={subject} onChange={(e) => setSubject(e.target.value)} aria-label="Subject" className="min-w-0 flex-1 bg-transparent font-medium outline-none" /></div>
+            <div className="flex gap-3"><span className="w-14 shrink-0 text-faint">To</span><span>{message.party} <span className="text-faint">{message.party_role}</span></span></div>
+            <div className="flex items-center gap-3"><span className="w-14 shrink-0 text-faint">Subject</span>
+              {editing ? <input value={subject} onChange={(e) => setSubject(e.target.value)} aria-label="Subject" className="min-w-0 flex-1 bg-transparent font-medium outline-none" /> : <span className="font-medium">{subject}</span>}
+            </div>
           </div>
-          <textarea value={body} onChange={(e) => setBody(e.target.value)} aria-label="Message" rows={Math.min(30, Math.max(8, body.split("\n").length + 2))} className="block w-full resize-y bg-transparent px-5 py-5 text-[13.5px] leading-relaxed outline-none" />
+          {editing ? (
+            <textarea autoFocus value={body} onChange={(e) => setBody(e.target.value)} aria-label="Message" rows={Math.min(30, Math.max(8, body.split("\n").length + 2))} className="block w-full resize-y bg-transparent px-5 py-5 text-[13.5px] leading-relaxed outline-none" />
+          ) : (
+            <p onClick={() => setEditing(true)} className="cursor-text whitespace-pre-line px-5 py-5 text-[13.5px] leading-relaxed">{body}</p>
+          )}
         </div>
-        {footer("Approve and send")}
+        <div className="sticky bottom-0 mt-6 flex flex-wrap items-center gap-2 border-t border-line bg-card/95 py-3 backdrop-blur">
+          {editing ? (
+            <>
+              <button disabled={pending || !body.trim()} onClick={save} className="flex h-9 items-center gap-1.5 rounded-lg bg-ink px-4 text-[13px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98] disabled:opacity-35"><Check size={14} /> Save</button>
+              <button disabled={pending} onClick={cancel} className={ghost}>Cancel</button>
+            </>
+          ) : (
+            <>
+              <button disabled={pending} onClick={() => decide("approved")} className="flex h-9 items-center gap-1.5 rounded-lg bg-ink px-4 text-[13px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98] disabled:opacity-35"><Check size={14} /> Approve and send</button>
+              <button disabled={pending} onClick={() => setEditing(true)} className={ghost}>Edit</button>
+            </>
+          )}
+          {error && <span className="text-[12.5px] text-risk">{error}</span>}
+        </div>
       </div>
     );
   }

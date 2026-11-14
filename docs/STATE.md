@@ -296,4 +296,5 @@ from the repo the same day. History is in git up to commit `341cf65`.
   tests; date rule tests. All with a stand in model, not live Opus.
 * Still needs Ismael: the company's legal name, address and contact email for the Privacy and Terms pages
   (`lincoln/src/lib/company.ts` still has placeholders); the Anthropic key in Render for a live test.
-
+* 2026-11-14: notices after actions (Toaster, `lincoln/src/lib/toast.ts`), and drafted emails now read as text with
+  Approve and send plus Edit (Edit or a tap opens the text, Save keeps it). There is no button to drop a drafted email.

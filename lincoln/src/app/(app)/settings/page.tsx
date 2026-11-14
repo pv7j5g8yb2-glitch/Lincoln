@@ -68,7 +68,6 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         </nav>
         <div className="min-w-0 max-w-[620px]">
           {mustSetUp && !codes && <p className="mb-5 text-[13px] font-medium">Two step sign in is required.</p>}
-          {saved && <p className="mb-5 text-[13px] text-muted">Saved.</p>}
           {err && <p className="mb-5 text-[13px] text-risk">{err}</p>}
 
           {tab === "profile" && (
