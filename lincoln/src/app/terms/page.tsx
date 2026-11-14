@@ -5,7 +5,7 @@ export const metadata = { title: "Terms of Service · Lincoln" };
 
 const clauses: Clause[] = [
   { h: "The agreement", p: [`These terms are an agreement between ${C.legalName} ("Lincoln") and the law firm or organisation that opens an account (the "Customer"). The person who creates the account confirms that they are at least 18 and are authorised to accept these terms for the Customer.`] },
-  { h: "The service", p: ["Lincoln is software that helps immigration law firms run their matters: it reads documents, prepares drafts, forms, messages and reminders, tracks dates and records what was done. The service is in a private preview. Features may change, and Lincoln may limit or withdraw the preview at any time."] },
+  { h: "The service", p: ["Lincoln is software that helps immigration law firms run their matters: it reads documents, prepares drafts, messages and reminders, tracks dates and records what was done. The service is in a private preview. Features may change, and Lincoln may limit or withdraw the preview at any time."] },
   { h: "Lincoln is not a law firm", p: ["Lincoln is not a lawyer or a law firm and does not give legal advice. Everything Lincoln produces is prepared for a licensed attorney to review. The Customer and its attorneys remain solely responsible for their legal work, including the accuracy of every document, the advice given to clients, every filing and every deadline. Nothing is to be filed with a government agency or sent as legal advice without an attorney's review and approval."] },
   { h: "Accounts", p: ["The Customer is responsible for its members' use of the service, for keeping sign in details confidential and for telling Lincoln promptly about any unauthorised access. Each person needs their own account. Shared sign ins are not permitted."] },
   { h: "Customer content", p: ["The Customer keeps all rights in the content it places in its workspace. The Customer gives Lincoln permission to host and process that content only to provide the service. Lincoln does not use Customer content to train artificial intelligence models.",
@@ -27,5 +27,5 @@ const clauses: Clause[] = [
 ];
 
 export default function Terms() {
-  return <LegalShell title="Terms of Service" intro="These terms govern access to and use of Lincoln. They are written to be read." clauses={clauses} />;
+  return <LegalShell title="Terms of Service" intro="These terms govern access to and use of Lincoln." clauses={clauses} />;
 }

@@ -21,11 +21,13 @@ const box = "rounded-xl border border-line bg-card";
 export default function ApprovalPanel({ id, caseId, kind, payload, message }: Props) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [subject, setSubject] = useState(message?.subject ?? "");
+  const [body, setBody] = useState(message?.body ?? "");
   const decide = (d: "approved" | "rejected") =>
     start(async () => {
       setError(null);
       try {
-        await decideApproval(id, d);
+        await decideApproval(id, d, kind === "message" && message ? { subject, body } : undefined);
       } catch (e) {
         setError(e instanceof Error ? e.message : "The action failed. Nothing was changed.");
       }
@@ -87,27 +89,11 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message }: Pr
         <div className={box}>
           <div className="border-b border-line px-5 py-3 text-[13px]">
             <div className="flex gap-3"><span className="w-14 text-faint">To</span><span>{message.party} <span className="text-faint">{message.party_role}</span></span></div>
-            <div className="flex gap-3"><span className="w-14 text-faint">Subject</span><span className="font-medium">{message.subject}</span></div>
+            <div className="flex items-center gap-3"><span className="w-14 shrink-0 text-faint">Subject</span><input value={subject} onChange={(e) => setSubject(e.target.value)} aria-label="Subject" className="min-w-0 flex-1 bg-transparent font-medium outline-none" /></div>
           </div>
-          <p className="whitespace-pre-line px-5 py-5 text-[13.5px] leading-relaxed">{message.body}</p>
+          <textarea value={body} onChange={(e) => setBody(e.target.value)} aria-label="Message" rows={Math.min(30, Math.max(8, body.split("\n").length + 2))} className="block w-full resize-y bg-transparent px-5 py-5 text-[13.5px] leading-relaxed outline-none" />
         </div>
         {footer("Approve and send")}
-      </div>
-    );
-  }
-
-  if (kind === "filing") {
-    return (
-      <div>
-        <ul className="border-t border-line">
-          {(payload.checks as [string, boolean][]).map(([t, ok]) => (
-            <li key={t} className="flex items-center gap-3 border-b border-line py-2.5 text-[13px]">
-              <Check size={14} className={ok ? "text-ink" : "text-risk"} />{t}
-            </li>
-          ))}
-        </ul>
-        {payload.note && <p className="mt-4 border-l border-ink pl-3 text-[13px] leading-relaxed">{payload.note}</p>}
-        {footer("Approve for filing")}
       </div>
     );
   }
@@ -124,23 +110,5 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message }: Pr
     );
   }
 
-  if (kind === "plan") {
-    return (
-      <div>
-        <ul className="border-t border-line">
-          {(payload.points as [string, string][]).map(([h, t]) => (
-            <li key={h} className="border-b border-line py-3"><div className="text-[13.5px] font-medium">{h}</div><p className="text-[13px] leading-relaxed text-muted">{t}</p></li>
-          ))}
-        </ul>
-        {message && (
-          <div className={clsx(box, "mt-5")}>
-            <div className="border-b border-line px-5 py-2.5 text-[12.5px]"><span className="text-faint">To </span>{message.party} <span className="text-faint">· </span><span className="font-medium">{message.subject}</span></div>
-            <p className="whitespace-pre-line px-5 py-4 text-[13px] leading-relaxed text-muted">{message.body}</p>
-          </div>
-        )}
-        {footer("Approve and send")}
-      </div>
-    );
-  }
   return null;
 }

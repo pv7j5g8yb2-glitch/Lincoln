@@ -9,12 +9,12 @@ import { otpauth } from "@/lib/totp";
 import { open as openSecret } from "@/lib/secret";
 import { SESSION_HOURS } from "@/lib/session";
 import { requireUser } from "@/lib/session";
-import { activitySince, people } from "@/lib/queries";
-import { ago, hours } from "@/lib/format";
+import { people } from "@/lib/queries";
+import { ago } from "@/lib/format";
 import { deviceName } from "@/lib/device";
 import { accessRecord } from "@/lib/access";
 
-const TABS: [string, string][] = [["profile", "Profile"], ["security", "Security"], ["firm", "Firm"], ["automation", "Automation"], ["usage", "Usage"]];
+const TABS: [string, string][] = [["profile", "Profile"], ["security", "Security"], ["firm", "Firm"], ["automation", "Automation"]];
 
 const RULES: [string, string, boolean][] = [
   ["Reading and filing case mail", "", true],
@@ -25,13 +25,10 @@ const RULES: [string, string, boolean][] = [
   ["Review items posted to Teams", "", true],
   ["Other messages", "", false],
   ["Strategy and eligibility", "", false],
-  ["Filings and signatures", "", false],
 ];
 const EVENT: Record<string, string> = { sign_in: "Signed in", sign_in_failed: "Wrong password", sign_in_code_failed: "Wrong two step code", recovery_code_used: "Recovery code used", password_changed: "Password changed", password_reset_requested: "Password reset requested", password_reset: "Password reset", two_step_on: "Two step sign in turned on", two_step_off: "Two step sign in turned off", two_step_required: "Two step sign in required for the firm", two_step_optional: "Two step sign in made optional for the firm", connected: "Account connected", disconnected: "Account disconnected", sessions_signed_out: "Devices signed out", account_created: "Account created", firm_exported: "Firm exported" };
 const ACCESS: Record<string, string> = { case_viewed: "Opened", page_viewed: "Viewed", exported: "Exported", firm_exported: "Exported" };
 const device = deviceName;
-const KINDS: Record<string, string> = { read: "Reading documents", evidence: "Grading evidence", draft: "Drafting", check: "Checking facts and forms", chase: "Chasing documents", send: "Routine messages", file: "Filing mail", date: "Dates", status: "Status checks", form: "Forms", packet: "Filing packets", open: "Opening cases", bulletin: "Visa Bulletin" };
-const DAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const MSG: Record<string, Record<string, string>> = {
   profile: { name: "Name required.", sample: "Not available in the sample workspace." },
@@ -146,18 +143,18 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               </div>
               {sessions.length > 1 && <form action={signOutSession} className="mt-2"><input type="hidden" name="session" value="others" /><button className={btn.ghost}>Sign out all other devices</button></form>}
 
-              <h2 className="mb-1 mt-12 text-[14px] font-medium">Security activity</h2>
-              <div className="border-t border-line">
-                {events.length === 0 ? <p className="py-3 text-[13px] text-faint">No events</p> : events.map((e) => (
+              {events.length > 0 && <h2 className="mb-1 mt-12 text-[14px] font-medium">Security activity</h2>}
+              <div className={events.length ? "border-t border-line" : undefined}>
+                {events.map((e) => (
                   <Row key={e.id} className="py-2.5"><span className="flex-1 text-[13px]">{EVENT[e.kind] ?? e.kind}{e.detail ? <span className="text-faint"> · {e.detail}</span> : null}</span><span className="shrink-0 text-[12px] text-faint">{e.ip ? `${e.ip} · ` : ""}{ago(e.at)}</span></Row>
                 ))}
               </div>
 
-              {admin && !firm.demo && (
+              {admin && !firm.demo && accessRecord(firm.id).length > 0 && (
                 <>
                   <h2 className="mb-1 mt-12 text-[14px] font-medium">Access record</h2>
                   <div className="border-t border-line">
-                    {accessRecord(firm.id).length === 0 ? <p className="py-3 text-[13px] text-faint">No entries</p> : accessRecord(firm.id).map((e, i) => (
+                    {accessRecord(firm.id).map((e, i) => (
                       <Row key={i} className="py-2.5"><span className="min-w-0 flex-1 truncate text-[13px]">{e.name ?? "Unknown"}<span className="text-faint"> · {ACCESS[e.action] ?? e.action} {e.label}</span></span><span className="shrink-0 text-[12px] text-faint">{ago(e.at)}</span></Row>
                     ))}
                   </div>
@@ -220,34 +217,6 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           )}
 
 
-          {tab === "usage" && (() => {
-            const acts = activitySince(firm.id, new Date(Date.now() - 7 * 86400000).toISOString(), viewer);
-            const total = acts.reduce((s, a) => s + a.minutes, 0);
-            const days = Array.from({ length: 7 }, (_, i) => {
-              const d = new Date(Date.now() - (6 - i) * 86400000);
-              const key = d.toISOString().slice(0, 10);
-              return { label: DAY[d.getDay()], min: acts.filter((a) => a.at.slice(0, 10) === key).reduce((s, a) => s + a.minutes, 0) };
-            });
-            const max = Math.max(...days.map((d) => d.min), 1);
-            const byKind = Object.entries(acts.reduce<Record<string, number>>((m, a) => ((m[a.kind] = (m[a.kind] ?? 0) + a.minutes), m), {})).sort((a, b) => b[1] - a[1]).slice(0, 8);
-            return (
-              <>
-                <div className="text-[12.5px] text-muted">Estimated time saved, last 7 days</div>
-                <div className="serif mt-1 text-[44px] font-medium leading-none">{hours(total)}</div>
-                <div className="mt-8 flex h-[110px] items-end gap-3">
-                  {days.map((d, i) => (
-                    <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
-                      <div className={clsx("w-full rounded-[4px]", i === 6 ? "bg-ink" : "bg-edge")} style={{ height: `${Math.max(2, (d.min / max) * 84)}px` }} />
-                      <span className="text-[11px] text-faint">{d.label}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-10 border-t border-line">
-                  {byKind.map(([k, m]) => <Row key={k} className="py-2.5"><span className="flex-1 text-[13px]">{KINDS[k] ?? k}</span><span className="text-[13px] tabular-nums text-muted">{hours(m)}</span></Row>)}
-                </div>
-              </>
-            );
-          })()}
         </div>
       </div>
     </div>

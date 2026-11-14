@@ -22,14 +22,12 @@ export default async function Home() {
         </p>
       )}
 
+      {review.length > 0 && (
       <section className="mt-14">
         <div className="mb-1 flex items-baseline justify-between">
           <h2 className="text-[13px] font-medium">For review</h2>
-          {review.length > 0 && <Link href="/approvals" className="text-[12.5px] text-muted hover:text-ink">View all</Link>}
+          <Link href="/approvals" className="text-[12.5px] text-muted hover:text-ink">View all</Link>
         </div>
-        {review.length === 0 ? (
-          <p className="border-t border-line py-6 text-[13px] text-faint">Nothing for review</p>
-        ) : (
           <ul className="border-t border-line">
             {review.slice(0, 6).map((a) => (
               <li key={a.id} className="border-b border-line">
@@ -44,8 +42,8 @@ export default async function Home() {
               </li>
             ))}
           </ul>
-        )}
       </section>
+      )}
 
       {done.length > 0 && (
         <section className="mt-10">

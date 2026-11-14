@@ -109,16 +109,26 @@ async function readFile(c: { client: string; type: string; firm: string; attorne
  * Reads a client file into the case. With append, the pages are added after the existing ones and the
  * earlier record is given to the model so that new documents are compared with it.
  */
+// Reads of one case run one after another, so two files arriving together never claim the same pages.
+const reading = new Map<string, Promise<void>>();
+
 export function processCase(firmId: string, caseId: string, files: Uint8Array[], opts: { append?: boolean; fromClient?: boolean } = {}) {
-  return forCase({ firmId, caseId, purpose: "read" }, () => readCase(firmId, caseId, files, opts));
+  const before = reading.get(caseId) ?? Promise.resolve();
+  const run = before.then(() => forCase({ firmId, caseId, purpose: "read" }, () => readCase(firmId, caseId, files, opts)));
+  const settled = run.catch(() => undefined);
+  reading.set(caseId, settled);
+  void settled.then(() => { if (reading.get(caseId) === settled) reading.delete(caseId); });
+  return run;
 }
 
 async function readCase(firmId: string, caseId: string, files: Uint8Array[], opts: { append?: boolean; fromClient?: boolean }) {
   const d = db();
+  d.prepare("UPDATE cases SET processing = 1 WHERE firm_id = ? AND id = ?").run(firmId, caseId);
   let before: number | null = null;
   try {
     const c = d.prepare("SELECT c.client, c.client_email, c.pages, c.type_code, c.type_name, c.attorney_id, f.name AS firm, u.name AS attorney FROM cases c JOIN firms f ON f.id = c.firm_id LEFT JOIN users u ON u.id = c.attorney_id WHERE c.firm_id = ? AND c.id = ?").get(firmId, caseId) as { client: string; client_email: string | null; pages: number; type_code: string; type_name: string; attorney_id: string; firm: string; attorney: string };
-    const append = Boolean(opts.append && c.pages > 0);
+    // Pages already in the case are never replaced: a new file always goes after them.
+    const append = c.pages > 0;
     before = c.pages;
     const start = append ? c.pages + 1 : 1;
     const added = await renderFiles(files, (k, jpeg) => savePage(firmId, caseId, k, jpeg), start);

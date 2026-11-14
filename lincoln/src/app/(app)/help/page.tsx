@@ -4,7 +4,6 @@ import { requireUser } from "@/lib/session";
 
 const QA: [string, string][] = [
   ["Limits", "Lincoln is not a lawyer. It gives no legal advice to the public, and signs, files or sends nothing legal without an attorney's approval."],
-  ["Drafts", "Underlined facts open their source page. Shaded text is a judgement call."],
 ];
 
 export default async function Help() {

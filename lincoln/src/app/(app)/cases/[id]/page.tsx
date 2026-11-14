@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import clsx from "clsx";
-import { ArrowUp, ChevronLeft, ChevronRight, Lock } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Lock } from "lucide-react";
 import DraftView from "@/components/DraftView";
+import MessageList from "@/components/MessageList";
+import AskBox from "@/components/AskBox";
 import Refresher from "@/components/Refresher";
 import { Empty, btn, field } from "@/components/ui";
-import { addFile, requestDraft } from "@/lib/actions";
+import { addFile, requestDraft, resolveIssue } from "@/lib/actions";
 import FileDrop from "@/components/FileDrop";
 import ExportMenu from "@/components/ExportMenu";
 import { exportItems } from "@/lib/exports";
@@ -102,10 +104,8 @@ export default async function CasePage({ params, searchParams }: { params: Promi
         ))}
       </div>
 
-      {tab === "overview" && (openAll.length + resolved.length + dates.length === 0 ? (
-        <p className="text-[13px] text-faint">{c.pages > 0 ? "Nothing open" : "No client file yet"}</p>
-      ) : (
-        <div className="grid gap-12 lg:grid-cols-[1.6fr_1fr]">
+      {tab === "overview" && (openAll.length + resolved.length + dates.length === 0 ? null : (
+        <div className={openAll.length + resolved.length > 0 && dates.length > 0 ? "grid gap-12 lg:grid-cols-[1.6fr_1fr]" : "max-w-[720px]"}>
           <section>
             {open.length > 0 && <h2 className="mb-1 text-[13px] font-medium">Open issues<span className="ml-1.5 font-normal text-faint">{open.length}</span></h2>}
             {open.length > 0 && (
@@ -114,7 +114,9 @@ export default async function CasePage({ params, searchParams }: { params: Promi
                   <li key={i.id} className="border-b border-line py-3.5">
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="text-[13.5px] font-medium">{i.title}</span>
-                      <span className="shrink-0 text-[12px] text-faint">{KIND[i.kind] ?? "Risk"}{i.severity === "high" ? " · High" : ""}</span>
+                      <span className="flex shrink-0 items-center gap-2 text-[12px] text-faint">{KIND[i.kind] ?? "Risk"}{i.severity === "high" ? " · High" : ""}
+                        <form action={resolveIssue.bind(null, i.id)}><button aria-label="Resolve" title="Resolve" className="flex h-6 w-6 items-center justify-center rounded-md text-faint transition hover:bg-panel hover:text-ink"><Check size={14} /></button></form>
+                      </span>
                     </div>
                     <p className="mt-0.5 text-[13px] leading-relaxed text-muted">{i.detail}</p>
                     {(JSON.parse(i.sources) as number[]).length > 0 && (
@@ -130,7 +132,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
               <details className="mt-3 text-[13px]">
                 <summary className="cursor-pointer text-muted transition hover:text-ink">{minor.length} minor</summary>
                 <ul className="mt-2 border-t border-line">
-                  {minor.map((i) => <li key={i.id} className="border-b border-line py-2.5"><div className="text-[13px]">{i.title}</div><div className="text-[12px] text-muted">{i.detail}</div></li>)}
+                  {minor.map((i) => <li key={i.id} className="flex items-start gap-3 border-b border-line py-2.5"><div className="min-w-0 flex-1"><div className="text-[13px]">{i.title}</div><div className="text-[12px] text-muted">{i.detail}</div></div><form action={resolveIssue.bind(null, i.id)}><button aria-label="Resolve" title="Resolve" className="flex h-6 w-6 items-center justify-center rounded-md text-faint transition hover:bg-panel hover:text-ink"><Check size={14} /></button></form></li>)}
                 </ul>
               </details>
             )}
@@ -262,7 +264,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
               </div>
             )}
             {!dr || !L ? (
-              <Empty>{decisions ? <>Awaiting strategy decisions. <Link href={`/approvals?id=${decisions.id}`} className="text-ink underline underline-offset-4">Open decisions</Link></> : "No drafts"}</Empty>
+              decisions ? <Empty>Awaiting strategy decisions. <Link href={`/approvals?id=${decisions.id}`} className="text-ink underline underline-offset-4">Open decisions</Link></Empty> : null
             ) : dr.status === "drafting" ? (
               <div className="py-6"><Refresher /><p className="text-[14px]">Drafting</p><div className="mt-3 h-[3px] w-full max-w-[320px] overflow-hidden rounded-full bg-line"><div className="sweep h-full w-1/3 rounded-full bg-ink" /></div></div>
             ) : dr.status === "failed" ? (
@@ -274,22 +276,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
         );
       })()}
 
-      {tab === "messages" && (msgs.length === 0 ? none : (
-        <ul className="border-t border-line">
-          {msgs.map((m) => (
-            <li key={m.id} className="border-b border-line py-4">
-              <div className="flex flex-wrap items-baseline gap-x-2 text-[12.5px]">
-                <span className="font-medium">{m.direction === "in" ? m.party : `To ${m.party}`}</span>
-                <span className="text-faint">{m.party_role}</span>
-                <span className="ml-auto text-faint">{m.direction === "in" ? "Received" : m.state === "needs_approval" ? "Awaiting approval" : m.state === "approved" ? "Approved, not sent" : "Sent"} · {ago(m.at)}</span>
-              </div>
-              <div className="mt-1 text-[13.5px]">{m.subject}</div>
-              <p className="mt-1 line-clamp-3 max-w-[720px] whitespace-pre-line text-[13px] leading-relaxed text-muted">{m.body}</p>
-              {m.lincoln_note && <p className="mt-2 max-w-[720px] border-l border-ink pl-3 text-[12.5px] leading-relaxed">{m.lincoln_note}</p>}
-            </li>
-          ))}
-        </ul>
-      ))}
+      {tab === "messages" && (msgs.length === 0 ? none : <MessageList items={msgs} />)}
 
       {tab === "activity" && (
         <ul className="border-t border-line">
@@ -307,11 +294,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
 
       {llmConfigured() && !c.processing && (
         <div className="mt-12 max-w-[640px]">
-          <form action="/assistant" method="get" className="flex items-center gap-2 rounded-full border border-line bg-card py-1.5 pl-4 pr-1.5 transition focus-within:border-edge">
-            <input type="hidden" name="case" value={id} />
-            <input name="q" required placeholder={`Ask about ${c.client}`} className="min-w-0 flex-1 bg-transparent text-[14px] outline-none placeholder:text-faint" />
-            <button aria-label="Ask" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-canvas"><ArrowUp size={16} /></button>
-          </form>
+          <AskBox caseId={id} placeholder={`Ask about ${c.client}`} />
         </div>
       )}
     </div>

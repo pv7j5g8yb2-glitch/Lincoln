@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
 import clsx from "clsx";
-import { Blocks, BookOpen, CircleCheck, CircleHelp, Ellipsis, FolderClosed, House, Inbox, LogOut, Play, Plus, RotateCcw, Settings } from "lucide-react";
+import { Blocks, CircleCheck, CircleHelp, Ellipsis, FolderClosed, House, Inbox, LogOut, Play, Plus, RotateCcw, Settings } from "lucide-react";
 import { advanceDemo, resetDemoAction, signOut } from "@/lib/actions";
 import { Avatar } from "./ui";
 
@@ -26,7 +26,7 @@ const TABS = [
   { href: "/approvals", label: "Review", Icon: CircleCheck },
 ] as const;
 const MORE = 3;
-const MORE_PATHS = ["/inbox", "/library", "/integrations", "/settings", "/help"];
+const MORE_PATHS = ["/inbox", "/integrations", "/settings", "/help"];
 
 function tabFor(path: string) {
   if (path === "/cases/new") return -1;
@@ -233,7 +233,6 @@ export default function TabBar({ firm, user, review, demo }: Props) {
         </div>
         <div className="lg-rule" />
         <Link href="/inbox" className={sheetItem}><Inbox size={18} strokeWidth={1.7} />Inbox</Link>
-        <Link href="/library" className={sheetItem}><BookOpen size={18} strokeWidth={1.7} />Library</Link>
         <Link href="/integrations" className={sheetItem}><Blocks size={18} strokeWidth={1.7} />Integrations</Link>
         <Link href="/settings" className={sheetItem}><Settings size={18} strokeWidth={1.7} />Settings</Link>
         <Link href="/help" className={sheetItem}><CircleHelp size={18} strokeWidth={1.7} />Help</Link>

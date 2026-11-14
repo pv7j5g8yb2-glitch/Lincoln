@@ -193,7 +193,7 @@ export async function acceptAllRecommended(approvalId: string) {
   revalidatePath("/", "layout");
 }
 
-export async function decideApproval(approvalId: string, decision: "approved" | "rejected") {
+export async function decideApproval(approvalId: string, decision: "approved" | "rejected", edit?: { subject: string; body: string }) {
   const { user, firm, viewer } = await requireUser();
   const d = db();
   const a = approvalById(firm.id, approvalId, viewer);
@@ -202,6 +202,11 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
   const payload = JSON.parse(a.payload);
 
   const tx = d.transaction(() => {
+    // An email is sent as the attorney left it; a returned one is never sent.
+    if (a.kind === "message" && payload.messageId) {
+      if (decision === "approved" && edit && edit.body.trim()) d.prepare("UPDATE messages SET subject = ?, body = ? WHERE firm_id = ? AND id = ? AND state = 'needs_approval'").run(edit.subject.trim().slice(0, 200) || "(no subject)", edit.body.trim().slice(0, 20000), F, payload.messageId);
+      if (decision === "rejected") d.prepare("UPDATE messages SET state = 'returned' WHERE firm_id = ? AND id = ? AND state = 'needs_approval'").run(F, payload.messageId);
+    }
     if (a.kind === "decisions" && decision === "approved") {
       const qs = payload.questions as Question[];
       if (qs.some((q) => !q.answer)) throw new Error("Every decision must be answered first.");
@@ -227,7 +232,7 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
           uid(), F, a.case_id, "Support letter for review",
           `Drafted from ${qs.length} recorded decisions: ${letter.facts} sourced facts, ${letter.calls} judgement calls, ${letter.notes} attorney notes.`,
           "The final merits paragraph: the one place where the argument is Lincoln's wording, not a fact from the file.",
-          "Nothing is filed at this step. Approval moves the letter to the filing packet for signature.",
+          null,
           JSON.stringify({ draftId }), user.id, now(), day(3));
         d.prepare("UPDATE cases SET stage = 'Review', summary = ?, waiting_on = ? WHERE firm_id = ? AND id = ?").run(`Support letter written from ${user.name.split(" ")[0]}'s decisions and waiting for review. The consultation and the passport renewal are still open.`, `${user.name}: review the letter`, F, a.case_id);
       }
@@ -239,22 +244,10 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
         d.prepare("UPDATE messages SET state = 'sent', at = ?, lincoln_note = ? WHERE firm_id = ? AND id = ?").run(now(), `Approved by ${user.name} and sent.`, F, m.id);
         log(F, a.case_id, "Lincoln", "send", `Sent "${m.subject}" to ${m.party} after ${user.name.split(" ")[0]} approved it.`, 5);
       }
-    } else if (a.kind === "filing" && decision === "approved") {
-      log(F, a.case_id, user.name, "decide", "Approved the application for filing.");
-      log(F, a.case_id, "Lincoln", "packet", "Assembled the filing packet in order with the fee form on top, and gave Aisha the filing checklist.", 30);
-      d.prepare("UPDATE cases SET summary = ?, waiting_on = 'Aisha Rahman: file the packet' WHERE firm_id = ? AND id = ?").run(`Approved for filing by ${user.name}. The packet is assembled and the filing checklist is with Aisha.`, F, a.case_id);
     } else if (a.kind === "draft_review" && decision === "approved") {
       d.prepare("UPDATE drafts SET status = 'approved', updated_at = ? WHERE firm_id = ? AND id = ?").run(now(), F, payload.draftId);
       log(F, a.case_id, user.name, "decide", `Approved: ${a.title}.`);
-      if (firm.demo) d.prepare("UPDATE cases SET summary = 'Support letter approved. Lincoln is assembling the exhibits in filing order. The consultation and the passport renewal are still open.', waiting_on = 'Peer group: advisory opinion' WHERE firm_id = ? AND id = ?").run(F, a.case_id);
-    } else if (a.kind === "plan" && decision === "approved") {
-      log(F, a.case_id, user.name, "decide", "Approved the response plan.");
-      const m = payload.messageId ? messageById(F, payload.messageId) : undefined;
-      if (m) {
-        d.prepare("UPDATE messages SET state = 'sent', at = ?, lincoln_note = ? WHERE firm_id = ? AND id = ?").run(now(), `Sent when ${user.name} approved the plan.`, F, m.id);
-        log(F, a.case_id, "Lincoln", "send", `Sent the document checklist to ${m.party}.`, 5);
-      }
-      d.prepare("UPDATE cases SET summary = 'Response plan approved. The employer has the checklist; Lincoln will chase it and draft the response as documents arrive.', waiting_on = 'Employer: 4 documents' WHERE firm_id = ? AND id = ?").run(F, a.case_id);
+      if (firm.demo) d.prepare("UPDATE cases SET summary = 'Support letter approved. The consultation and the passport renewal are still open.', waiting_on = 'Peer group: advisory opinion' WHERE firm_id = ? AND id = ?").run(F, a.case_id);
     } else if (decision === "rejected") {
       log(F, a.case_id, user.name, "decide", `Sent back: ${a.title}.`);
     }
@@ -568,4 +561,31 @@ export async function deleteFirm(form: FormData) {
   forgetFirmKey(firm.id);
   (await cookies()).delete(COOKIE);
   redirect("/signin?deleted=1");
+}
+
+/** The attorney closes an open issue. A date rule's issue stays closed after that. */
+export async function resolveIssue(issueId: string) {
+  const { user, firm, viewer } = await requireUser();
+  const d = db();
+  const row = d.prepare("SELECT case_id, title FROM issues WHERE firm_id = ? AND id = ? AND status = 'open'").get(firm.id, issueId) as { case_id: string; title: string } | undefined;
+  if (!row || !caseById(firm.id, row.case_id, viewer)) return;
+  d.prepare("UPDATE issues SET status = 'resolved', resolution = ?, resolved_at = ? WHERE firm_id = ? AND id = ?").run(`Resolved by ${user.name}.`, now(), firm.id, issueId);
+  log(firm.id, row.case_id, user.name, "decide", `Resolved: ${row.title}.`);
+  revalidatePath("/", "layout");
+}
+
+/** Mail Lincoln could not match goes to the case a person chooses, or out of the Inbox. */
+export async function sortMessage(form: FormData) {
+  const { user, firm, viewer } = await requireUser();
+  const d = db();
+  const messageId = String(form.get("message") ?? "");
+  const caseId = String(form.get("case") ?? "");
+  const m = d.prepare("SELECT id, party, subject FROM messages WHERE firm_id = ? AND id = ? AND state = 'unsure'").get(firm.id, messageId) as { id: string; party: string; subject: string } | undefined;
+  if (!m) return;
+  if (caseId === "none") d.prepare("DELETE FROM messages WHERE firm_id = ? AND id = ?").run(firm.id, m.id);
+  else if (caseById(firm.id, caseId, viewer)) {
+    d.prepare("UPDATE messages SET case_id = ?, state = 'filed', lincoln_note = ? WHERE firm_id = ? AND id = ?").run(caseId, `Filed by ${user.name}.`, firm.id, m.id);
+    log(firm.id, caseId, user.name, "file", `Filed an email from ${m.party}: ${m.subject}.`);
+  }
+  revalidatePath("/", "layout");
 }
