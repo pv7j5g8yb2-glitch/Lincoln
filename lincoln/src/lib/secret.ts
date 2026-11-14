@@ -1,23 +1,10 @@
 import crypto from "node:crypto";
-import fs from "node:fs";
-import path from "node:path";
-import { dataDir } from "./db";
+import { masterKey } from "./keys";
 
 // Mailbox tokens are encrypted at rest with AES-256-GCM. The key comes from LINCOLN_SECRET, or is
 // generated once and kept on the data disk, never in the repository.
 
-let key: Buffer | null = null;
-function getKey() {
-  if (key) return key;
-  const env = process.env.LINCOLN_SECRET;
-  if (env) return (key = crypto.createHash("sha256").update(env).digest());
-  const file = path.join(dataDir(), "secret.key");
-  if (!fs.existsSync(file)) {
-    fs.mkdirSync(dataDir(), { recursive: true });
-    fs.writeFileSync(file, crypto.randomBytes(32).toString("hex"), { mode: 0o600 });
-  }
-  return (key = Buffer.from(fs.readFileSync(file, "utf8").trim(), "hex"));
-}
+const getKey = masterKey;
 
 export function seal(text: string) {
   const iv = crypto.randomBytes(12);

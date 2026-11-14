@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { connect, isProvider, signInWith } from "@/lib/integrations";
 import { appUrl } from "@/lib/integrations/http";
-import { currentUser } from "@/lib/session";
+import { apiUser } from "@/lib/session";
 import { securityEvent } from "@/lib/audit";
 import { beginChallenge, createSession } from "@/lib/login";
 import { db } from "@/lib/db";
@@ -46,7 +46,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ provider
     }
   }
 
-  const s = await currentUser();
+  const s = await apiUser();
   if (!s) return go("/signin");
   if (s.firm.demo) return go("/integrations?error=sample");
   try {

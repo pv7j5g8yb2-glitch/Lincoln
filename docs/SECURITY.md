@@ -1,8 +1,31 @@
-# Lincoln security (as built and tested, 2026-11-13)
+# Lincoln security (as built and tested, updated 2026-11-14)
 
 Only what is actually in the code and was tested is listed. Nothing here is a certification.
 
 ## In place
+
+Added 2026-11-14:
+* The whole database file is encrypted (SQLite3 Multiple Ciphers, ChaCha20-Poly1305) with a key derived
+  from LINCOLN_SECRET: case text, emails, drafts, names and the journal are unreadable without it. A plain
+  database from before is converted in place on start (tested: a client's name no longer appears in the
+  file; opening it without the key fails).
+* Every key is derived from one master key for its own purpose (database, sealing), never reused.
+* Administrators can require two step sign in for the whole firm; an account without it can then reach
+  only the screen that sets it up, in pages, actions and API routes alike.
+* A session ends after 2 hours without use, inside its 12 hour limit.
+* A sign in from a device the account has not used before is emailed to the account.
+* New passwords are checked against known data breaches (Have I Been Pwned, k-anonymity: only five
+  characters of the password's hash leave the server).
+* An access record of who opened a case, viewed client pages, exported files or exported the firm,
+  with the address used, shown to administrators.
+* A daily model spend limit (LLM_DAILY_BUDGET_USD, default $5) stops new model calls once reached, and
+  per person limits on chat questions and new cases stop a runaway loop or misuse.
+* Administrators can export everything the firm has (every record and every client page) with their
+  password; secrets (password hashes, two step secrets, tokens, keys) are never included.
+* Error logs carry the error message only, never document or email content.
+* A written breach plan: `docs/BREACH-PLAN.md`.
+
+From before:
 
 * Every record carries its firm and every query filters on it. Another firm's case page, page image,
   export and assistant access return 404 (tested).
@@ -27,7 +50,7 @@ Only what is actually in the code and was tested is listed. Nothing here is a ce
   old outbox that kept them is emptied at start.
 * Attempt limits on sign in, two step codes, reset and deletion.
 * Browser headers: a strict Content Security Policy (own scripts only, no framing, forms post only to
-  Lincoln), HSTS, nosniff, no referrer leaks, camera and microphone off.
+  Lincoln), HSTS, nosniff, no referrer leaks, camera off, microphone only for Lincoln's own dictation.
 * Exports that write to a connected Drive or OneDrive are refused when started from another site.
 * Inbound endpoints: the forwarding address and the Gmail notification address need a secret token;
   Microsoft notifications must carry the subscription's secret; bodies are size limited.
@@ -43,11 +66,13 @@ Only what is actually in the code and was tested is listed. Nothing here is a ce
 
 ## Not yet in place (before any real client file)
 
-* A managed database with backups and row level isolation (today: one SQLite file on the server).
-* A direct Anthropic account with a zero data retention agreement (today: a third party relay).
-* An independent security review.
-* Firm wide enforcement of two step sign in.
+* Backups kept somewhere other than the server's own disk (the database and files are encrypted, but
+  they live on one Render disk).
+* A zero data retention agreement with Anthropic (applied for through Anthropic; the direct API does not
+  train on customer data under Anthropic's commercial terms).
+* An independent security review (paid), and Google's CASA assessment for Gmail and Drive (paid).
 * Narrower Google Drive access (a file picker instead of read access to all of Drive).
+* A data processing agreement and updated privacy policy from the parent's company, reviewed by a lawyer.
 
 ## Known and accepted
 

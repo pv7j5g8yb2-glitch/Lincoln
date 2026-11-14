@@ -4,12 +4,13 @@ import { connection, isProvider, upload, type OfficeKind } from "@/lib/integrati
 import { OFFICE_EXT, OFFICE_MIME } from "@/lib/integrations/types";
 import { caseDeck, caseXlsx, casesXlsx, draftDocx } from "@/lib/office";
 import { caseById, draftById } from "@/lib/queries";
-import { currentUser, viewer } from "@/lib/session";
+import { apiUser, viewer } from "@/lib/session";
+import { recordAccess } from "@/lib/access";
 
 // One route for every export: a draft as a document, the case list or a case index as a
 // spreadsheet, a case summary as a presentation. "to" is download, google or microsoft.
 export async function GET(req: Request) {
-  const s = await currentUser();
+  const s = await apiUser();
   if (!s) return new Response("Sign in first", { status: 401 });
   const q = new URL(req.url).searchParams;
   const what = q.get("what") ?? "", id = q.get("id") ?? "", to = q.get("to") ?? "download";
@@ -31,6 +32,7 @@ export async function GET(req: Request) {
     else { kind = "presentation"; name = `${c.client} case summary`; data = await caseDeck(F, c.id); }
   } else return new Response("Unknown export", { status: 400 });
 
+  await recordAccess(F, s.user.id, "exported", caseId ?? what, `${name} (${to === "download" ? "downloaded" : `sent to ${to}`})`);
   if (to === "download") {
     const file = `${name.normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "_").slice(0, 100) || "Lincoln"}.${OFFICE_EXT[kind]}`;
     return new Response(new Uint8Array(data), { headers: { "Content-Type": OFFICE_MIME[kind], "Content-Disposition": `attachment; filename="${file}"` } });

@@ -2,7 +2,7 @@ import Link from "next/link";
 import clsx from "clsx";
 import AvatarField from "@/components/AvatarField";
 import { Avatar, PageHead, btn, field, label } from "@/components/ui";
-import { changePassword, confirmTwoStep, deleteFirm, disableTwoStep, signOutSession, startTwoStep, updateFirm, updateProfile } from "@/lib/actions";
+import { changePassword, confirmTwoStep, deleteFirm, disableTwoStep, setTwoStepRequired, signOutSession, startTwoStep, updateFirm, updateProfile } from "@/lib/actions";
 import { db } from "@/lib/db";
 import QRCode from "qrcode";
 import { otpauth } from "@/lib/totp";
@@ -11,6 +11,8 @@ import { SESSION_HOURS } from "@/lib/session";
 import { requireUser } from "@/lib/session";
 import { activitySince, people } from "@/lib/queries";
 import { ago, hours } from "@/lib/format";
+import { deviceName } from "@/lib/device";
+import { accessRecord } from "@/lib/access";
 
 const TABS: [string, string][] = [["profile", "Profile"], ["security", "Security"], ["firm", "Firm"], ["automation", "Automation"], ["usage", "Usage"]];
 
@@ -25,20 +27,16 @@ const RULES: [string, string, boolean][] = [
   ["Strategy and eligibility", "", false],
   ["Filings and signatures", "", false],
 ];
-const EVENT: Record<string, string> = { sign_in: "Signed in", sign_in_failed: "Wrong password", sign_in_code_failed: "Wrong two step code", recovery_code_used: "Recovery code used", password_changed: "Password changed", password_reset_requested: "Password reset requested", password_reset: "Password reset", two_step_on: "Two step sign in turned on", two_step_off: "Two step sign in turned off", connected: "Account connected", disconnected: "Account disconnected", sessions_signed_out: "Devices signed out", account_created: "Account created" };
-const device = (ua: string | null) => {
-  const u = ua ?? "";
-  const os = /iPhone|iPad/.test(u) ? "iPhone or iPad" : /Android/.test(u) ? "Android" : /Mac OS X/.test(u) ? "Mac" : /Windows/.test(u) ? "Windows" : /Linux/.test(u) ? "Linux" : "Unknown device";
-  const br = /Edg\//.test(u) ? "Edge" : /Chrome\//.test(u) ? "Chrome" : /Firefox\//.test(u) ? "Firefox" : /Safari\//.test(u) ? "Safari" : "";
-  return br ? `${br} on ${os}` : os;
-};
+const EVENT: Record<string, string> = { sign_in: "Signed in", sign_in_failed: "Wrong password", sign_in_code_failed: "Wrong two step code", recovery_code_used: "Recovery code used", password_changed: "Password changed", password_reset_requested: "Password reset requested", password_reset: "Password reset", two_step_on: "Two step sign in turned on", two_step_off: "Two step sign in turned off", two_step_required: "Two step sign in required for the firm", two_step_optional: "Two step sign in made optional for the firm", connected: "Account connected", disconnected: "Account disconnected", sessions_signed_out: "Devices signed out", account_created: "Account created", firm_exported: "Firm exported" };
+const ACCESS: Record<string, string> = { case_viewed: "Opened", page_viewed: "Viewed", exported: "Exported", firm_exported: "Exported" };
+const device = deviceName;
 const KINDS: Record<string, string> = { read: "Reading documents", evidence: "Grading evidence", draft: "Drafting", check: "Checking facts and forms", chase: "Chasing documents", send: "Routine messages", file: "Filing mail", date: "Dates", status: "Status checks", form: "Forms", packet: "Filing packets", open: "Opening cases", bulletin: "Visa Bulletin" };
 const DAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const MSG: Record<string, Record<string, string>> = {
   profile: { name: "Name required.", sample: "Not available in the sample workspace." },
-  security: { limited: "Too many attempts. Try again in 15 minutes.", sample: "Not available in the sample workspace.", current: "Wrong password.", password: "10 characters min.", code: "Wrong code." },
-  firm: { "1": "Administrators only.", sample: "Not available in the sample workspace.", delete: "Name or password did not match." },
+  security: { limited: "Too many attempts. Try again in 15 minutes.", sample: "Not available in the sample workspace.", current: "Wrong password.", password: "10 characters min.", code: "Wrong code.", breached: "This password appears in known data breaches.", required: "The firm requires two step sign in.", admin: "Administrators only.", selffirst: "Turn on two step sign in for this account first." },
+  firm: { "1": "Administrators only.", sample: "Not available in the sample workspace.", delete: "Name or password did not match.", export: "Wrong password." },
 };
 
 function Row({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -46,8 +44,11 @@ function Row({ children, className }: { children: React.ReactNode; className?: s
 }
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ tab?: string; saved?: string; error?: string; connected?: string; inbound?: string; setup?: string; codes?: string }> }) {
-  const { user, firm, viewer, sessionId } = await requireUser();
-  const { tab = "profile", saved, error, connected, inbound, setup, codes } = await searchParams;
+  const { user, firm, viewer, sessionId, twoStep: hasTwoStep } = await requireUser({ setup: true });
+  const params = await searchParams;
+  const mustSetUp = Boolean(firm.require_2fa) && !hasTwoStep;
+  const { saved, error, setup, codes } = params;
+  const tab = mustSetUp ? "security" : params.tab ?? "profile";
   const d = db();
   const me = d.prepare("SELECT totp_enc, totp_pending_enc, recovery FROM users WHERE id = ?").get(user.id) as { totp_enc: string | null; totp_pending_enc: string | null; recovery: string | null };
   const twoStep = { on: Boolean(me.totp_enc), left: (JSON.parse(me.recovery ?? "[]") as string[]).length };
@@ -69,6 +70,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           ))}
         </nav>
         <div className="min-w-0 max-w-[620px]">
+          {mustSetUp && !codes && <p className="mb-5 text-[13px] font-medium">Two step sign in is required.</p>}
           {saved && <p className="mb-5 text-[13px] text-muted">Saved.</p>}
           {err && <p className="mb-5 text-[13px] text-risk">{err}</p>}
 
@@ -125,6 +127,14 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 )}
               </div>
 
+              {admin && !firm.demo && (
+                <form action={setTwoStepRequired} className="mt-3 flex items-center justify-between gap-4 border-b border-line pb-3">
+                  <input type="hidden" name="on" value={firm.require_2fa ? "0" : "1"} />
+                  <span className="text-[13px]">Required for everyone in the firm<span className="text-faint"> · {firm.require_2fa ? "On" : "Off"}</span></span>
+                  <button className={btn.ghost}>{firm.require_2fa ? "Turn off" : "Turn on"}</button>
+                </form>
+              )}
+
               <h2 className="mb-1 mt-12 text-[14px] font-medium">Signed in devices</h2>
               <div className="border-t border-line">
                 {sessions.map((x) => (
@@ -142,6 +152,17 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                   <Row key={e.id} className="py-2.5"><span className="flex-1 text-[13px]">{EVENT[e.kind] ?? e.kind}{e.detail ? <span className="text-faint"> · {e.detail}</span> : null}</span><span className="shrink-0 text-[12px] text-faint">{e.ip ? `${e.ip} · ` : ""}{ago(e.at)}</span></Row>
                 ))}
               </div>
+
+              {admin && !firm.demo && (
+                <>
+                  <h2 className="mb-1 mt-12 text-[14px] font-medium">Access record</h2>
+                  <div className="border-t border-line">
+                    {accessRecord(firm.id).length === 0 ? <p className="py-3 text-[13px] text-faint">No entries</p> : accessRecord(firm.id).map((e, i) => (
+                      <Row key={i} className="py-2.5"><span className="min-w-0 flex-1 truncate text-[13px]">{e.name ?? "Unknown"}<span className="text-faint"> · {ACCESS[e.action] ?? e.action} {e.label}</span></span><span className="shrink-0 text-[12px] text-faint">{ago(e.at)}</span></Row>
+                    ))}
+                  </div>
+                </>
+              )}
 
             </>
           )}
@@ -163,6 +184,16 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 ))}
               </div>
             </>
+          )}
+
+          {tab === "firm" && admin && !firm.demo && (
+            <section className="mt-12">
+              <h2 className="mb-1 text-[14px] font-medium">Export everything</h2>
+              <form action="/api/firm-export" method="post" className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
+                <input name="password" type="password" required autoComplete="current-password" placeholder="Password" className={clsx(field, "max-w-[260px]")} />
+                <button className={btn.secondary}>Download</button>
+              </form>
+            </section>
           )}
 
           {tab === "firm" && admin && !firm.demo && (

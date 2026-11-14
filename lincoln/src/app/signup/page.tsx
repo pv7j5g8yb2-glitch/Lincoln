@@ -6,7 +6,7 @@ import { signUp } from "@/lib/actions";
 import { currentUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
-const ERR: Record<string, string> = { fields: "Every field is required, with a valid email.", password: "The password needs at least 10 characters.", exists: "An account with this email already exists.", limited: "Too many attempts. Try again later." };
+const ERR: Record<string, string> = { fields: "Every field is required, with a valid email.", password: "The password needs at least 10 characters.", exists: "An account with this email already exists.", breached: "This password appears in known data breaches. Choose another.", limited: "Too many attempts. Try again later." };
 
 export default async function SignUp({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   if (await currentUser()) redirect("/");

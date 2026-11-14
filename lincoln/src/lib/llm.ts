@@ -1,3 +1,5 @@
+import { db } from "./db";
+
 // One place for every model call, over Anthropic's Messages API (directly, or through a relay that
 // speaks it). The key lives on the server and is never sent to the browser or written to the repo.
 
@@ -20,6 +22,28 @@ function request(body: Record<string, unknown>, effort: Effort) {
   return { headers, body: JSON.stringify(out) };
 }
 
+// Spend guard: every reply's token count is priced and added to today's total; once the daily budget
+// is used, no new model call starts until tomorrow (UTC). Protects the account from a runaway loop or
+// a stranger's misuse. LLM_DAILY_BUDGET_USD sets the budget; LLM_PRICE_IN / LLM_PRICE_OUT the price
+// per million tokens (Opus 5.5 list prices by default).
+type Usage = { input_tokens?: number; output_tokens?: number; cache_creation_input_tokens?: number; cache_read_input_tokens?: number };
+const day = () => `spend:${new Date().toISOString().slice(0, 10)}`;
+const budget = () => Number(process.env.LLM_DAILY_BUDGET_USD ?? 5);
+export function spentToday() {
+  const row = db().prepare("SELECT value FROM kv WHERE firm_id = '_system' AND key = ?").get(day()) as { value: string } | undefined;
+  return Number(row?.value ?? 0);
+}
+function guard() {
+  if (spentToday() >= budget()) throw new Error("Today's model budget is used up. It resets at midnight UTC.");
+}
+function addSpend(u: Usage | undefined) {
+  if (!u) return;
+  const pin = Number(process.env.LLM_PRICE_IN ?? 4), pout = Number(process.env.LLM_PRICE_OUT ?? 20);
+  const cost = ((u.input_tokens ?? 0) * pin + (u.cache_creation_input_tokens ?? 0) * pin * 1.25 + (u.cache_read_input_tokens ?? 0) * pin * 0.1 + (u.output_tokens ?? 0) * pout) / 1_000_000;
+  if (!cost) return;
+  db().prepare("INSERT INTO kv (firm_id, key, value) VALUES ('_system', ?, ?) ON CONFLICT(firm_id, key) DO UPDATE SET value = CAST(CAST(value AS REAL) + CAST(excluded.value AS REAL) AS TEXT)").run(day(), String(cost));
+}
+
 async function fail(res: Response): Promise<never> {
   const detail = await res.text().catch(() => "");
   if (res.status === 402 || /credit balance is too low/i.test(detail)) throw new Error("The model account is out of credit.");
@@ -28,7 +52,7 @@ async function fail(res: Response): Promise<never> {
   throw new Error(`The model service replied ${res.status}${msg ? `: ${msg}` : ""}.`);
 }
 
-type Reply = { content: { type: string; text?: string }[]; stop_reason: string };
+type Reply = { content: { type: string; text?: string }[]; stop_reason: string; usage?: Usage };
 const textOf = (d: Reply) => d.content.filter((b) => b.type === "text").map((b) => b.text ?? "").join("").trim();
 function check(d: Reply) {
   if (d.stop_reason === "refusal") throw new Error("The model declined this request.");
@@ -40,10 +64,12 @@ export async function chat(messages: Msg[], opts: { maxTokens?: number; effort?:
   if (!llmConfigured()) throw new Error("No model is connected yet.");
   const system = messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
   const turns = messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content }));
+  guard();
   const r = request({ max_tokens: Math.max(opts.maxTokens ?? 4000, 4000), ...(system ? { system } : {}), messages: turns }, opts.effort ?? "low");
   const res = await fetch(`${base()}/v1/messages`, { method: "POST", headers: r.headers, body: r.body, signal: AbortSignal.timeout(120_000) });
   if (!res.ok) await fail(res);
   const data = (await res.json()) as Reply;
+  addSpend(data.usage);
   check(data);
   return textOf(data);
 }
@@ -79,6 +105,7 @@ async function readPagesOnce(system: string, pages: { n: number; jpeg: Buffer }[
     content.push({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: p.jpeg.toString("base64") } });
   }
   content.push({ type: "text", text: instruction });
+  guard();
   const r = request({ max_tokens: maxTokens, stream: true, system, messages: [{ role: "user", content }] }, "medium");
   const res = await fetch(`${base()}/v1/messages`, {
     method: "POST",
@@ -102,6 +129,8 @@ async function readPagesOnce(system: string, pages: { n: number; jpeg: Buffer }[
       try {
         const ev = JSON.parse(line.slice(5));
         if (ev.type === "content_block_delta" && ev.delta?.type === "text_delta") out += ev.delta.text;
+        if (ev.type === "message_start") addSpend({ ...ev.message?.usage, output_tokens: 0 });
+        if (ev.type === "message_delta") addSpend({ output_tokens: ev.usage?.output_tokens });
         if (ev.type === "message_delta" && ev.delta?.stop_reason === "refusal") throw new Error("The model declined this request.");
         if (ev.type === "error") throw new Error(ev.error?.message ?? "The model service reported an error.");
       } catch (e) {
@@ -132,10 +161,12 @@ export async function runAgent(system: string, history: Turn[], tools: Tool[], h
   if (!llmConfigured()) throw new Error("No model is connected.");
   const msgs = [...history];
   for (let step = 0; step < 8; step++) {
+    guard();
     const r = request({ max_tokens: 8000, system, tools, messages: msgs }, "medium");
     const res = await fetch(`${base()}/v1/messages`, { method: "POST", headers: r.headers, body: r.body, signal: AbortSignal.timeout(180_000) });
     if (!res.ok) await fail(res);
-    const data = (await res.json()) as { content: ({ type: "text"; text: string } | { type: "tool_use"; id: string; name: string; input: Record<string, unknown> })[]; stop_reason: string };
+    const data = (await res.json()) as { usage?: Usage; content: ({ type: "text"; text: string } | { type: "tool_use"; id: string; name: string; input: Record<string, unknown> })[]; stop_reason: string };
+    addSpend(data.usage);
     const calls = data.content.filter((b) => b.type === "tool_use") as { type: "tool_use"; id: string; name: string; input: Record<string, unknown> }[];
     const text = data.content.filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("\n").trim();
     if (data.stop_reason === "refusal") throw new Error("The model declined this request.");

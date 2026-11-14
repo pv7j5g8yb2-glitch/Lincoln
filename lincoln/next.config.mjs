@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ["better-sqlite3", "pdfjs-dist", "@napi-rs/canvas", "exceljs", "pptxgenjs"],
+  serverExternalPackages: ["better-sqlite3-multiple-ciphers", "pdfjs-dist", "@napi-rs/canvas", "exceljs", "pptxgenjs"],
   experimental: { serverActions: { bodySizeLimit: "30mb" } },
   poweredByHeader: false,
   devIndicators: false,

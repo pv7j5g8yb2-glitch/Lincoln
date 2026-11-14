@@ -15,6 +15,7 @@ import { caseActivity, caseApprovals, caseById, caseDates, caseDrafts, caseMessa
 import { ago, inDays, longDate } from "@/lib/format";
 import { llmConfigured } from "@/lib/llm";
 import type { LetterContent } from "@/lib/letter";
+import { recordAccess } from "@/lib/access";
 
 const DOC_STATUS: Record<string, string> = { ok: "Usable", weak: "Low weight", excluded: "Excluded", draft: "Unsigned draft", duplicate: "Duplicate", superseded: "Superseded", needs_translation: "Translation required" };
 const GRADES = ["Excluded", "In the file", "Relevant", "Supports the fact", "Meets the standard", "Approved by attorney"];
@@ -28,6 +29,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
   const { tab = "overview", draft } = await searchParams;
   const c = caseById(firm.id, id, viewer);
   if (!c) notFound();
+  await recordAccess(firm.id, user.id, "case_viewed", c.id, `Case of ${c.client}`);
   const docs = documents(firm.id, id);
   const iss = issues(firm.id, id);
   const open = iss.filter((i) => i.status === "open");

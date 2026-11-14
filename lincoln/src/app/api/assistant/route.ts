@@ -1,6 +1,7 @@
+import { limited } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { db, uid } from "@/lib/db";
-import { currentUser, viewer } from "@/lib/session";
+import { apiUser, viewer } from "@/lib/session";
 import { caseById, caseDates, caseDrafts, cases, chatHistory, criteria, documents, issues, pendingApprovals, upcomingDates } from "@/lib/queries";
 import { llmConfigured, runAgent, type Tool } from "@/lib/llm";
 import { LIBRARY } from "@/lib/library";
@@ -18,11 +19,12 @@ const TOOLS: Tool[] = [
 ];
 
 export async function POST(req: Request) {
-  const s = await currentUser();
+  const s = await apiUser();
   if (!s) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   const { message, caseId } = (await req.json()) as { message?: string; caseId?: string };
   const text = (message ?? "").trim().slice(0, 4000);
   if (!text) return NextResponse.json({ error: "A question is required." }, { status: 400 });
+  if (limited(`ai:${s.user.id}`, 40)) return NextResponse.json({ error: "Too many questions at once. Try again in a few minutes." }, { status: 429 });
   if (!llmConfigured()) return NextResponse.json({ error: "The assistant is not enabled in this workspace." }, { status: 503 });
 
   const F = s.firm.id;

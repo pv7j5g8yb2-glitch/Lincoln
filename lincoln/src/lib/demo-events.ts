@@ -1,4 +1,4 @@
-import type Database from "better-sqlite3";
+import type Database from "better-sqlite3-multiple-ciphers";
 import { uid } from "./db";
 
 // Scripted events for the demo workspace: things that happen in the outside world, and what

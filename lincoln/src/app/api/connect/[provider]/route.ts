@@ -3,12 +3,12 @@ import { NextResponse } from "next/server";
 import { PROVIDERS, authUrl, isProvider } from "@/lib/integrations";
 import { appUrl } from "@/lib/integrations/http";
 import { newToken } from "@/lib/passwords";
-import { currentUser } from "@/lib/session";
+import { apiUser } from "@/lib/session";
 
 // One sign in per company connects every Google or every Microsoft service at once.
 export async function GET(_: Request, { params }: { params: Promise<{ provider: string }> }) {
   const { provider } = await params;
-  const s = await currentUser();
+  const s = await apiUser();
   if (!s) return NextResponse.redirect(new URL("/signin", appUrl()));
   if (s.firm.demo) return NextResponse.redirect(new URL("/integrations?error=sample", appUrl()));
   if (!isProvider(provider) || !PROVIDERS.find((p) => p.id === provider)!.configured()) return NextResponse.redirect(new URL(`/integrations?error=${provider}`, appUrl()));

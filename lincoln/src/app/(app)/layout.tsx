@@ -7,7 +7,7 @@ import { EVENTS } from "@/lib/demo-events";
 export const dynamic = "force-dynamic";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, firm, viewer } = await requireUser();
+  const { user, firm, viewer } = await requireUser({ setup: true });
   const step = Number(kv(firm.id, "demo_step") ?? "0");
   const review = pendingApprovals(firm.id, viewer).length;
   return (

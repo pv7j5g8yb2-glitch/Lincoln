@@ -7,6 +7,8 @@ const ERRORS: Record<string, string> = {
   sample: "Not available in the sample workspace.",
   model: "Lincoln's model is not connected.",
   failed: "Could not open the case. Try again.",
+  limited: "Too many at once. Try again in a few minutes.",
+  budget: "Today's model budget is used up.",
 };
 
 export default async function NewCase({ searchParams }: { searchParams: Promise<{ error?: string }> }) {

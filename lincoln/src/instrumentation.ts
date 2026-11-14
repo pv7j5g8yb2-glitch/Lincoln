@@ -10,7 +10,7 @@ export async function register() {
     try {
       await tick();
     } catch (e) {
-      console.error("Lincoln background work failed", e);
+      console.error("Lincoln background work failed:", e instanceof Error ? e.message : "unknown error");
     } finally {
       running = false;
     }

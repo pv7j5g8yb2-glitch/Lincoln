@@ -19,6 +19,7 @@ import type { Question } from "./halasz";
 import { LIBRARY } from "./library";
 import { draftForCase, processCase } from "./intake";
 import { fileKind } from "./pdf";
+import { breached } from "./pwned";
 import { llmConfigured } from "./llm";
 import { deliver, takeInstruction } from "./agent";
 import { randomBytes } from "node:crypto";
@@ -103,6 +104,7 @@ export async function signUp(form: FormData) {
   if (!validPassword(password)) redirect("/signup?error=password");
   const d = db();
   if (d.prepare("SELECT 1 FROM users WHERE email = ?").get(email)) redirect("/signup?error=exists");
+  if (await breached(password)) redirect("/signup?error=breached");
   const firmId = "f_" + uid();
   const userId = "u_" + uid();
   d.transaction(() => {
@@ -140,6 +142,7 @@ export async function resetPassword(form: FormData) {
   const token = String(form.get("token") ?? "");
   const password = String(form.get("password") ?? "");
   if (!validPassword(password)) redirect(`/reset/${encodeURIComponent(token)}?error=password`);
+  if (await breached(password)) redirect(`/reset/${encodeURIComponent(token)}?error=breached`);
   const d = db();
   if (limited(`rs:${await clientKey()}`, 20)) redirect("/forgot?error=limited");
   const r = d.prepare("SELECT user_id FROM password_resets WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?").get(sha(token), now()) as { user_id: string } | undefined;
@@ -292,6 +295,7 @@ export async function startCase(form: FormData) {
   const text = String(form.get("text") ?? "").trim().slice(0, 8000);
   const names = form.getAll("file").filter((f): f is File => f instanceof File && f.size > 0).map((f) => f.name.slice(0, 120));
   if (firm.demo) redirect("/cases/new?error=sample");
+  if (limited(`case:${user.id}`, 20)) redirect("/cases/new?error=limited");
   const got = await uploads(form);
   if (got === "size") redirect("/cases/new?error=size");
   if (got === "type") redirect("/cases/new?error=type");
@@ -306,8 +310,8 @@ export async function startCase(form: FormData) {
     const r = await takeInstruction(firm.id, { id: user.id, name: user.name, role: user.role }, { text: only ? `About ${only.client} (case ${only.id}): ${text}` : text, files: got.map((data, i) => ({ name: names[i] ?? `file ${i + 1}`, data })), via: "app" }, open);
     caseId = r.caseId;
     void r.work;
-  } catch {
-    redirect("/cases/new?error=failed");
+  } catch (e) {
+    redirect(`/cases/new?error=${e instanceof Error && /budget/i.test(e.message) ? "budget" : "failed"}`);
   }
   revalidatePath("/", "layout");
   if (!caseId) redirect(`/assistant?q=${encodeURIComponent(text)}`);
@@ -348,7 +352,7 @@ export async function updateProfile(form: FormData) {
 }
 
 export async function changePassword(form: FormData) {
-  const { user } = await requireUser();
+  const { user } = await requireUser({ setup: true });
   const current = String(form.get("current") ?? "");
   const next = String(form.get("next") ?? "");
   if (limited(`pw:${user.id}`, 6)) redirect("/settings?tab=security&error=limited");
@@ -358,12 +362,14 @@ export async function changePassword(form: FormData) {
     const f = db().prepare("SELECT demo FROM firms WHERE id = ?").get(user.firm_id) as { demo: number };
     if (f.demo) redirect("/settings?tab=security&error=sample");
     if (!validPassword(next)) redirect("/settings?tab=security&error=password");
+    if (await breached(next)) redirect("/settings?tab=security&error=breached");
     db().prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hashPassword(next), user.id);
     await securityEvent(user.firm_id, user.id, "password_changed", "first password set");
     redirect("/settings?tab=security&saved=1");
   }
   if (!verifyPassword(current, row.password_hash)) redirect("/settings?tab=security&error=current");
   if (!validPassword(next)) redirect("/settings?tab=security&error=password");
+  if (await breached(next)) redirect("/settings?tab=security&error=breached");
   const sid = (await cookies()).get(COOKIE)?.value ?? "";
   const d = db();
   d.transaction(() => {
@@ -487,14 +493,14 @@ async function revokeAccess(provider: string, refreshEnc: string) {
 // Two step sign in
 
 export async function startTwoStep() {
-  const { user, firm } = await requireUser();
+  const { user, firm } = await requireUser({ setup: true });
   notInSample(firm, "/settings?tab=security");
   db().prepare("UPDATE users SET totp_pending_enc = ? WHERE id = ?").run(sealSecret(newTotpSecret()), user.id);
   redirect("/settings?tab=security&setup=1");
 }
 
 export async function confirmTwoStep(form: FormData) {
-  const { user, firm } = await requireUser();
+  const { user, firm } = await requireUser({ setup: true });
   const row = db().prepare("SELECT totp_pending_enc FROM users WHERE id = ?").get(user.id) as { totp_pending_enc: string | null };
   if (!row.totp_pending_enc) redirect("/settings?tab=security");
   if (limited(`2fa:${user.id}`, 10)) redirect("/settings?tab=security&setup=1&error=limited");
@@ -510,6 +516,7 @@ export async function confirmTwoStep(form: FormData) {
 
 export async function disableTwoStep(form: FormData) {
   const { user, firm } = await requireUser();
+  if (firm.require_2fa) redirect("/settings?tab=security&error=required");
   const row = db().prepare("SELECT password_hash FROM users WHERE id = ?").get(user.id) as { password_hash: string | null };
   if (limited(`2fa:${user.id}`, 10) || !verifyPassword(String(form.get("password") ?? ""), row.password_hash)) redirect("/settings?tab=security&error=current");
   db().prepare("UPDATE users SET totp_enc = NULL, totp_pending_enc = NULL, recovery = NULL WHERE id = ?").run(user.id);
@@ -518,12 +525,23 @@ export async function disableTwoStep(form: FormData) {
 }
 
 export async function signOutSession(form: FormData) {
-  const { user, firm, sessionId } = await requireUser();
+  const { user, firm, sessionId } = await requireUser({ setup: true });
   const target = String(form.get("session") ?? "");
   if (target === "others") db().prepare("DELETE FROM sessions WHERE user_id = ? AND id != ?").run(user.id, sessionId);
   else db().prepare("DELETE FROM sessions WHERE user_id = ? AND id = ? AND id != ?").run(user.id, target, sessionId);
   await securityEvent(firm.id, user.id, "sessions_signed_out", target === "others" ? "all other devices" : "one device");
   revalidatePath("/settings");
+}
+
+/** Administrators can require two step sign in for everyone in the firm, once their own is on. */
+export async function setTwoStepRequired(form: FormData) {
+  const { user, firm, twoStep } = await requireUser();
+  if (firm.demo || !isAdmin(user.role)) redirect("/settings?tab=security&error=admin");
+  const on = form.get("on") === "1";
+  if (on && !twoStep) redirect("/settings?tab=security&error=selffirst");
+  db().prepare("UPDATE firms SET require_2fa = ? WHERE id = ?").run(on ? 1 : 0, firm.id);
+  await securityEvent(firm.id, user.id, on ? "two_step_required" : "two_step_optional");
+  redirect("/settings?tab=security&saved=1");
 }
 
 /** Permanently deletes the firm: every case, file, message, connection and account. Administrators only. */

@@ -1,12 +1,13 @@
-import Database from "better-sqlite3";
+import Database from "better-sqlite3-multiple-ciphers";
+import { derivedKey } from "./keys";
 import fs from "node:fs";
 import path from "node:path";
 import { seed } from "./seed";
 import { hashPassword } from "./passwords";
 
-// One SQLite file for this first version. Every table carries firm_id and every query in
-// queries.ts filters on it. Before any real client data: Postgres with row level security and a
-// key per firm (see docs/LINCOLN-V1.md, security minimum).
+// One SQLite file, encrypted as a whole (SQLite3 Multiple Ciphers, ChaCha20-Poly1305) with a key
+// derived from the master key: the file, its journal and any copy of the disk are unreadable without
+// it. Every table carries firm_id and every query in queries.ts filters on it.
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS firms (id TEXT PRIMARY KEY, name TEXT NOT NULL, demo INTEGER NOT NULL DEFAULT 0);
@@ -61,7 +62,7 @@ CREATE INDEX IF NOT EXISTS i_appr_firm ON approvals(firm_id, status);
 CREATE INDEX IF NOT EXISTS i_msg_firm ON messages(firm_id, at);
 `;
 
-const TABLES = ["security_events", "mailboxes", "sessions", "kv", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "criteria", "documents", "cases", "users", "firms"];
+const TABLES = ["access_log", "security_events", "mailboxes", "sessions", "kv", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "criteria", "documents", "cases", "users", "firms"];
 
 /** Where the database lives. On Render this is the persistent disk (DATA_DIR=/var/data). */
 export const dataDir = () => process.env.DATA_DIR || path.join(process.cwd(), "data");
@@ -73,11 +74,24 @@ export function db(): Database.Database {
   if (g.__lincolnDb) return g.__lincolnDb;
   const dir = dataDir();
   fs.mkdirSync(dir, { recursive: true });
-  const d = new Database(path.join(dir, "lincoln.db"));
+  const file = path.join(dir, "lincoln.db");
+  const pass = derivedKey("database");
+  // A database written before encryption is converted in place, once.
+  if (fs.existsSync(file) && fs.readFileSync(file).subarray(0, 15).toString("latin1") === "SQLite format 3") {
+    const plain = new Database(file);
+    plain.pragma("wal_checkpoint(TRUNCATE)");
+    plain.pragma("journal_mode = DELETE");
+    plain.pragma(`rekey='${pass}'`);
+    plain.close();
+  }
+  const d = new Database(file);
+  d.pragma(`key='${pass}'`);
   d.pragma("journal_mode = WAL");
   d.pragma("foreign_keys = ON");
   d.exec(SCHEMA);
-  for (const [table, col, type] of [["users", "avatar", "TEXT"], ["cases", "processing", "INTEGER NOT NULL DEFAULT 0"], ["cases", "note", "TEXT"], ["chat", "case_id", "TEXT"], ["cases", "client_email", "TEXT"], ["messages", "email", "TEXT"], ["messages", "thread_id", "TEXT"], ["messages", "mailbox_id", "TEXT"], ["mailboxes", "settings", "TEXT"], ["users", "totp_enc", "TEXT"], ["users", "totp_pending_enc", "TEXT"], ["users", "totp_last_step", "INTEGER"], ["users", "recovery", "TEXT"], ["sessions", "ip", "TEXT"], ["sessions", "agent", "TEXT"], ["sessions", "last_seen", "TEXT"], ["firms", "key_enc", "TEXT"]]) {
+  d.exec("CREATE TABLE IF NOT EXISTS access_log (id TEXT PRIMARY KEY, firm_id TEXT NOT NULL, user_id TEXT, at TEXT NOT NULL, action TEXT NOT NULL, target TEXT, label TEXT, ip TEXT)");
+  d.exec("CREATE TABLE IF NOT EXISTS known_devices (user_id TEXT NOT NULL, device TEXT NOT NULL, first_seen TEXT NOT NULL, PRIMARY KEY (user_id, device))");
+  for (const [table, col, type] of [["users", "avatar", "TEXT"], ["cases", "processing", "INTEGER NOT NULL DEFAULT 0"], ["cases", "note", "TEXT"], ["chat", "case_id", "TEXT"], ["cases", "client_email", "TEXT"], ["messages", "email", "TEXT"], ["messages", "thread_id", "TEXT"], ["messages", "mailbox_id", "TEXT"], ["mailboxes", "settings", "TEXT"], ["users", "totp_enc", "TEXT"], ["users", "totp_pending_enc", "TEXT"], ["users", "totp_last_step", "INTEGER"], ["users", "recovery", "TEXT"], ["sessions", "ip", "TEXT"], ["sessions", "agent", "TEXT"], ["sessions", "last_seen", "TEXT"], ["firms", "key_enc", "TEXT"], ["firms", "require_2fa", "INTEGER NOT NULL DEFAULT 0"]]) {
     const cols = d.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
     if (!cols.some((c) => c.name === col)) d.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`);
   }

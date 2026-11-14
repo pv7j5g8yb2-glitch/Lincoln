@@ -1,4 +1,4 @@
-import type Database from "better-sqlite3";
+import type Database from "better-sqlite3-multiple-ciphers";
 import { HALASZ_CRITERIA, HALASZ_DOCS, HALASZ_ISSUES, HALASZ_QUESTIONS } from "./halasz";
 
 // The sample workspace. Every firm, person, client, company and case here is made up.
