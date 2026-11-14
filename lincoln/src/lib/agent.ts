@@ -301,9 +301,6 @@ export async function tick() {
     for (const x of withDates) applyDateRules(x.firm_id, x.case_id, today);
   }
 
-  // Forms filled through the half price batch API are collected once their batch has ended.
-  if (llmConfigured()) await import("./fill").then((m) => m.collectForms()).catch(() => undefined);
-
   // Deadlines within 14 days become an open issue once (the end of a stay has its own rule).
   const soon = d.prepare("SELECT t.id, t.firm_id, t.case_id, t.label, t.date FROM dates t JOIN firms f ON f.id = t.firm_id WHERE f.demo = 0 AND t.kind != 'stay_ends' AND t.date >= date('now') AND t.date <= date('now', '+14 days')").all() as { id: string; firm_id: string; case_id: string; label: string; date: string }[];
   for (const t of soon) {

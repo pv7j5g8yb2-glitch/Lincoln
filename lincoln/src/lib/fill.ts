@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import { db, uid } from "./db";
-import { batchAvailable, batchResults, chat, forCase, parseJson, submitBatch, type BatchItem } from "./llm";
+import { batchAvailable, batchResults, cancelBatch, chat, forCase, parseJson, submitBatch, type BatchItem } from "./llm";
 import { caseRecord } from "./intake";
 import { fieldsOf, formsFor, hasTemplate, instructionsOf, normalise, templatePath, titleOf, yes, type Answer, type Field } from "./forms";
 
@@ -10,7 +10,10 @@ import { fieldsOf, formsFor, hasTemplate, instructionsOf, normalise, templatePat
 // Cost: only the sections of a form that apply to the case are sent (an O-1 petition skips the I-129's
 // H, L, E, Q and R supplements), the instructions and the record are cached across the chunks of a form,
 // and a fill nobody is waiting on (the automatic one after a file is read) goes through the half price
-// batch API. A fill a person asked for runs at once.
+// batch API. A batch not back within BATCH_WAIT is cancelled and the rest filled at once at the normal
+// price, so forms are never more than about a quarter of an hour behind. A fill a person asks for runs at once.
+
+const BATCH_WAIT = Number(process.env.LLM_BATCH_WAIT_MIN || 15) * 60_000;
 
 const CHUNK = 120;
 
@@ -93,7 +96,15 @@ async function run(firmId: string, caseId: string, opts: { refill?: boolean; onl
 }
 
 /** Collects finished batches. Runs from the background sweep. */
+let collecting = false;
 export async function collectForms() {
+  // One collection at a time, so a batch is never turned into answers twice.
+  if (collecting) return;
+  collecting = true;
+  try { await collect(); } finally { collecting = false; }
+}
+
+async function collect() {
   const d = db();
   // A fill cut off by a restart is marked failed, so it can be filled again rather than wait for ever.
   d.prepare("UPDATE forms SET status = 'failed' WHERE status = 'filling' AND batch IS NULL AND updated_at < ?").run(new Date(Date.now() - 2 * 3600_000).toISOString());
@@ -110,11 +121,12 @@ export async function collectForms() {
       try { results = await batchResults(b); } catch { return; }
       const started = (JSON.parse(forms[0].batch) as Pending).at;
       if (!results) {
-        // Batches end within a day; one that has not is given up rather than waited on for ever.
-        if (Date.now() - Date.parse(started) > 26 * 3600_000) for (const f of forms) d.prepare("UPDATE forms SET status = 'failed', batch = NULL, updated_at = ? WHERE id = ?").run(new Date().toISOString(), f.id);
+        // Too slow: cancelled. What finished is still used (and billed at half price); the rest is filled at once.
+        if (Date.now() - Date.parse(started) > BATCH_WAIT) await cancelBatch(b).catch(() => undefined);
         return;
       }
       const done: string[] = [];
+      const redo: string[] = [];
       for (const f of forms) {
         const layout = new Map((JSON.parse(f.layout) as Field[]).map((x) => [x.name, x]));
         const p = JSON.parse(f.batch) as Pending;
@@ -129,8 +141,13 @@ export async function collectForms() {
         if (ok) {
           d.prepare("UPDATE forms SET status = 'ready', answers = ?, batch = NULL, updated_at = ? WHERE id = ?").run(JSON.stringify(answers), new Date().toISOString(), f.id);
           done.push(`${f.code} (${answers.length} of ${f.fields} fields)`);
-        } else d.prepare("UPDATE forms SET status = 'failed', batch = NULL, updated_at = ? WHERE id = ?").run(new Date().toISOString(), f.id);
+        } else {
+          d.prepare("UPDATE forms SET batch = NULL, updated_at = ? WHERE id = ?").run(new Date().toISOString(), f.id);
+          redo.push(f.code);
+        }
       }
+      // Anything the batch did not finish is filled at once, form by form.
+      for (const code of redo) await run(firmId, caseId, { refill: true, only: code, now: true });
       const client = (d.prepare("SELECT client FROM cases WHERE id = ?").get(caseId) as { client: string } | undefined)?.client ?? "";
       finish(firmId, caseId, client, done);
     });

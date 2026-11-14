@@ -16,5 +16,8 @@ export async function register() {
     }
   };
   setTimeout(run, 15_000);
+  // Forms filled in a batch are collected every minute, so none waits on the five minute sweep.
+  const { collectForms } = await import("./lib/fill");
+  setInterval(() => void collectForms().catch(() => undefined), 60_000);
   setInterval(run, Number(process.env.LINCOLN_TICK_MS) || 5 * 60_000);
 }

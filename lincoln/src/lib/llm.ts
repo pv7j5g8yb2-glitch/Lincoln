@@ -208,6 +208,12 @@ export async function submitBatch(items: BatchItem[]): Promise<string> {
   return ((await res.json()) as { id: string }).id;
 }
 
+/** Stops a batch. Requests already answered are kept and billed; the rest are not. */
+export async function cancelBatch(id: string) {
+  const res = await fetch(`${base()}/v1/messages/batches/${encodeURIComponent(id)}/cancel`, { method: "POST", headers: headers(), signal: AbortSignal.timeout(60_000) });
+  if (!res.ok) await fail(res);
+}
+
 /** The batch's results by custom id once it has ended, or null while it is still running. */
 export async function batchResults(id: string): Promise<Map<string, { text?: string; error?: string }> | null> {
   const res = await fetch(`${base()}/v1/messages/batches/${encodeURIComponent(id)}`, { headers: headers(), signal: AbortSignal.timeout(60_000) });
