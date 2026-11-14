@@ -953,3 +953,13 @@ commenters are vendors, some posts read as AI written, none are immigration lawy
 * Revenue reporting: Harvey and Legora criticised for "contracted ARR" with opt outs; Harvey says the gap
   is about 5 percent. Harvey reported $400M ARR and a $15.5B valuation (Sept to Oct 2026, per the
   subreddit moderator).
+* Why Harvey is valued so highly despite the hate (from the same threads): buyers are not users ("The
+  people that choose software at biglaw are not the people using it"); risk averse partners pick the safe
+  consensus choice; fixed term contracts and slow procurement keep it in place; some partners hold stakes;
+  investors bet on a lab buying it; real revenue ($400M ARR, about 40 percent in house per one comment);
+  some users do like it (vaults for discovery, transactional drafting). Reddit over represents builders.
+* Read for Lincoln (2026-11-14): the clearest gap is work that starts itself on the firm's own case
+  record, for small flat fee firms in one practice area, where lawyers will not build their own flows.
+  The moats commenters name are being the system of record (switching cost), each firm's own playbook and
+  feedback, domain verification machinery and evals, distribution and trust. Lincoln has none yet; they
+  only form once firms run real cases in it. Features alone are copyable (ICM Desk, Filevine).
