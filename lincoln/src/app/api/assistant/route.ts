@@ -5,6 +5,8 @@ import { apiUser, viewer } from "@/lib/session";
 import { caseById, caseDates, caseDrafts, cases, chatHistory, criteria, documents, issues, pendingApprovals, upcomingDates } from "@/lib/queries";
 import { forCase, llmConfigured, runAgent, type Tool } from "@/lib/llm";
 import { typeOf } from "@/lib/library";
+import { FORM_TITLES, hasTemplate } from "@/lib/forms";
+import { prepareForms } from "@/lib/fill";
 import { EMAIL_STYLE } from "@/lib/style";
 import { PROCESS } from "@/lib/process";
 import { draftForCase } from "@/lib/intake";
@@ -17,6 +19,7 @@ const TOOLS: Tool[] = [
   { name: "draft_document", description: "Draft any document for a case from its file, every fact cited to its page: letters, RFE responses, declarations, cover letters, memos. Runs in the background and appears under the case's Drafts.", input_schema: { type: "object", properties: { case_id: { type: "string" }, request: { type: "string" } }, required: ["case_id", "request"] } },
   { name: "draft_email", description: "Prepare an email to a client or third party. It is queued for attorney approval and sent from the connected mailbox once approved. Never claims to have sent it.", input_schema: { type: "object", properties: { case_id: { type: "string" }, to_name: { type: "string" }, to_email: { type: "string" }, subject: { type: "string" }, body: { type: "string" } }, required: ["case_id", "to_name", "subject", "body"] } },
   { name: "add_date", description: "Add a deadline, expiry, appointment or target date to a case.", input_schema: { type: "object", properties: { case_id: { type: "string" }, label: { type: "string" }, date: { type: "string", description: "YYYY-MM-DD" } }, required: ["case_id", "label", "date"] } },
+  { name: "fill_forms", description: "Fill a case's official forms from its file in the background: all the forms its type needs, or one named form (for example I-131 or I-907). Answers carry their sources; the rest stays blank for the attorney.", input_schema: { type: "object", properties: { case_id: { type: "string" }, form: { type: "string", description: "One form number, or leave out for all" } }, required: ["case_id"] } },
   { name: "resolve_issue", description: "Mark an open issue on a case as resolved, with the reason.", input_schema: { type: "object", properties: { issue_id: { type: "string" }, resolution: { type: "string" } }, required: ["issue_id", "resolution"] } },
 ];
 
@@ -97,6 +100,16 @@ export async function POST(req: Request) {
       d.prepare("INSERT INTO dates (id, firm_id, case_id, label, date, kind, source) VALUES (?, ?, ?, ?, ?, 'target', ?)").run(uid(), F, x.id, String(input.label).slice(0, 120), input.date, `Added by ${s!.user.name}`);
       changed.any = true;
       return "Date added.";
+    }
+    if (name === "fill_forms") {
+      const x = own(input.case_id);
+      const form = input.form ? String(input.form).trim().toUpperCase() : undefined;
+      if (form && !FORM_TITLES[form]) return `Form ${form} is not one Lincoln fills yet.`;
+      if (form && !hasTemplate(form)) return `The blank ${form} has not been added to Lincoln yet, so it cannot be filled.`;
+      if (x.pages < 1) return "The case has no client file to fill forms from yet.";
+      void prepareForms(F, x.id, { refill: true, only: form });
+      changed.any = true;
+      return `Filling ${form ?? "the case's forms"} now. They appear under Forms on the case. Link: /cases/${x.id}?tab=forms`;
     }
     if (name === "resolve_issue") {
       const r = d.prepare("UPDATE issues SET status = 'resolved', resolution = ?, resolved_at = ? WHERE firm_id = ? AND id = ? AND status = 'open'").run(`${String(input.resolution).slice(0, 300)} (${s!.user.name})`, new Date().toISOString(), F, String(input.issue_id));
