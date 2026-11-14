@@ -30,7 +30,7 @@ export default function FormReview({ formId, caseId, layout, answers }: { formId
 
   const source = (s: string) => {
     const page = /^p\.\s?(\d+)/.exec(s)?.[1];
-    return page ? <a href={`/api/pages/${caseId}/${page}`} target="_blank" className="text-muted underline decoration-dotted underline-offset-4 hover:text-ink">{s}</a> : <span className="text-faint">{s === "edited" ? "Edited" : s === "attorney" ? "Attorney" : s === "firm" ? "Firm" : s === "case" ? "Case" : s}</span>;
+    return page ? <a href={`/api/pages/${caseId}/${page}`} target="_blank" className="text-muted underline decoration-dotted underline-offset-4 hover:text-ink">{s}</a> : <span className="text-faint">{s === "edited" ? "Edited" : s === "attorney" ? "Attorney" : s === "firm" ? "Firm" : s === "case" ? "Case" : s === "instructions" ? "Instructions" : s}</span>;
   };
 
   return (

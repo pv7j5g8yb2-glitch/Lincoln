@@ -83,12 +83,14 @@ function check(d: Reply) {
 }
 
 /** A short exchange: sorting mail, reading an instruction. Low effort; thinking still runs as the model needs. */
-export async function chat(messages: Msg[], opts: { maxTokens?: number; effort?: Effort; timeoutMs?: number } = {}): Promise<string> {
+/** With cache, the system prompt is cached so repeated calls on the same material (a form's instructions
+ *  and the case record, filled in chunks) are billed at the cached rate after the first. */
+export async function chat(messages: Msg[], opts: { maxTokens?: number; effort?: Effort; timeoutMs?: number; cache?: boolean } = {}): Promise<string> {
   if (!llmConfigured()) throw new Error("No model is connected yet.");
   const system = messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
   const turns = messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content }));
   guard();
-  const r = request({ max_tokens: Math.max(opts.maxTokens ?? 4000, 4000), ...(system ? { system } : {}), messages: turns }, opts.effort ?? "low");
+  const r = request({ max_tokens: Math.max(opts.maxTokens ?? 4000, 4000), ...(system ? { system: opts.cache ? [{ type: "text", text: system, cache_control: { type: "ephemeral" } }] : system } : {}), messages: turns }, opts.effort ?? "low");
   const res = await fetch(`${base()}/v1/messages`, { method: "POST", headers: r.headers, body: r.body, signal: AbortSignal.timeout(opts.timeoutMs ?? 120_000) });
   if (!res.ok) await fail(res);
   const data = (await res.json()) as Reply;

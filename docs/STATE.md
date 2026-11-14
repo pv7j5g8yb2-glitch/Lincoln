@@ -310,4 +310,12 @@ from the repo the same day. History is in git up to commit `341cf65`.
   Firm address/phone/email and attorney bar number in Settings feed the forms. Tested on a USCIS shaped test form
   with the stand in model. Blank official forms must be downloaded by a person into `lincoln/forms` (USCIS blocks
   automated downloads; we do not get round it).
+* 2026-11-14 (evening): Ismael added 37 official forms and 31 instruction files to `lincoln/forms` (list in its
+  README). Lincoln now reads each form's official instructions before filling it (cached, so a long form costs one
+  full read). Finding: every USCIS form is a locked PDF (opens without a password, filling allowed, other changes
+  not), and pdf-lib cannot open locked files at all, so no real form can be filled yet. A fork (@cantoo/pdf-lib)
+  opened the G-28 and read all 101 fields with proper labels; adding it was blocked by the session's safety check,
+  so it waits on Ismael's decision. Also open: the 2D barcode on each page will not carry the answers once filled
+  outside Adobe; check whether that matters before filing. Still missing: I-360, I-821, I-730, I-134, I-212,
+  I-192, I-526, N-600K, N-336, N-470, and court (EOIR) forms.
 
