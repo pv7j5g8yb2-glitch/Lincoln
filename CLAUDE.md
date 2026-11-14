@@ -98,6 +98,11 @@ warm, brief, human, following the thread and the case. Never "reply yes", stock 
 numbers, dashes or anything that sounds robotic or confusing. The rules live in `lincoln/src/lib/style.ts`; every
 email prompt uses them. Lincoln is AI but acts as a human P.A.
 
+**Anthropic credits need approval every time (Ismael, 2026-11-14).** The API key has $20 of credits that must also
+cover free testers. Before any call that spends them (live tests, model comparisons, anything run with a real key),
+say what it is and the estimated cost, end the message asking for approval, and spend nothing until he says yes.
+Stand in model tests cost nothing and need no approval.
+
 **Never push a failing build (2026-11-13).** Check the real exit status of the type check and `npm run
 build` before every push to the session branch; Render deploys from it. A grep for "Compiled" is not a check.
 
