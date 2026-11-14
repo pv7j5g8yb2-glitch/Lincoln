@@ -7,11 +7,11 @@ import type { Section, Seg } from "@/lib/halasz";
 
 type Hover = { doc?: string; page: number; x: number; y: number } | null;
 
-type Props = { caseId: string; draftId: string; title: string; subtitle: string; sections: Section[]; facts: number; calls: number; notes: number; status: string; generic?: boolean; exports: ExportItem[] };
+type Props = { caseId: string; draftId: string; title: string; subtitle: string; sections: Section[]; facts: number; calls: number; notes: number; status: string; generic?: boolean; by?: string; exports: ExportItem[] };
 
 const PAGE_REF = /\((?:pp?\.|page)\s?(\d+)[^)]*\)|\[Attorney:[^\]]*\]/g;
 
-export default function DraftView({ caseId, title, subtitle, sections, facts, calls, notes, status, generic, exports }: Props) {
+export default function DraftView({ caseId, title, subtitle, sections, facts, calls, notes, status, generic, by, exports }: Props) {
   const [focus, setFocus] = useState(false);
   const [hover, setHover] = useState<Hover>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -71,7 +71,7 @@ export default function DraftView({ caseId, title, subtitle, sections, facts, ca
       <div className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-2">
         <div className="mr-auto min-w-0">
           <div className="truncate text-[14px] font-medium">{title}</div>
-          <div className="text-[12.5px] text-faint">{status === "approved" ? "Approved" : "Draft for review"} · {facts} sourced facts{calls ? ` · ${calls} judgement calls` : ""}{notes ? ` · ${notes} attorney notes` : ""}</div>
+          <div className="text-[12.5px] text-faint">{status === "approved" ? "Approved" : "Draft for review"} · {facts} sourced facts{calls ? ` · ${calls} judgement calls` : ""}{notes ? ` · ${notes} attorney notes` : ""}{by ? ` · ${by}` : ""}</div>
         </div>
         <button onClick={() => setFocus((v) => !v)} className={clsx("h-8 rounded-lg border px-3 text-[12.5px] font-medium transition", focus ? "border-ink bg-ink text-canvas" : "border-line bg-card hover:bg-panel")}>Review mode</button>
         <ExportMenu items={exports} label="Open" />

@@ -13,14 +13,14 @@ import { connectionsOf } from "@/lib/integrations";
 import { requireUser } from "@/lib/session";
 import { caseActivity, caseApprovals, caseById, caseDates, caseDrafts, caseMessages, criteria, documents, issues } from "@/lib/queries";
 import { ago, inDays, longDate } from "@/lib/format";
-import { llmConfigured } from "@/lib/llm";
+import { llmConfigured, modelName } from "@/lib/llm";
 import type { LetterContent } from "@/lib/letter";
 import { recordAccess } from "@/lib/access";
 
 const DOC_STATUS: Record<string, string> = { ok: "Usable", weak: "Low weight", excluded: "Excluded", draft: "Unsigned draft", duplicate: "Duplicate", superseded: "Superseded", needs_translation: "Translation required" };
 const GRADES = ["Excluded", "In the file", "Relevant", "Supports the fact", "Meets the standard", "Approved by attorney"];
 const REC: Record<string, string> = { claim: "Claim", more: "More evidence required", no: "Do not claim", met: "Met", partial: "Partial", missing: "Missing" };
-const KIND: Record<string, string> = { date: "Date", conflict: "Conflict", missing: "Missing", risk: "Risk" };
+const KIND: Record<string, string> = { date: "Date", conflict: "Conflict", missing: "Missing", risk: "Risk", bar: "Bar" };
 const pageLink = "text-muted underline decoration-line underline-offset-4 transition hover:text-ink hover:decoration-ink";
 
 export default async function CasePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; draft?: string }> }) {
@@ -32,7 +32,10 @@ export default async function CasePage({ params, searchParams }: { params: Promi
   await recordAccess(firm.id, user.id, "case_viewed", c.id, `Case of ${c.client}`);
   const docs = documents(firm.id, id);
   const iss = issues(firm.id, id);
-  const open = iss.filter((i) => i.status === "open");
+  const openAll = iss.filter((i) => i.status === "open");
+  // Low severity items stay folded so the list holds what matters.
+  const open = openAll.filter((i) => i.severity !== "low");
+  const minor = openAll.filter((i) => i.severity === "low");
   const resolved = iss.filter((i) => i.status !== "open");
   const drafts = caseDrafts(firm.id, id);
   const msgs = caseMessages(firm.id, id);
@@ -99,7 +102,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
         ))}
       </div>
 
-      {tab === "overview" && (open.length + resolved.length + dates.length === 0 ? (
+      {tab === "overview" && (openAll.length + resolved.length + dates.length === 0 ? (
         <p className="text-[13px] text-faint">{c.pages > 0 ? "Nothing open" : "No client file yet"}</p>
       ) : (
         <div className="grid gap-12 lg:grid-cols-[1.6fr_1fr]">
@@ -122,6 +125,14 @@ export default async function CasePage({ params, searchParams }: { params: Promi
                   </li>
                 ))}
               </ul>
+            )}
+            {minor.length > 0 && (
+              <details className="mt-3 text-[13px]">
+                <summary className="cursor-pointer text-muted transition hover:text-ink">{minor.length} minor</summary>
+                <ul className="mt-2 border-t border-line">
+                  {minor.map((i) => <li key={i.id} className="border-b border-line py-2.5"><div className="text-[13px]">{i.title}</div><div className="text-[12px] text-muted">{i.detail}</div></li>)}
+                </ul>
+              </details>
             )}
             {resolved.length > 0 && (
               <details className="mt-3 text-[13px]">
@@ -235,7 +246,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
 
       {tab === "drafts" && (() => {
         const dr = drafts.find((x) => x.id === draft) ?? drafts[0];
-        const L = dr ? (JSON.parse(dr.content) as LetterContent & { generic?: boolean; error?: string }) : null;
+        const L = dr ? (JSON.parse(dr.content) as LetterContent & { generic?: boolean; error?: string; model?: string | null }) : null;
         const decisions = pending.find((a) => a.kind === "decisions");
         return (
           <div>
@@ -257,7 +268,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
             ) : dr.status === "failed" ? (
               <p className="text-[13px] text-risk">The draft could not be produced. {L.error}</p>
             ) : (
-              <DraftView caseId={id} draftId={dr.id} title={dr.title} subtitle={`${c.type_code} · ${c.client}${c.counterpart ? ` · ${c.counterpart}` : ""}`} sections={L.sections} facts={L.facts} calls={L.calls} notes={L.notes} status={dr.status} generic={Boolean(L.generic)} exports={exportItems(firm.id, user.id, "draft", dr.id)} />
+              <DraftView caseId={id} draftId={dr.id} title={dr.title} subtitle={`${c.type_code} · ${c.client}${c.counterpart ? ` · ${c.counterpart}` : ""}`} sections={L.sections} facts={L.facts} calls={L.calls} notes={L.notes} status={dr.status} generic={Boolean(L.generic)} by={L.model ? modelName(L.model) : undefined} exports={exportItems(firm.id, user.id, "draft", dr.id)} />
             )}
           </div>
         );

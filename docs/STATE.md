@@ -255,3 +255,21 @@ from the repo the same day. History is in git up to commit `341cf65`.
 2. Parent or guardian conversation about ownership.
 3. Find one immigration lawyer willing to review outputs.
 4. Decide the name after lawyers have reacted to something real.
+
+## Built 2026-11-14: checks from the Reddit threads (kept light, Donna principle)
+* Date rules in code (`lincoln/src/lib/rules.ts`, tests in `lincoln/tests`, `npm test`): passport expired or
+  expiring before the requested period, authorised stay ended (days counted, 3 and 10 year bar warning) or
+  ending within 90 days, H-1B six year limit. The reading only tags each date's kind; nothing is counted by
+  the model. Rules rerun daily, and a rule the attorney resolved is not raised again.
+* Second reading after every file read: one text only call that looks only for bars, missing items and
+  conflicts the first read missed, at most 6, "Bar" issues shown first when high.
+* Every cited sentence in a draft is checked against the page it cites; a sentence the page does not support
+  gets "[Attorney: not shown on p. N]" or "[Attorney: p. N says otherwise: ...]". Pages not in the file are
+  caught without the model.
+* Every model call is recorded in a `usage` table: firm, case, purpose, the model that actually answered
+  (fallbacks included), tokens, cost. Gives the cost per case for the pricing decision. Drafts show the model.
+* Case page folds low severity issues into "N minor". Privacy page names Anthropic, Render and Resend and says
+  plainly that no zero retention agreement is signed yet.
+* Tested with a stand in model only, not live Opus yet. The real cost per case is unknown until a live run;
+  the `usage` table will show it.
+

@@ -1,7 +1,7 @@
 import { db, uid } from "./db";
-import { chat, llmConfigured, parseJson } from "./llm";
+import { chat, forCase, llmConfigured, parseJson } from "./llm";
 import { LIBRARY } from "./library";
-import { UNNAMED, draftForCase, processCase } from "./intake";
+import { UNNAMED, applyDateRules, draftForCase, processCase } from "./intake";
 import { fileKind } from "./pdf";
 import { addEvent, ensurePush, fetchNew, send, settingsOf, teamsPost, type Connection, type Inbound } from "./integrations";
 
@@ -46,7 +46,11 @@ export async function checkMailbox(c: Connection) {
   }
 }
 
-export async function handleInbound(firmId: string, mail: Inbound, mailboxId: string | null) {
+export function handleInbound(firmId: string, mail: Inbound, mailboxId: string | null) {
+  return forCase({ firmId, purpose: "mail" }, () => inbound(firmId, mail, mailboxId));
+}
+
+async function inbound(firmId: string, mail: Inbound, mailboxId: string | null) {
   const d = db();
   if (isNoise(mail)) return;
   const firm = d.prepare("SELECT name FROM firms WHERE id = ?").get(firmId) as { name: string };
@@ -177,7 +181,11 @@ async function handleInstruction(firmId: string, mail: Inbound, msgId: string, m
  * Works out what an instruction asks for and opens the case at once. The slower part (reading files,
  * drafting) is returned as a promise, so a person typing into Lincoln is taken to the case straight away.
  */
-export async function takeInstruction(firmId: string, member: Member, input: { text: string; subject?: string; from?: string; fromName?: string; files: { name: string; data: Uint8Array }[]; via: "email" | "app" }, open?: OpenCase[]): Promise<{ caseId: string | null; summary: string; work: Promise<void> }> {
+export function takeInstruction(firmId: string, member: Member, input: { text: string; subject?: string; from?: string; fromName?: string; files: { name: string; data: Uint8Array }[]; via: "email" | "app" }, open?: OpenCase[]): Promise<{ caseId: string | null; summary: string; work: Promise<void> }> {
+  return forCase({ firmId, purpose: "instruction" }, () => instruction(firmId, member, input, open));
+}
+
+async function instruction(firmId: string, member: Member, input: { text: string; subject?: string; from?: string; fromName?: string; files: { name: string; data: Uint8Array }[]; via: "email" | "app" }, open?: OpenCase[]): Promise<{ caseId: string | null; summary: string; work: Promise<void> }> {
   const d = db();
   open ??= d.prepare("SELECT id, ref, client, client_email, counterpart, type_code FROM cases WHERE firm_id = ? ORDER BY opened_at DESC LIMIT 200").all(firmId) as OpenCase[];
   const names = input.files.map((f) => f.name).join(", ") || "none";
@@ -279,8 +287,16 @@ export async function tick() {
   d.prepare("DELETE FROM login_challenges WHERE expires_at < ?").run(now());
   d.prepare("DELETE FROM password_resets WHERE expires_at < ?").run(new Date(Date.now() - 24 * 3600_000).toISOString());
 
-  // Deadlines within 14 days become an open issue once.
-  const soon = d.prepare("SELECT t.id, t.firm_id, t.case_id, t.label, t.date FROM dates t JOIN firms f ON f.id = t.firm_id WHERE f.demo = 0 AND t.date >= date('now') AND t.date <= date('now', '+14 days')").all() as { id: string; firm_id: string; case_id: string; label: string; date: string }[];
+  // Date rules are recounted once a day, so days left and days out of status stay current.
+  const today = new Date().toISOString().slice(0, 10);
+  if (!d.prepare("SELECT 1 FROM kv WHERE firm_id = '_system' AND key = ?").get(`rules:${today}`)) {
+    d.prepare("INSERT OR IGNORE INTO kv (firm_id, key, value) VALUES ('_system', ?, '1')").run(`rules:${today}`);
+    const withDates = d.prepare("SELECT DISTINCT t.firm_id, t.case_id FROM dates t JOIN firms f ON f.id = t.firm_id WHERE f.demo = 0 AND t.kind IN ('passport_expires', 'stay_ends', 'period_ends', 'h1b_first_start')").all() as { firm_id: string; case_id: string }[];
+    for (const x of withDates) applyDateRules(x.firm_id, x.case_id, today);
+  }
+
+  // Deadlines within 14 days become an open issue once (the end of a stay has its own rule).
+  const soon = d.prepare("SELECT t.id, t.firm_id, t.case_id, t.label, t.date FROM dates t JOIN firms f ON f.id = t.firm_id WHERE f.demo = 0 AND t.kind != 'stay_ends' AND t.date >= date('now') AND t.date <= date('now', '+14 days')").all() as { id: string; firm_id: string; case_id: string; label: string; date: string }[];
   for (const t of soon) {
     const key = `due:${t.id}`;
     if (d.prepare("SELECT 1 FROM kv WHERE firm_id = ? AND key = ?").get(t.firm_id, key)) continue;

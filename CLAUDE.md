@@ -84,6 +84,11 @@ menu as a glass sheet; no top bar or slide out menu. The app follows the device'
 A case is opened by prompting Lincoln (one box: describe it or attach files), never by filling a form; the
 normal path is Lincoln opening cases from mail by itself. Keep screens light: hide empty sections.
 
+**Lincoln is Donna, not a dashboard (Ismael, 2026-11-14).** Think of Lincoln as an organised personal assistant,
+like Donna to Harvey Specter in Suits: it does everything and comes to the lawyer only for a crucial approval, a
+question or missing context. Do not make it heavy: no piles of features, checks or flags on screen. Checks run
+quietly and surface only what matters; minor items stay folded.
+
 **Never push a failing build (2026-11-13).** Check the real exit status of the type check and `npm run
 build` before every push to the session branch; Render deploys from it. A grep for "Compiled" is not a check.
 

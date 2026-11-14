@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { db, uid } from "@/lib/db";
 import { apiUser, viewer } from "@/lib/session";
 import { caseById, caseDates, caseDrafts, cases, chatHistory, criteria, documents, issues, pendingApprovals, upcomingDates } from "@/lib/queries";
-import { llmConfigured, runAgent, type Tool } from "@/lib/llm";
+import { forCase, llmConfigured, runAgent, type Tool } from "@/lib/llm";
 import { LIBRARY } from "@/lib/library";
 import { draftForCase } from "@/lib/intake";
 import { firmMailbox } from "@/lib/integrations";
@@ -128,7 +128,7 @@ ${overview}`;
   const history = chatHistory(F, s.user.id, scope).slice(-16).map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
   const ins = d.prepare("INSERT INTO chat (id, firm_id, user_id, role, content, at, case_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
   try {
-    const reply = await runAgent(system, [...history, { role: "user", content: text }], TOOLS, async (name, input) => `<data source="${name}">\n${(await handle(name, input)).replace(/<\/data>/gi, "")}\n</data>`);
+    const reply = await forCase({ firmId: F, caseId: scope, purpose: "assistant" }, () => runAgent(system, [...history, { role: "user", content: text }], TOOLS, async (name, input) => `<data source="${name}">\n${(await handle(name, input)).replace(/<\/data>/gi, "")}\n</data>`));
     ins.run(uid(), F, s.user.id, "user", text, new Date().toISOString(), scope);
     ins.run(uid(), F, s.user.id, "assistant", reply, new Date(Date.now() + 1).toISOString(), scope);
     return NextResponse.json({ reply, changed: changed.any });
