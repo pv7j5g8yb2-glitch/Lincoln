@@ -76,12 +76,12 @@ agency.
 | Reading and checking | Reads every page, lists documents, conflicts, missing items, dates, bars; dates counted in code. Works on the stand in model; real accuracy untested. |
 | Strategy | Grades evidence against the requirements and flags weak points. Decisions stay with the attorney. Works in the sample case only as a structured set of decisions. |
 | Drafting | Any letter or memo from the file, every fact cited to its page and checked against it. Quality on real Opus untested. |
-| Forms | Not built. Biggest gap. |
-| Exhibit packet | Exhibit index to Excel. No assembled PDF packet with tabs yet. |
+| Forms | Fills each official fillable USCIS PDF from the file, every answer with its source, blanks left for the attorney, editable; download is the real form. Needs the blank forms added once to `lincoln/forms` (USCIS blocks automated downloads). |
+| Exhibit packet | One PDF: cover letter, filled forms, letters, exhibit index, each exhibit behind a tab page. Final review item lists what is in it and what needs the attorney before filing. |
 | Signatures | Not done, by law. Sending forms for e-signature (DocuSign) is planned. |
 | Filing | Not done: no USCIS filing API, and the attorney must submit. Lincoln can take it to the last click. |
-| After filing | Reads receipts and notices that arrive by mail, sets deadlines. No USCIS status tracking yet. |
-| RFE and NOID | Reads the notice and sets the deadline; drafts with the general drafting. No dedicated response builder. |
+| After filing | Reads notices that arrive by mail: records the receipt number, sets printed deadlines, moves the stage on approval or denial. No USCIS status tracking yet. |
+| RFE and NOID | Reads the notice, sets the printed deadline, lists each point and drafts the full response for review. |
 | Court | Drafting support only. No EOIR filing formats. |
 | Billing | Not built. |
 

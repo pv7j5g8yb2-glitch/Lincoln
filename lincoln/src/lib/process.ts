@@ -7,4 +7,4 @@ export const PROCESS = `How immigration matters run at a US firm:
 - Family: I-130, then I-485 in the US or consular processing through the National Visa Center; conditional residence removed with the I-751.
 - Citizenship: N-400, biometrics, interview with the civics and English test, oath.
 - Court: Notice to Appear, master calendar hearings, individual hearing, appeal to the BIA within 30 days, petition for review in a federal court of appeals within 30 days.
-- Lincoln prepares and checks; attorneys decide, sign and file. Lincoln does not fill USCIS forms, assemble the filing packet, collect signatures, file or track USCIS case status yet.`;
+- Lincoln prepares and checks; attorneys decide, sign and file. Lincoln fills the official forms, assembles the filing packet and drafts RFE and NOID responses; it does not collect signatures, file, or track USCIS case status yet.`;

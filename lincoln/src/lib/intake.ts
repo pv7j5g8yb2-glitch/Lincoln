@@ -21,6 +21,7 @@ type Reading = {
   client_email: { subject: string; body: string } | null;
   unreadable?: { page: number; what: string; reason: string }[];
   identity?: { client: string | null; petitioner: string | null; type_code: string | null; type_name?: string | null };
+  notice?: { kind: string; form?: string | null; receipt_number?: string | null; notice_date?: string | null; due?: string | null; points?: string[]; page?: number } | null;
 };
 
 /** A case opened from files alone carries this name until the documents say who the client is. */
@@ -53,7 +54,8 @@ Read every page. Reply with one JSON object and nothing else, in this shape:
  "facts": [{"fact": "one checkable fact: a name, title, figure, date, number, award, publication, salary, status or signature", "page": 1}],
  "requirements": [{"name": "a legal or filing requirement for this case type", "citation": "", "status": "met | partial | missing", "summary": "what the file shows", "gap": "what is still needed", "evidence": [{"page": 1, "grade": 3, "note": ""}]}],
  "client_email": {"subject": "", "body": "an email from the responsible attorney to the client asking for what is missing, written to the email rules below; or null if nothing is missing"},
- "unreadable": [{"page": 1, "what": "which document or part", "reason": "blurred | glare | cut off | too small | handwriting | other"}]
+ "unreadable": [{"page": 1, "what": "which document or part", "reason": "blurred | glare | cut off | too small | handwriting | other"}],
+ "notice": {"kind": "rfe | noid | noir | receipt | biometrics | interview | approval | denial | transfer | other", "form": "the form the notice is about, e.g. I-129", "receipt_number": "exactly as printed, or null", "notice_date": "YYYY-MM-DD or null", "due": "the response deadline exactly as printed, YYYY-MM-DD, or null", "points": ["for an RFE, NOID or NOIR: each thing the agency asks for, one per item, in its order"], "page": 1} or null if the new pages hold no notice from USCIS, the Department of Labor, the State Department or the immigration court
 }
 ${c.fromClient ? "The file was sent by the client. If any page is unreadable, the client email must ask for a clearer photo or scan of exactly those documents, with one line on how (flat surface, good light, the whole page in frame)." : "The file was added by firm staff. Do not mention unreadable pages in the client email; they are reported to the staff separately."}
 Dates: only those that govern the case (status and document expiries, deadlines, employment start, filing targets, appointments), at most 10. Not birth dates or the dates of ordinary documents. Date kinds: "passport_expires" for the passport expiry, "stay_ends" for the I-94 admit until date, "period_ends" for the end of the period requested or offered, "h1b_first_start" for the start of the person's first H-1B status; anything else "other". Do not calculate durations, deadlines or limits from the dates; Lincoln calculates those.
@@ -221,6 +223,8 @@ async function readCase(firmId: string, caseId: string, files: Uint8Array[], opt
     applyDateRules(firmId, caseId);
     await forCase({ firmId, caseId, purpose: "check" }, () => secondReading(firmId, caseId, `${c.type_code} ${c.type_name}`));
     d.prepare("UPDATE cases SET processing = 0 WHERE firm_id = ? AND id = ?").run(firmId, caseId);
+    // A notice from an agency is acted on straight away: deadline, receipt number, response.
+    if (r.notice) await actOnNotice(firmId, caseId, r.notice).catch(() => undefined);
     // With the file read, the forms the case needs are filled from it, in the background.
     void import("./fill").then((m) => m.prepareForms(firmId, caseId)).catch(() => undefined);
   } catch (e) {
@@ -423,3 +427,42 @@ Reply with one JSON object and nothing else:
   }
   return { paras: out, checked: claims.length, failed: verdict.size };
 }
+
+const NOTICES: Record<string, string> = { rfe: "Request for Evidence", noid: "Notice of Intent to Deny", noir: "Notice of Intent to Revoke" };
+
+/**
+ * What a notice from an agency sets in motion. An RFE, NOID or NOIR gets its deadline as printed and a full
+ * draft response for the attorney; a receipt number is recorded; an approval or denial moves the case on.
+ */
+async function actOnNotice(firmId: string, caseId: string, n: NonNullable<Reading["notice"]>) {
+  const d = db();
+  const kind = String(n.kind ?? "").toLowerCase();
+  const iso = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
+  const where = Number.isInteger(n.page) ? `Notice, p. ${n.page}` : "Notice";
+  const c = d.prepare("SELECT client, attorney_id, receipt FROM cases WHERE firm_id = ? AND id = ?").get(firmId, caseId) as { client: string; attorney_id: string; receipt: string | null };
+  const receipt = String(n.receipt_number ?? "").replace(/\s/g, "").toUpperCase();
+  if (/^[A-Z]{3}\d{10}$/.test(receipt) && !c.receipt) d.prepare("UPDATE cases SET receipt = ? WHERE firm_id = ? AND id = ?").run(receipt, firmId, caseId);
+
+  if (NOTICES[kind]) {
+    const label = NOTICES[kind];
+    const due = iso(n.due);
+    if (due) d.prepare("INSERT INTO dates (id, firm_id, case_id, label, date, kind, source) VALUES (?, ?, ?, ?, ?, 'deadline', ?)").run(uid(), firmId, caseId, `${label} response due`, due, where);
+    d.prepare("UPDATE cases SET stage = 'Response', state = 'needs_you', waiting_on = ? WHERE firm_id = ? AND id = ?").run(`${label}: response`, firmId, caseId);
+    const points = (n.points ?? []).filter((x) => typeof x === "string" && x.trim()).slice(0, 20);
+    const request = `Response to the ${label}${n.form ? ` on Form ${n.form}` : ""}${iso(n.notice_date) ? ` dated ${iso(n.notice_date)}` : ""}. Answer every point the notice raises, in its order, with the evidence in the file cited to its page, and say plainly what evidence is still needed and from whom.${points.length ? ` The points: ${points.map((p, i) => `${i + 1}. ${p}`).join(" ")}` : ""}`;
+    const draftId = uid();
+    d.prepare("INSERT INTO drafts (id, firm_id, case_id, title, kind, status, version, content, updated_at) VALUES (?, ?, ?, ?, 'generic', 'drafting', 1, ?, ?)").run(draftId, firmId, caseId, `${label} response`, JSON.stringify({ sections: [], facts: 0, calls: 0, notes: 0, claimed: [], generic: true }), new Date().toISOString());
+    log(firmId, caseId, "date", `Read the ${label}${due ? `: response due ${due}` : ""}. Drafting the response.`, 20);
+    await draftForCase(firmId, caseId, draftId, request, { assignee: c.attorney_id, due });
+  } else if (kind === "approval") {
+    d.prepare("UPDATE cases SET stage = 'Approved' WHERE firm_id = ? AND id = ?").run(firmId, caseId);
+    log(firmId, caseId, "file", `Approval notice filed${n.form ? ` for Form ${n.form}` : ""}.`, 5);
+  } else if (kind === "denial") {
+    d.prepare("UPDATE cases SET stage = 'Denied', state = 'needs_you' WHERE firm_id = ? AND id = ?").run(firmId, caseId);
+    d.prepare("INSERT INTO issues (id, firm_id, case_id, kind, severity, title, detail, sources, status, created_at) VALUES (?, ?, ?, 'date', 'high', ?, ?, ?, 'open', ?)").run(uid(), firmId, caseId, `Denial${n.form ? ` of Form ${n.form}` : ""}: motion or appeal`, "A motion or appeal on Form I-290B is generally due within 30 days of the decision, or 33 days if it was mailed. The notice states the exact deadline and whether an appeal is available.", JSON.stringify(Number.isInteger(n.page) ? [n.page] : []), new Date().toISOString());
+  } else if (kind === "receipt") {
+    d.prepare("UPDATE cases SET stage = CASE WHEN stage IN ('Intake', 'Evidence', 'Strategy', 'Drafting', 'Review', 'Ready to file') THEN 'Filed' ELSE stage END WHERE firm_id = ? AND id = ?").run(firmId, caseId);
+    if (receipt) log(firmId, caseId, "file", `Receipt notice filed: ${receipt}.`, 3);
+  }
+}
+

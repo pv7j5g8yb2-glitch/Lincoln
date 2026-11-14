@@ -305,4 +305,9 @@ from the repo the same day. History is in git up to commit `341cf65`.
   step, and what start to finish needs (forms, filing packet, final review page, e-signature, status tracking, RFE
   builder, a live accuracy test graded by an immigration lawyer). A short version is in Lincoln's prompts
   (`lincoln/src/lib/process.ts`).
+* 2026-11-14 (later): built forms (`lincoln/src/lib/forms.ts`, `fill.ts`), the filing packet and final review (`packet.ts`,
+  Review item "Filing packet"), and RFE/NOID/NOIR handling (deadline as printed, receipt number, full draft response).
+  Firm address/phone/email and attorney bar number in Settings feed the forms. Tested on a USCIS shaped test form
+  with the stand in model. Blank official forms must be downloaded by a person into `lincoln/forms` (USCIS blocks
+  automated downloads; we do not get round it).
 

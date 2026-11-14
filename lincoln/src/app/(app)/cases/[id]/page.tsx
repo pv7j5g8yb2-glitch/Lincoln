@@ -62,7 +62,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
         <div className="min-w-0">
           <h1 className="serif flex items-center gap-2 text-[27px] font-medium leading-tight">{c.sensitive ? <Lock size={17} className="text-faint" /> : null}{c.client}</h1>
           <p className="mt-1.5 text-[13px] text-muted">
-            {c.type_code}{c.counterpart ? ` · ${c.counterpart}` : ""} · {c.stage}{c.sensitive ? " · Restricted" : ""}
+            {c.type_code}{c.counterpart ? ` · ${c.counterpart}` : ""} · {c.stage}{c.receipt ? ` · ${c.receipt}` : ""}{c.sensitive ? " · Restricted" : ""}
           </p>
         </div>
         <div className="flex items-center gap-3">
