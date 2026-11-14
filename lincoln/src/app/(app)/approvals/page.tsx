@@ -6,6 +6,7 @@ import { Empty, PageHead } from "@/components/ui";
 import { requireUser } from "@/lib/session";
 import { approvalById, decidedApprovals, messageById, pendingApprovals } from "@/lib/queries";
 import { ago, inDays } from "@/lib/format";
+import { packetPlan } from "@/lib/packet";
 
 export default async function Review({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
   const { firm, viewer } = await requireUser();
@@ -14,7 +15,7 @@ export default async function Review({ searchParams }: { searchParams: Promise<{
   const decided = decidedApprovals(firm.id, viewer);
   const picked = id ? approvalById(firm.id, id, viewer) : undefined;
   const sel = picked && picked.status === "pending" ? picked : pending[0];
-  const payload = sel ? JSON.parse(sel.payload) : null;
+  const payload = sel ? (sel.kind === "packet" ? packetPlan(firm.id, sel.case_id) : JSON.parse(sel.payload)) : null;
   const message = payload?.messageId ? messageById(firm.id, payload.messageId) : null;
 
   return (

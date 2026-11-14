@@ -251,9 +251,10 @@ export default async function CasePage({ params, searchParams }: { params: Promi
 
       {tab === "forms" && (
         <div>
-          {!firm.demo && formsFor(c.type_code).length > 0 && (
-            <form action={refillForms.bind(null, id)} className="mb-4 flex justify-end"><button className={btn.ghost}>Fill again from the file</button></form>
-          )}
+          <div className="mb-4 flex justify-end gap-2">
+            {!firm.demo && formsFor(c.type_code).length > 0 && <form action={refillForms.bind(null, id)}><button className={btn.ghost}>Fill again from the file</button></form>}
+            {forms.some((f) => f.status === "ready") && <a href={`/api/packet?case=${id}`} target="_blank" className={btn.secondary}>Filing packet</a>}
+          </div>
           <ul className="border-t border-line">
             {forms.map((f) => {
               const answers = JSON.parse(f.answers) as { name: string; label: string; value: string; source: string }[];

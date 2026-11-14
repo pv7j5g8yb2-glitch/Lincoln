@@ -57,6 +57,14 @@ async function run(firmId: string, caseId: string, opts: { refill?: boolean; onl
     }
   }
   if (done.length) log(firmId, caseId, `Filled ${done.join(", ")} from the file. Fields the file does not support are left blank.`, done.length * 45);
+  // With the forms filled, the packet goes to the attorney for one final review, once.
+  const ready = d.prepare("SELECT COUNT(*) AS n FROM forms WHERE firm_id = ? AND case_id = ? AND status = 'ready'").get(firmId, caseId) as { n: number };
+  const open = d.prepare("SELECT 1 FROM approvals WHERE firm_id = ? AND case_id = ? AND kind = 'packet' AND status = 'pending'").get(firmId, caseId);
+  if (ready.n > 0 && !open) {
+    const who = d.prepare("SELECT attorney_id FROM cases WHERE id = ?").get(caseId) as { attorney_id: string };
+    d.prepare("INSERT INTO approvals (id, firm_id, case_id, kind, title, brief, payload, status, assignee_id, created_at) VALUES (?, ?, ?, 'packet', ?, ?, '{}', 'pending', ?, ?)").run(uid(), firmId, caseId, `Filing packet: ${c.client}`, "Cover letter, forms, letters and exhibits in filing order.", who.attorney_id, new Date().toISOString());
+    d.prepare("UPDATE cases SET state = 'needs_you' WHERE id = ?").run(caseId);
+  }
 }
 
 async function answer(code: string, details: string, record: string, fields: Field[]): Promise<Answer[]> {

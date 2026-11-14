@@ -134,6 +134,38 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message }: Pr
     );
   }
 
+  if (kind === "packet") {
+    const plan = payload as { forms: { code: string; title: string; answered: number; fields: number; ready: boolean }[]; letters: { title: string; notes: number }[]; exhibits: { n: number; title: string; pages: number }[]; issues: string[] };
+    const before = [
+      ...plan.issues,
+      ...plan.letters.filter((l) => l.notes > 0).map((l) => `${l.title}: ${l.notes} attorney ${l.notes === 1 ? "note" : "notes"} left`),
+      ...plan.forms.filter((f) => !f.ready).map((f) => `Form ${f.code} not filled`),
+    ];
+    const row = "flex items-baseline gap-3 border-b border-line py-2.5 text-[13px]";
+    return (
+      <div>
+        {before.length > 0 && (
+          <div className="mb-6">
+            <h3 className="mb-1 text-[13px] font-medium">Before filing</h3>
+            <ul className="border-t border-line">{before.map((b, i) => <li key={i} className={row}><span className="h-1.5 w-1.5 shrink-0 translate-y-[-2px] rounded-full bg-risk" />{b}</li>)}</ul>
+          </div>
+        )}
+        <h3 className="mb-1 text-[13px] font-medium">Contents</h3>
+        <ul className="border-t border-line">
+          <li className={row}><span className="flex-1">Cover letter</span></li>
+          {plan.forms.filter((f) => f.ready).map((f) => <li key={f.code} className={row}><span className="w-[64px] shrink-0 font-medium">{f.code}</span><span className="min-w-0 flex-1 truncate">{f.title}</span><span className="shrink-0 text-[12px] text-faint">{f.answered} of {f.fields}</span></li>)}
+          {plan.letters.map((l, i) => <li key={i} className={row}><span className="min-w-0 flex-1 truncate">{l.title}</span></li>)}
+          {plan.exhibits.length > 0 && <li className={row}><span className="flex-1">Exhibits 1 to {plan.exhibits.length}, with an index</span><span className="shrink-0 text-[12px] text-faint">{plan.exhibits.reduce((n, e) => n + e.pages, 0)} pages</span></li>}
+        </ul>
+        <a href={`/api/packet?case=${caseId}`} target="_blank" className={clsx(box, "mt-5 flex items-center gap-3 px-4 py-4 transition hover:border-ink")}>
+          <FileText size={18} className="text-muted" />
+          <span className="flex-1 text-[14px] font-medium">Open packet</span>
+        </a>
+        {footer("Approve for filing")}
+      </div>
+    );
+  }
+
   if (kind === "draft_review") {
     return (
       <div>

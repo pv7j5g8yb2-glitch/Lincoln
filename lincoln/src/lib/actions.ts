@@ -247,6 +247,9 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
       d.prepare("UPDATE drafts SET status = 'approved', updated_at = ? WHERE firm_id = ? AND id = ?").run(now(), F, payload.draftId);
       log(F, a.case_id, user.name, "decide", `Approved: ${a.title}.`);
       if (firm.demo) d.prepare("UPDATE cases SET summary = 'Support letter approved. The consultation and the passport renewal are still open.', waiting_on = 'Peer group: advisory opinion' WHERE firm_id = ? AND id = ?").run(F, a.case_id);
+    } else if (a.kind === "packet" && decision === "approved") {
+      log(F, a.case_id, user.name, "decide", "Approved the filing packet.");
+      d.prepare("UPDATE cases SET stage = 'Ready to file', waiting_on = ? WHERE firm_id = ? AND id = ?").run(`${user.name}: file the packet`, F, a.case_id);
     } else if (decision === "rejected") {
       log(F, a.case_id, user.name, "decide", `Sent back: ${a.title}.`);
     }
