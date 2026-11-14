@@ -44,10 +44,10 @@ export function dateRules(dates: DateIn[], today: string): RuleIssue[] {
   if (stay) {
     const n = days(stay.date, today);
     if (n > 0) {
-      out.push({ rule: "stay_ended", severity: "high", title: `Authorised stay ended ${n} ${n === 1 ? "day" : "days"} ago`, detail: `The I-94 ended on ${longDate(stay.date)}. If no timely filing extended the stay, unlawful presence may have accrued since ${longDate(addDays(stay.date, 1))}: ${n} ${n === 1 ? "day" : "days"}. More than 180 days triggers the 3 year bar and a year or more the 10 year bar on departure (INA 212(a)(9)(B)).`, pages: pageOf(stay.source) });
+      out.push({ rule: "stay_ended", severity: "high", title: `Authorized stay ended ${n} ${n === 1 ? "day" : "days"} ago`, detail: `The I-94 ended on ${longDate(stay.date)}. If no timely filing extended the stay, unlawful presence may have accrued since ${longDate(addDays(stay.date, 1))}: ${n} ${n === 1 ? "day" : "days"}. More than 180 days triggers the 3 year bar and a year or more the 10 year bar on departure (INA 212(a)(9)(B)).`, pages: pageOf(stay.source) });
     } else if (n >= -90) {
       const left = -n;
-      out.push({ rule: "stay_ending", severity: left <= 30 ? "high" : "medium", title: left === 0 ? "Authorised stay ends today" : `Authorised stay ends in ${left} ${left === 1 ? "day" : "days"}`, detail: `The I-94 ends on ${longDate(stay.date)}. An extension or change of status is timely only if filed before then.`, pages: pageOf(stay.source) });
+      out.push({ rule: "stay_ending", severity: left <= 30 ? "high" : "medium", title: left === 0 ? "Authorized stay ends today" : `Authorized stay ends in ${left} ${left === 1 ? "day" : "days"}`, detail: `The I-94 ends on ${longDate(stay.date)}. An extension or change of status is timely only if filed before then.`, pages: pageOf(stay.source) });
     }
   }
 

@@ -33,7 +33,8 @@ These are hard rules. They come from repeated correction, not preference.
 **Never use dashes.** No em dashes, no en dashes, no dashes as punctuation of any kind. Use a
 comma, a full stop, or restructure the sentence. This applies to every message, draft and rewrite.
 
-**Irish English, not American.** Enquiry not inquiry. Realise, organise, apologise. Programme,
+**Irish English, not American** (in messages to Ismael and in docs written for him; Lincoln itself writes American
+English, because its users are US lawyers and its drafts go to USCIS). Enquiry not inquiry. Realise, organise, apologise. Programme,
 centre, colour. "At the weekend", not "on the weekend".
 
 **Sound like a person, not a salesperson.** Plain sentences. No LinkedIn register, no "circling

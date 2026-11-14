@@ -17,7 +17,7 @@ export default async function SignUp({ searchParams }: { searchParams: Promise<{
       <SocialButtons />
       <form action={signUp} className="flex flex-col gap-4">
         <label className="block"><span className={fieldLabel}>Full name</span><input name="name" required maxLength={100} autoComplete="name" placeholder="Sam Smith" className={field} /></label>
-        <label className="block"><span className={fieldLabel}>Firm</span><input name="firm" required maxLength={120} autoComplete="organization" placeholder="Name" className={field} /></label>
+        <label className="block"><span className={fieldLabel}>Firm</span><input name="firm" required maxLength={120} autoComplete="organization" placeholder="Firm name" className={field} /></label>
         <label className="block"><span className={fieldLabel}>Email address</span><input name="email" type="email" required autoComplete="email" placeholder="you@example.com" className={field} /></label>
         <label className="block"><span className={fieldLabel}>Password</span><PasswordInput /></label>
         <button className={`${submit} mt-1`}>Continue</button>

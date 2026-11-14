@@ -33,7 +33,7 @@ Rules:
 - Never choose silently between conflicting facts: report the conflict with both pages.
 - Cite regulations and forms only when you are certain of them; otherwise leave the citation empty.
 - Pages may be scans or phone photos. If any part of a page that matters to the case cannot be read with certainty (blur, glare, shadow, cut off edges, low resolution, handwriting that is not legible), do not guess and do not use anything from that part: list it under "unreadable". A wrong name, date or number in an immigration filing is worse than a missing one.
-- Write tersely and formally, as a senior paralegal would in a case note. No greetings, no filler, no first person.
+- Write tersely and formally, as a senior paralegal would in a case note, in American English. No greetings, no filler, no first person.
 - Dates in YYYY-MM-DD.`;
 
 const instruction = (c: { client: string; type: string; firm: string; attorney: string; extra?: string; fromClient?: boolean }) => `${c.extra ?? ""}Case: ${c.client}. Case type: ${c.type}. Firm: ${c.firm}. Responsible attorney: ${c.attorney}.
@@ -329,7 +329,7 @@ ${caseRecord(firmId, caseId)}
 </record>
 
 Read the record a second time and check only three things. Report only what is not already listed under ISSUES, even in other words.
-1. Bars: anything that could make the person ineligible or inadmissible or end the case: time out of status or an overstay, a prior denial, refusal or removal, a cancelled visa, a finding of fraud or misrepresentation, an arrest or conviction, unauthorised work, a J-1 or J-2 stay that may carry the two year home residency requirement.
+1. Bars: anything that could make the person ineligible or inadmissible or end the case: time out of status or an overstay, a prior denial, refusal or removal, a canceled visa, a finding of fraud or misrepresentation, an arrest or conviction, unauthorized work, a J-1 or J-2 stay that may carry the two year home residency requirement.
 2. Missing: documents or evidence this case type needs that the file does not contain.
 3. Conflicts: the same fact (a name, date, title, salary, employer, figure) stated differently in two documents.
 Do not calculate durations, deadlines or limits. Report nothing rather than something weak: at most 6 items, and "high" only for what could end or seriously delay the case.

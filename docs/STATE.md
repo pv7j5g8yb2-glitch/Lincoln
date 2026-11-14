@@ -273,3 +273,27 @@ from the repo the same day. History is in git up to commit `341cf65`.
 * Tested with a stand in model only, not live Opus yet. The real cost per case is unknown until a live run;
   the `usage` table will show it.
 
+## Full review pass (2026-11-14, after "do not stop polishing")
+* Sample workspace made honest: removed everything Lincoln does not do yet (USCIS status checks, Visa Bulletin
+  reading, N-400 form filling and "filing checks", secure upload links, referee chasing, country conditions
+  research, weekly status checks, response plans). Haddad is now a document read with a flagged absence and a
+  client email; the RFE and I-751 events end in emails for approval.
+* Removed: Settings "Usage" tab (its "estimated time saved" came from minutes typed into the code, a made up
+  figure), the static Library page, "Filings and signatures" from Automation, helper legend on Help, empty
+  sections (Security activity, Access record, Home "For review", case overview and drafts placeholders), notes
+  under each row in the Inbox.
+* Added (small, essential): edit an email before approving it ("Discard" instead of "Return" for emails, and a
+  discarded email is marked so); resolve an issue from the case (a resolved date rule stays closed); file mail
+  Lincoln could not match to a case, from the Inbox; the case ask box is the same box as Home (attach files to
+  the case, dictation); page references in a case's chat open the page.
+* One message list for the Inbox and each case: a row opens to the full email; Lincoln's note shows only there.
+* Fixed: two files arriving for one case could write over each other's pages; reads of a case now queue and a
+  new file always goes after existing pages.
+* Lincoln writes American English (UI, prompts, demo), since users are US lawyers; messages to Ismael stay Irish.
+* The assistant's description of Lincoln now matches what it does (one reminder without approval, the checks).
+* Tested: every screen on desktop, phone, light and dark; mail in (unsorted and new case with a PDF), filing,
+  resolving, editing and approving, case chat, demo events and the strategy to letter flow; 17 of 17 security
+  tests; date rule tests. All with a stand in model, not live Opus.
+* Still needs Ismael: the company's legal name, address and contact email for the Privacy and Terms pages
+  (`lincoln/src/lib/company.ts` still has placeholders); the Anthropic key in Render for a live test.
+

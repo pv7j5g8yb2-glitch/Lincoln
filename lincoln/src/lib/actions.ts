@@ -227,10 +227,10 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
         const letter = buildHalaszLetter(answers);
         const draftId = uid();
         d.prepare("INSERT INTO drafts (id, firm_id, case_id, title, kind, status, version, content, updated_at) VALUES (?, ?, ?, 'Petition support letter', 'letter', 'for_review', 1, ?, ?)").run(draftId, F, a.case_id, JSON.stringify(letter), now());
-        log(F, a.case_id, "Lincoln", "draft", `Wrote the support letter from ${user.name.split(" ")[0]}'s decisions: ${letter.claimed.length} criteria argued, ${letter.facts} facts each linked to its page, ${letter.calls} judgement calls marked.`, 240);
+        log(F, a.case_id, "Lincoln", "draft", `Wrote the support letter from ${user.name.split(" ")[0]}'s decisions: ${letter.claimed.length} criteria argued, ${letter.facts} facts each linked to its page, ${letter.calls} judgment calls marked.`, 240);
         d.prepare("INSERT INTO approvals (id, firm_id, case_id, kind, title, brief, least_sure, if_wrong, payload, status, assignee_id, created_at, due) VALUES (?, ?, ?, 'draft_review', ?, ?, ?, ?, ?, 'pending', ?, ?, ?)").run(
           uid(), F, a.case_id, "Support letter for review",
-          `Drafted from ${qs.length} recorded decisions: ${letter.facts} sourced facts, ${letter.calls} judgement calls, ${letter.notes} attorney notes.`,
+          `Drafted from ${qs.length} recorded decisions: ${letter.facts} sourced facts, ${letter.calls} judgment calls, ${letter.notes} attorney notes.`,
           "The final merits paragraph: the one place where the argument is Lincoln's wording, not a fact from the file.",
           null,
           JSON.stringify({ draftId }), user.id, now(), day(3));

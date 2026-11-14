@@ -10,8 +10,14 @@ import { clearChat, startCase } from "@/lib/actions";
 type M = { role: string; content: string };
 
 /** Minimal rendering for model replies: paragraphs, bullet and numbered lines, bold. */
-function Rich({ text }: { text: string }) {
-  const links = (s: string, k: number) => s.split(/(\/cases\/[\w?=&-]+)/g).map((p, i) => (i % 2 ? <Link key={`${k}-${i}`} href={p} className="underline underline-offset-4">Open</Link> : <Fragment key={`${k}-${i}`}>{p}</Fragment>));
+function Rich({ text, caseId }: { text: string; caseId?: string }) {
+  // Case links open the case; in a case's chat, "(p. 12)" opens that page of the client file.
+  const links = (s: string, k: number) => s.split(/(\/cases\/[\w?=&-]+|\(pp?\. ?\d+[^)]*\))/g).map((p, i) => {
+    if (!(i % 2)) return <Fragment key={`${k}-${i}`}>{p}</Fragment>;
+    if (p.startsWith("/cases/")) return <Link key={`${k}-${i}`} href={p} className="underline underline-offset-4">Open</Link>;
+    const page = /\d+/.exec(p)?.[0];
+    return caseId && page ? <a key={`${k}-${i}`} href={`/api/pages/${caseId}/${page}`} target="_blank" className="whitespace-nowrap text-[13px] text-muted underline decoration-dotted underline-offset-4 hover:text-ink">{p}</a> : <Fragment key={`${k}-${i}`}>{p}</Fragment>;
+  });
   const bold = (s: string) => s.split(/\*\*(.+?)\*\*/g).map((p, i) => (i % 2 ? <strong key={i} className="font-semibold">{p}</strong> : <Fragment key={i}>{links(p.replace(/^#+\s*/, ""), i)}</Fragment>));
   const blocks = text.trim().split(/\n{2,}/);
   return (
@@ -106,7 +112,7 @@ export default function AssistantChat({ initial, q, connected, scope }: { initia
       <div className="flex flex-col gap-7 pb-36">
         {msgs.map((m, i) => m.role === "user"
           ? <div key={i} className="msg-in ml-auto max-w-[85%] whitespace-pre-line rounded-2xl bg-panel px-4 py-2.5 text-[14.5px] leading-relaxed">{m.content}</div>
-          : <div key={i} className="msg-in text-[14.5px] leading-[1.7]"><Rich text={m.content} /></div>)}
+          : <div key={i} className="msg-in text-[14.5px] leading-[1.7]"><Rich text={m.content} caseId={scope?.id} /></div>)}
         {busy && <div className="flex items-center gap-1"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ink" /><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ink [animation-delay:150ms]" /><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ink [animation-delay:300ms]" /></div>}
         {error && <p className="text-[13px] text-risk">{error}</p>}
         <div ref={end} />

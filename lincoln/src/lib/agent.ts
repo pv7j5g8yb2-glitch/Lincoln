@@ -89,7 +89,7 @@ Decide what this email is and reply with one JSON object only:
  "dates": [{"label": "", "date": "YYYY-MM-DD"}],
  "reply": {"subject": "", "body": "a short, courteous acknowledgement or answer from ${owner.name}, signed with the firm name"} or null}
 Rules: new_case only when someone asks the firm to take on an immigration matter or sends documents for a matter the firm has not opened. case_update when it concerns an open case (match by sender address, name or reference). government for USCIS, DOL or State Department notices. other for anything not about a case, with no reply. Dates only for deadlines, expiries, appointments or interviews stated in the email.`;
-    const t = parseJson<Triage>(await chat([{ role: "system", content: "You are Lincoln, case software in a US immigration law firm. You sort incoming mail for the attorneys. You never give legal advice to the public and never invent facts. Reply with JSON only." }, { role: "user", content: prompt }], { maxTokens: 1500 }));
+    const t = parseJson<Triage>(await chat([{ role: "system", content: "You are Lincoln, case software in a US immigration law firm. You sort incoming mail for the attorneys. You never give legal advice to the public and never invent facts. Write in American English. Reply with JSON only." }, { role: "user", content: prompt }], { maxTokens: 1500 }));
 
     if (t.kind === "other" && t.certain === true && !unverified) {
       // Clearly not work: nothing about it is kept.
@@ -208,7 +208,7 @@ Reply with one JSON object only:
  "draft": "what to draft, in one sentence, or null if no document is asked for",
  "due": "YYYY-MM-DD if a deadline for the work is given, else null",
  "dates": [{"label": "", "date": "YYYY-MM-DD"}]}`;
-  const t = parseJson<{ case_id: string | null; new_case: (Triage["new_case"] & { client_email?: string | null }) | null; summary: string; draft: string | null; due: string | null; dates: Triage["dates"] }>(await chat([{ role: "system", content: "You are Lincoln, case software in a US immigration law firm. You take instructions from the firm's attorneys and staff. Reply with JSON only." }, { role: "user", content: prompt }], { maxTokens: 1200 }));
+  const t = parseJson<{ case_id: string | null; new_case: (Triage["new_case"] & { client_email?: string | null }) | null; summary: string; draft: string | null; due: string | null; dates: Triage["dates"] }>(await chat([{ role: "system", content: "You are Lincoln, case software in a US immigration law firm. You take instructions from the firm's attorneys and staff. Write in American English. Reply with JSON only." }, { role: "user", content: prompt }], { maxTokens: 1200 }));
   const summary = String(t.summary ?? "").slice(0, 300);
   const files = input.files.map((f) => f.data).filter((b) => fileKind(b)).slice(0, 20);
   let caseId = open.some((c) => c.id === t.case_id) ? t.case_id : null;

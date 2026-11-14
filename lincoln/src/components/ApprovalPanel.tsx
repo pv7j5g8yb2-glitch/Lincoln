@@ -38,7 +38,7 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message }: Pr
       <button disabled={pending || disabled} onClick={() => decide("approved")} className="flex h-9 items-center gap-1.5 rounded-lg bg-ink px-4 text-[13px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98] disabled:opacity-35">
         <Check size={14} /> {text}
       </button>
-      <button disabled={pending} onClick={() => decide("rejected")} className="h-9 rounded-lg border border-line bg-card px-3.5 text-[13px] font-medium transition hover:bg-panel disabled:opacity-40">Return</button>
+      <button disabled={pending} onClick={() => decide("rejected")} className="h-9 rounded-lg border border-line bg-card px-3.5 text-[13px] font-medium transition hover:bg-panel disabled:opacity-40">{kind === "message" ? "Discard" : "Return"}</button>
       {error && <span className="text-[12.5px] text-risk">{error}</span>}
     </div>
   );
