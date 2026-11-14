@@ -2,6 +2,7 @@ import { db, uid } from "./db";
 import { LIBRARY } from "./library";
 import { chat, forCase, parseJson, readPages } from "./llm";
 import { DATE_KINDS, dateRules } from "./rules";
+import { EMAIL_STYLE } from "./style";
 import { renderFiles } from "./pdf";
 import { loadPage, removePagesAfter, savePage } from "./storage";
 
@@ -47,14 +48,17 @@ Read every page. Reply with one JSON object and nothing else, in this shape:
  "dates": [{"label": "", "date": "YYYY-MM-DD", "source": "document, p. N", "kind": "passport_expires | stay_ends | period_ends | h1b_first_start | other"}],
  "facts": [{"fact": "one checkable fact: a name, title, figure, date, number, award, publication, salary, status or signature", "page": 1}],
  "requirements": [{"name": "a legal or filing requirement for this case type", "citation": "", "status": "met | partial | missing", "summary": "what the file shows", "gap": "what is still needed", "evidence": [{"page": 1, "grade": 3, "note": ""}]}],
- "client_email": {"subject": "", "body": "a courteous, plain email from the responsible attorney asking the client for what is missing; or null if nothing is missing"},
+ "client_email": {"subject": "", "body": "an email from the responsible attorney to the client asking for what is missing, written to the email rules below; or null if nothing is missing"},
  "unreadable": [{"page": 1, "what": "which document or part", "reason": "blurred | glare | cut off | too small | handwriting | other"}]
 }
 ${c.fromClient ? "The file was sent by the client. If any page is unreadable, the client email must ask for a clearer photo or scan of exactly those documents, with one line on how (flat surface, good light, the whole page in frame)." : "The file was added by firm staff. Do not mention unreadable pages in the client email; they are reported to the staff separately."}
 Dates: only those that govern the case (status and document expiries, deadlines, employment start, filing targets, appointments), at most 10. Not birth dates or the dates of ordinary documents. Date kinds: "passport_expires" for the passport expiry, "stay_ends" for the I-94 admit until date, "period_ends" for the end of the period requested or offered, "h1b_first_start" for the start of the person's first H-1B status; anything else "other". Do not calculate durations, deadlines or limits from the dates; Lincoln calculates those.
 Facts: at most 40, the ones that could conflict with another document or that a draft would cite.
 Evidence grade: 1 in the file, 2 relevant, 3 supports the fact, 4 enough for the standard.
-Status "weak" means low weight (self serving or from an interested party); "excluded" means it should not be relied on, with the reason in the note.`;
+Status "weak" means low weight (self serving or from an interested party); "excluded" means it should not be relied on, with the reason in the note.
+
+The client email, if any:
+${EMAIL_STYLE}`;
 
 const log = (firm: string, caseId: string, kind: string, text: string, minutes: number) =>
   db().prepare("INSERT INTO activity (id, firm_id, case_id, at, actor, kind, text, minutes) VALUES (?, ?, ?, ?, 'Lincoln', ?, ?, ?)").run(uid(), firm, caseId, new Date().toISOString(), kind, text, minutes);

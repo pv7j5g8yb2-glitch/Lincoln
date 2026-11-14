@@ -93,6 +93,11 @@ to Harvey Specter in Suits combined: it does the legal work and keeps everything
 only for a crucial approval, a question or missing context. Do not make it heavy: no piles of features, checks or flags on screen. Checks run
 quietly and surface only what matters; minor items stay folded.
 
+**Emails Lincoln drafts (Ismael, 2026-11-14).** Every email reads as if the attorney or paralegal wrote it: professional,
+warm, brief, human, following the thread and the case. Never "reply yes", stock phrases, internal labels, page
+numbers, dashes or anything that sounds robotic or confusing. The rules live in `lincoln/src/lib/style.ts`; every
+email prompt uses them. Lincoln is AI but acts as a human P.A.
+
 **Never push a failing build (2026-11-13).** Check the real exit status of the type check and `npm run
 build` before every push to the session branch; Render deploys from it. A grep for "Compiled" is not a check.
 
