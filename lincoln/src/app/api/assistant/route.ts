@@ -107,7 +107,7 @@ export async function POST(req: Request) {
       if (form && !FORM_TITLES[form]) return `Form ${form} is not one Lincoln fills yet.`;
       if (form && !hasTemplate(form)) return `The blank ${form} has not been added to Lincoln yet, so it cannot be filled.`;
       if (x.pages < 1) return "The case has no client file to fill forms from yet.";
-      void prepareForms(F, x.id, { refill: true, only: form });
+      void prepareForms(F, x.id, { refill: true, only: form, now: true });
       changed.any = true;
       return `Filling ${form ?? "the case's forms"} now. They appear under Forms on the case. Link: /cases/${x.id}?tab=forms`;
     }

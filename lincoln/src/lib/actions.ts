@@ -646,7 +646,7 @@ export async function refillForms(caseId: string) {
   if (!caseById(firm.id, caseId, viewer) || firm.demo) return;
   const { prepareForms } = await import("./fill");
   db().prepare("UPDATE forms SET status = 'filling' WHERE firm_id = ? AND case_id = ? AND status != 'no_template'").run(firm.id, caseId);
-  void prepareForms(firm.id, caseId, { refill: true });
+  void prepareForms(firm.id, caseId, { refill: true, now: true });
   revalidatePath(`/cases/${caseId}`);
 }
 

@@ -16,5 +16,5 @@ export async function register() {
     }
   };
   setTimeout(run, 15_000);
-  setInterval(run, 5 * 60_000);
+  setInterval(run, Number(process.env.LINCOLN_TICK_MS) || 5 * 60_000);
 }

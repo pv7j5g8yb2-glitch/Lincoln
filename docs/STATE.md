@@ -247,6 +247,14 @@ from the repo the same day. History is in git up to commit `341cf65`.
   roughly $170 to $225 profit before company costs. Levers that keep quality: Haiku for mail sorting and reminders,
   Batch API (half price) for work that can wait, prompt caching, sending only the form sections that apply, measured
   effort levels. Target after levers: about $30 to $60 a seat. The live test's usage table gives the real figure.
+* Cost levers built (2026-11-14, tested with the stand in model): mail sorting, instruction reading and form section
+  choice run on the light model (LLM_MODEL_LIGHT, Haiku 5.5 by default); client replies and all legal work stay on
+  LLM_MODEL. Forms send only the sections that apply (an O-1 sends 292 of the I-129's 942 fields). The automatic fill
+  after a file is read goes through the Batch API at half price (LLM_BATCH=off turns it off); a fill a person asks
+  for runs at once. Usage is priced per model. Open: batch results are kept by Anthropic for 29 days, so check this
+  against the zero retention agreement before real client files. Ismael (2026-11-14): margins should be 70 to 80
+  percent; Opus only if Sonnet proves worse in the comparison. ICONIQ (Jan 2026, via secondary sources) puts AI
+  company gross margins at about 52 percent on average, against 70 to 90 percent for mature SaaS.
 * Pre-seed size (Claude's earlier advice, 2026-11-14, superseded by the line above): about $1M (range $750k to $1.5M) for 18 months: two engineers, a part time immigration attorney reviewer, SOC 2 Type I and a penetration test, model and hosting costs, growth, legal and insurance, and a buffer. Ismael's model budget for testing now is $5 to $20, so tests are run small.
 * Pitch material (2026-11-14): `docs/pitch/Lincoln-seed-deck.pdf` (16 slides, minimal, sourced, no invented proof) and `docs/pitch/Lincoln-product-description.docx`. The $1.5M raise, use of funds split and 18 month targets are Claude's proposal, not decided by Ismael. The team slide gives only his first name, not his age.
 * Where firm work arrives (2026-11-14, from what is known, not measured): email is the main channel (client and employer mail, documents, USCIS email notices) but not the only one. Calls and consultations, web intake forms, client portals in case software and paper USCIS notices also bring work. Lincoln needs its own intake (a client upload link and questionnaire) and a way to take scanned notices, besides mail. Not built yet.
