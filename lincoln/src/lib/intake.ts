@@ -81,17 +81,17 @@ ${instruction(c)}`;
 
 /** Reads a file of any length: one request for a short file, batches and a text only merge for a long one. */
 async function readFile(c: { client: string; type: string; firm: string; attorney: string; extra?: string; fromClient?: boolean }, pages: { n: number; jpeg: Buffer }[]): Promise<{ reading: Reading; notes: Notes | null }> {
-  if (pages.length <= BATCH) return { reading: parseJson<Reading>(await readPages(SYSTEM, pages, instruction(c), 8000)), notes: null };
+  if (pages.length <= BATCH) return { reading: parseJson<Reading>(await readPages(SYSTEM, pages, instruction(c), 16000)), notes: null };
   const notes: Notes = { documents: [], facts: [], dates: [], unreadable: [] };
   for (let i = 0; i < pages.length; i += BATCH) {
     const part = pages.slice(i, i + BATCH);
-    const r = parseJson<Partial<Notes>>(await readPages(SYSTEM, part, batchInstruction(part[0].n, part[part.length - 1].n), 6000));
+    const r = parseJson<Partial<Notes>>(await readPages(SYSTEM, part, batchInstruction(part[0].n, part[part.length - 1].n), 12000));
     notes.documents.push(...(r.documents ?? []));
     notes.facts.push(...(r.facts ?? []));
     notes.dates.push(...(r.dates ?? []));
     notes.unreadable.push(...(r.unreadable ?? []));
   }
-  const reading = parseJson<Reading>(await readPages(SYSTEM, [], mergeInstruction(c, pages.length, notes), 10000));
+  const reading = parseJson<Reading>(await readPages(SYSTEM, [], mergeInstruction(c, pages.length, notes), 16000));
   // The merge never sees the pages, so what the batches could not read stays unreadable.
   const seen = new Set((reading.unreadable ?? []).map((u) => u.page));
   reading.unreadable = [...(reading.unreadable ?? []), ...notes.unreadable.filter((u) => !seen.has(u.page))];
@@ -210,7 +210,7 @@ ${record ? `The case record below was extracted from the ${c.pages} page client 
 
 Rules for the draft: every factual sentence ends with its source page in the form (p. 12). Use only facts in the file. Put anything the attorney must decide or obtain in square brackets starting with "Attorney:". Do not use markdown symbols. Reply with one JSON object and nothing else:
 {"title": "short document title", "sections": [{"heading": "", "paragraphs": [""]}]}`;
-    const r = parseJson<{ title: string; sections: { heading: string; paragraphs: string[] }[] }>(await readPages(SYSTEM, pages, ask, 8000));
+    const r = parseJson<{ title: string; sections: { heading: string; paragraphs: string[] }[] }>(await readPages(SYSTEM, pages, ask, 16000));
     let facts = 0, notes = 0;
     const sections = (r.sections ?? []).slice(0, 40).map((s, i) => ({
       id: `s${i}`,

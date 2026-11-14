@@ -16,7 +16,7 @@ services:
       - key: DATA_DIR
         value: /tmp/lincoln-data
       - key: LLM_BASE_URL
-        value: https://api.llmsrelay.com/v1
+        value: https://api.anthropic.com
       - key: LLM_MODEL
         value: claude-opus-5-5
       - key: SEED_USER_EMAIL     # a personal login for the sample workspace, set in the dashboard

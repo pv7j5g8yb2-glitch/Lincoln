@@ -1,24 +1,51 @@
-// One place for every model call. Works with any provider that speaks the OpenAI chat format.
-// The key lives in .env.local on the server and is never sent to the browser or written to the repo.
+// One place for every model call, over Anthropic's Messages API (directly, or through a relay that
+// speaks it). The key lives on the server and is never sent to the browser or written to the repo.
 
 export const llmConfigured = () => Boolean(process.env.LLM_API_KEY && process.env.LLM_BASE_URL && process.env.LLM_MODEL);
 
 export type Msg = { role: "system" | "user" | "assistant"; content: string };
+type Effort = "low" | "medium" | "high";
 
-export async function chat(messages: Msg[], opts: { maxTokens?: number } = {}): Promise<string> {
+const base = () => process.env.LLM_BASE_URL!.replace(/\/$/, "").replace(/\/v1$/, "");
+const direct = () => /(^|\.)anthropic\.com$/.test(new URL(base()).host);
+
+/** Headers and extra body fields for every request. Direct to Anthropic, a refusal falls back to another model. */
+function request(body: Record<string, unknown>, effort: Effort) {
+  const headers: Record<string, string> = { "content-type": "application/json", "x-api-key": process.env.LLM_API_KEY!, "anthropic-version": "2023-06-01" };
+  const out: Record<string, unknown> = { model: process.env.LLM_MODEL, ...body, output_config: { effort } };
+  if (direct()) {
+    headers["anthropic-beta"] = "server-side-fallback-2026-07-01";
+    out.fallbacks = "default";
+  }
+  return { headers, body: JSON.stringify(out) };
+}
+
+async function fail(res: Response): Promise<never> {
+  const detail = await res.text().catch(() => "");
+  if (res.status === 402 || /credit balance is too low/i.test(detail)) throw new Error("The model account is out of credit.");
+  if (res.status === 401) throw new Error("The model key was refused.");
+  const msg = /"message"\s*:\s*"([^"]{1,200})"/.exec(detail)?.[1];
+  throw new Error(`The model service replied ${res.status}${msg ? `: ${msg}` : ""}.`);
+}
+
+type Reply = { content: { type: string; text?: string }[]; stop_reason: string };
+const textOf = (d: Reply) => d.content.filter((b) => b.type === "text").map((b) => b.text ?? "").join("").trim();
+function check(d: Reply) {
+  if (d.stop_reason === "refusal") throw new Error("The model declined this request.");
+  if (!textOf(d)) throw new Error(d.stop_reason === "max_tokens" ? "The model ran out of room before answering." : "The model service sent an empty reply.");
+}
+
+/** A short exchange: sorting mail, reading an instruction. Low effort; thinking still runs as the model needs. */
+export async function chat(messages: Msg[], opts: { maxTokens?: number; effort?: Effort } = {}): Promise<string> {
   if (!llmConfigured()) throw new Error("No model is connected yet.");
-  const res = await fetch(`${process.env.LLM_BASE_URL!.replace(/\/$/, "")}/chat/completions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.LLM_API_KEY}` },
-    body: JSON.stringify({ model: process.env.LLM_MODEL, messages, max_tokens: opts.maxTokens ?? 1500 }),
-    signal: AbortSignal.timeout(90_000),
-  });
-  if (res.status === 402) throw new Error("The model account is out of credit.");
-  if (!res.ok) throw new Error(`The model service replied ${res.status}.`);
-  const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-  const text = data.choices?.[0]?.message?.content;
-  if (!text) throw new Error("The model service sent an empty reply.");
-  return text;
+  const system = messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
+  const turns = messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content }));
+  const r = request({ max_tokens: Math.max(opts.maxTokens ?? 4000, 4000), ...(system ? { system } : {}), messages: turns }, opts.effort ?? "low");
+  const res = await fetch(`${base()}/v1/messages`, { method: "POST", headers: r.headers, body: r.body, signal: AbortSignal.timeout(120_000) });
+  if (!res.ok) await fail(res);
+  const data = (await res.json()) as Reply;
+  check(data);
+  return textOf(data);
 }
 
 type Block = { type: "text"; text: string } | { type: "image"; source: { type: "base64"; media_type: "image/jpeg"; data: string } };
@@ -52,20 +79,15 @@ async function readPagesOnce(system: string, pages: { n: number; jpeg: Buffer }[
     content.push({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: p.jpeg.toString("base64") } });
   }
   content.push({ type: "text", text: instruction });
-  const base = process.env.LLM_BASE_URL!.replace(/\/$/, "").replace(/\/v1$/, "");
-  const res = await fetch(`${base}/v1/messages`, {
+  const r = request({ max_tokens: maxTokens, stream: true, system, messages: [{ role: "user", content }] }, "medium");
+  const res = await fetch(`${base()}/v1/messages`, {
     method: "POST",
-    headers: { "content-type": "application/json", "x-api-key": process.env.LLM_API_KEY!, "anthropic-version": "2023-06-01" },
-    body: JSON.stringify({ model: process.env.LLM_MODEL, max_tokens: maxTokens, stream: true, system, messages: [{ role: "user", content }] }),
+    headers: r.headers,
+    body: r.body,
     signal: AbortSignal.timeout(600_000),
   });
-  if (!res.ok || !res.body) {
-    const detail = await res.text().catch(() => "");
-    if (res.status === 402) throw new Error("The model account is out of credit.");
-    const msg = /"message"\s*:\s*"([^"]{1,400})"/.exec(detail)?.[1]?.slice(0, 200);
-    throw new Error(`The model service replied ${res.status}${msg ? `: ${msg}` : ""}.`);
-  }
-  const reader = res.body.getReader();
+  if (!res.ok || !res.body) await fail(res);
+  const reader = res.body!.getReader();
   const dec = new TextDecoder();
   let buf = "", out = "";
   for (;;) {
@@ -80,6 +102,7 @@ async function readPagesOnce(system: string, pages: { n: number; jpeg: Buffer }[
       try {
         const ev = JSON.parse(line.slice(5));
         if (ev.type === "content_block_delta" && ev.delta?.type === "text_delta") out += ev.delta.text;
+        if (ev.type === "message_delta" && ev.delta?.stop_reason === "refusal") throw new Error("The model declined this request.");
         if (ev.type === "error") throw new Error(ev.error?.message ?? "The model service reported an error.");
       } catch (e) {
         if (e instanceof SyntaxError) continue;
@@ -107,24 +130,17 @@ type Turn = { role: "user" | "assistant"; content: unknown };
  */
 export async function runAgent(system: string, history: Turn[], tools: Tool[], handle: (name: string, input: Record<string, unknown>) => Promise<string>): Promise<string> {
   if (!llmConfigured()) throw new Error("No model is connected.");
-  const base = process.env.LLM_BASE_URL!.replace(/\/$/, "").replace(/\/v1$/, "");
   const msgs = [...history];
   for (let step = 0; step < 8; step++) {
-    const res = await fetch(`${base}/v1/messages`, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": process.env.LLM_API_KEY!, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: process.env.LLM_MODEL, max_tokens: 2000, system, tools, messages: msgs }),
-      signal: AbortSignal.timeout(120_000),
-    });
-    if (res.status === 402) throw new Error("The model account is out of credit.");
-    if (!res.ok) {
-      const detail = await res.text().catch(() => "");
-      throw new Error(`The model service replied ${res.status}${/"message"\s*:\s*"([^"]{1,160})"/.exec(detail)?.[1] ? `: ${/"message"\s*:\s*"([^"]{1,160})"/.exec(detail)![1]}` : ""}.`);
-    }
+    const r = request({ max_tokens: 8000, system, tools, messages: msgs }, "medium");
+    const res = await fetch(`${base()}/v1/messages`, { method: "POST", headers: r.headers, body: r.body, signal: AbortSignal.timeout(180_000) });
+    if (!res.ok) await fail(res);
     const data = (await res.json()) as { content: ({ type: "text"; text: string } | { type: "tool_use"; id: string; name: string; input: Record<string, unknown> })[]; stop_reason: string };
     const calls = data.content.filter((b) => b.type === "tool_use") as { type: "tool_use"; id: string; name: string; input: Record<string, unknown> }[];
     const text = data.content.filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("\n").trim();
+    if (data.stop_reason === "refusal") throw new Error("The model declined this request.");
     if (!calls.length) return text || "Done.";
+    // The whole reply goes back unchanged, thinking blocks included, as the API requires.
     msgs.push({ role: "assistant", content: data.content });
     const results = [];
     for (const c of calls) {
