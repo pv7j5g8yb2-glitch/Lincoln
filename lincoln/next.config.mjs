@@ -4,6 +4,9 @@ const nextConfig = {
   experimental: { serverActions: { bodySizeLimit: "30mb" } },
   poweredByHeader: false,
   devIndicators: false,
+  async rewrites() {
+    return [{ source: "/.well-known/microsoft-identity-association.json", destination: "/api/ms-identity" }];
+  },
   async headers() {
     return [
       {
