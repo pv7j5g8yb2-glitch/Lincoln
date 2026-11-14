@@ -18,6 +18,6 @@ extension tips). Supplements are saved as `i-914supa.pdf` and so on; their instr
 
 Mapped to a case type but not added yet: I-360, I-821, I-730, I-134, I-212, I-192, I-526, N-600K, N-336, N-470.
 
-USCIS forms are locked PDFs (they open without a password and allow filling, but not other changes). The
-PDF library Lincoln uses cannot open locked files, so filling real forms waits on a decision about using
-one that can.
+USCIS forms are locked PDFs (they open without a password and allow filling, but not other changes). Lincoln
+opens them as any PDF reader does. After adding or replacing a form, run
+`node --experimental-strip-types --no-warnings scripts/check-forms.mts` to confirm it opens, reads and fills.

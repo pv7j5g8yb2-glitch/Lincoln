@@ -1,7 +1,7 @@
 // Builds a small fillable PDF shaped like a USCIS form (cryptic field names, labels in tooltips,
 // checkboxes, a radio group, a field with a maximum length) to test the form engine without the real forms.
 import fs from "node:fs";
-import { PDFDocument, PDFName, PDFString, StandardFonts } from "pdf-lib";
+import { PDFDocument, PDFName, PDFString, StandardFonts } from "@cantoo/pdf-lib";
 
 export async function makeForm(file) {
   const pdf = await PDFDocument.create();

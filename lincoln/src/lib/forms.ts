@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { PDFCheckBox, PDFDocument, PDFDropdown, PDFHexString, PDFName, PDFOptionList, PDFRadioGroup, PDFString, PDFTextField, StandardFonts } from "pdf-lib";
+import { PDFCheckBox, PDFDict, PDFDocument, PDFDropdown, PDFHexString, PDFName, PDFOptionList, PDFRadioGroup, PDFString, PDFTextField, StandardFonts } from "@cantoo/pdf-lib";
 
 // Official forms are filled in their own fillable PDF: every field is read with its label, answered
 // from the case and written back, so the attorney gets the real form, editable, not a copy of it.
@@ -118,11 +118,14 @@ const text = (v: unknown) => (v instanceof PDFString || v instanceof PDFHexStrin
 
 /** Every field of a fillable PDF, with the label the form gives it (its tooltip), in page order. */
 export async function fieldsOf(bytes: Uint8Array): Promise<Field[]> {
-  const pdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
+  const pdf = await openForm(bytes);
+  plainText(pdf.getForm().getFields());
   const pages = pdf.getPages().map((p) => p.ref);
   const out: Field[] = [];
   for (const f of pdf.getForm().getFields()) {
     const name = f.getName();
+    // The 2D barcode boxes on each page are written by Adobe from the answers, never by hand.
+    if (/BarCode|PDF417/i.test(name)) continue;
     const tip = text(f.acroField.dict.get(PDFName.of("TU")));
     const label = (tip || name.replace(/^form\d*\[0\]\./, "").replace(/\[\d+\]/g, "").replace(/[#._]+/g, " ")).replace(/\s+/g, " ").trim().slice(0, 300);
     const widget = f.acroField.getWidgets()[0];
@@ -150,12 +153,28 @@ export function normalise(field: Field, value: string) {
   return v;
 }
 
+/** Opens an official form. USCIS locks its PDFs (no password to open; filling allowed, other changes not);
+ *  the lock is opened as any PDF reader does, and its leftover dictionary is dropped so the saved file is clean. */
+async function openForm(bytes: Uint8Array) {
+  const pdf = await PDFDocument.load(bytes, { password: "" });
+  for (const [ref, obj] of pdf.context.enumerateIndirectObjects())
+    if (obj instanceof PDFDict && obj.get(PDFName.of("Filter"))?.toString() === "/Standard" && obj.has(PDFName.of("O"))) pdf.context.delete(ref);
+  return pdf;
+}
+
+/** Some USCIS boxes ("Additional Information") are marked rich text, which the PDF library cannot read or
+ *  draw; they take plain text just as well. */
+function plainText(fields: ReturnType<ReturnType<PDFDocument["getForm"]>["getFields"]>) {
+  for (const f of fields) if (f instanceof PDFTextField && f.isRichFormatted()) f.disableRichFormatting();
+}
+
 export const yes = (v: string) => /^(yes|true|x|checked|on|1)$/i.test(v.trim());
 
 /** The blank form with the answers written into its own fields. The fields stay editable. */
 export async function fillPdf(bytes: Uint8Array, answers: { name: string; value: string }[]): Promise<Uint8Array> {
-  const pdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
+  const pdf = await openForm(bytes);
   const form = pdf.getForm();
+  plainText(form.getFields());
   const byName = new Map(form.getFields().map((f) => [f.getName(), f]));
   for (const a of answers) {
     const f = byName.get(a.name);

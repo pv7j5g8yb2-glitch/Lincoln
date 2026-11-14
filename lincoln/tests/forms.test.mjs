@@ -3,7 +3,7 @@ import assert from "node:assert";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument } from "@cantoo/pdf-lib";
 import { makeForm } from "./make-form.mjs";
 import { fieldsOf, fillPdf, normalise } from "../src/lib/forms.ts";
 

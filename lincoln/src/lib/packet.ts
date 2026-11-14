@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "@cantoo/pdf-lib";
 import { db } from "./db";
 import { fillPdf, hasTemplate, templatePath, titleOf } from "./forms";
 import { loadPage } from "./storage";
