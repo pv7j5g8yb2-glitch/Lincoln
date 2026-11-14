@@ -226,6 +226,7 @@ from the repo the same day. History is in git up to commit `341cf65`.
 * Who the parent or guardian owner is, and how payments and contracts are held.
 * Which immigration lawyer will advise (nobody yet).
 * Which model providers and what data agreements.
+* Pre-seed size (Claude's advice, 2026-11-14, not decided): about $1M (range $750k to $1.5M) for 18 months: two engineers, a part time immigration attorney reviewer, SOC 2 Type I and a penetration test, model and hosting costs, growth, legal and insurance, and a buffer. Ismael's model budget for testing now is $5 to $20, so tests are run small.
 * Pitch material (2026-11-14): `docs/pitch/Lincoln-seed-deck.pdf` (16 slides, minimal, sourced, no invented proof) and `docs/pitch/Lincoln-product-description.docx`. The $1.5M raise, use of funds split and 18 month targets are Claude's proposal, not decided by Ismael. The team slide gives only his first name, not his age.
 * Where firm work arrives (2026-11-14, from what is known, not measured): email is the main channel (client and employer mail, documents, USCIS email notices) but not the only one. Calls and consultations, web intake forms, client portals in case software and paper USCIS notices also bring work. Lincoln needs its own intake (a client upload link and questionnaire) and a way to take scanned notices, besides mail. Not built yet.
 

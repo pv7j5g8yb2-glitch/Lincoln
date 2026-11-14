@@ -1,7 +1,7 @@
 # Investors for legal tech and legal AI (researched 2026-11-12)
 
-Reference list for later. House rule (CLAUDE.md): do not pitch any of these until the product has real
-paying users or revenue. Deal details come from press releases and aggregators (Sacra, Seedtable,
+Reference list. Rule since 2026-11-13 (CLAUDE.md): applying before revenue is allowed, only through each
+firm's own application form, never cold outreach, always through the parent owned company. Deal details come from press releases and aggregators (Sacra, Seedtable,
 CB Insights, BetaKit, SiliconANGLE, Legal.io); check a firm's own site before contacting it.
 
 ## 1. Legal tech specialists
