@@ -239,6 +239,14 @@ from the repo the same day. History is in git up to commit `341cf65`.
   review, company and legal). Biggest levers in order: firms using it weekly, a published blind accuracy test graded by a paid
   immigration lawyer (hired through a marketplace, not cold outreach), a 2 minute product demo video, applications to
   programmes that fund young founders. With firms using it and the graded test, about 10 to 25 percent within 12 months (a guess).
+* Unit economics (Claude's estimate from the code, 2026-11-14, not measured): on Opus 5.5 a full employment case
+  (60 page file, 3 drafts with citation checks, G-28 + I-129 + I-907) costs about $4 to $6; a family green card case
+  about $4 to $5; a simple renewal about $1. Output tokens (including thinking) are most of it. Caseload sources are
+  anecdotal: about 30 cases per associate plus 60 to 80 per paralegal, 70 to 150 open clients per attorney. A seat
+  opening 10 to 20 new cases a month plus mail and questions costs about $65 to $120 a month; at $300 a seat that is
+  roughly $170 to $225 profit before company costs. Levers that keep quality: Haiku for mail sorting and reminders,
+  Batch API (half price) for work that can wait, prompt caching, sending only the form sections that apply, measured
+  effort levels. Target after levers: about $30 to $60 a seat. The live test's usage table gives the real figure.
 * Pre-seed size (Claude's earlier advice, 2026-11-14, superseded by the line above): about $1M (range $750k to $1.5M) for 18 months: two engineers, a part time immigration attorney reviewer, SOC 2 Type I and a penetration test, model and hosting costs, growth, legal and insurance, and a buffer. Ismael's model budget for testing now is $5 to $20, so tests are run small.
 * Pitch material (2026-11-14): `docs/pitch/Lincoln-seed-deck.pdf` (16 slides, minimal, sourced, no invented proof) and `docs/pitch/Lincoln-product-description.docx`. The $1.5M raise, use of funds split and 18 month targets are Claude's proposal, not decided by Ismael. The team slide gives only his first name, not his age.
 * Where firm work arrives (2026-11-14, from what is known, not measured): email is the main channel (client and employer mail, documents, USCIS email notices) but not the only one. Calls and consultations, web intake forms, client portals in case software and paper USCIS notices also bring work. Lincoln needs its own intake (a client upload link and questionnaire) and a way to take scanned notices, besides mail. Not built yet.
