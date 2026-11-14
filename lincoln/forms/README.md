@@ -4,6 +4,10 @@ Lincoln fills each form in its own official fillable PDF. USCIS blocks automated
 downloads each blank form from https://www.uscis.gov/forms/all-forms in a browser and saves it here,
 named by form number in lower case: `g-28.pdf`, `i-129.pdf`, `i-130.pdf` and so on.
 
+Save each form's instructions from the same page too, named `i-130-instr.pdf` and so on. They say how
+each item is answered ("N/A", "None", which parts apply) and change with each edition. Filing addresses
+and fees are not in them: USCIS keeps those on each form's Where to File page and in the G-1055 fee schedule.
+
 Check the edition date on each form page every few months; when USCIS publishes a new edition, replace
 the file. A case whose form is missing here shows "Blank form not added" and is not filled.
 
