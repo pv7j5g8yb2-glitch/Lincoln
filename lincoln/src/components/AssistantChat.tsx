@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useRef, useState, useTransition } from "react";
 import { SquarePen, ChevronLeft } from "lucide-react";
 import Composer from "./Composer";
-import { clearChat } from "@/lib/actions";
+import { clearChat, startCase } from "@/lib/actions";
 
 type M = { role: string; content: string };
 
@@ -67,7 +67,15 @@ export default function AssistantChat({ initial, q, connected, scope }: { initia
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const box = <Composer value={text} onChange={setText} onSend={() => send(text)} busy={busy} placeholder={scope ? `Ask about ${scope.name}` : "Ask Lincoln anything"} autoFocus />;
+  const handOver = (files: File[]) => {
+    const fd = new FormData();
+    fd.set("text", text.trim());
+    if (scope) fd.set("case", scope.id);
+    files.forEach((f) => fd.append("file", f));
+    setBusy(true);
+    start(() => startCase(fd));
+  };
+  const box = <Composer value={text} onChange={setText} onSend={(files) => (files.length ? handOver(files) : send(text))} busy={busy} placeholder={scope ? `Ask about ${scope.name}` : "Ask Lincoln anything"} autoFocus />;
 
   const head = (
     <div className="mb-6 flex items-center justify-between gap-3">

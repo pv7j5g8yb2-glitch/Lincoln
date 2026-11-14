@@ -288,7 +288,7 @@ export async function resetDemoAction() {
 
 /** New case from one prompt: Lincoln reads what was typed and any files, then opens and works the case. */
 export async function startCase(form: FormData) {
-  const { user, firm } = await requireUser();
+  const { user, firm, viewer } = await requireUser();
   const text = String(form.get("text") ?? "").trim().slice(0, 8000);
   const names = form.getAll("file").filter((f): f is File => f instanceof File && f.size > 0).map((f) => f.name.slice(0, 120));
   if (firm.demo) redirect("/cases/new?error=sample");
@@ -299,7 +299,11 @@ export async function startCase(form: FormData) {
   if (!llmConfigured()) redirect("/cases/new?error=model");
   let caseId: string | null = null;
   try {
-    const r = await takeInstruction(firm.id, { id: user.id, name: user.name, role: user.role }, { text, files: got.map((data, i) => ({ name: names[i] ?? `file ${i + 1}`, data })), via: "app" });
+    // From a case's own chat, the files and words belong to that case.
+    const scoped = String(form.get("case") ?? "");
+    const only = scoped ? caseById(firm.id, scoped, viewer) : undefined;
+    const open = only ? [{ id: only.id, ref: only.ref, client: only.client, client_email: only.client_email ?? null, counterpart: only.counterpart, type_code: only.type_code }] : undefined;
+    const r = await takeInstruction(firm.id, { id: user.id, name: user.name, role: user.role }, { text: only ? `About ${only.client} (case ${only.id}): ${text}` : text, files: got.map((data, i) => ({ name: names[i] ?? `file ${i + 1}`, data })), via: "app" }, open);
     caseId = r.caseId;
     void r.work;
   } catch {

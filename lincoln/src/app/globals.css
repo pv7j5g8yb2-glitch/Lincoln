@@ -363,3 +363,22 @@ select:focus-visible {
     mask-image: none;
   }
 }
+
+/* Dictation in progress: three small bars that rise and fall. */
+.mic-live i {
+  display: block;
+  width: 2.5px;
+  height: 12px;
+  border-radius: 2px;
+  background: currentColor;
+  animation: mic-bar 0.9s ease-in-out infinite;
+}
+.mic-live i:nth-child(2) { animation-delay: 0.15s; }
+.mic-live i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes mic-bar {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mic-live i { animation: none; }
+}
