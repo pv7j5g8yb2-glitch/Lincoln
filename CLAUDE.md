@@ -16,7 +16,9 @@ Read `docs/STATE.md` at the start of every session: it has the current state, wh
 what is open and what to do next. Keep it up to date when anything in it changes.
 Whenever something important comes up (a decision, a preference, a lesson, a plan, a finding),
 save it straight away without asking: rules go in this file, state and plans in `docs/STATE.md`,
-research in `docs/RESEARCH.md`, then commit and push. Not every remark is a rule: save what will
+research in `docs/RESEARCH.md`, then commit and push.
+What lawyers say about legal AI, in their own words: `docs/reddit/` (30 threads, 2026-11-14). Read it before
+product or positioning decisions. Not every remark is a rule: save what will
 matter again, not passing thoughts.
 
 ## Git

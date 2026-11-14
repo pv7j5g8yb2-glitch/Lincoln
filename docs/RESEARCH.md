@@ -963,3 +963,23 @@ commenters are vendors, some posts read as AI written, none are immigration lawy
   The moats commenters name are being the system of record (switching cost), each firm's own playbook and
   feedback, domain verification machinery and evals, distribution and trust. Lincoln has none yet; they
   only form once firms run real cases in it. Features alone are copyable (ICM Desk, Filevine).
+* Full text of the 30 threads, verbatim: `docs/reddit/2026-11-14-legal-ai-threads.md`.
+
+## Gabe Pereyra (Harvey co-founder, u/Gabe_HarveyAI) in those threads (Aug to Sept 2026)
+Replies in the Tenet launch thread and the "make Harvey more engaging" thread. His own words, not verified.
+* Tenet (post-trained Kimi K3): cost is "part of it but also performance" and "sovereign AI (will help
+  us help law firms building their own AI)". Claims it beats "most frontier models at a better price
+  point", bigger gap on specialised tasks. Training data: synthetic data reviewed by lawyers plus human
+  lawyer data; argues frontier labs train on synthetic data too.
+* Grounding: Lexis partnership plus Harvey's own caselaw; "Much of the grounding our users care about
+  comes from their internal data not just caselaw."
+* Concedes integration and governance "matter much more than slightly better model performance".
+* Concedes the benchmark rubric can miss an invented citation it does not list; says they also use
+  human evaluation (a commenter found no public documentation of it). Compares to BLEU: "benchmarks
+  don't have to be perfect to be useful."
+* Building private evals with law firms, "eventually on live work".
+* "We are working on expanding the product to smaller firms!" A threat to Lincoln's small firm gap.
+* "We have a big UI change coming soon"; Harvey is "consumption based pricing now".
+* Asked critics openly for advice ("Curious what you would recommend we do re data?").
+* Also in the threads: a Harvey employee (u/sknaruto) offering to build DMS integrations for a firm, and a
+  Harvey AMA by Winston Weinberg and Gabe in r/legaltech (about May 2026; $300M ARR then).
