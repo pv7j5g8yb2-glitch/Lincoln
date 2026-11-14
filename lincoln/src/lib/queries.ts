@@ -58,3 +58,7 @@ export const approvalById = (firm: string, id: string, v?: Viewer) => {
   const a = approvalByIdRaw(firm, id);
   return a && !hiddenCases(firm, v).has(a.case_id) ? a : undefined;
 };
+
+export type FormRow = { id: string; case_id: string; code: string; title: string; status: string; fields: number; layout: string; answers: string; updated_at: string };
+export const caseForms = (firm: string, c: string) => all<FormRow>("SELECT * FROM forms WHERE firm_id = ? AND case_id = ? ORDER BY CASE code WHEN 'G-28' THEN 0 ELSE 1 END, rowid", firm, c);
+

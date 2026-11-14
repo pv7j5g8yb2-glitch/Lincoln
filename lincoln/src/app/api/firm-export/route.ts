@@ -14,7 +14,7 @@ const OMIT: Record<string, string[]> = {
   mailboxes: ["refresh_enc", "access_enc", "token_enc", "settings", "inbound_token_hash"],
   firms: ["key_enc"],
 };
-const TABLES = ["firms", "users", "cases", "documents", "criteria", "issues", "dates", "drafts", "messages", "approvals", "activity", "chat", "mailboxes", "security_events", "access_log", "usage"];
+const TABLES = ["firms", "users", "cases", "documents", "criteria", "issues", "dates", "drafts", "messages", "approvals", "activity", "chat", "mailboxes", "security_events", "access_log", "usage", "forms"];
 
 export async function POST(req: Request) {
   const s = await apiUser();

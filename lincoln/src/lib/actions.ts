@@ -337,7 +337,7 @@ export async function updateProfile(form: FormData) {
   const avatar = String(form.get("avatar") ?? "");
   if (!name) redirect("/settings?tab=profile&error=name");
   const d = db();
-  d.prepare("UPDATE users SET name = ?, initials = ?, role = ? WHERE id = ?").run(name, initialsOf(name), role || user.role, user.id);
+  d.prepare("UPDATE users SET name = ?, initials = ?, role = ?, bar_number = ?, bar_state = ? WHERE id = ?").run(name, initialsOf(name), role || user.role, String(form.get("bar_number") ?? "").trim().slice(0, 40) || null, String(form.get("bar_state") ?? "").trim().slice(0, 40) || null, user.id);
   if (avatar === "remove") d.prepare("UPDATE users SET avatar = NULL WHERE id = ?").run(user.id);
   else if (/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(avatar) && avatar.length < 400_000) d.prepare("UPDATE users SET avatar = ? WHERE id = ?").run(avatar, user.id);
   revalidatePath("/", "layout");
@@ -382,7 +382,8 @@ export async function updateFirm(form: FormData) {
   notInSample(firm, "/settings?tab=firm");
   const name = String(form.get("firm") ?? "").trim().slice(0, 120);
   if (!name || !/admin|managing/i.test(user.role)) redirect("/settings?tab=firm&error=1");
-  db().prepare("UPDATE firms SET name = ? WHERE id = ?").run(name, firm.id);
+  const opt = (k: string, n: number) => String(form.get(k) ?? "").trim().slice(0, n) || null;
+  db().prepare("UPDATE firms SET name = ?, address = ?, phone = ?, email = ? WHERE id = ?").run(name, opt("address", 200), opt("phone", 40), opt("email", 120), firm.id);
   revalidatePath("/", "layout");
   await toast("Saved");
   redirect("/settings?tab=firm");
@@ -614,3 +615,35 @@ export async function saveMessage(approvalId: string, subject: string, body: str
   await toast("Saved");
   revalidatePath("/", "layout");
 }
+
+/** The attorney's changes to a filled form: edited answers and blanks filled by hand. */
+export async function saveFormAnswers(formId: string, changes: { name: string; value: string }[]) {
+  const { firm, viewer } = await requireUser();
+  const d = db();
+  const f = d.prepare("SELECT case_id, layout, answers FROM forms WHERE firm_id = ? AND id = ?").get(firm.id, formId) as { case_id: string; layout: string; answers: string } | undefined;
+  if (!f || !caseById(firm.id, f.case_id, viewer)) return;
+  const layout = JSON.parse(f.layout) as { name: string; label: string }[];
+  const answers = new Map((JSON.parse(f.answers) as { name: string; label: string; value: string; source: string }[]).map((a) => [a.name, a]));
+  for (const c of changes.slice(0, 2000)) {
+    const field = layout.find((x) => x.name === c.name);
+    if (!field) continue;
+    const value = String(c.value ?? "").slice(0, 500);
+    if (!value.trim()) answers.delete(c.name);
+    else answers.set(c.name, { name: c.name, label: field.label, value, source: "edited" });
+  }
+  const ordered = layout.map((x) => answers.get(x.name)).filter(Boolean);
+  d.prepare("UPDATE forms SET answers = ?, updated_at = ? WHERE id = ?").run(JSON.stringify(ordered), now(), formId);
+  await toast("Saved");
+  revalidatePath(`/cases/${f.case_id}`);
+}
+
+/** Fills the case's forms again from the file as it now stands. */
+export async function refillForms(caseId: string) {
+  const { firm, viewer } = await requireUser();
+  if (!caseById(firm.id, caseId, viewer) || firm.demo) return;
+  const { prepareForms } = await import("./fill");
+  db().prepare("UPDATE forms SET status = 'filling' WHERE firm_id = ? AND case_id = ? AND status != 'no_template'").run(firm.id, caseId);
+  void prepareForms(firm.id, caseId, { refill: true });
+  revalidatePath(`/cases/${caseId}`);
+}
+

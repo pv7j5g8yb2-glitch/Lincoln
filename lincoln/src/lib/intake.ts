@@ -221,6 +221,8 @@ async function readCase(firmId: string, caseId: string, files: Uint8Array[], opt
     applyDateRules(firmId, caseId);
     await forCase({ firmId, caseId, purpose: "check" }, () => secondReading(firmId, caseId, `${c.type_code} ${c.type_name}`));
     d.prepare("UPDATE cases SET processing = 0 WHERE firm_id = ? AND id = ?").run(firmId, caseId);
+    // With the file read, the forms the case needs are filled from it, in the background.
+    void import("./fill").then((m) => m.prepareForms(firmId, caseId)).catch(() => undefined);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
     d.prepare("UPDATE cases SET processing = 0, note = ?, pages = COALESCE(?, pages) WHERE firm_id = ? AND id = ?").run(`The file could not be read. ${msg}`.slice(0, 300), before, firmId, caseId);
@@ -290,7 +292,7 @@ Rules for the draft: every factual sentence ends with its source page in the for
 }
 
 /** The case as text: documents, extracted facts, evidence, issues and dates, each with its page. */
-function caseRecord(firmId: string, caseId: string) {
+export function caseRecord(firmId: string, caseId: string) {
   const d = db();
   const docs = d.prepare("SELECT n, title, page_from, page_to, doc_date, source, status, note FROM documents WHERE firm_id = ? AND case_id = ? ORDER BY n").all(firmId, caseId) as { n: number; title: string; page_from: number | null; page_to: number | null; doc_date: string | null; source: string; status: string; note: string | null }[];
   const crit = d.prepare("SELECT name, citation, recommendation, summary, weakness, evidence FROM criteria WHERE firm_id = ? AND case_id = ? ORDER BY n").all(firmId, caseId) as { name: string; citation: string; recommendation: string; summary: string; weakness: string; evidence: string }[];

@@ -55,6 +55,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const events = tab === "security" ? (d.prepare("SELECT id, kind, detail, ip, at FROM security_events WHERE user_id = ? ORDER BY at DESC LIMIT 12").all(user.id) as { id: string; kind: string; detail: string | null; ip: string | null; at: string }[]) : [];
   const hasPassword = Boolean((db().prepare("SELECT password_hash FROM users WHERE id = ?").get(user.id) as { password_hash: string | null }).password_hash);
   const admin = /admin|managing/i.test(user.role);
+  const details = d.prepare("SELECT address, phone, email FROM firms WHERE id = ?").get(firm.id) as { address: string | null; phone: string | null; email: string | null };
+  const bar = d.prepare("SELECT bar_number, bar_state FROM users WHERE id = ?").get(user.id) as { bar_number: string | null; bar_state: string | null };
   const err = error && tab !== "integrations" ? MSG[tab]?.[error] : null;
 
   return (
@@ -75,6 +77,10 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               <AvatarField initials={user.initials} current={user.avatar} />
               <label className="block"><span className={label}>Name</span><input name="name" required maxLength={100} defaultValue={user.name} className={field} /></label>
               <label className="block"><span className={label}>Role</span><input name="role" maxLength={60} defaultValue={user.role} className={field} /></label>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <label className="block"><span className={label}>Bar number</span><input name="bar_number" maxLength={40} defaultValue={bar.bar_number ?? ""} className={field} /></label>
+                <label className="block"><span className={label}>Licensing state</span><input name="bar_state" maxLength={40} defaultValue={bar.bar_state ?? ""} className={field} /></label>
+              </div>
               <label className="block"><span className={label}>Email</span><input value={user.email} disabled className={clsx(field, "bg-side text-muted")} /></label>
               <div><button className={btn.primary}>Save</button></div>
             </form>
@@ -165,9 +171,14 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
 
           {tab === "firm" && (
             <>
-              <form action={updateFirm} className="flex items-end gap-2">
-                <label className="block flex-1"><span className={label}>Firm name</span><input name="firm" required maxLength={120} defaultValue={firm.name} disabled={!admin} className={clsx(field, !admin && "bg-side text-muted")} /></label>
-                {admin && <button className={btn.secondary}>Save</button>}
+              <form action={updateFirm} className="flex flex-col gap-5">
+                <label className="block"><span className={label}>Firm name</span><input name="firm" required maxLength={120} defaultValue={firm.name} disabled={!admin} className={clsx(field, !admin && "bg-side text-muted")} /></label>
+                <label className="block"><span className={label}>Address</span><input name="address" maxLength={200} defaultValue={details.address ?? ""} disabled={!admin} autoComplete="street-address" className={clsx(field, !admin && "bg-side text-muted")} /></label>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <label className="block"><span className={label}>Phone</span><input name="phone" maxLength={40} defaultValue={details.phone ?? ""} disabled={!admin} autoComplete="tel" className={clsx(field, !admin && "bg-side text-muted")} /></label>
+                  <label className="block"><span className={label}>Email</span><input name="email" type="email" maxLength={120} defaultValue={details.email ?? ""} disabled={!admin} className={clsx(field, !admin && "bg-side text-muted")} /></label>
+                </div>
+                {admin && <div><button className={btn.primary}>Save</button></div>}
               </form>
               <h2 className="mb-1 mt-10 text-[14px] font-medium">Members</h2>
               <div className="border-t border-line">

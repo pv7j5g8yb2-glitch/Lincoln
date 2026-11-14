@@ -4,16 +4,18 @@ import clsx from "clsx";
 import { Check, ChevronLeft, ChevronRight, Lock } from "lucide-react";
 import DraftView from "@/components/DraftView";
 import MessageList from "@/components/MessageList";
+import FormReview from "@/components/FormReview";
+import { formsFor } from "@/lib/forms";
 import AskBox from "@/components/AskBox";
 import Refresher from "@/components/Refresher";
 import { Empty, btn, field } from "@/components/ui";
-import { addFile, requestDraft, resolveIssue } from "@/lib/actions";
+import { addFile, refillForms, requestDraft, resolveIssue } from "@/lib/actions";
 import FileDrop from "@/components/FileDrop";
 import ExportMenu from "@/components/ExportMenu";
 import { exportItems } from "@/lib/exports";
 import { connectionsOf } from "@/lib/integrations";
 import { requireUser } from "@/lib/session";
-import { caseActivity, caseApprovals, caseById, caseDates, caseDrafts, caseMessages, criteria, documents, issues } from "@/lib/queries";
+import { caseActivity, caseApprovals, caseById, caseDates, caseDrafts, caseForms, caseMessages, criteria, documents, issues } from "@/lib/queries";
 import { ago, inDays, longDate } from "@/lib/format";
 import { llmConfigured, modelName } from "@/lib/llm";
 import type { LetterContent } from "@/lib/letter";
@@ -47,7 +49,8 @@ export default async function CasePage({ params, searchParams }: { params: Promi
   const upcoming = dates.filter((d) => d.date >= todayIso);
   const past = dates.filter((d) => d.date < todayIso).reverse();
   const crit = criteria(firm.id, id);
-  const all: [string, string, number | undefined, boolean][] = [["overview", "Overview", undefined, true], ["documents", "Documents", docs.length, docs.length > 0 || llmConfigured()], ["evidence", "Evidence", undefined, crit.length > 0], ["drafts", "Drafts", drafts.length, drafts.length > 0 || c.pages > 0], ["messages", "Messages", msgs.length, msgs.length > 0], ["activity", "Activity", undefined, true]];
+  const forms = caseForms(firm.id, id);
+  const all: [string, string, number | undefined, boolean][] = [["overview", "Overview", undefined, true], ["documents", "Documents", docs.length, docs.length > 0 || llmConfigured()], ["evidence", "Evidence", undefined, crit.length > 0], ["forms", "Forms", forms.length, forms.length > 0], ["drafts", "Drafts", drafts.length, drafts.length > 0 || c.pages > 0], ["messages", "Messages", msgs.length, msgs.length > 0], ["activity", "Activity", undefined, true]];
   const tabs = all.filter((t) => t[3] || t[0] === tab);
   const none = <Empty>No records</Empty>;
 
@@ -245,6 +248,35 @@ export default async function CasePage({ params, searchParams }: { params: Promi
           </div>
         );
       })()}
+
+      {tab === "forms" && (
+        <div>
+          {!firm.demo && formsFor(c.type_code).length > 0 && (
+            <form action={refillForms.bind(null, id)} className="mb-4 flex justify-end"><button className={btn.ghost}>Fill again from the file</button></form>
+          )}
+          <ul className="border-t border-line">
+            {forms.map((f) => {
+              const answers = JSON.parse(f.answers) as { name: string; label: string; value: string; source: string }[];
+              return (
+                <li key={f.id} className="border-b border-line">
+                  <details className="group">
+                    <summary className="flex cursor-pointer list-none items-center gap-3 py-3.5 [&::-webkit-details-marker]:hidden">
+                      <span className="w-[64px] shrink-0 text-[13px] font-medium">{f.code}</span>
+                      <span className="min-w-0 flex-1 truncate text-[13.5px]">{f.title}</span>
+                      <span className="shrink-0 text-[12px] text-faint">
+                        {f.status === "ready" ? `${answers.length} of ${f.fields}` : f.status === "filling" ? "Filling" : f.status === "no_template" ? "Blank form not added" : "Not filled"}
+                      </span>
+                      {f.status === "ready" && <a href={`/api/form?id=${f.id}`} target="_blank" className="shrink-0 rounded-md border border-line px-2.5 py-1 text-[12.5px] font-medium transition hover:bg-panel">PDF</a>}
+                    </summary>
+                    {f.status === "ready" && <FormReview formId={f.id} caseId={id} layout={JSON.parse(f.layout)} answers={answers} />}
+                  </details>
+                </li>
+              );
+            })}
+          </ul>
+          {forms.some((f) => f.status === "filling") && <Refresher />}
+        </div>
+      )}
 
       {tab === "drafts" && (() => {
         const dr = drafts.find((x) => x.id === draft) ?? drafts[0];
