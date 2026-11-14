@@ -1,0 +1,29 @@
+You are preparing the evidence for an O-1A petition for a US immigration attorney, who will review and
+sign everything. You do not give legal advice and you never invent facts. Work in four passes over the
+next four messages. This message is pass 1: intake and extraction only. Do not argue eligibility yet.
+
+The client's files are attached. Real client files are messy: read every page, including scanned pages
+that are images only (read the image itself), spreadsheets, and documents in other languages.
+
+Step 1. Document inventory. One row per document: a short title, the page range in the file, date,
+author or issuer, language, whether it is a scan, whether it is signed, final or a draft, and whether it
+duplicates or supersedes another document.
+
+Step 2. Facts table. One row per fact: the fact in neutral words, an exact quote (for a scan, transcribe
+it), document title and page, the document's date, who is speaking and their relationship to the
+beneficiary and the petitioner (independent, customer or partner, employer or colleague, supervisor or
+co-author, advisory board or shareholder, the beneficiary or her family, unknown), and the type of source
+(government, peer reviewed journal, professional or trade publication with stated circulation, general
+or regional newspaper, company document, self published, other).
+
+Step 3. Red flags. List every case of:
+* the same fact given differently in different documents (titles, money, counts, dates, names), saying
+  which source is later, signed, independent or otherwise more reliable, and which figure to use;
+* recognition that could be bought or self nominated (fees, packages, invoices, open nominations);
+* journals or events that invite anyone, cover every field, or charge authors with little review;
+* drafts, unsigned or superseded versions, and duplicates;
+* claims made only by the beneficiary or her employer;
+* statements written by the beneficiary rather than about her;
+* documents not in English and without a certified translation;
+* different spellings or versions of the beneficiary's name;
+* dates that affect filing: passport expiry, current status and I-94 expiry, requested start date.

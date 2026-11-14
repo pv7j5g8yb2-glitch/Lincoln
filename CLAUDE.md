@@ -1,147 +1,172 @@
-# Kirmi Studio
+# Lincoln
 
-The clinic agency model is dropped for good. Do not suggest it, reference it, or use
-it as a fit check for new ideas.
+**Lincoln v0 (a prompt method) failed its blind test against plain Claude on 2026-11-11. On 2026-11-12
+Ismael restarted Lincoln as a case platform; the plan is `docs/LINCOLN-V1.md` and the app is in
+`lincoln/` (first draft built 2026-11-13). See `docs/STATE.md`.**
+
+Lincoln is an AI workspace for immigration lawyers (decided 2026-11-09, Ismael). It was called
+Hopkins until that day, and the repo and its GitHub name still say Hopkins. The earlier real
+estate content product, the Covered certificate tracker and everything around them were
+removed from this repo on 2026-11-09. They are still in git history up to commit `341cf65` if
+anything is ever needed. The clinic agency model is dropped for good. Do not suggest it.
 
 ## Start here
 
-Read `docs/STATE.md` at the start of every session: it has the current state, what's in flight,
-and the small details from earlier sessions. Keep it up to date when anything in it changes.
-Whenever something important or valuable comes up (a decision, a preference, a lesson, a plan,
-a finding), save it straight away without asking: rules go in this file, creative learnings in the
-playbook, state and plans in `docs/STATE.md`, then commit and push (Ismael, 2026-10-19).
+Read `docs/STATE.md` at the start of every session: it has the current state, what is decided,
+what is open and what to do next. Keep it up to date when anything in it changes.
+Whenever something important comes up (a decision, a preference, a lesson, a plan, a finding),
+save it straight away without asking: rules go in this file, state and plans in `docs/STATE.md`,
+research in `docs/RESEARCH.md`, then commit and push.
+What lawyers say about legal AI, in their own words: `docs/reddit/` (30 threads, 2026-11-14). Read it before
+product or positioning decisions. Not every remark is a rule: save what will
+matter again, not passing thoughts.
 
 ## Git
 
-Push work to the session branch without asking (Ismael, 2026-10-18). A push redeploys the waitlist
-on Render, which is fine. Only ask first when a change would alter the live site in a way he hasn't
-already agreed to.
+Push work to the session branch without asking. Never push to another branch without permission.
+Only ask first when a change would alter something live that Ismael has not agreed to.
 
 ## Writing for Ismael
 
 These are hard rules. They come from repeated correction, not preference.
 
-**Never use dashes.** No em dashes, no en dashes, no dashes as punctuation of any
-kind. Use a comma, a full stop, or restructure the sentence. This applies to every
-message, every draft, every rewrite, without exception.
+**Never use dashes.** No em dashes, no en dashes, no dashes as punctuation of any kind. Use a
+comma, a full stop, or restructure the sentence. This applies to every message, draft and rewrite.
 
-**Irish English, not American.** Enquiry not inquiry. Realise, organise, apologise.
-Programme, centre, colour. "At the weekend", not "on the weekend".
+**Irish English, not American** (in messages to Ismael and in docs written for him; Lincoln itself writes American
+English, because its users are US lawyers and its drafts go to USCIS). Enquiry not inquiry. Realise, organise, apologise. Programme,
+centre, colour. "At the weekend", not "on the weekend".
 
-**Sound like a person, not a salesperson.** Plain sentences. No LinkedIn register,
-no "circling back", no "just floating this back up", no "hope this finds you well",
-no "I wanted to reach out". Short is better than clever.
+**Sound like a person, not a salesperson.** Plain sentences. No LinkedIn register, no "circling
+back", no "hope this finds you well", no "I wanted to reach out". Short is better than clever.
 
 **Say what the reader gets, not what the product does.**
 
-**Never claim anything untested or untrue.** No invented results, no user counts,
-no capabilities that have not actually been run.
+**Never claim anything untested or untrue.** No invented results, user counts, certifications,
+customers, testimonials or capabilities that have not actually been run. This matters more here
+than anywhere: lawyers check, and a false claim ends the company.
 
 **Don't repeat what an earlier message in the thread already said.**
 
-**One ask, and make it answerable.** A question the reader can answer in one line
-beats a request for a 15 minute call.
+**Examples read as suggestions.** Never use a dated or basic idea (AI receptionists, chatbots) or
+one he has ruled out as an example, even to show a method. If an example is not something worth
+building in 2026, leave it out.
 
-## Brand principles
+**One ask, and make it answerable.**
 
-From reference carousels Ismael saved. They apply to our own brand and to every
-creative the product makes for its customers, since we distribute their ads.
+**Don't pad, don't act superior, don't pile on options.** Ismael gets angry at long lists, at
+being asked what he already answered, and at being told to talk to people without a reason. Give
+a straight answer first, then the reason. When he decides something, do it.
 
-1. **Visual language.** Visuals aren't aesthetics. They are signals of intent,
-   position and credibility.
-2. **Brand value.** Brands don't earn trust by promising more. They earn it by
-   delivering the same thing, every time.
-3. **Brand psychology.** People don't buy products. They buy meaning, and defend
-   their choice with logic later.
-4. **Brand character.** There is no neutral brand. You shape your character, or the
-   market does it for you.
-5. **Brand story.** One campaign doesn't build a brand. Repeated narratives do.
-6. **Market and positioning.** If your position isn't clear, you're replaceable.
-   Clarity is the real competitive advantage.
-7. **Brand system.** Without systems, brands rely on taste. Taste doesn't scale.
-8. **Execution.** Strategy means nothing without reality. Brands are built in
-   experience, not intention.
-9. **Branding is alignment.** What you say, what you show, what you deliver and what
-   people remember. When everything aligns, the brand becomes undeniable.
+**Lincoln facts not to get wrong again (Ismael, 2026-11-12).** Lincoln handles every immigration case
+type a firm takes; never propose an O-1 only product. Only call the market crowded or Lincoln's price
+high against a competitor that does at least 80 percent of what Lincoln does for less; compare price
+with the work saved, not with case software. Never assume most firms use Docketwise (its share is
+unknown). Never present a co-founder as an easy fix: it costs equity, a minor cannot hire, and the role
+is unclear.
 
-The six pillars every brand (ours and each customer's) needs defined:
+**Lincoln's edge is autonomy (Ismael, 2026-11-13).** Lincoln works without being prompted: it reads the firm's
+mail, opens and works cases, chases and prepares the next step, and asks only for decisions. Never present an
+upload or chat feature as the product; that is what Harvey and Legora already do. New accounts always start
+completely blank. The chat must behave like Claude and ChatGPT (one line box, Enter sends, box pinned at the
+bottom, "Ask Lincoln anything") and must answer honestly about what Lincoln can and cannot do.
 
-1. **Visual identity.** Logos, colours, type and layouts that make the brand
-   instantly recognisable.
-2. **Brand promise.** The core commitment, delivered at every interaction.
-3. **Consumer psychology.** The emotions, motivations and biases that make people
-   choose one brand over another.
-4. **Brand personality.** How the brand speaks, behaves and feels. Its human
-   character.
-5. **Narrative systems.** Connected stories and messages that repeat across channels
-   over time.
-6. **Market execution.** Consistent launches, campaigns and real world presence.
+**Lincoln's interface copy (Ismael, 2026-11-13).** Write the product like a billion dollar company
+would. Keep screens minimal: no explanatory sentences for things the user can see for themselves. Never
+address the user in the second person inside the product (no "you", "your", "Needs you"); use neutral
+labels such as "For review" and "Awaiting approval". Emails Lincoln drafts to clients are the exception.
+No status chatter or helper text (Ismael, 2026-11-14: "a serious software platform never talks to the user
+like this"): no "checked just now", no confirmations like "Connected. New mail is read...", no subtitles
+under names, no checklists of what works, no descriptions under rows or buttons. Errors are a few words.
+Notices after an action (Ismael, 2026-11-14) drop from the top as a soft rectangle, one or two words ("Saved",
+"Sent", "Deleted"), can be pushed up, and leave by themselves after 5 seconds. Drafted emails show Approve and Edit;
+Edit opens the text, then Save.
 
-Reference style: black on warm off white, fine grain, a bold grotesk title over a
-regular weight word, one simple symbol with thick rounded strokes, one short line of
-copy. Second style: italic serif headings with soft highlighter marks on grid paper.
+**Lincoln on phones and manual work (Ismael, 2026-11-14).** On phones Lincoln uses the Hopkins Liquid Glass
+tab bar (Home, Cases, +, Review, More), with a lens that glides, stretches and follows a finger, and the More
+menu as a glass sheet; no top bar or slide out menu. The app follows the device's light or dark setting.
+A case is opened by prompting Lincoln (one box: describe it or attach files), never by filling a form; the
+normal path is Lincoln opening cases from mail by itself. Keep screens light: hide empty sections.
 
-## Hopkins brand (locked)
+**Lincoln is Mike Ross and Donna, not a dashboard (Ismael, 2026-11-14).** Think of Lincoln as Mike Ross and Donna
+to Harvey Specter in Suits combined: it does the legal work and keeps everything organised, and comes to the lawyer
+only for a crucial approval, a question or missing context. Do not make it heavy: no piles of features, checks or flags on screen. Checks run
+quietly and surface only what matters; minor items stay folded.
 
-The product: one chat that runs a real estate business's marketing like an agency would.
-**Positioning (Ismael, 2026-10-18):** Hopkins is a chat, like ChatGPT or Claude, for running real
-estate marketing. Always lead with the chat. Never word it like a service that does the work for
-them ("made for you", "done for you"), because that reads as a digital marketing agency.
-Name **Hopkins**, after Claude Hopkins, who wrote *Scientific Advertising* in 1923 and
-tested every ad against another. Instagram **@gethopkins**. Domain gethopkins.com is
-not bought yet; the waitlist runs on waitlist.kirmistudio.com until sign ups prove it.
+**Emails Lincoln drafts (Ismael, 2026-11-14).** Every email reads as if the attorney or paralegal wrote it: professional,
+warm, brief, human, following the thread and the case. Never "reply yes", stock phrases, internal labels, page
+numbers, dashes or anything that sounds robotic or confusing. The rules live in `lincoln/src/lib/style.ts`; every
+email prompt uses them. Lincoln is AI but acts as a human P.A.
 
-* **Mark, "Rise":** two hand drawn pebbles, deliberately lopsided, never perfect
-  circles. Small plum pebble lower left (the ad that lost), larger gold pebble upper
-  right (the winner). The symbol stands on its own, then the name beside it.
-* **Colours:** Oxblood `#2A0F14` (ground), Oxblood 2 `#36151C` (surfaces), Cream
-  `#F4EBDD` (text on dark, ground on light), Gold `#D7AE62` (the winner, buttons,
-  the number that matters, nothing else), Plum `#5B4873` (second pebble, past or
-  unchosen options; lightens to lilac `#B79DC2` on cream), Rose grey `#C3A9A2`
-  (quiet text). Bronze `#8E6B2C` for gold coloured text on cream.
-* **Type:** Inter Tight, bold over regular, tight spacing. Instrument Serif italic
-  for one accent word at most.
-* **Where each ground goes:** oxblood outside (logo, posts, ads, the top of the
-  landing page), cream inside (the product, long reading sections, forms). Fine
-  grain on both.
-* **Tagline:** none for now (Ismael, 2026-10-18). Don't use "Tested, not guessed." as a slogan on
-  end cards, ads or the page. **Promise:** "Real estate marketing, run for
-  you. Nothing goes live without your yes."
-* **Wording in public copy:** say "real estate" (agents, teams, brokerages), never
-  "estate agent", because the US, Canada, Australia and the UAE all say real estate.
-  Never use "Realtor" (a trademark for NAR members only). Messages to Ismael stay in
-  Irish English.
-* **"Built in Silicon Valley" is true** (Ismael, 2026-10-18). It stays in the footer and can be used in
-  public copy. Never question it, call it false or remove it.
-* **Voice: never "we", "us" or "our"** in anything public (page, posts, captions,
-  stories, ads, emails). "We" makes Hopkins sound like an agency. Write as the product:
-  "Hopkins makes the ads", "you approve", or "I" when Hopkins talks in the chat. Same in
-  plans and drafts for Ismael: say what Hopkins does or what to post, not what "we" do.
-* **Personality:** a quiet expert. Plain, precise, shows the numbers, never hype. In reels it talks
-  like one person telling a friend or colleague what they think: everyday words, swearing is fine
-  where natural (Ismael, 2026-10-19). Facts stay exact.
-* **Recurring stories:** Wanamaker's half, tested not guessed, the empty Monday.
+**Never push a failing build (2026-11-13).** Check the real exit status of the type check and `npm run
+build` before every push to the session branch; Render deploys from it. A grep for "Compiled" is not a check.
 
-## Creative playbook
+## The project
 
-What content and ad creative actually works on Instagram for real estate lives in
-`.claude/skills/hopkins-creative/SKILL.md`. Use it for every post, carousel, reel and ad,
-for @gethopkins and for what the product makes for customers. When Ismael sends new
-examples of what's winning, add the learning to its log with the date.
+* **What it is:** a self serve AI workspace for immigration lawyers in the US (the law is federal,
+  so no single state). Like Claude or ChatGPT, trained and set up for immigration work: it takes
+  any time consuming task, returns a finished file (Word, PDF, Excel), and connects to the tools
+  lawyers use (Word, Google Docs, Outlook, Drive, their case software). Ready made workflows
+  first, a general assistant on top. Priced per seat per month (about $300 is the working figure,
+  untested).
+* **First workflows (draft, to be tested):** employment based cases (O-1, EB-1, H-1B, L-1 and
+  green cards from them), end to end from client questionnaire and evidence to a finished filing
+  packet. Family cases, forms, deadlines and billing come later.
+* **Goal (Ismael, 2026-11-09):** $100k a month profit by age 20, about November 2031. Roughly
+  445 seats at $300 if about 75 percent of revenue is profit (both figures are assumptions).
+* **Name (Ismael, 2026-11-09): Lincoln**, after Abraham Lincoln the lawyer. Domain: uselincoln.com
+  (found free, to be bought by a parent or guardian, used only as the web address). lincoln.ai
+  is for sale and is left for later when there is money and users, do not overpay early. Ruled
+  out: Walter (Legora owns Walter AI), Atticus, Gideon (both used in legal tech), Suits
+  (Suits.ai exists, and Mike Ross practised without a licence), Hopkins (clashes with Johns
+  Hopkins in search). Still to do: a US trademark search for LINCOLN in software and legal
+  services, and a look at what a search for "Lincoln AI" shows. Lincoln is a big brand in other
+  industries (Lincoln Financial, Lincoln Motor, Lincoln Electric).
+* **Honest odds:** low single digits to about ten percent for the goal, a guess. Every funded
+  competitor (Harvey, Legora, Clio, Spellbook, CoCounsel, Parley, CaseBlink, Docketwise and
+  others) is already selling. See `docs/RESEARCH.md`.
 
-## Product decisions (Hopkins)
+## Ismael's real requirements (2026-11-10)
 
-* **Free plan:** up to 3 ads made in the chat, previews only, the Hopkins logo and name
-  across the middle, no downloads. Changes to those 3 are included. Asking for a 4th, or
-  pressing "run it" on any ad, brings up the upgrade message in the chat.
-* **Paid:** billing starts when the first ad goes live. Month to month, cancel any time,
-  a flat price with no cut of ad spend. From $299 a month; higher tiers by monthly ad
-  spend are not final.
-* **Solo plan:** there will be one for single agents, priced below the team plans. No
-  price set yet. Teams and brokerages get early access first.
-* **Waitlist offer:** 30% off the first year.
-* **Autopilot:** optional. The owner sets a monthly budget and goal once, Hopkins makes,
-  tests and runs ads within it, reports every Monday, and can be paused any time. The
-  default stays approving every ad.
-* **Agency offer:** don't ask teams to fire their agency. Run Hopkins next to it on one
-  listing for a month, compare cost per lead, keep whichever wins.
+* The only goal: about $100k a month profit (about $1M a year) by age 20. Price, self serve and
+  seat counts are not rules in themselves.
+* Never suggest asking buyers or strangers about their problems, pain or how they work (posts,
+  DMs, "20 minutes of your time"). Professionals mock it (r/Ask_Lawyers reply: "weed out
+  questions from kids spamming forums for shitty business ideas"). Learn by reading what they
+  already wrote; approach them only with finished work they can judge.
+* Reaching buyers (Ismael, 2026-11-11): company content is fine (a brand account posting like any software
+  company), but nothing about him, his face, his story or his life. No cold outreach of any kind, not even
+  "just asking for feedback". Ideas must be ones where buyers can find the product through company
+  content, search or a marketplace and sign up on their own.
+* Funding (Ismael, 2026-11-13): applying to VC firms and accelerators before revenue IS allowed. He
+  has no income and needs cash now; the old rule (no VC before paying users) is overruled. Still no
+  cold outreach: apply only through each firm's own application form, and always through the company
+  owned by a parent or guardian.
+* No video or phone calls with buyers. Selling and talking to customers in writing is fine (email,
+  DMs, LinkedIn), as long as it is a normal human conversation, not template pitching.
+
+## Hard limits (do not break these)
+
+* **Ismael is 15.** A parent or guardian must be the legal owner of the company and the account
+  holder for payments, contracts and data agreements. LinkedIn's minimum age is believed to be
+  16 (verify): do not set up an account that pretends to be someone else.
+* **No fake identity, no fake founder, no fake lawyer.** The product is not a lawyer and never
+  claims to be. Every output is for a licensed attorney to review. Say so plainly.
+* **Client files (Ismael, 2026-11-12).** Lawyers testing Lincoln are encouraged to use it on real cases,
+  but only once the security minimum in `docs/LINCOLN-V1.md` is in place. Claude and Ismael build and
+  test on public documents and made up cases only.
+* **Security claims only if true.** No SOC 2, ISO or HIPAA badges until they exist. What can be
+  said honestly: no training on customer data, a zero retention agreement with the model
+  provider (only if actually signed), where data is stored, how to delete it.
+* **No made up proof.** No logos, quotes, stats or "pilots" that did not happen.
+* **No scraping and no ways round a site's bot protection.**
+* **Unauthorised practice of law:** the product prepares documents for lawyers. It does not give
+  legal advice to the public.
+
+## How to work
+
+* Test before saying it works. Look at the real output, not only that tests pass.
+* Run the cheap test before the big build. The plan is in `docs/TEST-PLAN.md`.
+* Do not build anything Ismael has not asked for. Say what you think and wait.
+* Check a claim against a source before repeating it. Many sources in this field are vendor
+  blogs, and AI summaries get firms, dates and funding wrong.

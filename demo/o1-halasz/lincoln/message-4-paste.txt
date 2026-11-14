@@ -1,0 +1,9 @@
+Pass 4: review your own work as a strict reviewer who did not write it.
+
+1. Check the letter sentence by sentence: the cited page contains the fact, the figure is the reliable
+   one, nothing comes from a draft, duplicate or excluded document, and nothing is overstated.
+2. Check every criterion claim against its regulation standard and that no excluded evidence is used.
+3. Check that every red flag from pass 1 is resolved in the letter or listed in the gaps.
+4. Check the filing requirements list is complete, including dates.
+5. Fix everything, then output the final versions of all four documents, followed by a short list of
+   the corrections you made in this pass.

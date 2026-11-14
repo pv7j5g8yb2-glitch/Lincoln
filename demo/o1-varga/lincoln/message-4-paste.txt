@@ -1,0 +1,9 @@
+Pass 4: check your own work as a strict reviewer who did not write it.
+
+1. Go through the support letter sentence by sentence. For each factual sentence, confirm that the
+   cited exhibit and page contain that fact. List every sentence that is unsupported, mis-cited,
+   overstated or uses a superseded figure.
+2. Check that no weak or excluded evidence is being used to claim a criterion.
+3. Check that every missing required element appears in the gaps list.
+4. Fix every problem you found, then output the final versions of all four documents, followed by a
+   short list of the corrections you made in this pass.

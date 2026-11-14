@@ -1,0 +1,51 @@
+# Free test version: no card needed. The free plan has no persistent disk, so accounts and decisions
+# disappear whenever the service restarts, and it sleeps after about 15 minutes without a visit.
+# The sample workspace always comes back. Use render.yaml (Starter plan) for anything longer lived.
+services:
+  - type: web
+    name: lincoln
+    runtime: node
+    rootDir: lincoln
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /signin
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: DATA_DIR
+        value: /tmp/lincoln-data
+      - key: LLM_BASE_URL
+        value: https://api.anthropic.com
+      - key: LLM_MODEL
+        value: claude-opus-5-5
+      - key: SEED_USER_EMAIL     # a personal login for the sample workspace, set in the dashboard
+        sync: false
+      - key: SEED_USER_PASSWORD
+        sync: false
+      - key: SEED_USER_NAME
+        sync: false
+      - key: SEED_USER_FIRM
+        sync: false
+      - key: APP_URL             # the public address, used for the Google sign in return link
+        value: https://lincoln-qm5g.onrender.com
+      - key: GOOGLE_CLIENT_ID    # from Google Cloud, OAuth client for a web application
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_PUBSUB_TOPIC  # projects/<project id>/topics/lincoln-gmail, for instant Gmail delivery
+        sync: false
+      - key: GOOGLE_PUSH_TOKEN    # shared with the Pub/Sub push subscription address
+        generateValue: true
+      - key: MICROSOFT_CLIENT_ID # from Microsoft Entra, app registration for Outlook, OneDrive, Teams
+        sync: false
+      - key: MICROSOFT_CLIENT_SECRET
+        sync: false
+      - key: RESEND_API_KEY      # password reset emails
+        sync: false
+      - key: MAIL_FROM           # e.g. Lincoln <no-reply@uselincoln.com>
+        sync: false
+      - key: LINCOLN_SECRET      # encrypts mailbox tokens at rest
+        generateValue: true
+      - key: LLM_API_KEY
+        sync: false

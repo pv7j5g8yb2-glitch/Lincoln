@@ -1,0 +1,16 @@
+Pass 3: draft the four documents, using only the pass 1 facts and the pass 2 conclusions.
+
+1. Petition support letter from the petitioner to USCIS. Structure: introduction; the beneficiary and
+   the field; the legal standard with regulation citations; one section per claimed criterion, each
+   headed with its citation; the consultation; the final merits argument; conclusion. Every factual
+   sentence ends with a citation to the document title and page in the client file. Use the reliable
+   figure for every conflict and never repeat a superseded, draft or inflated one. Do not use excluded
+   evidence. Do not write caveats addressed to USCIS; put notes for the attorney in [square brackets].
+   Never say a document is enclosed if it has not been obtained; write [to be obtained].
+2. Criteria map table: criterion and citation, recommendation, evidence with pages, weakness, strength.
+3. Exhibit index in filing order: forms, required documents, evidence by criterion, supporting
+   material. List excluded documents separately with the reason. Mark items still to be obtained.
+4. Gaps and risks: every missing or inadequate requirement, every weak criterion, every conflict, every
+   date that affects filing, with the action for the attorney.
+
+Do not use internal row numbers or IDs from earlier passes in these documents.
