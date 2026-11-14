@@ -301,4 +301,8 @@ from the repo the same day. History is in git up to commit `341cf65`.
 * 2026-11-14: case types rebuilt from the official USCIS forms list (uscis.gov/forms/all-forms, fetched that day) plus
   State Department, Labor, EOIR, ICE, CBP, federal court, compliance and advice work: 156 types in 14 families
   (`lincoln/src/lib/library.ts`). Any matter outside the list is still opened under the name the model gives it.
+* 2026-11-14: `docs/HOW-FIRMS-WORK.md` maps how immigration firms work step by step, where Lincoln stands at each
+  step, and what start to finish needs (forms, filing packet, final review page, e-signature, status tracking, RFE
+  builder, a live accuracy test graded by an immigration lawyer). A short version is in Lincoln's prompts
+  (`lincoln/src/lib/process.ts`).
 

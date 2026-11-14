@@ -3,6 +3,7 @@ import { LIBRARY, typeOf } from "./library";
 import { chat, forCase, parseJson, readPages } from "./llm";
 import { DATE_KINDS, dateRules } from "./rules";
 import { EMAIL_STYLE } from "./style";
+import { PROCESS } from "./process";
 import { renderFiles } from "./pdf";
 import { loadPage, removePagesAfter, savePage } from "./storage";
 
@@ -35,7 +36,10 @@ Rules:
 - Cite regulations and forms only when you are certain of them; otherwise leave the citation empty.
 - Pages may be scans or phone photos. If any part of a page that matters to the case cannot be read with certainty (blur, glare, shadow, cut off edges, low resolution, handwriting that is not legible), do not guess and do not use anything from that part: list it under "unreadable". A wrong name, date or number in an immigration filing is worse than a missing one.
 - Write tersely and formally, as a senior paralegal would in a case note, in American English. No greetings, no filler, no first person.
-- Dates in YYYY-MM-DD.`;
+- Dates in YYYY-MM-DD.
+- Say where the case stands and who it is waiting on in the terms of the process below.
+
+${PROCESS}`;
 
 const instruction = (c: { client: string; type: string; firm: string; attorney: string; extra?: string; fromClient?: boolean }) => `${c.extra ?? ""}Case: ${c.client}. Case type: ${c.type}. Firm: ${c.firm}. Responsible attorney: ${c.attorney}.
 
