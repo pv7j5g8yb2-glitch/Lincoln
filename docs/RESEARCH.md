@@ -905,3 +905,51 @@ https://www.mycase.com/?p=16749 , https://www.iphonejd.com/?p=303 , https://www.
   account for the company (verified business details and an email on the domain), linked to the app
   registration, plus the publisher domain file (served by Lincoln at /.well-known/). Optional Microsoft
   365 Certification is a further audit, not needed to remove "unverified".
+
+## 30 Reddit threads on Harvey, Legora, Claude and adoption (pasted 2026-11-14)
+Sources: r/legaltech, r/biglaw, r/sales, Sept 2025 to Nov 2026. Comments, not verified facts; many
+commenters are vendors, some posts read as AI written, none are immigration lawyers specifically.
+* Most repeated verdict: Harvey and Legora are chat plus upload; lawyers say Claude or ChatGPT with
+  projects and skills does the same for $25 to $125 a seat (Claude Team or Enterprise). The anchor a
+  small firm has in mind is that price, not case software.
+* What two commenters say does not exist yet is Lincoln's thesis: "An email comes into my inbox with an
+  updated deadline... the entire workflow process is seamlessly kicked off in an autonomous fashion...
+  The process automation isn't there now in any meaningful way." A practice software builder: the hard
+  part is "making the system underneath smart enough that the AI isn't guessing" (matters, deadlines,
+  contacts, documents linked). Several: systems of record survive because labs will not become databases.
+* Adoption: lawyers ignore tools they must prompt or build flows for ("Is the problem that you are
+  expected to become a prompt engineer?"). Advice from adoption people: start with one task they dislike.
+* Harvey complaints: no memory across a matter (reupload every time); routes the real work to cheaper
+  models while the chosen model only writes the final output (Harvey help page "multi-model", per a
+  commenter); "lazy" ("type continue if you want me to read all the documents"); opaque pricing that
+  differs per customer; minimums (one report: $30k start, about $1,200 a seat, 100 seats) and no time
+  for small firms. Half of US lawyers are solo or small firm.
+* AI faults lawyers name: risk spotting "like a 1L gunner" (every risk, no sense of size), too quick to
+  accept fault and easy to lead, verbose prose they can spot ("Claudeslop"), fluent text without sources
+  (then they reread the original and decide AI saved nothing), missed facts that change the answer
+  (one intake line that disqualified a matter was missed by every tool except Opus at max effort).
+* Errors: omissions are the hardest to catch (several independently). Patterns that work: separate passes
+  (extract, validate, correct, assure), one pass only for what is missing and one only for
+  contradictions, an adversarial reviewer agent with a written protocol, two models checking each other,
+  abstention ("I don't know"), and calculations done in code ("computers are good at math, just not LLMs").
+* Trust: every line linked to the page it came from makes review a spot check. Keep extracted candidates
+  with sources apart from the reconciled value; show conflicts instead of overwriting. Keep a record per
+  output: sources, model and prompt version, date, reviewer, sign off. Firms stay liable (clients refuse
+  non reliance carve outs), so a documented method is how they defend the standard of care.
+* InfoSec and client opt outs come down to three questions: do you train on our data, how long do you
+  keep it, who are your subprocessors. Security reviews then ask where every copy of the text lives
+  (OCR, search index, logs, crash reports, backups).
+* Word: "If the output isn't tracked changes in the document the lawyer already has open, most lawyers
+  won't use it." Firm voice: lawyers build style guides from their own past work; biggest quality jump.
+* Costs (one litigator's runs of Harvey's open benchmark tasks, 77 to 137 page contract reviews): about
+  $2 to $11 a task on Opus 4.7 and 4.8 depending on effort. Estimate (one tweet): Harvey uses 13 trillion
+  tokens a month. Per seat vendors are squeezed as usage grows and are suspected of throttling; one
+  founder argues for per unit pricing (per patent drafted) instead.
+* Harvey's open benchmark (LAB): criticised for all pass grading, noisy LLM judges, synthetic tasks,
+  judges not given the source documents. Lawyers trust tests they can read.
+* Pilots: run on finished matters where the right answer is known (counts misses, not only fixes),
+  measure corrections per document over time, write the stop criteria first. What sells most is that
+  comparable firms already use it (cannot be faked).
+* Revenue reporting: Harvey and Legora criticised for "contracted ARR" with opt outs; Harvey says the gap
+  is about 5 percent. Harvey reported $400M ARR and a $15.5B valuation (Sept to Oct 2026, per the
+  subreddit moderator).
