@@ -29,8 +29,22 @@ const direct = () => /(^|\.)anthropic\.com$/.test(new URL(base()).host);
 // Two models: the main one (LLM_MODEL) for legal work, where accuracy decides everything, and a light
 // one (LLM_MODEL_LIGHT, Haiku by default) for sorting work that is simple and frequent, such as deciding
 // what an email is. Anything a person reads as work product, emails included, stays on the main model.
-const mainModel = () => process.env.LLM_MODEL!;
-const lightModel = () => process.env.LLM_MODEL_LIGHT || (direct() ? "claude-haiku-5-5" : mainModel());
+// For model comparisons only: LINCOLN_MODEL_BY_FIRM maps a test firm's name to one model used for all its
+// work, e.g. {"Test Sonnet":"claude-sonnet-5-5"}. Unset in normal use.
+function testModel(): string | null {
+  const map = process.env.LINCOLN_MODEL_BY_FIRM;
+  const w = work.getStore();
+  if (!map || !w) return null;
+  try {
+    const name = (db().prepare("SELECT name FROM firms WHERE id = ?").get(w.firmId) as { name: string } | undefined)?.name;
+    const m = name ? (JSON.parse(map) as Record<string, string>)[name] : undefined;
+    return typeof m === "string" && /^claude-[a-z0-9-]+$/.test(m) ? m : null;
+  } catch {
+    return null;
+  }
+}
+const mainModel = () => testModel() ?? process.env.LLM_MODEL!;
+const lightModel = () => testModel() ?? (process.env.LLM_MODEL_LIGHT || (direct() ? "claude-haiku-5-5" : process.env.LLM_MODEL!));
 const headers = () => ({ "content-type": "application/json", "x-api-key": process.env.LLM_API_KEY!, "anthropic-version": "2023-06-01" });
 
 /** Headers and extra body fields for every request. Direct to Anthropic, a refusal falls back to another model. */
