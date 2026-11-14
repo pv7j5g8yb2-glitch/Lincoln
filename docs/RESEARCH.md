@@ -894,3 +894,14 @@ found. Conclusion for Lincoln: desktop first for reading files and reviewing dra
 approvals and notices.
 Sources: https://www.americanbar.org/groups/law_practice/resources/tech-report/2022/practice-management/ ,
 https://www.mycase.com/?p=16749 , https://www.iphonejd.com/?p=303 , https://www.lawnext.com/?p=13460
+
+## Removing "unverified app" warnings (checked 2026-11-14)
+* Google: Gmail and Drive read scopes are restricted, so the warning and 100 user cap stay until an annual
+  CASA security assessment passes. Tier 2 lab prices (a comparison labelled "as of 2024", switchlabs.dev):
+  TAC Security $540 basic, Leviathan $800 to $1,200, NetSentries $900 to $1,500, NCC Group $1,200+,
+  Bishop Fox $1,500+; Tier 3 about $4,500 to $8,000+. The lab sends Google a Letter of Validation.
+  Renewed every year. Sending only (gmail.send) is a sensitive scope and does not need CASA.
+* Microsoft: no paid assessment. Publisher verification is free: a Microsoft AI Cloud Partner Program
+  account for the company (verified business details and an email on the domain), linked to the app
+  registration, plus the publisher domain file (served by Lincoln at /.well-known/). Optional Microsoft
+  365 Certification is a further audit, not needed to remove "unverified".
