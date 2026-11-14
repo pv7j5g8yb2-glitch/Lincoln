@@ -4,7 +4,7 @@ import { db, uid } from "@/lib/db";
 import { apiUser, viewer } from "@/lib/session";
 import { caseById, caseDates, caseDrafts, cases, chatHistory, criteria, documents, issues, pendingApprovals, upcomingDates } from "@/lib/queries";
 import { forCase, llmConfigured, runAgent, type Tool } from "@/lib/llm";
-import { LIBRARY } from "@/lib/library";
+import { typeOf } from "@/lib/library";
 import { EMAIL_STYLE } from "@/lib/style";
 import { draftForCase } from "@/lib/intake";
 import { firmMailbox } from "@/lib/integrations";
@@ -12,7 +12,7 @@ import { firmMailbox } from "@/lib/integrations";
 const TOOLS: Tool[] = [
   { name: "find_cases", description: "Search the firm's cases by client, petitioner, type, reference or stage. Empty query lists all.", input_schema: { type: "object", properties: { query: { type: "string" } } } },
   { name: "get_case", description: "Full record of one case: documents with pages, issues, requirements and evidence, dates, drafts, messages.", input_schema: { type: "object", properties: { case_id: { type: "string" } }, required: ["case_id"] } },
-  { name: "open_case", description: "Open a new case.", input_schema: { type: "object", properties: { client: { type: "string" }, type_code: { type: "string", description: "A code from the firm's case types, e.g. O-1A, H-1B, I-130 / I-485, N-400" }, counterpart: { type: "string" }, client_email: { type: "string" } }, required: ["client", "type_code"] } },
+  { name: "open_case", description: "Open a new case.", input_schema: { type: "object", properties: { client: { type: "string" }, type_code: { type: "string", description: "The case type code, for example O-1A, H-1B, I-130, I-589, N-400, EOIR-42B, or a short code of its own for any other matter" }, type_name: { type: "string", description: "Plain name of the matter" }, counterpart: { type: "string" }, client_email: { type: "string" } }, required: ["client", "type_code"] } },
   { name: "draft_document", description: "Draft any document for a case from its file, every fact cited to its page: letters, RFE responses, declarations, cover letters, memos. Runs in the background and appears under the case's Drafts.", input_schema: { type: "object", properties: { case_id: { type: "string" }, request: { type: "string" } }, required: ["case_id", "request"] } },
   { name: "draft_email", description: "Prepare an email to a client or third party. It is queued for attorney approval and sent from the connected mailbox once approved. Never claims to have sent it.", input_schema: { type: "object", properties: { case_id: { type: "string" }, to_name: { type: "string" }, to_email: { type: "string" }, subject: { type: "string" }, body: { type: "string" } }, required: ["case_id", "to_name", "subject", "body"] } },
   { name: "add_date", description: "Add a deadline, expiry, appointment or target date to a case.", input_schema: { type: "object", properties: { case_id: { type: "string" }, label: { type: "string" }, date: { type: "string", description: "YYYY-MM-DD" } }, required: ["case_id", "label", "date"] } },
@@ -63,10 +63,10 @@ export async function POST(req: Request) {
     }
     if (name === "open_case") {
       const code = String(input.type_code ?? "").trim();
-      const fam = LIBRARY.find((f) => f.types.some(([k]) => k === code));
+      const ty = typeOf(code, input.type_name ? String(input.type_name) : null);
       const id = "c_" + uid();
       d.prepare(`INSERT INTO cases (id, firm_id, ref, client, counterpart, type_code, type_name, family, stage, state, summary, attorney_id, paralegal_id, opened_at, sensitive, pages, processing, client_email)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Intake', 'moving', 'Opened. No client file yet.', ?, ?, ?, ?, 0, 0, ?)`).run(id, F, `${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`, String(input.client).slice(0, 120), input.counterpart ? String(input.counterpart).slice(0, 120) : null, code || "Other", fam?.types.find(([k]) => k === code)?.[1] ?? "To be confirmed", fam?.name ?? "Other", s!.user.id, s!.user.id, new Date().toISOString(), fam?.name === "Humanitarian" ? 1 : 0, input.client_email ? String(input.client_email).toLowerCase() : null);
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Intake', 'moving', 'Opened. No client file yet.', ?, ?, ?, ?, 0, 0, ?)`).run(id, F, `${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`, String(input.client).slice(0, 120), input.counterpart ? String(input.counterpart).slice(0, 120) : null, ty.code, ty.name, ty.family, s!.user.id, s!.user.id, new Date().toISOString(), ty.family === "Humanitarian" ? 1 : 0, input.client_email ? String(input.client_email).toLowerCase() : null);
       log(id, "open", `Opened the case at ${s!.user.name.split(" ")[0]}'s request.`, 5);
       changed.any = true;
       return `Opened case ${id}. Link: /cases/${id}`;

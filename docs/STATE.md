@@ -298,3 +298,7 @@ from the repo the same day. History is in git up to commit `341cf65`.
   (`lincoln/src/lib/company.ts` still has placeholders); the Anthropic key in Render for a live test.
 * 2026-11-14: notices after actions (Toaster, `lincoln/src/lib/toast.ts`), and drafted emails now read as text with
   Approve and send plus Edit (Edit or a tap opens the text, Save keeps it). There is no button to drop a drafted email.
+* 2026-11-14: case types rebuilt from the official USCIS forms list (uscis.gov/forms/all-forms, fetched that day) plus
+  State Department, Labor, EOIR, ICE, CBP, federal court, compliance and advice work: 156 types in 14 families
+  (`lincoln/src/lib/library.ts`). Any matter outside the list is still opened under the name the model gives it.
+

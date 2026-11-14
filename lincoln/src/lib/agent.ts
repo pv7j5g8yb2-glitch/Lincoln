@@ -1,6 +1,6 @@
 import { db, uid } from "./db";
 import { chat, forCase, llmConfigured, parseJson } from "./llm";
-import { LIBRARY } from "./library";
+import { LIBRARY, typeOf } from "./library";
 import { EMAIL_STYLE } from "./style";
 import { UNNAMED, applyDateRules, draftForCase, processCase } from "./intake";
 import { fileKind } from "./pdf";
@@ -19,7 +19,7 @@ type Triage = {
   kind: "new_case" | "case_update" | "government" | "other";
   certain: boolean;
   case_id: string | null;
-  new_case: { client: string; counterpart: string | null; type_code: string } | null;
+  new_case: { client: string; counterpart: string | null; type_code: string; type_name?: string | null } | null;
   summary: string;
   dates: { label: string; date: string }[];
   reply: { subject: string; body: string } | null;
@@ -85,7 +85,7 @@ Decide what this email is and reply with one JSON object only:
 {"kind": "new_case | case_update | government | other",
  "certain": true or false: true only if there is no reasonable doubt about kind and case,
  "case_id": "id of the matching open case, or null if none or if more than one could match",
- "new_case": {"client": "full name of the person the case is for", "counterpart": "employer or petitioner, or null", "type_code": "one code from the list"} or null,
+ "new_case": {"client": "full name of the person the case is for", "counterpart": "employer or petitioner, or null", "type_code": "the matching code from the list, or a short code of your own if none fits", "type_name": "plain name of the matter, for example Asylum or Cancellation of removal"} or null,
  "summary": "one sentence for the case log",
  "dates": [{"label": "", "date": "YYYY-MM-DD"}],
  "reply": {"subject": "", "body": "a short reply or acknowledgement from ${owner.name}, written to the email rules below"} or null}
@@ -115,11 +115,11 @@ ${EMAIL_STYLE}`;
     let opened = false;
     if (t.kind === "new_case") {
       const code = String(t.new_case?.type_code ?? "").trim();
-      const fam = LIBRARY.find((f) => f.types.some(([c]) => c === code));
+      const ty = typeOf(code, t.new_case?.type_name);
       caseId = "c_" + uid();
       const client = String(t.new_case?.client ?? mail.fromName).slice(0, 120);
       d.prepare(`INSERT INTO cases (id, firm_id, ref, client, counterpart, type_code, type_name, family, stage, state, waiting_on, summary, attorney_id, paralegal_id, opened_at, sensitive, pages, processing, client_email)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Intake', 'moving', NULL, ?, ?, ?, ?, ?, 0, 0, ?)`).run(caseId, firmId, `${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`, client, t.new_case?.counterpart ?? null, fam ? code : code || "Other", fam?.types.find(([c]) => c === code)?.[1] ?? "To be confirmed", fam?.name ?? "Other", String(t.summary ?? "Opened from an email."), owner.id, owner.id, now(), fam?.name === "Humanitarian" ? 1 : 0, mail.from);
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Intake', 'moving', NULL, ?, ?, ?, ?, ?, 0, 0, ?)`).run(caseId, firmId, `${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`, client, t.new_case?.counterpart ?? null, ty.code, ty.name, ty.family, String(t.summary ?? "Opened from an email."), owner.id, owner.id, now(), ty.family === "Humanitarian" ? 1 : 0, mail.from);
       log(firmId, caseId, "open", `Opened the case from an email from ${mail.fromName}.`, 10);
       opened = true;
     } else {
@@ -207,7 +207,7 @@ ${body}
 If the instruction is about a new matter, give new_case. Leave the client empty if no name is given; it is taken from the files.
 Reply with one JSON object only:
 {"case_id": "the open case this is about, or null",
- "new_case": {"client": "", "counterpart": null, "type_code": "", "client_email": null} or null,
+ "new_case": {"client": "", "counterpart": null, "type_code": "the matching code from the case types, or a short code of your own if none fits", "type_name": "plain name of the matter", "client_email": null} or null,
  "summary": "one sentence for the case log",
  "draft": "what to draft, in one sentence, or null if no document is asked for",
  "due": "YYYY-MM-DD if a deadline for the work is given, else null",
@@ -218,12 +218,12 @@ Reply with one JSON object only:
   let caseId = open.some((c) => c.id === t.case_id) ? t.case_id : null;
   if (!caseId && (t.new_case || files.length)) {
     const code = String(t.new_case?.type_code ?? "").trim();
-    const fam = LIBRARY.find((f) => f.types.some(([c]) => c === code));
+    const ty = typeOf(code, t.new_case?.type_name);
     const client = String(t.new_case?.client ?? "").trim().slice(0, 120) || UNNAMED;
     const email = String(t.new_case?.client_email ?? "").trim().toLowerCase();
     caseId = "c_" + uid();
     d.prepare(`INSERT INTO cases (id, firm_id, ref, client, counterpart, type_code, type_name, family, stage, state, summary, attorney_id, paralegal_id, opened_at, sensitive, pages, processing, client_email)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Intake', 'moving', ?, ?, ?, ?, ?, 0, ?, ?)`).run(caseId, firmId, `${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`, client, t.new_case?.counterpart ?? null, fam ? code : "Other", fam?.types.find(([c]) => c === code)?.[1] ?? "To be confirmed", fam?.name ?? "Other", summary || "Opened at the firm's request.", member.id, member.id, now(), fam?.name === "Humanitarian" ? 1 : 0, files.length ? 1 : 0, /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? email : null);
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Intake', 'moving', ?, ?, ?, ?, ?, 0, ?, ?)`).run(caseId, firmId, `${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`, client, t.new_case?.counterpart ?? null, ty.code, ty.name, ty.family, summary || "Opened at the firm's request.", member.id, member.id, now(), ty.family === "Humanitarian" ? 1 : 0, files.length ? 1 : 0, /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? email : null);
     log(firmId, caseId, "open", `Opened the case at ${member.name}'s request.`, 10);
   }
   if (!caseId) return { caseId: null, summary, work: Promise.resolve() };

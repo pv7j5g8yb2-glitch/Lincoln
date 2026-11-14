@@ -16,7 +16,6 @@ import { approvalById, caseById, kv, messageById, setKv } from "./queries";
 import { buildHalaszLetter } from "./letter";
 import { EVENTS } from "./demo-events";
 import type { Question } from "./halasz";
-import { LIBRARY } from "./library";
 import { draftForCase, processCase } from "./intake";
 import { fileKind } from "./pdf";
 import { breached } from "./pwned";
