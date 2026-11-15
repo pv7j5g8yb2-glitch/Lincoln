@@ -265,7 +265,8 @@ from the repo the same day. History is in git up to commit `341cf65`.
   Same cost and prompts. Live timing of the long case before this: reading 2.5 min, all work done in about 10 min,
   6 of them waiting on the batch.
 * Chat (Ismael, 2026-11-15): replies stream word by word and the page follows them down unless the reader has
-  scrolled up; Stop keeps what was written; Retry on the last reply; the arrow and reopening a chat land at the very
+  scrolled up; Stop keeps what was written; play and pause under each reply reads it aloud with the device's own voice (free, no
+  credits; Retry was removed on 2026-11-15 because it spends credits for little); the arrow and reopening a chat land at the very
   bottom; no empty space under the box. Answers are brief: a broad question ("what can you do") gets two or three
   sentences and one question back, never a pitch. Lincoln never lists what it does not do yet, what is planned or how
   it works inside; asked about something it cannot do, it says so in one sentence.

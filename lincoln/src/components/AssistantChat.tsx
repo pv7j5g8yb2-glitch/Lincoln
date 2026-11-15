@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { ArrowDown, Check, ChevronDown, ChevronLeft, Copy, MoreHorizontal, Pencil, RotateCcw, SquarePen } from "lucide-react";
+import { ArrowDown, Check, ChevronDown, ChevronLeft, Copy, MoreHorizontal, Pause, Pencil, Play, SquarePen } from "lucide-react";
 import Composer from "./Composer";
 import Markdown from "./Markdown";
 import { deleteChat, renameChat, startCase } from "@/lib/actions";
@@ -23,6 +23,98 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button onClick={copy} aria-label="Copy" title="Copy" className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition hover:bg-panel hover:text-ink">
       {done ? <Check size={15} /> : <Copy size={15} />}
+    </button>
+  );
+}
+
+// Read aloud uses the device's own voices (free, no model credits). One reply plays at a time. Pausing stops
+// the voice and keeps the place; playing again starts from the sentence it stopped in. Short pieces are spoken
+// one after another because some browsers cut off long utterances.
+type Say = { key: string | null; state: "idle" | "playing" | "paused"; chunks: string[]; at: number };
+const say: Say = { key: null, state: "idle", chunks: [], at: 0 };
+const listeners = new Set<() => void>();
+const emit = () => listeners.forEach((f) => f());
+let run = 0;
+
+function spoken(md: string): string[] {
+  // Each line becomes a spoken sentence: Markdown marks, list numbers, links and page references are dropped,
+  // and a table row is read as its cells in order.
+  const said: string[] = [];
+  for (let l of md.replace(/```[\s\S]*?```/g, "").split("\n")) {
+    l = l.trim();
+    if (!l || /^\|?\s*:?-{2,}/.test(l) || /^(\*\s*){3,}$|^(_\s*){3,}$/.test(l)) continue;
+    if (l.startsWith("|")) l = l.replace(/^\||\|$/g, "").split("|").map((c) => c.trim()).filter(Boolean).join(", ");
+    l = l
+      .replace(/^#{1,6}\s+/, "").replace(/^>\s?/, "").replace(/^[-*\u2022+]\s+/, "").replace(/^\d+[.)]\s+/, "")
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/\/cases\/[\w?=&-]+/g, "").replace(/\s*\(pp?\. ?\d+[^)]*\)/g, "")
+      .replace(/\*\*|__|`/g, "").replace(/(^|\s)[*_]([^*_\n]+)[*_](?=[\s.,;:!?]|$)/g, "$1$2")
+      .trim();
+    if (l) said.push(/[.!?:;]$/.test(l) ? l : l + ".");
+  }
+  const text = said.join(" ");
+  const out: string[] = [];
+  for (const s of text.split(/(?<=[.!?])\s+/)) {
+    if (out.length && out[out.length - 1].length + s.length < 220) out[out.length - 1] += " " + s;
+    else out.push(s);
+  }
+  return out;
+}
+
+function bestVoice() {
+  const all = window.speechSynthesis.getVoices();
+  const en = all.filter((v) => /^en[-_]US/i.test(v.lang));
+  const rank = (v: SpeechSynthesisVoice) => (/premium/i.test(v.name) ? 5 : /enhanced|natural|neural/i.test(v.name) ? 4 : /google us english/i.test(v.name) ? 3 : /samantha|ava|allison|aria|jenny/i.test(v.name) ? 2 : v.localService ? 1 : 0);
+  return en.sort((a, b) => rank(b) - rank(a))[0] ?? all.find((v) => /^en/i.test(v.lang)) ?? null;
+}
+
+function speakFrom() {
+  const synth = window.speechSynthesis;
+  const token = ++run;
+  synth.cancel();
+  const next = () => {
+    if (token !== run) return;
+    if (say.at >= say.chunks.length) { Object.assign(say, { key: null, state: "idle", chunks: [], at: 0 }); emit(); return; }
+    const u = new SpeechSynthesisUtterance(say.chunks[say.at]);
+    const v = bestVoice();
+    if (v) u.voice = v;
+    u.lang = v?.lang ?? "en-US";
+    u.onend = () => { if (token === run) { say.at++; next(); } };
+    u.onerror = (e) => { if (token === run && e.error !== "interrupted" && e.error !== "canceled") { say.at++; next(); } };
+    synth.speak(u);
+  };
+  next();
+}
+
+function silence() {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  run++;
+  window.speechSynthesis.cancel();
+  Object.assign(say, { key: null, state: "idle", chunks: [], at: 0 });
+  emit();
+}
+
+function SpeakButton({ id, text }: { id: string; text: string }) {
+  const [, tick] = useState(0);
+  const [ok, setOk] = useState(false);
+  useEffect(() => {
+    setOk("speechSynthesis" in window);
+    const f = () => tick((n) => n + 1);
+    listeners.add(f);
+    return () => { listeners.delete(f); };
+  }, []);
+  if (!ok) return null;
+  const mine = say.key === id;
+  const playing = mine && say.state === "playing";
+  const toggle = () => {
+    if (playing) { run++; window.speechSynthesis.cancel(); say.state = "paused"; emit(); return; }
+    if (!mine) Object.assign(say, { key: id, chunks: spoken(text), at: 0 });
+    say.state = "playing";
+    emit();
+    speakFrom();
+  };
+  return (
+    <button onClick={toggle} aria-label={playing ? "Pause" : "Read aloud"} title={playing ? "Pause" : "Read aloud"} className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition hover:bg-panel hover:text-ink">
+      {playing ? <Pause size={15} /> : <Play size={15} />}
     </button>
   );
 }
@@ -64,6 +156,7 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
     return () => { window.removeEventListener("scroll", check); window.removeEventListener("resize", check); };
   }, []);
   useEffect(() => { if (follow.current) toBottom(false); }, [msgs]);
+  useEffect(() => silence, []);
   useEffect(() => {
     if (!menu) return;
     const close = () => { setMenu(null); setConfirmDelete(false); };
@@ -77,6 +170,7 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
     setError(null);
     setBusy(true);
     setEditing(null);
+    if (editFrom) silence();
     follow.current = true;
     setMsgs((m) => [...(editFrom ? m.slice(0, editFrom.index) : m), { role: "user", content: message }, { role: "assistant", content: "" }]);
     if (!editFrom) setText("");
@@ -244,9 +338,7 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
             {m.content && !(busy && i === msgs.length - 1) && (
               <div className="-ml-1.5 mt-2 flex gap-0.5">
                 <CopyButton text={m.content} />
-                {i === msgs.length - 1 && !busy && msgs[i - 1]?.role === "user" && (
-                  <button onClick={() => send(msgs[i - 1].content, { index: i - 1, id: msgs[i - 1].id })} aria-label="Retry" title="Retry" className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition hover:bg-panel hover:text-ink"><RotateCcw size={15} /></button>
-                )}
+                <SpeakButton id={m.id ?? `i${i}`} text={m.content} />
               </div>
             )}
           </div>
