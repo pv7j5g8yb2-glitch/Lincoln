@@ -273,8 +273,9 @@ from the repo the same day. History is in git up to commit `341cf65`.
 * Live chat check (2026-11-15, Sonnet, about 3 cents): five questions answered in 3 to 5 seconds, 22 to 124 words,
   no feature list, no roadmap ("what are you working on next" got no leak). Found: one outdated citation (premium
   processing given as 8 CFR 103.7(e), now 106.4) and "Lincoln"/"I" mixed. Prompt tightened for both; not rerun live.
-* Notifications (Ismael, 2026-11-15): Lincoln asks once to allow notifications (a soft card a few seconds in, again two
-  weeks after Not now; switch in Settings, Profile). Web Push with no outside service: key derived from LINCOLN_SECRET,
+* Notifications (Ismael, 2026-11-15): Lincoln asks with the system's own permission box only (on the first tap a few seconds in,
+  as phones require a tap; switch in Settings, Profile). Web Push works on Android, iPhone (from the Home Screen) and
+  computers (Chrome, Edge, Firefox, Safari). Web Push with no outside service: key derived from LINCOLN_SECRET,
   messages signed and encrypted for the device. Sent only when the person is not in the app (the open app reports
   presence every 20 seconds). Items landing in Review are batched over 20 seconds into one notification. Chat replies
   now run on the server to the end even if the app is closed, reopen mid reply, Stop works from any page, and a reply

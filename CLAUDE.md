@@ -86,7 +86,7 @@ Notices after an action (Ismael, 2026-11-14) drop from the top as a soft rectang
 "Sent", "Deleted"), can be pushed up, and leave by themselves after 5 seconds. Drafted emails show Approve and Edit;
 Edit opens the text, then Save.
 
-**Notifications (Ismael, 2026-11-15).** Lincoln asks to allow notifications and sends them only when the person has
+**Notifications (Ismael, 2026-11-15).** Lincoln asks with the system's own permission box only, never a box of its own first (it comes up on the first tap, as phones require), works on iPhone, Android and computers, and sends them only when the person has
 left the app: work that lands in Review (batched) and chat replies finished in the background, like Claude. Chat replies
 always run to the end on the server, even when the app is closed. Every notification has a short title and one line.
 
