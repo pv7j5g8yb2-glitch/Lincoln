@@ -270,6 +270,12 @@ from the repo the same day. History is in git up to commit `341cf65`.
   bottom; no empty space under the box. Answers are brief: a broad question ("what can you do") gets two or three
   sentences and one question back, never a pitch. Lincoln never lists what it does not do yet, what is planned or how
   it works inside; asked about something it cannot do, it says so in one sentence.
+* Live chat check (2026-11-15, Sonnet, about 3 cents): five questions answered in 3 to 5 seconds, 22 to 124 words,
+  no feature list, no roadmap ("what are you working on next" got no leak). Found: one outdated citation (premium
+  processing given as 8 CFR 103.7(e), now 106.4) and "Lincoln"/"I" mixed. Prompt tightened for both; not rerun live.
+* Case type test suite: offered, not run. Plan: about 12 short made up cases covering the form families (I-129,
+  I-140, I-130 with I-485 package, I-129F, I-751, I-589, N-400, I-90, I-821D, I-601A, I-539, I-290B), each with
+  planted problems and a key; free stand in run first, then one live case, then the rest (estimated $6 to $9).
 * Models decided (Ismael, 2026-11-15): Sonnet 5.5 as LLM_MODEL for all legal work (reading, checks, forms, letters,
   citation checks, emails, chat); Haiku 5.5 as LLM_MODEL_LIGHT for mail sorting, instructions and form section choice.
   Opus not used unless a later test shows it catches what Sonnet misses. Second check widened to six checks (bars and
