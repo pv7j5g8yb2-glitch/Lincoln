@@ -77,7 +77,7 @@ async function run(firmId: string, caseId: string, opts: { refill?: boolean; onl
       }
       const answers: Answer[] = [];
       for (const part of chunks) answers.push(...toAnswers(await chat([{ role: "system", content: system }, { role: "user", content: askFor(code, details, part) }], { maxTokens: 16000, effort: "medium", timeoutMs: 300_000, cache: true }), part));
-      d.prepare("UPDATE forms SET status = 'ready', answers = ?, updated_at = ? WHERE id = ?").run(JSON.stringify(answers), new Date().toISOString(), id);
+      d.prepare("UPDATE forms SET status = 'ready', answers = ?, updated_at = ? WHERE id = ?").run(JSON.stringify(dropContradictions(answers)), new Date().toISOString(), id);
       done.push(`${code} (${answers.length} of ${fields.length} fields)`);
     } catch {
       d.prepare("UPDATE forms SET status = 'failed', updated_at = ? WHERE id = ?").run(new Date().toISOString(), id);
@@ -139,7 +139,7 @@ async function collect() {
         });
         // A chunk that failed is not hidden as blanks: the form is marked failed and can be filled again.
         if (ok) {
-          d.prepare("UPDATE forms SET status = 'ready', answers = ?, batch = NULL, updated_at = ? WHERE id = ?").run(JSON.stringify(answers), new Date().toISOString(), f.id);
+          d.prepare("UPDATE forms SET status = 'ready', answers = ?, batch = NULL, updated_at = ? WHERE id = ?").run(JSON.stringify(dropContradictions(answers)), new Date().toISOString(), f.id);
           done.push(`${f.code} (${answers.length} of ${f.fields} fields)`);
         } else {
           d.prepare("UPDATE forms SET batch = NULL, updated_at = ? WHERE id = ?").run(new Date().toISOString(), f.id);
@@ -236,6 +236,18 @@ Answer only the fields the record or the details above clearly support, and leav
 - The preparer and attorney parts take the firm and attorney details above; the client never signs as preparer.
 - source: "p. N" for a page of the client file, "firm" or "attorney" for the details above, "case" for the case line, "instructions" for an answer the instructions dictate.
 Reply with one JSON object and nothing else: {"answers": [{"i": 0, "value": "", "source": ""}]}`;
+}
+
+/** One question's Yes and No boxes both ticked is a contradiction: neither is kept, the attorney decides. */
+function dropContradictions(answers: Answer[]): Answer[] {
+  const question = (a: Answer) => a.label.replace(/\s*Check (Yes|No)\b.*$/i, "").trim();
+  const ticked = new Map<string, Set<string>>();
+  for (const a of answers) {
+    const m = /Check (Yes|No)\b/i.exec(a.label);
+    if (m && a.value === "yes") ticked.set(question(a), new Set([...(ticked.get(question(a)) ?? []), m[1].toLowerCase()]));
+  }
+  const bad = new Set([...ticked].filter(([, v]) => v.size > 1).map(([k]) => k));
+  return answers.filter((a) => !(/Check (Yes|No)\b/i.test(a.label) && bad.has(question(a))));
 }
 
 /** The model's answers, checked against the fields they claim to fill. */

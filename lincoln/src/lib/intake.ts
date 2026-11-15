@@ -21,7 +21,7 @@ type Reading = {
   client_email: { subject: string; body: string } | null;
   unreadable?: { page: number; what: string; reason: string }[];
   identity?: { client: string | null; petitioner: string | null; type_code: string | null; type_name?: string | null };
-  notice?: { kind: string; form?: string | null; receipt_number?: string | null; notice_date?: string | null; due?: string | null; points?: string[]; page?: number } | null;
+  notice?: { kind: string; form?: string | null; classification?: string | null; about_this_case?: boolean; receipt_number?: string | null; notice_date?: string | null; due?: string | null; points?: string[]; page?: number } | null;
 };
 
 /** A case opened from files alone carries this name until the documents say who the client is. */
@@ -57,7 +57,7 @@ Read every page. Reply with one JSON object and nothing else, in this shape:
  "requirements": [{"name": "a legal or filing requirement for this case type", "citation": "", "status": "met | partial | missing", "summary": "what the file shows", "gap": "what is still needed", "evidence": [{"page": 1, "grade": 3, "note": ""}]}],
  "client_email": {"subject": "", "body": "an email from the responsible attorney to the client asking for what is missing, written to the email rules below; or null if nothing is missing"},
  "unreadable": [{"page": 1, "what": "which document or part", "reason": "blurred | glare | cut off | too small | handwriting | other"}],
- "notice": {"kind": "rfe | noid | noir | receipt | biometrics | interview | approval | denial | transfer | other", "form": "the form the notice is about, e.g. I-129", "receipt_number": "exactly as printed, or null", "notice_date": "YYYY-MM-DD or null", "due": "the response deadline exactly as printed, YYYY-MM-DD, or null", "points": ["for an RFE, NOID or NOIR: each thing the agency asks for, one per item, in its order"], "page": 1} or null if the new pages hold no notice from USCIS, the Department of Labor, the State Department or the immigration court
+ "notice": {"kind": "rfe | noid | noir | receipt | biometrics | interview | approval | denial | transfer | other", "form": "the form the notice is about, e.g. I-129", "classification": "the visa class or benefit the notice is for, as printed, e.g. H1B, or null", "about_this_case": true only if the notice is about this matter and not an earlier petition or status shown as history in the file, "receipt_number": "exactly as printed, or null", "notice_date": "YYYY-MM-DD or null", "due": "the response deadline exactly as printed, YYYY-MM-DD, or null", "points": ["for an RFE, NOID or NOIR: each thing the agency asks for, one per item, in its order"], "page": 1} or null if the new pages hold no notice from USCIS, the Department of Labor, the State Department or the immigration court
 }
 ${c.fromClient ? "The file was sent by the client. If any page is unreadable, the client email must ask for a clearer photo or scan of exactly those documents, with one line on how (flat surface, good light, the whole page in frame)." : "The file was added by firm staff. Do not mention unreadable pages in the client email; they are reported to the staff separately."}
 Dates: only those that govern the case (status and document expiries, deadlines, employment start, filing targets, appointments), at most 10. Not birth dates or the dates of ordinary documents. Date kinds: "passport_expires" for the passport expiry, "stay_ends" for the I-94 admit until date, "period_ends" for the end of the period requested or offered, "h1b_first_start" for the start of the person's first H-1B status; anything else "other". Do not calculate durations, deadlines or limits from the dates; Lincoln calculates those.
@@ -465,7 +465,22 @@ async function actOnNotice(firmId: string, caseId: string, n: NonNullable<Readin
   const kind = String(n.kind ?? "").toLowerCase();
   const iso = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
   const where = Number.isInteger(n.page) ? `Notice, p. ${n.page}` : "Notice";
-  const c = d.prepare("SELECT client, attorney_id, receipt FROM cases WHERE firm_id = ? AND id = ?").get(firmId, caseId) as { client: string; attorney_id: string; receipt: string | null };
+  const c = d.prepare("SELECT client, attorney_id, receipt, type_code, stage, opened_at FROM cases WHERE firm_id = ? AND id = ?").get(firmId, caseId) as { client: string; attorney_id: string; receipt: string | null; type_code: string; stage: string; opened_at: string };
+  // A client's file often holds notices from earlier petitions (an old H-1B approval in an O-1 case). Those
+  // are history: they never set this case's receipt number, stage or deadlines.
+  const squash = (v: string) => v.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  // Compared only when both are visa classes (H-1B, O-1A, L-1A, E-2): a family or court case is never
+  // judged by this, so a real notice is not missed.
+  const visa = /^[A-Z]{1,2}-?\d[A-Z]?\d?$/i;
+  const otherClass = Boolean(n.classification && visa.test(n.classification.trim()) && visa.test(c.type_code.trim()) && squash(n.classification).slice(0, 2) !== squash(c.type_code).slice(0, 2));
+  // An approval, denial or receipt dated before the case was opened, on a case not yet filed, is history.
+  // A request with a deadline still ahead is always acted on, even in a case brought into Lincoln late.
+  const pending = NOTICES[kind] && iso(n.due) && iso(n.due)! >= new Date().toISOString().slice(0, 10);
+  const earlier = !pending && iso(n.notice_date) && iso(n.notice_date)! < c.opened_at.slice(0, 10) && !["Filed", "Response"].includes(c.stage);
+  if (n.about_this_case === false || otherClass || earlier) {
+    log(firmId, caseId, "file", `Earlier notice in the file noted${n.form ? ` (Form ${n.form}${n.classification ? `, ${n.classification}` : ""})` : ""}; this case is unchanged.`, 2);
+    return;
+  }
   const receipt = String(n.receipt_number ?? "").replace(/\s/g, "").toUpperCase();
   if (/^[A-Z]{3}\d{10}$/.test(receipt) && !c.receipt) d.prepare("UPDATE cases SET receipt = ? WHERE firm_id = ? AND id = ?").run(receipt, firmId, caseId);
 
