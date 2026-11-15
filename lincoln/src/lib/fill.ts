@@ -228,7 +228,8 @@ Fields of the form (index | kind | label | options):
 ${fields.map((f, i) => `${i} | ${f.kind} | ${f.label}${f.options?.length ? ` | ${f.options.join(" / ")}` : ""}`).join("\n")}
 
 Answer only the fields the record or the details above clearly support, and leave every other field out. A blank is filled by the attorney in seconds; a wrong answer can sink the case.
-- check fields: value "yes" to tick the box, only for the box that applies.
+- check fields: value "yes" to tick the box, only for the box that applies. A check field is one box of a question and its label says which ("Check Yes.", "Check No.", "Check B."): tick it only when that box is the right answer.
+- Answers about eligibility and what the petition asks for (requested action, basis for classification, status questions) follow the facts in the record, not what a client or employer asked for. Where they conflict, for example a change of status asked for after the status has ended, leave the field blank for the attorney.
 - choice fields: exactly one of the listed options.
 - Dates as MM/DD/YYYY. Names exactly as on the passport.
 - N/A or None only where the instructions call for it and the record shows the item does not apply (no middle name on the passport, no prior marriage stated in the file). Never because something is merely missing from the file.
@@ -247,7 +248,9 @@ function toAnswers(reply: string, fields: Field[]): Answer[] {
     if (!f || !value.trim()) continue;
     if (f.kind === "choice" && !f.options?.some((o) => o.toLowerCase() === value.trim().toLowerCase())) continue;
     if (f.kind === "check" && !yes(value)) continue;
-    out.push({ name: f.name, label: f.label, value: f.kind === "check" ? "yes" : normalise(f, value), source: String(a.source ?? "").slice(0, 40) });
+    const v = f.kind === "check" ? "yes" : normalise(f, value);
+    if (!v) continue;
+    out.push({ name: f.name, label: f.label, value: v, source: String(a.source ?? "").slice(0, 40) });
   }
   return out;
 }

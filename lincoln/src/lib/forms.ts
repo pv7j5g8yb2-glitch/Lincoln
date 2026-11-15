@@ -147,8 +147,16 @@ export function normalise(field: Field, value: string) {
   // A value too long for its box is never cut: a cut number is a wrong number. Numbers lose their
   // prefix and separators where that makes them fit (A-numbers, receipts); otherwise the field stays blank.
   if (field.max && v.length > field.max) {
-    const digits = v.replace(/^[A-Za-z]{1,3}(?=\d)/, "").replace(/[\s-]/g, "");
-    v = /number|no\.|receipt|ssn|ein/i.test(field.label) && /^\d+$/.test(digits) && digits.length <= field.max ? digits : "";
+    const numberish = /number|no\.|receipt|ssn|ein|telephone|phone|mobile|fax/i.test(field.label);
+    const compact = v.replace(/[\s\-().]/g, "").replace(/^\+/, "");
+    if (numberish && /^[A-Za-z]{0,3}\d+$/.test(compact) && compact.length <= field.max) v = compact; // EAC2390112345 keeps its letters
+    else {
+      // A box for digits only (an A-number box after its printed "A") takes the number without its prefix.
+      let digits = compact.replace(/^[A-Za-z]{1,3}(?=\d)/, "");
+      if (/telephone|phone|mobile|fax/i.test(field.label) && /^1\d{10}$/.test(digits)) digits = digits.slice(1);
+      // Receipt numbers are never shortened: their letters are part of the number.
+      v = numberish && !/receipt/i.test(field.label) && /^\d+$/.test(digits) && digits.length <= field.max ? digits : "";
+    }
   }
   return v;
 }

@@ -251,12 +251,7 @@ export async function batchResults(id: string): Promise<Map<string, { text?: str
   return out;
 }
 
-/** Pulls the JSON object out of a model reply, tolerating code fences or stray text around it. */
-export function parseJson<T>(text: string): T {
-  const a = text.indexOf("{"), b = text.lastIndexOf("}");
-  if (a < 0 || b <= a) throw new Error("The model reply was not in the expected format.");
-  return JSON.parse(text.slice(a, b + 1)) as T;
-}
+export { parseJson, repairJson } from "./json";
 
 export type Tool = { name: string; description: string; input_schema: Record<string, unknown> };
 type Turn = { role: "user" | "assistant"; content: unknown };

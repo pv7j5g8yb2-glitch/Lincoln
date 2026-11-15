@@ -93,22 +93,32 @@ Merge documents split across parts into one entry. Compare the facts across docu
 
 ${instruction(c)}`;
 
+/** A reading whose reply is not well formed is asked for once more before the file is given up on. */
+async function readJson<T>(ask: () => Promise<string>): Promise<T> {
+  try {
+    return parseJson<T>(await ask());
+  } catch (e) {
+    if (!(e instanceof SyntaxError) && !/expected format/.test(e instanceof Error ? e.message : "")) throw e;
+    return parseJson<T>(await ask());
+  }
+}
+
 /** Reads a file of any length: one request for a short file, batches and a text only merge for a long one. */
 async function readFile(c: { client: string; type: string; firm: string; attorney: string; extra?: string; fromClient?: boolean }, pages: { n: number; jpeg: Buffer }[]): Promise<{ reading: Reading; notes: Notes }> {
   if (pages.length <= BATCH) {
-    const reading = parseJson<Reading>(await readPages(SYSTEM, pages, instruction(c), 16000));
+    const reading = await readJson<Reading>(() => readPages(SYSTEM, pages, instruction(c), 16000));
     return { reading, notes: { documents: reading.documents ?? [], facts: reading.facts ?? [], dates: reading.dates ?? [], unreadable: reading.unreadable ?? [] } };
   }
   const notes: Notes = { documents: [], facts: [], dates: [], unreadable: [] };
   for (let i = 0; i < pages.length; i += BATCH) {
     const part = pages.slice(i, i + BATCH);
-    const r = parseJson<Partial<Notes>>(await readPages(SYSTEM, part, batchInstruction(part[0].n, part[part.length - 1].n), 12000));
+    const r = await readJson<Partial<Notes>>(() => readPages(SYSTEM, part, batchInstruction(part[0].n, part[part.length - 1].n), 12000));
     notes.documents.push(...(r.documents ?? []));
     notes.facts.push(...(r.facts ?? []));
     notes.dates.push(...(r.dates ?? []));
     notes.unreadable.push(...(r.unreadable ?? []));
   }
-  const reading = parseJson<Reading>(await readPages(SYSTEM, [], mergeInstruction(c, pages.length, notes), 16000));
+  const reading = await readJson<Reading>(() => readPages(SYSTEM, [], mergeInstruction(c, pages.length, notes), 16000));
   // The merge never sees the pages, so what the batches could not read stays unreadable.
   const seen = new Set((reading.unreadable ?? []).map((u) => u.page));
   reading.unreadable = [...(reading.unreadable ?? []), ...notes.unreadable.filter((u) => !seen.has(u.page))];
