@@ -983,3 +983,14 @@ Replies in the Tenet launch thread and the "make Harvey more engaging" thread. H
 * Asked critics openly for advice ("Curious what you would recommend we do re data?").
 * Also in the threads: a Harvey employee (u/sknaruto) offering to build DMS integrations for a firm, and a
   Harvey AMA by Winston Weinberg and Gabe in r/legaltech (about May 2026; $300M ARR then).
+
+
+## Harvey user interview on contractions in briefs (pasted 2026-11-15)
+
+* A lawyer explains why a brief to a judge avoids contractions: the audience is the court, tradition is strong,
+  and "the court should not rule this way" hits harder than "shouldn't". Contractions are fine in conversation.
+* The useful detail: the lawyer told Harvey to remember a personal style rule ("never use contractions in my
+  legal writing") and Harvey keeps it. Lawyers expect their tool to learn their house style once and keep it.
+* For Lincoln: formal documents (letters to USCIS, briefs, declarations, RFE responses) are drafted without
+  contractions by default (built 2026-11-15). Client emails stay human and may use them. Not built yet:
+  remembering each attorney's or firm's own style rules when told once.
