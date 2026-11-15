@@ -127,9 +127,11 @@ async function readFile(c: { client: string; type: string; firm: string; attorne
     return { reading, notes: { documents: reading.documents ?? [], facts: reading.facts ?? [], dates: reading.dates ?? [], unreadable: reading.unreadable ?? [] } };
   }
   const notes: Notes = { documents: [], facts: [], dates: [], unreadable: [] };
-  for (let i = 0; i < pages.length; i += BATCH) {
-    const part = pages.slice(i, i + BATCH);
-    const r = await readJson<Partial<Notes>>(() => readPages(SYSTEM, part, batchInstruction(part[0].n, part[part.length - 1].n), 32000));
+  // The batches are read in parallel (as many at once as the reading limit allows) and joined in page order.
+  const parts: { n: number; jpeg: Buffer }[][] = [];
+  for (let i = 0; i < pages.length; i += BATCH) parts.push(pages.slice(i, i + BATCH));
+  const results = await Promise.all(parts.map((part) => readJson<Partial<Notes>>(() => readPages(SYSTEM, part, batchInstruction(part[0].n, part[part.length - 1].n), 32000))));
+  for (const r of results) {
     notes.documents.push(...(r.documents ?? []));
     notes.facts.push(...(r.facts ?? []));
     notes.dates.push(...(r.dates ?? []));

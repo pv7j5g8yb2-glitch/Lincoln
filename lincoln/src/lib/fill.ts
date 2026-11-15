@@ -51,16 +51,17 @@ async function run(firmId: string, caseId: string, opts: { refill?: boolean; onl
   const done: string[] = [];
   const items: BatchItem[] = [];
   const pending: { id: string; chunks: string[][] }[] = [];
-  for (const code of codes) {
+  // The forms are filled at the same time; each form's own chunks stay in order so its cached instructions are reused.
+  await Promise.all(codes.map(async (code) => {
     const existing = d.prepare("SELECT id, code, status FROM forms WHERE firm_id = ? AND case_id = ? AND code = ?").get(firmId, caseId, code) as Row | undefined;
-    if (existing && (existing.status === "ready" || existing.status === "filling") && !opts.refill) continue;
+    if (existing && (existing.status === "ready" || existing.status === "filling") && !opts.refill) return;
     const id = existing?.id ?? uid();
     const now = new Date().toISOString();
     if (existing) d.prepare("UPDATE forms SET status = 'filling', batch = NULL, updated_at = ? WHERE id = ?").run(now, id);
     else d.prepare("INSERT INTO forms (id, firm_id, case_id, code, title, status, updated_at) VALUES (?, ?, ?, ?, ?, 'filling', ?)").run(id, firmId, caseId, code, titleOf(code), now);
     if (!hasTemplate(code)) {
       d.prepare("UPDATE forms SET status = 'no_template', updated_at = ? WHERE id = ?").run(now, id);
-      continue;
+      return;
     }
     try {
       const fields = await fieldsOf(new Uint8Array(fs.readFileSync(templatePath(code))));
@@ -73,7 +74,7 @@ async function run(firmId: string, caseId: string, opts: { refill?: boolean; onl
       if (batch) {
         chunks.forEach((part, k) => items.push({ id: `${id}_${k}`, system, user: askFor(code, details, part), maxTokens: 16000, effort: "medium", cache: true }));
         pending.push({ id, chunks: chunks.map((part) => part.map((f) => f.name)) });
-        continue;
+        return;
       }
       const answers: Answer[] = [];
       for (const part of chunks) answers.push(...toAnswers(await chat([{ role: "system", content: system }, { role: "user", content: askFor(code, details, part) }], { maxTokens: 16000, effort: "medium", timeoutMs: 300_000, cache: true }), part));
@@ -82,7 +83,7 @@ async function run(firmId: string, caseId: string, opts: { refill?: boolean; onl
     } catch {
       d.prepare("UPDATE forms SET status = 'failed', updated_at = ? WHERE id = ?").run(new Date().toISOString(), id);
     }
-  }
+  }));
   if (items.length) {
     try {
       const b = await submitBatch(items);

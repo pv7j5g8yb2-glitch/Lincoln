@@ -255,6 +255,10 @@ from the repo the same day. History is in git up to commit `341cf65`.
   against the zero retention agreement before real client files. Ismael (2026-11-14): margins should be 70 to 80
   percent; Opus only if Sonnet proves worse in the comparison. ICONIQ (Jan 2026, via secondary sources) puts AI
   company gross margins at about 52 percent on average, against 70 to 90 percent for mature SaaS.
+* Speed (Ismael, 2026-11-15): forms are filled at once at the normal price (batch only with LLM_BATCH=on, about 20
+  cents a case dearer); reading batches run three at a time (LLM_READ_CONCURRENCY) and a case's forms in parallel.
+  Same cost and prompts. Live timing of the long case before this: reading 2.5 min, all work done in about 10 min,
+  6 of them waiting on the batch.
 * Models decided (Ismael, 2026-11-15): Sonnet 5.5 as LLM_MODEL for all legal work (reading, checks, forms, letters,
   citation checks, emails, chat); Haiku 5.5 as LLM_MODEL_LIGHT for mail sorting, instructions and form section choice.
   Opus not used unless a later test shows it catches what Sonnet misses. Second check widened to six checks (bars and

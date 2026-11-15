@@ -99,6 +99,7 @@ function record(model: string | undefined, u: Usage, factor = 1) {
 
 async function fail(res: Response): Promise<never> {
   const detail = await res.text().catch(() => "");
+  if (res.status === 429) throw new Error(`The model service replied 429, retry after ${Number(res.headers.get("retry-after")) || 10}.`);
   if (res.status === 402 || /credit balance is too low/i.test(detail)) throw new Error("The model account is out of credit.");
   if (res.status === 401) throw new Error("The model key was refused.");
   const msg = /"message"\s*:\s*"([^"]{1,200})"/.exec(detail)?.[1];
@@ -135,25 +136,32 @@ export async function chat(messages: Msg[], opts: { maxTokens?: number; effort?:
 
 type Block = { type: "text"; text: string } | { type: "image"; source: { type: "base64"; media_type: "image/jpeg"; data: string } };
 
-// Large reads run one at a time: the provider reserves credit for each request while it runs,
-// and parallel reads of long files can exceed it. A dropped stream is retried twice.
-let queue: Promise<unknown> = Promise.resolve();
+// Reads of page images run a few at a time across the whole server (LLM_READ_CONCURRENCY, 3 by default):
+// a long file is read in parallel batches, and one firm's long file never holds another's for minutes. A
+// dropped stream or an overloaded service is retried; a rate limit waits as long as the service asks.
+const READS = () => Math.max(1, Number(process.env.LLM_READ_CONCURRENCY) || 3);
+let active = 0;
+const waiting: (() => void)[] = [];
+async function slot<T>(fn: () => Promise<T>): Promise<T> {
+  if (active >= READS()) await new Promise<void>((r) => waiting.push(r));
+  active++;
+  try { return await fn(); } finally { active--; waiting.shift()?.(); }
+}
 
-/** Reads page images with the Messages API. Queued, retried, and streamed so long answers do not time out. */
+/** Reads page images with the Messages API. Limited in number, retried, and streamed so long answers do not time out. */
 export function readPages(system: string, pages: { n: number; jpeg: Buffer }[], instruction: string, maxTokens = 16000): Promise<string> {
-  const run = queue.then(async () => {
+  return slot(async () => {
     for (let attempt = 0; ; attempt++) {
       try {
         return await readPagesOnce(system, pages, instruction, maxTokens);
       } catch (e) {
         const msg = e instanceof Error ? e.message : "";
-        if (attempt >= 2 || !/interrupt|overload|timeout|terminated|replied (429|5\d\d)/i.test(msg)) throw e;
-        await new Promise((r) => setTimeout(r, 4000 * (attempt + 1)));
+        const wait = Number(/retry after (\d+)/.exec(msg)?.[1] ?? 0);
+        if (attempt >= 4 || !/interrupt|overload|timeout|terminated|replied (429|5\d\d)/i.test(msg)) throw e;
+        await new Promise((r) => setTimeout(r, Math.min(60, wait || 4 * (attempt + 1)) * 1000));
       }
     }
   });
-  queue = run.catch(() => undefined);
-  return run;
 }
 
 async function readPagesOnce(system: string, pages: { n: number; jpeg: Buffer }[], instruction: string, maxTokens = 16000): Promise<string> {
@@ -218,7 +226,9 @@ async function readPagesOnce(system: string, pages: { n: number; jpeg: Buffer }[
 // Message Batches API at half price. Results usually come back within minutes, at most a day. The batch
 // id is stored with the work, so a restart loses nothing; the background sweep collects the results.
 export type BatchItem = { id: string; system: string; user: string; maxTokens: number; effort: Effort; cache?: boolean };
-export const batchAvailable = () => llmConfigured() && process.env.LLM_BATCH !== "off" && (direct() || process.env.LLM_BATCH === "on");
+// Off unless LLM_BATCH=on (Ismael, 2026-11-15): forms are filled at once at the normal price, about 20 cents more a
+// case, so a case is ready in minutes rather than waiting on the batch.
+export const batchAvailable = () => llmConfigured() && process.env.LLM_BATCH === "on";
 
 export async function submitBatch(items: BatchItem[]): Promise<string> {
   guard();
