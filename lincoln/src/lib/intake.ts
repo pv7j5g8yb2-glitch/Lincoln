@@ -1,3 +1,4 @@
+import { supportRule } from "./thresholds";
 import { db, uid } from "./db";
 import { LIBRARY, typeOf } from "./library";
 import { chat, errorContext, forCase, isTestRun, parseJson, readPages, workFirm } from "./llm";
@@ -66,6 +67,7 @@ Read every page. Reply with one JSON object and nothing else, in this shape:
 }
 ${c.fromClient ? "The file was sent by the client. If any page is unreadable, the client email must ask for a clearer photo or scan of exactly those documents, with one line on how (flat surface, good light, the whole page in frame)." : "The file was added by firm staff. Do not mention unreadable pages in the client email; they are reported to the staff separately."}
 Dates: only those that govern the case (status and document expiries, deadlines, employment start, filing targets, appointments), at most 10. Not birth dates or the dates of ordinary documents. Date kinds: "passport_expires" for the passport expiry, "stay_ends" for the I-94 admit until date, "period_ends" for the end of the period requested or offered, "h1b_first_start" for the start of the person's first H-1B status; anything else "other". Do not calculate durations, deadlines or limits from the dates; Lincoln calculates those.
+Issues: what the attorney must decide or act on. All missing documents go in one issue that lists them, not one issue each. Never an issue for a missing engagement letter or G-28 (Lincoln prepares the G-28), an undated or unsigned questionnaire, or that a fact is only self reported.
 Facts: at most 80: every identity fact of each person in the file (full name as written, other names, date and place of birth, citizenship, A-Number, passport number and dates, current and past addresses, phone, email, last entry and status, marriages and divorces, children), which the forms are filled from, then the ones that could conflict with another document or that a draft would cite.
 Evidence grade: 1 in the file, 2 relevant, 3 supports the fact, 4 enough for the standard.
 Status "weak" means low weight (self serving or from an interested party); "excluded" means it should not be relied on, with the reason in the note.
@@ -382,7 +384,12 @@ Read the record a second time, as the attorney would before signing, and check t
 4. Conflicts: the same fact (a name, date, title, salary, employer, figure) stated differently in two documents. First check that both describe the same thing: a current address and an address abroad, a current salary and an offered one, gross and annualized pay are not conflicts.
 5. Unsupported claims: statements in letters, declarations or the employer's documents (rankings such as "most cited", "national", "leading", counts, figures, dates) that nothing else in the file supports.
 6. Requests the facts do not allow: what the client or employer asks for (a change of status, a start date, premium processing) that the record shows cannot be done as asked, and an earlier petition or notice in the file that is history, not this case.
-Do not calculate durations, deadlines or limits. Report nothing rather than something weak: at most 12 items, and "high" only for what could end or seriously delay the case.
+Law to apply, so that what is not a problem is not reported as one:
+- Immediate relatives of US citizens (spouse, unmarried child under 21, parent of a citizen aged 21 or over) who were inspected and admitted are not barred from adjustment by an overstay or unauthorized work (INA 245(c)). Report those facts once, as low, not as bars.
+- For an adjustment applicant, travel on advance parole is not a departure that triggers the 3 and 10 year unlawful presence bars (Matter of Arrabally and Yerrabelly, 25 I&N Dec. 771 (BIA 2012)). Do not warn that advance parole travel triggers them.
+${supportRule(type.split(" ")[0])}
+Do not calculate durations, deadlines or limits, except the affidavit of support comparison above. Report nothing rather than something weak: at most 8 items, and "high" only for what could end or seriously delay the case.
+Never report as an item: a missing engagement letter or G-28 (Lincoln prepares the G-28), a questionnaire that is undated or unsigned, that a fact is only self reported, or translations that may be needed later. All missing documents go in one item that lists them, not one item each.
 Reply with one JSON object and nothing else:
 {"issues": [{"kind": "bar | missing | conflict | risk", "severity": "high | medium | low", "title": "", "detail": "one or two sentences", "pages": [1]}]}`;
     const r = parseJson<{ issues?: { kind: string; severity: string; title: string; detail: string; pages?: number[] }[] }>(await chat([{ role: "system", content: systemPrompt() }, { role: "user", content: ask }], { maxTokens: 16000, effort: "high", timeoutMs: 300_000 }));

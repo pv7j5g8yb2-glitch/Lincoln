@@ -282,8 +282,9 @@ from the repo the same day. History is in git up to commit `341cf65`.
   stops its notifications. Not yet seen on a real phone. Lock screen previews show client names.
 * Case type test FINAL (2026-11-15): all 12 cases run, $4.27 in total. Every main planted problem was caught. Fixed from
   it: identity facts dropped from forms, forms failing on rate limits, no knowledge of today's date, non-problems
-  reported as issues. Weak spots left: I-864 income not computed against the poverty guideline, Arrabally (advance
-  parole travel is not a departure) not known, still many low value issues per case.
+  reported as issues. Weak spots then fixed in the prompts (not yet rerun live): the 2026 I-864P
+  minimums (official USCIS table, `lincoln/src/lib/thresholds.ts`, update each March), Arrabally, the 245(c) immediate
+  relative exception, and fewer minor issues (missing documents as one item, no G-28 or engagement letter items, at most 8).
 * Case type test (2026-11-15, live, $1.48 so far, cases in `lincoln/tests/case-types/` with KEY.md): free stand in run
   of all 70 case types passed except the 10 forms not yet added. Live: marriage green card ($0.95; caught the marriage
   date conflict, treated overstay and work as excused for an immediate relative, raised the I-864 shortfall without
