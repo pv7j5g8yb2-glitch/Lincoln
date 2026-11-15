@@ -137,3 +137,16 @@ personal in here.
 * Phone app: not first. Web app first (works in a phone browser), then push notifications for
   approvals and new leads once teams have live ads, a native app only when teams ask or approvals
   are being lost.
+
+## Lincoln: Microsoft sign in (checked 2026-11-15)
+
+* app.uselincoln.com has Google and Microsoft buttons (`/api/auth/microsoft`), using the `/common`
+  endpoint. The app registration accepts both personal and work Microsoft accounts (tested).
+* It asks for a lot: Mail.ReadWrite, Mail.Send, Calendars.ReadWrite, Files.ReadWrite.All,
+  Sites.Read.All, Team.ReadBasic.All, Channel.ReadBasic.All, ChannelMessage.Send.
+* uselincoln.com is added to the Entra "Default Directory" but not verified yet. The TXT record
+  `MS=...` is live on GoDaddy and on Google and Cloudflare DNS; Microsoft's check was still failing,
+  most likely cached. Try again later, or from admin.microsoft.com, Settings, Domains.
+* Until publisher verification (verified domain plus a Microsoft AI Cloud Partner Program ID), work
+  accounts at other companies will mostly get "Need admin approval". Personal accounts and his own
+  tenant are fine. The Teams and SharePoint scopes only work for work accounts.
