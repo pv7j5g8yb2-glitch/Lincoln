@@ -286,6 +286,10 @@ from the repo the same day. History is in git up to commit `341cf65`.
   reported as issues. Weak spots then fixed in the prompts (not yet rerun live): the 2026 I-864P
   minimums (official USCIS table, `lincoln/src/lib/thresholds.ts`, update each March), Arrabally, the 245(c) immediate
   relative exception, and fewer minor issues (missing documents as one item, no G-28 or engagement letter items, at most 8).
+  Live recheck (case 13, $0.39): the J-1 212(e) bar was still caught as the top item, issues fell from about 20 to 10,
+  missing documents became one item; but the first reading did not have the new rules, so it still listed overstay and
+  advance parole as high and the income as 'may' fall short. The rules and I-864P table now go to the first reading
+  too (not yet rerun).
 * Case type test (2026-11-15, live, $1.48 so far, cases in `lincoln/tests/case-types/` with KEY.md): free stand in run
   of all 70 case types passed except the 10 forms not yet added. Live: marriage green card ($0.95; caught the marriage
   date conflict, treated overstay and work as excused for an immediate relative, raised the I-864 shortfall without

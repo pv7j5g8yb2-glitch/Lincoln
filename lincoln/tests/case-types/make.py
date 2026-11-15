@@ -177,5 +177,17 @@ case("12-appeal-motion", "From: Tariq Hussain <tariq.hussain@mail.example>\n\nHi
   "Today is the intake date: 2026-11-15.",
  ])])
 
+case("13-recheck-i130", "From: Omar Haddad <omar.haddad@mail.example>\n\nHi, I'm a US citizen and want to petition for my wife Lena so she can get her green card here. Please file the I-130 for now. Her details and mine are in the form. Omar", [
+ ("Client intake questionnaire: Spouse petition (I-130)", [
+  "Petitioner: Omar Khalil Haddad. US citizen by birth, born 1989-04-02 in Dearborn, MI. Address: 1450 Oakwood Blvd, Dearborn, MI 48124. Phone (313) 555-0122.",
+  "Beneficiary: Lena Marie Haddad (born Lena Marie Vogel). Born 1992-11-19 in Leipzig, Germany. Citizen of Germany. Passport C4FX29871, expires 2030-06-30.",
+  "Married 2024-05-11 in Dearborn, Michigan. No prior marriages for either.",
+  "Lena's last entry: 2023-02-08 at Detroit as a B-2 visitor, admitted until 2023-08-07. She stayed. She has worked as a bookkeeper since 2023-10 without authorization.",
+  "Earlier stay: 2014-09 to 2016-06 as a J-1 exchange visitor (university research), funded by her home government. DS-2019 marked subject to the two-year home residency requirement. She has not returned to Germany for two years since, and no waiver was filed.",
+  "Plan: she will adjust status here and travel to Germany on advance parole for her sister's wedding while the green card is pending.",
+  "Household: Omar, Lena and Omar's daughter Nora (age 6). Household size 3.",
+  "Omar's 2025 income: $31,200 as a warehouse supervisor. No other income or assets.",
+ ])])
+
 json.dump(CASES, open(os.path.join(OUT, "emails.json"), "w"), indent=1)
 print("made", len(CASES))

@@ -45,3 +45,9 @@ immigration attorney would raise. "Must not" lists things that are not problems 
     * No appeal lies; a motion is the route (the decision says so).
     * Filed after 33 days (decision 2026-08-12): late; a late motion to reopen can be excused only if the delay was reasonable and beyond his control.
     * Ground: the RFE went to the old address although an AR-11 was filed.
+13. **13-recheck-i130** (G-28, I-130, I-130A; rerun of the three fixes, 2026-11-15).
+    * I-864: household of 3 on $31,200 is below the 2026 minimum of $34,150 (shortfall $2,950); joint sponsor or assets.
+    * Must not: treat the overstay or unauthorized work as bars to adjustment (245(c), spouse of a citizen), or warn
+      that advance parole travel triggers the unlawful presence bars (Arrabally).
+    * Real bar that must still appear: the J-1 two year home residency requirement (212(e)) bars adjustment until
+      it is met or waived.
