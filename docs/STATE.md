@@ -150,3 +150,6 @@ personal in here.
 * Until publisher verification (verified domain plus a Microsoft AI Cloud Partner Program ID), work
   accounts at other companies will mostly get "Need admin approval". Personal accounts and his own
   tenant are fine. The Teams and SharePoint scopes only work for work accounts.
+* `invalid_client` on Continue with Microsoft (2026-11-15): Render's `MICROSOFT_CLIENT_SECRET` held
+  the Azure Secret ID, not the secret Value. Fix: new client secret in Azure, paste its Value, save,
+  rebuild and deploy. Secrets last at most 24 months; make a new one before the expiry date.
