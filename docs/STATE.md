@@ -255,10 +255,11 @@ from the repo the same day. History is in git up to commit `341cf65`.
   against the zero retention agreement before real client files. Ismael (2026-11-14): margins should be 70 to 80
   percent; Opus only if Sonnet proves worse in the comparison. ICONIQ (Jan 2026, via secondary sources) puts AI
   company gross margins at about 52 percent on average, against 70 to 90 percent for mature SaaS.
-* Fair use limit (Ismael, 2026-11-15): Lincoln is sold as unlimited, but model cost is capped at $150 per seat a month
-  (LLM_SEAT_MONTHLY_USD), pooled across a firm's seats; Claude chose $150 rather than $299 so the worst case still
-  keeps about half the seat price. A busy seat is estimated at $30 to $70. LLM_DAILY_BUDGET_USD is a server wide
-  daily cap ($5 default) and must be raised once several testers use Lincoln.
+* Fair use limit (Ismael, 2026-11-15): Lincoln is sold as unlimited, but each user is capped at $150 of model cost a
+  month (LLM_SEAT_MONTHLY_USD, per user, not pooled; Claude chose $150 rather than $299 so the worst case still keeps
+  about half the seat price). Work counts against the person asking in the chat or giving the instruction, otherwise
+  the case's responsible attorney. A busy user is estimated at $30 to $70. LLM_DAILY_BUDGET_USD is a separate server
+  wide daily cap ($5 default) and must be raised once several testers use Lincoln.
 * Speed (Ismael, 2026-11-15): forms are filled at once at the normal price (batch only with LLM_BATCH=on, about 20
   cents a case dearer); reading batches run three at a time (LLM_READ_CONCURRENCY) and a case's forms in parallel.
   Same cost and prompts. Live timing of the long case before this: reading 2.5 min, all work done in about 10 min,

@@ -12,7 +12,7 @@ type Effort = "low" | "medium" | "high";
 // Every model call is recorded against the firm and case it worked for: which model actually answered
 // (a refused request can be answered by a fallback model, and that is never hidden), the tokens and the
 // cost. It is the method record for each output and the cost of each case.
-type Work = { firmId: string; caseId?: string | null; purpose: string };
+type Work = { firmId: string; caseId?: string | null; purpose: string; userId?: string | null };
 const work = new AsyncLocalStorage<Work>();
 /** Runs model calls as work for a firm and, where there is one, a case. */
 export const forCase = <T>(w: Work, fn: () => Promise<T>) => work.run(w, fn);
@@ -75,22 +75,27 @@ export function spentToday() {
   const row = db().prepare("SELECT value FROM kv WHERE firm_id = '_system' AND key = ?").get(day()) as { value: string } | undefined;
   return Number(row?.value ?? 0);
 }
-// Fair use: each seat may use up to LLM_SEAT_MONTHLY_USD of model cost a month ($150 by default), pooled across the
-// firm's seats. Ordinary use is a small fraction of that (a busy seat is about $30 to $70), so nobody meets it in
-// practice; it stops a runaway loop or a shared login from costing more than the seat pays.
+// Fair use (Ismael, 2026-11-15): each user may use up to LLM_SEAT_MONTHLY_USD of model cost a month ($150 by
+// default). A busy user is about $30 to $70, so nobody meets it in practice; it stops a runaway loop or a shared
+// login from costing more than the seat pays. Work is counted against the person it is for: the one asking in the
+// chat or giving an instruction, otherwise the case's responsible attorney.
 const seatLimit = () => Number(process.env.LLM_SEAT_MONTHLY_USD ?? 150);
-export function firmMonthUse(firmId: string) {
-  const d = db();
+function personOf(w: Work | undefined): string | null {
+  if (!w) return null;
+  if (w.userId) return w.userId;
+  if (!w.caseId) return null;
+  return (db().prepare("SELECT attorney_id FROM cases WHERE firm_id = ? AND id = ?").get(w.firmId, w.caseId) as { attorney_id: string | null } | undefined)?.attorney_id ?? null;
+}
+export function userMonthUse(userId: string) {
   const since = new Date().toISOString().slice(0, 8) + "01";
-  const spent = (d.prepare("SELECT COALESCE(SUM(cost), 0) AS c FROM usage WHERE firm_id = ? AND at >= ?").get(firmId, since) as { c: number }).c;
-  const seats = Math.max(1, (d.prepare("SELECT COUNT(*) AS n FROM users WHERE firm_id = ?").get(firmId) as { n: number }).n);
-  return { spent, limit: seats * seatLimit() };
+  const spent = (db().prepare("SELECT COALESCE(SUM(cost), 0) AS c FROM usage WHERE user_id = ? AND at >= ?").get(userId, since) as { c: number }).c;
+  return { spent, limit: seatLimit() };
 }
 function guard() {
   if (spentToday() >= budget()) throw new Error("Today's model budget is used up. It resets at midnight UTC.");
-  const firmId = work.getStore()?.firmId;
-  if (firmId && seatLimit() > 0) {
-    const { spent, limit } = firmMonthUse(firmId);
+  const person = seatLimit() > 0 ? personOf(work.getStore()) : null;
+  if (person) {
+    const { spent, limit } = userMonthUse(person);
     if (spent >= limit) throw new Error("Monthly usage limit reached.");
   }
 }
@@ -110,7 +115,7 @@ function addSpend(u: Usage | undefined, model?: string, factor = 1) {
 function record(model: string | undefined, u: Usage, factor = 1) {
   const w = work.getStore();
   if (!w) return;
-  db().prepare("INSERT INTO usage (id, firm_id, case_id, at, purpose, model, input_tokens, output_tokens, cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)").run(uid(), w.firmId, w.caseId ?? null, new Date().toISOString(), w.purpose, model ?? mainModel() ?? "", (u.input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0), u.output_tokens ?? 0, priceOf(u, model, factor));
+  db().prepare("INSERT INTO usage (id, firm_id, case_id, user_id, at, purpose, model, input_tokens, output_tokens, cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(uid(), w.firmId, w.caseId ?? null, personOf(w), new Date().toISOString(), w.purpose, model ?? mainModel() ?? "", (u.input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0), u.output_tokens ?? 0, priceOf(u, model, factor));
 }
 
 async function fail(res: Response): Promise<never> {

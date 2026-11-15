@@ -188,7 +188,7 @@ async function handleInstruction(firmId: string, mail: Inbound, msgId: string, m
  * drafting) is returned as a promise, so a person typing into Lincoln is taken to the case straight away.
  */
 export function takeInstruction(firmId: string, member: Member, input: { text: string; subject?: string; from?: string; fromName?: string; files: { name: string; data: Uint8Array }[]; via: "email" | "app" }, open?: OpenCase[]): Promise<{ caseId: string | null; summary: string; work: Promise<void> }> {
-  return forCase({ firmId, purpose: "instruction" }, () => instruction(firmId, member, input, open));
+  return forCase({ firmId, purpose: "instruction", userId: member.id }, () => instruction(firmId, member, input, open));
 }
 
 async function instruction(firmId: string, member: Member, input: { text: string; subject?: string; from?: string; fromName?: string; files: { name: string; data: Uint8Array }[]; via: "email" | "app" }, open?: OpenCase[]): Promise<{ caseId: string | null; summary: string; work: Promise<void> }> {
