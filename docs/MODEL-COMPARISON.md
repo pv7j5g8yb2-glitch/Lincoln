@@ -52,3 +52,15 @@ answer key in KEY.md). Run on the live app, each firm on one model for every ste
 | Second check, letters, citation checks, chat, client emails | Sonnet | Haiku miscites and writes the wrong document |
 | Forms | Sonnet, through the half price batch | No wrong answers after the new rules; Haiku is a candidate after more cases |
 | Opus | Not yet | Only worth 2.7 times the price if it catches what Sonnet missed (the J-1 years in Tunis, unsupported letter claims) |
+
+## Hybrid rerun (2026-11-15, Sonnet for legal work, Haiku for sorting, sharper second check): $1.58
+
+* About 21.5 of 22. New catches: the unsupported claims in two letters ("most downloaded", "most cited"), the CV's
+  "national" award and a second patent with no document, a missing contract or itinerary, and no work
+  authorization shown for 2021 to 2023 (a real gap in the file). The address false alarm is gone; letters now
+  attribute claims ("states that"). Forms: change of status left blank for the attorney, no contradictory boxes.
+* Still missed: her 2016 to 2019 years in Tunisia as a possible way the J-1 rule was met. The check only added new
+  issues, so it never revisited the listed J-1 issue. Fixed in the prompt (each cure is its own item); unproven
+  until the next live run.
+* Cost: forms ran through the half price batch ($0.21). Citation checks on the longer letter were the largest single
+  cost ($0.48, 11 calls).
