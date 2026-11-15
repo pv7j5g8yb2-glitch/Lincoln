@@ -75,8 +75,24 @@ export function spentToday() {
   const row = db().prepare("SELECT value FROM kv WHERE firm_id = '_system' AND key = ?").get(day()) as { value: string } | undefined;
   return Number(row?.value ?? 0);
 }
+// Fair use: each seat may use up to LLM_SEAT_MONTHLY_USD of model cost a month ($150 by default), pooled across the
+// firm's seats. Ordinary use is a small fraction of that (a busy seat is about $30 to $70), so nobody meets it in
+// practice; it stops a runaway loop or a shared login from costing more than the seat pays.
+const seatLimit = () => Number(process.env.LLM_SEAT_MONTHLY_USD ?? 150);
+export function firmMonthUse(firmId: string) {
+  const d = db();
+  const since = new Date().toISOString().slice(0, 8) + "01";
+  const spent = (d.prepare("SELECT COALESCE(SUM(cost), 0) AS c FROM usage WHERE firm_id = ? AND at >= ?").get(firmId, since) as { c: number }).c;
+  const seats = Math.max(1, (d.prepare("SELECT COUNT(*) AS n FROM users WHERE firm_id = ?").get(firmId) as { n: number }).n);
+  return { spent, limit: seats * seatLimit() };
+}
 function guard() {
   if (spentToday() >= budget()) throw new Error("Today's model budget is used up. It resets at midnight UTC.");
+  const firmId = work.getStore()?.firmId;
+  if (firmId && seatLimit() > 0) {
+    const { spent, limit } = firmMonthUse(firmId);
+    if (spent >= limit) throw new Error("Monthly usage limit reached.");
+  }
 }
 const PRICES: [RegExp, number, number][] = [[/haiku-5/, 0.1, 0.5], [/sonnet-5/, 2, 10], [/opus-5-5/, 4, 20], [/opus/, 5, 25], [/fable|mythos/, 8, 40]];
 /** Batch requests are billed at half price. */
