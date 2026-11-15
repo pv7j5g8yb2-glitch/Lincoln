@@ -255,6 +255,11 @@ from the repo the same day. History is in git up to commit `341cf65`.
   against the zero retention agreement before real client files. Ismael (2026-11-14): margins should be 70 to 80
   percent; Opus only if Sonnet proves worse in the comparison. ICONIQ (Jan 2026, via secondary sources) puts AI
   company gross margins at about 52 percent on average, against 70 to 90 percent for mature SaaS.
+* Model comparison (2026-11-15, live, long O-1A test case, `docs/MODEL-COMPARISON.md`): Sonnet 5.5 did the full
+  case for $1.37 with about 20.5 of 22 planted problems caught; Haiku 5.5 for $0.135 with about 18.5, weak drafting and
+  one serious misread notice; Opus 5.5 lost three readings to a Lincoln length limit bug (fixed) and has no result yet.
+  Six Lincoln bugs fixed from it, including a security hole (profile title granted admin). Render still has the test
+  settings (LINCOLN_MODEL_BY_FIRM, LLM_DAILY_BUDGET_USD=10, LLM_BATCH=off) until the Opus run; remove them after.
 * Pre-seed size (Claude's earlier advice, 2026-11-14, superseded by the line above): about $1M (range $750k to $1.5M) for 18 months: two engineers, a part time immigration attorney reviewer, SOC 2 Type I and a penetration test, model and hosting costs, growth, legal and insurance, and a buffer. Ismael's model budget for testing now is $5 to $20, so tests are run small.
 * Pitch material (2026-11-14): `docs/pitch/Lincoln-seed-deck.pdf` (16 slides, minimal, sourced, no invented proof) and `docs/pitch/Lincoln-product-description.docx`. The $1.5M raise, use of funds split and 18 month targets are Claude's proposal, not decided by Ismael. The team slide gives only his first name, not his age.
 * Where firm work arrives (2026-11-14, from what is known, not measured): email is the main channel (client and employer mail, documents, USCIS email notices) but not the only one. Calls and consultations, web intake forms, client portals in case software and paper USCIS notices also bring work. Lincoln needs its own intake (a client upload link and questionnaire) and a way to take scanned notices, besides mail. Not built yet.
