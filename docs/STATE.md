@@ -303,7 +303,8 @@ from the repo the same day. History is in git up to commit `341cf65`.
   on firm work accounts usually cannot approve it without their IT admin. Fix: add uselincoln.com as a verified
   custom domain in Entra (TXT record at GoDaddy), set it as publisher domain, then join the Microsoft AI Cloud
   Partner Program as the company (owned by the parent, primary contact on an @uselincoln.com email) and add its
-  MPN ID. Google shows the logo only after brand verification. Home page in both branding pages stays https://app.uselincoln.com
+  MPN ID. No paid email needed: hello@uselincoln.com on Zoho Mail's free plan, and the custom domain is added free
+  in the existing Entra directory (do not buy Microsoft 365 for this; Claude wrongly suggested it once). Google shows the logo only after brand verification. Home page in both branding pages stays https://app.uselincoln.com
   (Ismael, 2026-11-15) until the landing page is live; then change it to https://uselincoln.com in Google and Microsoft.
 
 1. Read and agree `docs/TEST-PLAN.md` (three weeks, no building before the stop rule).
