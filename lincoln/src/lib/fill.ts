@@ -232,7 +232,7 @@ Answer only the fields the record or the details above clearly support, and leav
 - check fields: value "yes" to tick the box, only for the box that applies. A check field is one box of a question and its label says which ("Check Yes.", "Check No.", "Check B."): tick it only when that box is the right answer.
 - Answers about eligibility and what the petition asks for (requested action, basis for classification, status questions) follow the facts in the record, not what a client or employer asked for. Where they conflict, for example a change of status asked for after the status has ended, leave the field blank for the attorney.
 - choice fields: exactly one of the listed options.
-- Dates as MM/DD/YYYY. Names exactly as on the passport.
+- Dates as MM/DD/YYYY. Names exactly as on the passport; when the file has no passport, as the client's own form or questionnaire gives them. Fill every identity item the record states (names, date and place of birth, citizenship, A-Number, addresses).
 - N/A or None only where the instructions call for it and the record shows the item does not apply (no middle name on the passport, no prior marriage stated in the file). Never because something is merely missing from the file.
 - The preparer and attorney parts take the firm and attorney details above; the client never signs as preparer.
 - source: "p. N" for a page of the client file, "firm" or "attorney" for the details above, "case" for the case line, "instructions" for an answer the instructions dictate.
