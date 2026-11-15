@@ -20,3 +20,8 @@ assert.deepStrictEqual(fix('{"date": "2026-11-30", "detail": "pp. 48-49 conflict
 const big = { documents: [{ title: 'He said "fine"', page_from: 1, page_to: 2 }], issues: [{ pages: [1, 2, 3], detail: "a, b; c: d" }] };
 assert.deepStrictEqual(fix(JSON.stringify(big, null, 2)), big);
 console.log("all json repair tests passed");
+// The slip that broke the live comparison: a quoted phrase followed by a comma and more words.
+assert.deepStrictEqual(fix('{"issues": [{"title": "Award", "detail": "HR calls it a "national innovation award", but it is internal", "pages": [20]}, {"title": "Next"}]}'),
+  { issues: [{ title: "Award", detail: 'HR calls it a "national innovation award", but it is internal', pages: [20] }, { title: "Next" }] });
+assert.deepStrictEqual(fix('{"a": ["one "two", three", "four"]}'), { a: ['one "two", three', "four"] });
+console.log("all quote repair tests passed");

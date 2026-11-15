@@ -32,14 +32,15 @@ export function repairJson(s: string): string {
   const startValue = () => { if (afterValue) out += ","; afterValue = false; };
   // Sticky patterns read at the current position without copying the rest of the text.
   const at = (re: RegExp, i: number) => { re.lastIndex = i; return re.exec(s); };
-  const ENDS = /\s*(?:[,:}\]]|$|"[^"\n]{0,80}"\s*:)/y, PAGE = /p{1,2}\.\s*(?=\d)/iy, NUM = /-?\d+(\.\d+)?([eE][+-]?\d+)?/y, RANGE = /(\d+)\s*[-–]\s*(\d+)/y, LIT = /true|false|null/y;
+  const ENDS = /\s*(?:[:}\]]|$|,\s*(?:["{[\]}\d-]|true|false|null|$)|"[^"\n]{0,80}"\s*:)/y, PAGE = /p{1,2}\.\s*(?=\d)/iy, NUM = /-?\d+(\.\d+)?([eE][+-]?\d+)?/y, RANGE = /(\d+)\s*[-–]\s*(\d+)/y, LIT = /true|false|null/y;
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
     if (inStr) {
       if (ch === "\\") { out += ch + (s[i + 1] ?? ""); i++; continue; }
       if (ch === '"') {
-        // A quote ends the string when what follows can follow a string, including the next key ("key":)
-        // when the comma between them is missing.
+        // A quote ends the string when what follows can follow a string: a colon or closing bracket, a
+        // comma followed by more JSON (not by more words, as in: calls it a "national award", but...), or
+        // the next key ("key":) when the comma between them is missing.
         if (at(ENDS, i + 1)) { out += ch; inStr = false; afterValue = true; }
         else out += '\\"';
         continue;
