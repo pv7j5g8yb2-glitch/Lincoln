@@ -81,3 +81,12 @@ export function repairJson(s: string): string {
   }
   return out;
 }
+
+/** The text around the point where parsing failed, for diagnosing test runs. */
+export function errorContext(text: string, err: unknown) {
+  const a = text.indexOf("{");
+  const pos = Number(/position (\d+)/.exec(err instanceof Error ? err.message : "")?.[1] ?? -1);
+  if (a < 0 || pos < 0) return "";
+  const at = a + pos;
+  return JSON.stringify(text.slice(Math.max(0, at - 220), at + 120));
+}

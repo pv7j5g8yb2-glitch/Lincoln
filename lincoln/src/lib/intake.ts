@@ -1,6 +1,6 @@
 import { db, uid } from "./db";
 import { LIBRARY, typeOf } from "./library";
-import { chat, forCase, parseJson, readPages } from "./llm";
+import { chat, errorContext, forCase, isTestRun, parseJson, readPages } from "./llm";
 import { DATE_KINDS, dateRules } from "./rules";
 import { EMAIL_STYLE } from "./style";
 import { PROCESS } from "./process";
@@ -99,7 +99,14 @@ async function readJson<T>(ask: () => Promise<string>): Promise<T> {
     return parseJson<T>(await ask());
   } catch (e) {
     if (!(e instanceof SyntaxError) && !/expected format/.test(e instanceof Error ? e.message : "")) throw e;
-    return parseJson<T>(await ask());
+    const again = await ask();
+    try {
+      return parseJson<T>(again);
+    } catch (e2) {
+      // In a model comparison run only, the failing passage is kept in the case note to find the cause.
+      if (isTestRun() && e2 instanceof Error) throw new Error(`${e2.message} Near: ${errorContext(again, e2)}`.slice(0, 900));
+      throw e2;
+    }
   }
 }
 
@@ -239,7 +246,7 @@ async function readCase(firmId: string, caseId: string, files: Uint8Array[], opt
     void import("./fill").then((m) => m.prepareForms(firmId, caseId)).catch(() => undefined);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
-    d.prepare("UPDATE cases SET processing = 0, note = ?, pages = COALESCE(?, pages) WHERE firm_id = ? AND id = ?").run(`The file could not be read. ${msg}`.slice(0, 300), before, firmId, caseId);
+    d.prepare("UPDATE cases SET processing = 0, note = ?, pages = COALESCE(?, pages) WHERE firm_id = ? AND id = ?").run(`The file could not be read. ${msg}`.slice(0, isTestRun() ? 900 : 300), before, firmId, caseId);
     // Pages from a failed read are removed, so nothing is kept that the case does not show.
     if (before !== null) removePagesAfter(caseId, before);
   }

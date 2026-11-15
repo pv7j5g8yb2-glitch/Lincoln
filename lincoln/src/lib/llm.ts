@@ -31,6 +31,8 @@ const direct = () => /(^|\.)anthropic\.com$/.test(new URL(base()).host);
 // what an email is. Anything a person reads as work product, emails included, stays on the main model.
 // For model comparisons only: LINCOLN_MODEL_BY_FIRM maps a test firm's name to one model used for all its
 // work, e.g. {"Test Sonnet":"claude-sonnet-5-5"}. Unset in normal use.
+/** True for a test firm named in LINCOLN_MODEL_BY_FIRM. */
+export const isTestRun = () => testModel() !== null;
 function testModel(): string | null {
   const map = process.env.LINCOLN_MODEL_BY_FIRM;
   const w = work.getStore();
@@ -251,7 +253,7 @@ export async function batchResults(id: string): Promise<Map<string, { text?: str
   return out;
 }
 
-export { parseJson, repairJson } from "./json";
+export { parseJson, repairJson, errorContext } from "./json";
 
 export type Tool = { name: string; description: string; input_schema: Record<string, unknown> };
 type Turn = { role: "user" | "assistant"; content: unknown };
