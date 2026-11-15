@@ -103,6 +103,10 @@ cover free testers. Before any call that spends them (live tests, model comparis
 say what it is and the estimated cost, end the message asking for approval, and spend nothing until he says yes.
 Stand in model tests cost nothing and need no approval.
 
+**Cheap check first, never hours of silence (Ismael, 2026-11-15).** Before any long or costly live test, run the
+smallest real model check first (Haiku, a short file, a few cents, a few minutes) to catch what breaks. If a test
+breaks or runs past about 30 minutes, stop and tell him, rather than fixing and rerunning in silence.
+
 **Never push a failing build (2026-11-13).** Check the real exit status of the type check and `npm run
 build` before every push to the session branch; Render deploys from it. A grep for "Compiled" is not a check.
 
