@@ -95,6 +95,9 @@ Merge documents split across parts into one entry. Compare the facts across docu
 
 ${instruction(c)}`;
 
+// Length limits are generous on purpose: the model's thinking counts towards them, and a limit that runs
+// out cuts the answer off mid way. Only what the model actually writes is billed.
+
 /** A reading whose reply is not well formed is asked for once more before the file is given up on. */
 async function readJson<T>(ask: () => Promise<string>): Promise<T> {
   try {
@@ -119,19 +122,19 @@ async function readJson<T>(ask: () => Promise<string>): Promise<T> {
 /** Reads a file of any length: one request for a short file, batches and a text only merge for a long one. */
 async function readFile(c: { client: string; type: string; firm: string; attorney: string; extra?: string; fromClient?: boolean }, pages: { n: number; jpeg: Buffer }[]): Promise<{ reading: Reading; notes: Notes }> {
   if (pages.length <= BATCH) {
-    const reading = await readJson<Reading>(() => readPages(SYSTEM, pages, instruction(c), 16000));
+    const reading = await readJson<Reading>(() => readPages(SYSTEM, pages, instruction(c), 48000));
     return { reading, notes: { documents: reading.documents ?? [], facts: reading.facts ?? [], dates: reading.dates ?? [], unreadable: reading.unreadable ?? [] } };
   }
   const notes: Notes = { documents: [], facts: [], dates: [], unreadable: [] };
   for (let i = 0; i < pages.length; i += BATCH) {
     const part = pages.slice(i, i + BATCH);
-    const r = await readJson<Partial<Notes>>(() => readPages(SYSTEM, part, batchInstruction(part[0].n, part[part.length - 1].n), 12000));
+    const r = await readJson<Partial<Notes>>(() => readPages(SYSTEM, part, batchInstruction(part[0].n, part[part.length - 1].n), 32000));
     notes.documents.push(...(r.documents ?? []));
     notes.facts.push(...(r.facts ?? []));
     notes.dates.push(...(r.dates ?? []));
     notes.unreadable.push(...(r.unreadable ?? []));
   }
-  const reading = await readJson<Reading>(() => readPages(SYSTEM, [], mergeInstruction(c, pages.length, notes), 16000));
+  const reading = await readJson<Reading>(() => readPages(SYSTEM, [], mergeInstruction(c, pages.length, notes), 48000));
   // The merge never sees the pages, so what the batches could not read stays unreadable.
   const seen = new Set((reading.unreadable ?? []).map((u) => u.page));
   reading.unreadable = [...(reading.unreadable ?? []), ...notes.unreadable.filter((u) => !seen.has(u.page))];
@@ -279,7 +282,7 @@ ${record ? `The case record below was extracted from the ${c.pages} page client 
 
 Rules for the draft: every factual sentence ends with its source page in the form (p. 12). Use only facts in the file. Put anything the attorney must decide or obtain in square brackets starting with "Attorney:". Do not use markdown symbols. Reply with one JSON object and nothing else:
 {"title": "short document title", "sections": [{"heading": "", "paragraphs": [""]}]}`;
-    const r = parseJson<{ title: string; sections: { heading: string; paragraphs: string[] }[] }>(await readPages(SYSTEM, pages, ask, 16000));
+    const r = parseJson<{ title: string; sections: { heading: string; paragraphs: string[] }[] }>(await readPages(SYSTEM, pages, ask, 48000));
     const model = (d.prepare("SELECT model FROM usage WHERE firm_id = ? AND case_id = ? AND purpose = 'draft' ORDER BY at DESC LIMIT 1").get(firmId, caseId) as { model: string } | undefined)?.model ?? null;
     const raw = (r.sections ?? []).slice(0, 40).map((s) => ({ heading: String(s.heading ?? "").slice(0, 200), paras: (s.paragraphs ?? []).slice(0, 60).map(String) }));
     // Every cited sentence is checked against its page before the attorney sees the draft.
@@ -372,7 +375,7 @@ Read the record a second time and check only three things. Report only what is n
 Do not calculate durations, deadlines or limits. Report nothing rather than something weak: at most 6 items, and "high" only for what could end or seriously delay the case.
 Reply with one JSON object and nothing else:
 {"issues": [{"kind": "bar | missing | conflict", "severity": "high | medium | low", "title": "", "detail": "one or two sentences", "pages": [1]}]}`;
-    const r = parseJson<{ issues?: { kind: string; severity: string; title: string; detail: string; pages?: number[] }[] }>(await chat([{ role: "system", content: SYSTEM }, { role: "user", content: ask }], { maxTokens: 8000, effort: "high", timeoutMs: 300_000 }));
+    const r = parseJson<{ issues?: { kind: string; severity: string; title: string; detail: string; pages?: number[] }[] }>(await chat([{ role: "system", content: SYSTEM }, { role: "user", content: ask }], { maxTokens: 16000, effort: "high", timeoutMs: 300_000 }));
     const pages = (d.prepare("SELECT pages FROM cases WHERE firm_id = ? AND id = ?").get(firmId, caseId) as { pages: number }).pages;
     const found = (r.issues ?? []).filter((x) => typeof x.title === "string" && x.title.trim()).slice(0, 6);
     const ins = d.prepare("INSERT INTO issues (id, firm_id, case_id, kind, severity, title, detail, sources, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', ?)");
@@ -433,7 +436,7 @@ async function checkCitations(firmId: string, caseId: string, paras: string[], p
 ${batch.map((c, k) => `S${k + 1} (p. ${c.pages.join(", ")}): ${c.text.replace(/\s+/g, " ").slice(0, 600)}`).join("\n")}
 Reply with one JSON object and nothing else:
 {"results": [{"id": "S1", "verdict": "supported | not_shown | contradicted", "note": "for contradicted only: what the page says instead, in a few words"}]}`;
-    const r = parseJson<{ results?: { id: string; verdict: string; note?: string }[] }>(await readPages(SYSTEM, imgs, ask, 8000));
+    const r = parseJson<{ results?: { id: string; verdict: string; note?: string }[] }>(await readPages(SYSTEM, imgs, ask, 16000));
     for (const x of r.results ?? []) {
       const c = batch[Number(String(x.id).replace(/\D/g, "")) - 1];
       if (!c) continue;

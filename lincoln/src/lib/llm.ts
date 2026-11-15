@@ -109,7 +109,8 @@ type Reply = { content: { type: string; text?: string }[]; stop_reason: string; 
 const textOf = (d: Reply) => d.content.filter((b) => b.type === "text").map((b) => b.text ?? "").join("").trim();
 function check(d: Reply) {
   if (d.stop_reason === "refusal") throw new Error("The model declined this request.");
-  if (!textOf(d)) throw new Error(d.stop_reason === "max_tokens" ? "The model ran out of room before answering." : "The model service sent an empty reply.");
+  if (d.stop_reason === "max_tokens") throw new Error("The model ran out of room before finishing its answer.");
+  if (!textOf(d)) throw new Error("The model service sent an empty reply.");
 }
 
 /** A short exchange: sorting mail, reading an instruction. Low effort; thinking still runs as the model needs.
@@ -174,7 +175,7 @@ async function readPagesOnce(system: string, pages: { n: number; jpeg: Buffer }[
   if (!res.ok || !res.body) await fail(res);
   const reader = res.body!.getReader();
   const dec = new TextDecoder();
-  let buf = "", out = "", model: string | undefined;
+  let buf = "", out = "", model: string | undefined, cut = false;
   const used: Usage = {};
   for (;;) {
     const { done, value } = await reader.read();
@@ -198,6 +199,7 @@ async function readPagesOnce(system: string, pages: { n: number; jpeg: Buffer }[
           addSpend({ output_tokens: ev.usage?.output_tokens }, model);
         }
         if (ev.type === "message_delta" && ev.delta?.stop_reason === "refusal") throw new Error("The model declined this request.");
+        if (ev.type === "message_delta" && ev.delta?.stop_reason === "max_tokens") cut = true;
         if (ev.type === "error") throw new Error(ev.error?.message ?? "The model service reported an error.");
       } catch (e) {
         if (e instanceof SyntaxError) continue;
@@ -206,6 +208,8 @@ async function readPagesOnce(system: string, pages: { n: number; jpeg: Buffer }[
     }
   }
   record(model, used);
+  // An answer cut off by the length limit is never passed on as if it were whole.
+  if (cut) throw new Error("The model ran out of room before finishing its answer.");
   if (!out) throw new Error("The model service sent an empty reply.");
   return out;
 }

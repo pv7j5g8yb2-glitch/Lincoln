@@ -71,12 +71,12 @@ async function run(firmId: string, caseId: string, opts: { refill?: boolean; onl
       // Every field stays on the form for the attorney; only the applicable ones are answered.
       d.prepare("UPDATE forms SET fields = ?, layout = ?, updated_at = ? WHERE id = ?").run(fields.length, JSON.stringify(fields), new Date().toISOString(), id);
       if (batch) {
-        chunks.forEach((part, k) => items.push({ id: `${id}_${k}`, system, user: askFor(code, details, part), maxTokens: 8000, effort: "medium", cache: true }));
+        chunks.forEach((part, k) => items.push({ id: `${id}_${k}`, system, user: askFor(code, details, part), maxTokens: 16000, effort: "medium", cache: true }));
         pending.push({ id, chunks: chunks.map((part) => part.map((f) => f.name)) });
         continue;
       }
       const answers: Answer[] = [];
-      for (const part of chunks) answers.push(...toAnswers(await chat([{ role: "system", content: system }, { role: "user", content: askFor(code, details, part) }], { maxTokens: 8000, effort: "medium", timeoutMs: 300_000, cache: true }), part));
+      for (const part of chunks) answers.push(...toAnswers(await chat([{ role: "system", content: system }, { role: "user", content: askFor(code, details, part) }], { maxTokens: 16000, effort: "medium", timeoutMs: 300_000, cache: true }), part));
       d.prepare("UPDATE forms SET status = 'ready', answers = ?, updated_at = ? WHERE id = ?").run(JSON.stringify(answers), new Date().toISOString(), id);
       done.push(`${code} (${answers.length} of ${fields.length} fields)`);
     } catch {
