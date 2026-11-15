@@ -1,6 +1,6 @@
 import { db, uid } from "./db";
 import { LIBRARY, typeOf } from "./library";
-import { chat, errorContext, forCase, isTestRun, parseJson, readPages } from "./llm";
+import { chat, errorContext, forCase, isTestRun, parseJson, readPages, workFirm } from "./llm";
 import { DATE_KINDS, dateRules } from "./rules";
 import { EMAIL_STYLE } from "./style";
 import { PROCESS } from "./process";
@@ -106,7 +106,11 @@ async function readJson<T>(ask: () => Promise<string>): Promise<T> {
       return parseJson<T>(again);
     } catch (e2) {
       // In a model comparison run only, the failing passage is kept in the case note to find the cause.
-      if (isTestRun() && e2 instanceof Error) throw new Error(`${e2.message} Near: ${errorContext(again, e2)}`.slice(0, 900));
+      if (isTestRun() && e2 instanceof Error) {
+        // The whole reply is kept with the test firm, for the firm export, so the slip can be found.
+        db().prepare("INSERT INTO kv (firm_id, key, value) VALUES (?, ?, ?)").run(workFirm(), `debug:reading:${Date.now()}`, again);
+        throw new Error(`${e2.message} Near: ${errorContext(again, e2)}`.slice(0, 900));
+      }
       throw e2;
     }
   }

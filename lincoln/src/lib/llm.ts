@@ -31,6 +31,8 @@ const direct = () => /(^|\.)anthropic\.com$/.test(new URL(base()).host);
 // what an email is. Anything a person reads as work product, emails included, stays on the main model.
 // For model comparisons only: LINCOLN_MODEL_BY_FIRM maps a test firm's name to one model used for all its
 // work, e.g. {"Test Sonnet":"claude-sonnet-5-5"}. Unset in normal use.
+/** The firm the current work is for, if any. */
+export const workFirm = () => work.getStore()?.firmId ?? null;
 /** True for a test firm named in LINCOLN_MODEL_BY_FIRM. */
 export const isTestRun = () => testModel() !== null;
 function testModel(): string | null {

@@ -35,6 +35,9 @@ export async function POST(req: Request) {
     const rows = t === "firms" ? d.prepare(`SELECT ${keep.join(", ")} FROM firms WHERE id = ?`).all(s.firm.id) : d.prepare(`SELECT ${keep.join(", ")} FROM ${t} WHERE firm_id = ?`).all(s.firm.id);
     zip.file(`records/${t}.json`, JSON.stringify(rows, null, 2));
   }
+  // Failed readings kept for test firms only (see intake.ts).
+  const debug = d.prepare("SELECT key, value FROM kv WHERE firm_id = ? AND key LIKE 'debug:%'").all(s.firm.id);
+  if (debug.length) zip.file("records/debug.json", JSON.stringify(debug, null, 2));
   for (const c of d.prepare("SELECT id, client, pages FROM cases WHERE firm_id = ?").all(s.firm.id) as { id: string; client: string; pages: number }[]) {
     const folder = `${c.client.replace(/[^\w\s.-]/g, "").trim().slice(0, 60) || "Case"} (${c.id})`;
     for (let n = 1; n <= c.pages; n++) {
