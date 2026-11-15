@@ -255,6 +255,11 @@ from the repo the same day. History is in git up to commit `341cf65`.
   against the zero retention agreement before real client files. Ismael (2026-11-14): margins should be 70 to 80
   percent; Opus only if Sonnet proves worse in the comparison. ICONIQ (Jan 2026, via secondary sources) puts AI
   company gross margins at about 52 percent on average, against 70 to 90 percent for mature SaaS.
+* Models decided (Ismael, 2026-11-15): Sonnet 5.5 as LLM_MODEL for all legal work (reading, checks, forms, letters,
+  citation checks, emails, chat); Haiku 5.5 as LLM_MODEL_LIGHT for mail sorting, instructions and form section choice.
+  Opus not used unless a later test shows it catches what Sonnet misses. Second check widened to six checks (bars and
+  their cures, missing items, conflicts that describe the same thing, unsupported claims, requests the facts do not
+  allow, history versus this case), up to 12 items; drafts attribute letter claims to their author.
 * Model comparison (2026-11-15, live, long O-1A test case, `docs/MODEL-COMPARISON.md`): Sonnet 5.5 did the full
   case for $1.37 with about 20.5 of 22 planted problems caught; Haiku 5.5 for $0.135 with about 18.5, weak drafting and
   one serious misread notice; Opus 5.5 lost three readings to a Lincoln length limit bug (fixed) and has no result yet.

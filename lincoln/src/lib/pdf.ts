@@ -1,5 +1,5 @@
 
-// Pages one case can hold. Cost grows with every page read (about 3 to 4 cents a page on Opus), so the
+// Pages one case can hold. Cost grows with every page read (about a cent a page on Sonnet), so the
 // limit is generous for real files (O-1 and EB-1 evidence often runs to 150 to 300 pages) but stops a
 // stray 2,000 page dump from spending the day's budget. LINCOLN_MAX_PAGES changes it.
 export const MAX_PAGES = Number(process.env.LINCOLN_MAX_PAGES) || 500;

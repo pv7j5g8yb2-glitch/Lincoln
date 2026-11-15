@@ -18,7 +18,7 @@ services:
       - key: LLM_BASE_URL
         value: https://api.anthropic.com
       - key: LLM_MODEL
-        value: claude-opus-5-5
+        value: claude-sonnet-5-5
       - key: SEED_USER_EMAIL     # a personal login for the sample workspace, set in the dashboard
         sync: false
       - key: SEED_USER_PASSWORD
