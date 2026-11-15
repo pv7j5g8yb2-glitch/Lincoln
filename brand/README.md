@@ -21,8 +21,8 @@ is ever shipped.
 
 * `lincoln-wordmark-black.svg` and `lincoln-wordmark-white.svg`: transparent background
 * `lincoln-wordmark-on-paper.svg/.png` and `lincoln-wordmark-on-black.svg/.png`: with background
-* `lincoln-icon-black.svg/.png` and `lincoln-icon-paper.svg/.png`: serif L monogram in a rounded
-  square, for the app icon and profile pictures (an option, not yet decided)
+* `lincoln-icon-black.svg/.png` and `lincoln-icon-paper.svg/.png`: serif L monogram (Literata 700,
+  pure white, 58 percent of the tile, made larger on 2026-11-15) in a rounded square, for the app icon
 
 * `lincoln-banner-company-cream.png` and `lincoln-banner-company-dark.png`: LinkedIn company
   page cover, 2256 by 382 (1128 by 191 at 2x). Check the current size on LinkedIn before uploading.
@@ -30,8 +30,8 @@ is ever shipped.
   profile cover, 3168 by 792 (1584 by 396 at 2x), for the founder profile at 16.
 
 * `lincoln-instagram-pfp-dark.png` and `lincoln-instagram-pfp-cream.png`: Instagram profile
-  picture, 1080 by 1080, full square (Instagram crops it to a circle), L centred at 40 percent
-  of the height so it stays inside the circle.
+  picture, 1080 by 1080, full square (Instagram crops it to a circle), L (Literata 700) centred at 54
+  percent of the height so it stays inside the circle.
 
 ## Type for the product
 
