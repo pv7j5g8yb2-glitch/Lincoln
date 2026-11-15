@@ -395,9 +395,23 @@ export async function updateFirm(form: FormData) {
   redirect("/settings?tab=firm");
 }
 
-export async function clearChat(caseId: string | null) {
+export async function renameChat(id: string, title: string) {
   const { user, firm } = await requireUser();
-  db().prepare("DELETE FROM chat WHERE firm_id = ? AND user_id = ? AND case_id IS ?").run(firm.id, user.id, caseId);
+  const t = title.replace(/\s+/g, " ").trim().slice(0, 80);
+  if (!t) return;
+  db().prepare("UPDATE chat_threads SET title = ? WHERE firm_id = ? AND user_id = ? AND id = ?").run(t, firm.id, user.id, id);
+  revalidatePath("/assistant");
+}
+
+export async function deleteChat(id: string) {
+  const { user, firm } = await requireUser();
+  const d = db();
+  const t = d.prepare("SELECT case_id FROM chat_threads WHERE firm_id = ? AND user_id = ? AND id = ?").get(firm.id, user.id, id) as { case_id: string | null } | undefined;
+  if (!t) return;
+  d.prepare("DELETE FROM chat WHERE firm_id = ? AND user_id = ? AND thread_id = ?").run(firm.id, user.id, id);
+  d.prepare("DELETE FROM chat_threads WHERE firm_id = ? AND user_id = ? AND id = ?").run(firm.id, user.id, id);
+  await toast("Deleted");
+  redirect(t.case_id ? `/assistant?case=${t.case_id}` : "/assistant");
 }
 
 export async function disconnectMailbox() {

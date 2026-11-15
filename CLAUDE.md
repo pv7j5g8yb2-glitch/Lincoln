@@ -69,7 +69,11 @@ is unclear.
 mail, opens and works cases, chases and prepares the next step, and asks only for decisions. Never present an
 upload or chat feature as the product; that is what Harvey and Legora already do. New accounts always start
 completely blank. The chat must behave like Claude and ChatGPT (one line box, Enter sends, box pinned at the
-bottom, "Ask Lincoln anything") and must answer honestly about what Lincoln can and cannot do.
+bottom, "Ask Lincoln anything") and must answer honestly about what Lincoln can and cannot do. Like Claude (Ismael, 2026-11-15): separate chats with a
+title top left (tap for the list of chats and New chat) and ••• top right (Rename, Delete); replies formatted in
+Markdown (short paragraphs, bold for what matters, numbered steps, bullet lists, tables when comparing, headings
+only for long answers); copy under every message, edit under the user's; an arrow to jump to the latest; large
+readable type (16 to 16.5px, line height 1.7).
 
 **Lincoln's interface copy (Ismael, 2026-11-13).** Write the product like a billion dollar company
 would. Keep screens minimal: no explanatory sentences for things the user can see for themselves. Never

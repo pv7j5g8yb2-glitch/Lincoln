@@ -52,7 +52,11 @@ export const caseDrafts = (firm: string, c: string) => all<Draft>("SELECT * FROM
 export const draftById = (firm: string, id: string) => one<Draft>("SELECT * FROM drafts WHERE firm_id = ? AND id = ?", firm, id);
 export const kv = (firm: string, key: string) => one<{ value: string }>("SELECT value FROM kv WHERE firm_id = ? AND key = ?", firm, key)?.value ?? null;
 export const setKv = (firm: string, key: string, value: string) => db().prepare("INSERT INTO kv (firm_id, key, value) VALUES (?, ?, ?) ON CONFLICT(firm_id, key) DO UPDATE SET value = excluded.value").run(firm, key, value);
-export const chatHistory = (firm: string, user: string, caseId: string | null = null) => all<{ id: string; role: string; content: string; at: string }>("SELECT id, role, content, at FROM chat WHERE firm_id = ? AND user_id = ? AND case_id IS ? ORDER BY at", firm, user, caseId);
+export type Thread = { id: string; title: string; case_id: string | null; updated_at: string };
+/** A person's chats, newest first: firm wide ones, or those about one case. */
+export const chatThreads = (firm: string, user: string, caseId: string | null = null) => all<Thread>("SELECT id, title, case_id, updated_at FROM chat_threads WHERE firm_id = ? AND user_id = ? AND case_id IS ? ORDER BY updated_at DESC LIMIT 50", firm, user, caseId);
+export const chatThread = (firm: string, user: string, id: string) => one<Thread>("SELECT id, title, case_id, updated_at FROM chat_threads WHERE firm_id = ? AND user_id = ? AND id = ?", firm, user, id);
+export const threadMessages = (firm: string, user: string, thread: string) => all<{ id: string; role: string; content: string; at: string }>("SELECT id, role, content, at FROM chat WHERE firm_id = ? AND user_id = ? AND thread_id = ? ORDER BY at", firm, user, thread);
 
 export const approvalById = (firm: string, id: string, v?: Viewer) => {
   const a = approvalByIdRaw(firm, id);

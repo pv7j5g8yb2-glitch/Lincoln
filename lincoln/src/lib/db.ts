@@ -48,6 +48,8 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 CREATE TABLE IF NOT EXISTS drafts (id TEXT PRIMARY KEY, firm_id TEXT NOT NULL, case_id TEXT NOT NULL, title TEXT NOT NULL, kind TEXT NOT NULL, status TEXT NOT NULL, version INTEGER NOT NULL, content TEXT NOT NULL, updated_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS chat (id TEXT PRIMARY KEY, firm_id TEXT NOT NULL, user_id TEXT NOT NULL, role TEXT NOT NULL, content TEXT NOT NULL, at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS chat_threads (id TEXT PRIMARY KEY, firm_id TEXT NOT NULL, user_id TEXT NOT NULL, case_id TEXT, title TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS i_threads_user ON chat_threads(firm_id, user_id, case_id, updated_at);
 CREATE TABLE IF NOT EXISTS kv (firm_id TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (firm_id, key));
 CREATE TABLE IF NOT EXISTS mailboxes (id TEXT PRIMARY KEY, firm_id TEXT NOT NULL, user_id TEXT NOT NULL, provider TEXT NOT NULL, email TEXT NOT NULL, refresh_enc TEXT NOT NULL, access_enc TEXT, expires_at INTEGER, last_check TEXT, last_error TEXT, created_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS security_events (id TEXT PRIMARY KEY, firm_id TEXT NOT NULL, user_id TEXT, at TEXT NOT NULL, kind TEXT NOT NULL, detail TEXT, ip TEXT);
@@ -62,7 +64,7 @@ CREATE INDEX IF NOT EXISTS i_appr_firm ON approvals(firm_id, status);
 CREATE INDEX IF NOT EXISTS i_msg_firm ON messages(firm_id, at);
 `;
 
-const TABLES = ["forms", "usage", "access_log", "security_events", "mailboxes", "sessions", "kv", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "criteria", "documents", "cases", "users", "firms"];
+const TABLES = ["chat_threads", "forms", "usage", "access_log", "security_events", "mailboxes", "sessions", "kv", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "criteria", "documents", "cases", "users", "firms"];
 
 /** Where the database lives. On Render this is the persistent disk (DATA_DIR=/var/data). */
 export const dataDir = () => process.env.DATA_DIR || path.join(process.cwd(), "data");
@@ -94,11 +96,18 @@ export function db(): Database.Database {
   d.exec("CREATE TABLE IF NOT EXISTS usage (id TEXT PRIMARY KEY, firm_id TEXT NOT NULL, case_id TEXT, at TEXT NOT NULL, purpose TEXT NOT NULL, model TEXT NOT NULL, input_tokens INTEGER NOT NULL, output_tokens INTEGER NOT NULL, cost REAL NOT NULL)");
   d.exec("CREATE INDEX IF NOT EXISTS i_usage_firm ON usage(firm_id, at)");
   d.exec("CREATE TABLE IF NOT EXISTS known_devices (user_id TEXT NOT NULL, device TEXT NOT NULL, first_seen TEXT NOT NULL, PRIMARY KEY (user_id, device))");
-  for (const [table, col, type] of [["users", "avatar", "TEXT"], ["cases", "processing", "INTEGER NOT NULL DEFAULT 0"], ["cases", "note", "TEXT"], ["chat", "case_id", "TEXT"], ["cases", "client_email", "TEXT"], ["messages", "email", "TEXT"], ["messages", "thread_id", "TEXT"], ["messages", "mailbox_id", "TEXT"], ["mailboxes", "settings", "TEXT"], ["users", "totp_enc", "TEXT"], ["users", "totp_pending_enc", "TEXT"], ["users", "totp_last_step", "INTEGER"], ["users", "recovery", "TEXT"], ["sessions", "ip", "TEXT"], ["sessions", "agent", "TEXT"], ["sessions", "last_seen", "TEXT"], ["firms", "key_enc", "TEXT"], ["firms", "require_2fa", "INTEGER NOT NULL DEFAULT 0"], ["issues", "rule", "TEXT"], ["firms", "address", "TEXT"], ["firms", "phone", "TEXT"], ["firms", "email", "TEXT"], ["users", "bar_number", "TEXT"], ["users", "bar_state", "TEXT"], ["cases", "receipt", "TEXT"], ["forms", "batch", "TEXT"], ["usage", "user_id", "TEXT"]]) {
+  for (const [table, col, type] of [["users", "avatar", "TEXT"], ["cases", "processing", "INTEGER NOT NULL DEFAULT 0"], ["cases", "note", "TEXT"], ["chat", "case_id", "TEXT"], ["cases", "client_email", "TEXT"], ["messages", "email", "TEXT"], ["messages", "thread_id", "TEXT"], ["messages", "mailbox_id", "TEXT"], ["mailboxes", "settings", "TEXT"], ["users", "totp_enc", "TEXT"], ["users", "totp_pending_enc", "TEXT"], ["users", "totp_last_step", "INTEGER"], ["users", "recovery", "TEXT"], ["sessions", "ip", "TEXT"], ["sessions", "agent", "TEXT"], ["sessions", "last_seen", "TEXT"], ["firms", "key_enc", "TEXT"], ["firms", "require_2fa", "INTEGER NOT NULL DEFAULT 0"], ["issues", "rule", "TEXT"], ["firms", "address", "TEXT"], ["firms", "phone", "TEXT"], ["firms", "email", "TEXT"], ["users", "bar_number", "TEXT"], ["users", "bar_state", "TEXT"], ["cases", "receipt", "TEXT"], ["forms", "batch", "TEXT"], ["usage", "user_id", "TEXT"], ["chat", "thread_id", "TEXT"]]) {
     const cols = d.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
     if (!cols.some((c) => c.name === col)) d.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`);
   }
   d.exec("CREATE INDEX IF NOT EXISTS i_usage_user ON usage(user_id, at)");
+  // Chats became separate threads (2026-11-15): each earlier conversation becomes one thread, named after its first question.
+  for (const g of d.prepare("SELECT firm_id, user_id, case_id, MIN(at) AS first, MAX(at) AS last FROM chat WHERE thread_id IS NULL GROUP BY firm_id, user_id, case_id").all() as { firm_id: string; user_id: string; case_id: string | null; first: string; last: string }[]) {
+    const q = (d.prepare("SELECT content FROM chat WHERE firm_id = ? AND user_id = ? AND case_id IS ? AND thread_id IS NULL AND role = 'user' ORDER BY at LIMIT 1").get(g.firm_id, g.user_id, g.case_id) as { content: string } | undefined)?.content ?? "Chat";
+    const id = uid();
+    d.prepare("INSERT INTO chat_threads (id, firm_id, user_id, case_id, title, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)").run(id, g.firm_id, g.user_id, g.case_id, q.replace(/\s+/g, " ").slice(0, 60), g.first, g.last);
+    d.prepare("UPDATE chat SET thread_id = ? WHERE firm_id = ? AND user_id = ? AND case_id IS ? AND thread_id IS NULL").run(id, g.firm_id, g.user_id, g.case_id);
+  }
   // The old outbox kept reset links in readable form; nothing may keep them.
   d.exec("DELETE FROM outbox");
   d.exec(`DELETE FROM sessions WHERE created_at < '${new Date(Date.now() - 24 * 3600_000).toISOString()}'`);
