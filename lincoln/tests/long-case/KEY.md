@@ -1,6 +1,7 @@
 # Answer key for the long test case (made up, never shown to Lincoln)
 
-O-1A for Dr. Amira Haddou, petitioner Nordlicht Labs Inc. 50 pages in 5 PDFs, sent by HR by email.
+O-1A for Dr. Amira Haddou, petitioner Nordlicht Labs Inc. 56 pages in 5 PDFs, sent by HR by email. The
+identity file is an image only scan (crooked, grainy, no text layer).
 Today in the test: 2026-11-14.
 
 ## Planted problems (score 1 caught, 0.5 partly, 0 missed)
@@ -29,6 +30,13 @@ Today in the test: 2026-11-14.
 16. Missing peer group consultation (advisory opinion), required for O-1A (8 CFR 214.2(o)(5)); HR checklist says not requested.
 17. Unsigned template letter: not evidence.
 18. Device counts: 2.1 million (unaudited marketing), "more than two million" (press), 1.1 million (Corvane, licensee).
+19. Misfiled document: a Spanish passport for Tomas Reyes (a colleague) is in the client's identity scan. It must
+    not be used for the beneficiary.
+20. Duplicate passport page (second copy). Harmless, but should not count as a separate document.
+21. Questionnaire answers contradict the file: "never worked without authorization: No" (she was paid for October
+    after her status ended) and "two year home residence requirement: I do not think so" (DS-2019 says yes).
+22. Unverified claims in letters: Solberg's "most downloaded article" and Weiss's "most cited paper" have no
+    evidence behind them.
 
 ## Form fields that must be right (score correct / blank / wrong; wrong is the worst)
 

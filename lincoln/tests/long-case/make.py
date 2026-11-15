@@ -69,6 +69,18 @@ doc("1_identity_and_status.pdf", [
         "UNITED STATES OF AMERICA  VISA", "Issuing post: TUNIS   Control number: 20230931440001",
         "Surname: HADDOU   Given name: AMIRA   Passport: T0849213", "Visa type/class: R  H1B   Entries: M",
         "Issue date: 12NOV2023   Expiration date: 30SEP2026   Annotation: PET NORDLICHT LABS INC"], {"box": True}),
+    ("PASSPORT  KINGDOM OF SPAIN", [
+        "Type: P   Code: ESP   Passport No.: PAF771204", "", "Surname: REYES GARRIDO", "Given names: TOMAS", "Nationality: SPANISH",
+        "Date of birth: 22 SEP 1987", "Place of birth: VALENCIA", "Date of issue: 14 JUN 2020", "Date of expiry: 13 JUN 2030"], {"box": True}),
+    ("PASSPORT / PASSEPORT  REPUBLIC OF TUNISIA  (second copy, sent again by the client)", [
+        "Passport No.: T0849213   Surname: HADDOU   Given names: AMIRA", "Date of birth: 17 APR 1990   Date of expiry: 02 MAR 2027"], {"box": True}),
+    ("Client questionnaire  (completed by the beneficiary)", [
+        "Full legal name: Amira Haddou     Other names used: none", "Date of birth: 04/17/1990     Country of birth: Tunisia",
+        "Current immigration status: H-1B     Status expires: 09/30/2026", "Have you ever violated the terms of your status or worked without authorization? No",
+        "Have you ever been subject to the two year home residence requirement? I do not think so",
+        "Prior US visits: J-1 2014 to 2016 (Chicago); H-1B since 2023 (consular processing in Tunis, November 2023)",
+        "Address abroad: 12 Rue Habib Bourguiba, Sfax 3000, Tunisia", "Marital status: single     Children: none",
+        "Have you ever been arrested or cited? No", "Signature: A. Haddou   Date: 10/27/2026"]),
     ("Client note to the firm (typed by the client)", [
         "Hello, a few things for my file:", "",
         "- My H-1B with Nordlicht ends 30 September. HR told me the O-1 would be filed before then but it has not been yet. I am still in Boston working remotely for now.",
@@ -205,6 +217,13 @@ doc("4_employer.pdf", [
         "Leads the low light and event camera research program; supervises seven researchers; owns the patent pipeline; represents the company at scientific conferences."]),
     ("Pay statement  09/30/2026", ["Employee: Amira Haddou   Pay period: 09/16/2026 to 09/30/2026", "Gross pay: $6,500.00   Annualized: $156,000"]),
     ("Pay statement  10/31/2026", ["Employee: Amira Haddou   Pay period: 10/16/2026 to 10/31/2026", "Gross pay: $6,500.00   Annualized: $156,000", "Note: paid as remote employee"]),
+    ("Form W-2 Wage and Tax Statement 2025", [
+        "Employer: NORDLICHT LABS INC  EIN 84-2219978", "Employee: AMIRA HADDOU", "Box 1 Wages, tips, other compensation: 148,200.00",
+        "Box 2 Federal income tax withheld: 27,410.00", "Box 16 State wages (MA): 148,200.00"], {"box": True}),
+    ("Labor Condition Application  ETA-9035  (certified, for the 2023 H-1B)", [
+        "Case number: I-200-23187-554210   Status: Certified   Period: 10/01/2023 to 09/30/2026",
+        "Employer: Nordlicht Labs Inc   FEIN 84-2219978", "Job title: Senior Research Scientist   SOC 19-2012", "Wage offered: $142,000 per year   Prevailing wage: $131,560 (Level III)",
+        "Worksite: 200 Seaport Boulevard, Boston, MA 02210"]),
     ("Employment verification", ["This confirms that Amira Haddou has been employed by Nordlicht Labs Inc. since March 15, 2021 as a Research Scientist and since July 1, 2023 as Senior Research Scientist.", "HR Operations"]),
     ("Email from HR to the firm (printed)", [
         "From: Jana Okafor <people@nordlicht-labs.example>", "Subject: Amira O-1",
@@ -219,19 +238,52 @@ doc("5_expert_letters.pdf", [
         "I write in strong support of Dr. Amira Haddou. I supervised her J-1 research from 2014 to 2016 and have followed her work since.",
         "Her 2021 denoising paper is the most cited paper in our subfield that year and changed how industry handles low light capture.",
         "", "Daniel Weiss, Chair, Department of Electrical Engineering"]),
-    ("Letter from Weiss  (page 2)", ["She is, without question, among the top researchers in computational imaging worldwide."]),
+    ("Letter from Weiss  (page 2)", [
+        "Her later work at Nordlicht turned that research into products. The low light method described in US 11,904,218 is, to my knowledge, licensed by at least one camera maker.",
+        "She has reviewed for the Journal of Computational Imaging for five years, a role the journal gives only to recognized experts.",
+        "She is, without question, among the top researchers in computational imaging worldwide. I recommend her without reservation.",
+        "Daniel Weiss"]),
     ("Letter from Dr. Hanne Lindqvist", [
         "Karolinska Medical Imaging Center (independent)", "September 2, 2026", "",
         "I have never worked with Dr. Haddou. I know her through her published work, which our group adopted in 2023 for endoscopic imaging.",
-        "Her sparse sensing method reduced the light dose needed by about a third in our trials.", "Hanne Lindqvist, MD PhD"]),
+        "Her sparse sensing method reduced the light dose needed by about a third in our trials.",
+        "We cited her 2023 paper in two of our own publications and in a grant application to the national research council, which was funded.",
+        "Before her work, endoscopic imaging in low light required either higher illumination, which heats tissue, or long exposures, which blur. Her method avoids both.",
+        "I regard this as an original contribution of major significance to medical imaging.", "Hanne Lindqvist, MD PhD"]),
+    ("Letter from Lindqvist  (page 2: credentials)", [
+        "Dr. Lindqvist leads the Medical Imaging Center's optics unit, has published 61 papers and serves on two national technology review panels.",
+        "Contact: h.lindqvist@kmic.example"]),
     ("Letter from Tomas Reyes", [
         "Nordlicht Labs Inc.", "October 1, 2026", "I co-invented US 11,904,218 with Amira. Her design was the core of the patent.", "Tomas Reyes, Staff Engineer"]),
     ("Letter from Prof. Ingrid Solberg", [
         "Nordic Institute of Optics", "August 12, 2026",
-        "As editor of the Journal of Computational Imaging I rely on Dr. Haddou for our most technical submissions.", "Ingrid Solberg, Editor in Chief"]),
+        "As editor of the Journal of Computational Imaging I rely on Dr. Haddou for our most technical submissions.",
+        "Reviewers are invited only after the editorial board has assessed their published work. She has completed 31 reviews since 2021, more than most senior reviewers.",
+        "Her own 2021 paper in our journal is the most downloaded article in the journal's history (14,800 downloads).", "Ingrid Solberg, Editor in Chief"]),
     ("Letter from Corvane Optics", ["May 30, 2026", "Corvane adopted Dr. Haddou's method; it is in about 1.1 million of our camera modules.", "Mei Chen, VP Engineering"]),
     ("Unsigned letter template", ["[Name], [Title]", "I am pleased to support Dr. Haddou...", "(template from HR, not signed)"]),
     ("Letter from Dr. Samir Ben Youssef", [
         "Institut de Vision Numerique, Tunis", "July 7, 2026", "I supervised Dr. Haddou's postdoctoral work from 2016 to 2019 in Tunis.", "Samir Ben Youssef, Director"]),
 ])
+# Real identity documents arrive as scans: no text layer, slightly crooked, grainy.
+def scanify(name, angle=0.8):
+    import subprocess, tempfile, random
+    from PIL import Image, ImageFilter
+    src = os.path.join(OUT, name)
+    tmp = tempfile.mkdtemp()
+    subprocess.run(["pdftoppm", "-r", "110", "-png", src, os.path.join(tmp, "p")], check=True)
+    pages = sorted(f for f in os.listdir(tmp) if f.endswith(".png"))
+    c = canvas.Canvas(src, pagesize=letter)
+    random.seed(7)
+    for i, f in enumerate(pages):
+        img = Image.open(os.path.join(tmp, f)).convert("L")
+        img = img.rotate(angle * (1 if i % 2 else -1), expand=False, fillcolor=255).filter(ImageFilter.GaussianBlur(0.6))
+        px = img.load()
+        for _ in range(img.size[0] * img.size[1] // 60):
+            x, y = random.randrange(img.size[0]), random.randrange(img.size[1]); px[x, y] = max(0, px[x, y] - 90)
+        out = os.path.join(tmp, f"s{i}.jpg"); img.save(out, quality=72)
+        c.drawImage(out, 0, 0, width=W, height=H); c.showPage()
+    c.save()
+
+scanify("1_identity_and_status.pdf")
 print("written to", OUT)
