@@ -298,6 +298,13 @@ from the repo the same day. History is in git up to commit `341cf65`.
 * Honest odds of the goal: low single digits to about ten percent. A guess.
 
 ## Next
+* Sign in screens (2026-11-15): app.uselincoln.com callback addresses must be added in Google and Microsoft (done by
+  Ismael or pending). Microsoft: the app is unverified (publisher domain is the onmicrosoft.com default), so people
+  on firm work accounts usually cannot approve it without their IT admin. Fix: add uselincoln.com as a verified
+  custom domain in Entra (TXT record at GoDaddy), set it as publisher domain, then join the Microsoft AI Cloud
+  Partner Program as the company (owned by the parent, primary contact on an @uselincoln.com email) and add its
+  MPN ID. Google shows the logo only after brand verification. uselincoln.com has no site yet; forward it to the app
+  until the landing page exists.
 
 1. Read and agree `docs/TEST-PLAN.md` (three weeks, no building before the stop rule).
 2. Parent or guardian conversation about ownership.
