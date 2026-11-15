@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { ArrowDown, Check, ChevronDown, ChevronLeft, Copy, MoreHorizontal, Pencil, SquarePen } from "lucide-react";
+import { ArrowDown, Check, ChevronDown, ChevronLeft, Copy, MoreHorizontal, Pencil, RotateCcw, SquarePen } from "lucide-react";
 import Composer from "./Composer";
 import Markdown from "./Markdown";
 import { deleteChat, renameChat, startCase } from "@/lib/actions";
@@ -42,20 +42,28 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [atBottom, setAtBottom] = useState(true);
   const [, start] = useTransition();
-  const end = useRef<HTMLDivElement>(null);
   const sentInitial = useRef(false);
+  const stopper = useRef<AbortController | null>(null);
+  // Follow the reply down while it is written, unless the reader has scrolled up to read something.
+  const follow = useRef(true);
   const base = scope ? `/assistant?case=${scope.id}` : "/assistant";
   const link = (id: string) => `${base}${scope ? "&" : "?"}t=${id}`;
 
-  const toBottom = (smooth = true) => end.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "end" });
-  useEffect(() => { toBottom(msgs.length > initial.length); }, [msgs.length, busy]); // eslint-disable-line react-hooks/exhaustive-deps
+  const toBottom = (smooth = true) => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: smooth ? "smooth" : "auto" });
+  // An existing chat opens at its latest message.
+  useEffect(() => { if (initial.length) requestAnimationFrame(() => toBottom(false)); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    const check = () => setAtBottom(window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 160);
+    const check = () => {
+      const bottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80;
+      setAtBottom(bottom);
+      follow.current = bottom;
+    };
     check();
     window.addEventListener("scroll", check, { passive: true });
     window.addEventListener("resize", check);
     return () => { window.removeEventListener("scroll", check); window.removeEventListener("resize", check); };
-  }, [msgs.length]);
+  }, []);
+  useEffect(() => { if (follow.current) toBottom(false); }, [msgs]);
   useEffect(() => {
     if (!menu) return;
     const close = () => { setMenu(null); setConfirmDelete(false); };
@@ -69,26 +77,63 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
     setError(null);
     setBusy(true);
     setEditing(null);
-    setMsgs((m) => [...(editFrom ? m.slice(0, editFrom.index) : m), { role: "user", content: message }]);
+    follow.current = true;
+    setMsgs((m) => [...(editFrom ? m.slice(0, editFrom.index) : m), { role: "user", content: message }, { role: "assistant", content: "" }]);
     if (!editFrom) setText("");
+    requestAnimationFrame(() => toBottom());
+    const ctl = new AbortController();
+    stopper.current = ctl;
+    let written = "";
+    const show = (content: string, ids?: { user?: string; reply?: string | null }) => setMsgs((m) => {
+      const out = m.slice(0, -2);
+      out.push({ ...m[m.length - 2], ...(ids?.user ? { id: ids.user } : {}) });
+      out.push({ ...m[m.length - 1], content, ...(ids?.reply ? { id: ids.reply } : {}) });
+      return out;
+    });
     try {
-      const res = await fetch("/api/assistant", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, caseId: scope?.id, threadId, editFrom: editFrom?.id }) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setMsgs((m) => [...m.slice(0, -1), { id: data.ids?.user, role: "user", content: message }, { id: data.ids?.reply, role: "assistant", content: data.reply }]);
-      if (!threadId && data.threadId) {
-        setThreadId(data.threadId);
-        setTitle(data.title ?? null);
-        setThreads((t) => [{ id: data.threadId, title: data.title ?? "Chat" }, ...t]);
-        window.history.replaceState(null, "", link(data.threadId));
+      const res = await fetch("/api/assistant", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, caseId: scope?.id, threadId, editFrom: editFrom?.id }), signal: ctl.signal });
+      if (!res.ok || !res.body) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? "The request failed.");
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let i;
+        while ((i = buf.indexOf("\n")) >= 0) {
+          const line = buf.slice(0, i);
+          buf = buf.slice(i + 1);
+          if (!line.trim()) continue;
+          const ev = JSON.parse(line) as { t?: string; done?: boolean; error?: string; reply?: string; threadId?: string; title?: string; changed?: boolean; ids?: { user: string; reply: string | null } };
+          if (ev.t) { written += ev.t; show(written); }
+          if (ev.error) throw new Error(ev.error);
+          if (ev.done) {
+            show(ev.reply ?? written, ev.ids);
+            if (!threadId && ev.threadId) {
+              setThreadId(ev.threadId);
+              setTitle(ev.title ?? null);
+              setThreads((x) => [{ id: ev.threadId!, title: ev.title ?? "Chat" }, ...x]);
+              window.history.replaceState(null, "", link(ev.threadId));
+            }
+            if (ev.changed) router.refresh();
+          }
+        }
       }
-      if (data.changed) router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "The request failed.");
+      if (ctl.signal.aborted) {
+        // Stopped by the reader: what was written stays.
+        if (!written) setMsgs((m) => m.slice(0, -1));
+      } else {
+        setMsgs((m) => (m[m.length - 1]?.content ? m : m.slice(0, -1)));
+        setError(e instanceof Error ? e.message : "The request failed.");
+      }
     } finally {
+      stopper.current = null;
       setBusy(false);
     }
   }
+  const stop = () => stopper.current?.abort();
 
   useEffect(() => {
     if (q && !sentInitial.current) {
@@ -107,7 +152,7 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
     setBusy(true);
     start(() => startCase(fd));
   };
-  const box = <Composer value={text} onChange={setText} onSend={(files) => (files.length ? handOver(files) : send(text))} busy={busy} placeholder={scope ? `Ask about ${scope.name}` : "Ask Lincoln anything"} autoFocus={!msgs.length} />;
+  const box = <Composer value={text} onChange={setText} onSend={(files) => (files.length ? handOver(files) : send(text))} onStop={stop} busy={busy} placeholder={scope ? `Ask about ${scope.name}` : "Ask Lincoln anything"} autoFocus={!msgs.length} />;
 
   const saveTitle = () => {
     const t = (renaming ?? "").trim();
@@ -119,7 +164,7 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
   };
 
   const head = (
-    <div className="sticky top-0 z-20 -mx-4 mb-4 flex items-center justify-between gap-2 bg-canvas px-4 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md md:-mx-2 md:px-2">
+    <div className="sticky top-0 z-20 -mx-4 -mt-[max(1.75rem,env(safe-area-inset-top))] mb-4 flex items-center justify-between gap-2 bg-canvas px-4 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-md md:-mx-2 md:-mt-12 md:px-2">
       <div className="relative flex min-w-0 items-center gap-1">
         <Link href={scope ? `/cases/${scope.id}` : "/"} aria-label="Back" className="-ml-1.5 shrink-0 rounded-lg p-1.5 text-muted transition hover:bg-panel hover:text-ink md:hidden"><ChevronLeft size={19} /></Link>
         {renaming !== null ? (
@@ -168,9 +213,9 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
   }
 
   return (
-    <div className="mx-auto max-w-[720px]">
+    <div className="mx-auto -mb-36 max-w-[720px] md:-mb-24">
       {head}
-      <div className="flex flex-col gap-8 pb-40">
+      <div className="flex flex-col gap-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))]">
         {msgs.map((m, i) => m.role === "user" ? (
           <div key={i} className="msg-in group flex flex-col items-end gap-1">
             {editing?.index === i ? (
@@ -193,13 +238,20 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
           </div>
         ) : (
           <div key={i} className="msg-in">
-            <div className="text-[16px] leading-[1.7] md:text-[16.5px]"><Markdown text={m.content} caseId={scope?.id} /></div>
-            <div className="-ml-1.5 mt-2 flex gap-0.5"><CopyButton text={m.content} /></div>
+            {m.content
+              ? <div className="text-[16px] leading-[1.7] md:text-[16.5px]"><Markdown text={m.content} caseId={scope?.id} /></div>
+              : <div className="flex h-7 items-center gap-1"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ink" /><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ink [animation-delay:150ms]" /><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ink [animation-delay:300ms]" /></div>}
+            {m.content && !(busy && i === msgs.length - 1) && (
+              <div className="-ml-1.5 mt-2 flex gap-0.5">
+                <CopyButton text={m.content} />
+                {i === msgs.length - 1 && !busy && msgs[i - 1]?.role === "user" && (
+                  <button onClick={() => send(msgs[i - 1].content, { index: i - 1, id: msgs[i - 1].id })} aria-label="Retry" title="Retry" className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition hover:bg-panel hover:text-ink"><RotateCcw size={15} /></button>
+                )}
+              </div>
+            )}
           </div>
         ))}
-        {busy && <div className="flex items-center gap-1"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ink" /><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ink [animation-delay:150ms]" /><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ink [animation-delay:300ms]" /></div>}
         {error && <p className="text-[14px] text-risk">{error}</p>}
-        <div ref={end} />
       </div>
       <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-t from-canvas from-70% to-transparent px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-8 md:left-[248px] md:px-12">
         <div className="relative mx-auto max-w-[720px]">

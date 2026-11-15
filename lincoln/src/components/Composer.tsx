@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, FileText, Mic, Plus, X } from "lucide-react";
+import { ArrowUp, FileText, Mic, Plus, Square, X } from "lucide-react";
 
 const ACCEPT = "application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.heic";
 
@@ -25,7 +25,7 @@ const speechApi = () => {
  * One line that grows with the text. Enter sends, Shift and Enter adds a line. The + attaches files;
  * the microphone dictates into the box where the browser supports speech recognition.
  */
-export default function Composer({ value, onChange, onSend, busy, placeholder = "Ask Lincoln anything", autoFocus, attach = true }: { value: string; onChange: (v: string) => void; onSend: (files: File[]) => void; busy?: boolean; placeholder?: string; autoFocus?: boolean; attach?: boolean }) {
+export default function Composer({ value, onChange, onSend, onStop, busy, placeholder = "Ask Lincoln anything", autoFocus, attach = true }: { value: string; onChange: (v: string) => void; onSend: (files: File[]) => void; onStop?: () => void; busy?: boolean; placeholder?: string; autoFocus?: boolean; attach?: boolean }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const picker = useRef<HTMLInputElement>(null);
   const [fly, setFly] = useState(0);
@@ -111,14 +111,16 @@ export default function Composer({ value, onChange, onSend, busy, placeholder = 
             }
           }}
           placeholder={listening ? "Listening" : placeholder}
-          className={`block max-h-[220px] min-h-[24px] flex-1 resize-none bg-transparent py-[5px] text-[15px] leading-6 outline-none placeholder:text-faint ${attach ? "px-1" : "pl-2"}`}
+          className={`block max-h-[220px] min-h-[24px] flex-1 resize-none bg-transparent py-[4px] text-[16px] leading-6 outline-none placeholder:text-faint ${attach ? "px-1" : "pl-2"}`}
         />
         {canSpeak && (
           <button type="button" onClick={toggleMic} aria-label={listening ? "Stop dictation" : "Dictate"} aria-pressed={listening} className={listening ? "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink/[0.08] text-ink" : iconBtn}>
             {listening ? <span className="mic-live flex items-center gap-[2px]"><i /><i /><i /></span> : <Mic size={17} strokeWidth={1.8} />}
           </button>
         )}
-        <button key={fly} disabled={!ready} aria-label="Send" className={`mb-px flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-ink text-canvas transition-colors hover:opacity-90 ${fly ? "send-pop" : ""} ${ready ? "" : "opacity-20"}`}><ArrowUp size={16} /></button>
+        {busy && onStop
+          ? <button type="button" onClick={onStop} aria-label="Stop" className="mb-px flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-canvas transition hover:opacity-90"><Square size={12} fill="currentColor" /></button>
+          : <button key={fly} disabled={!ready} aria-label="Send" className={`mb-px flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-ink text-canvas transition-colors hover:opacity-90 ${fly ? "send-pop" : ""} ${ready ? "" : "opacity-20"}`}><ArrowUp size={16} /></button>}
       </div>
     </form>
   );

@@ -300,25 +300,21 @@ type Turn = { role: "user" | "assistant"; content: unknown };
  * One agent turn with tools over the Messages API. Calls run until the model answers in text,
  * at most eight steps. The handler executes each tool call against the firm's own data.
  */
-export async function runAgent(system: string, history: Turn[], tools: Tool[], handle: (name: string, input: Record<string, unknown>) => Promise<string>): Promise<string> {
+export async function runAgent(system: string, history: Turn[], tools: Tool[], handle: (name: string, input: Record<string, unknown>) => Promise<string>, opts: { onText?: (t: string) => void; signal?: AbortSignal } = {}): Promise<string> {
   if (!llmConfigured()) throw new Error("No model is connected.");
   const msgs = [...history];
+  const said: string[] = [];
   for (let step = 0; step < 8; step++) {
     guard();
-    const r = request({ max_tokens: 8000, system, tools, messages: msgs }, "medium");
-    const res = await fetch(`${base()}/v1/messages`, { method: "POST", headers: r.headers, body: r.body, signal: AbortSignal.timeout(180_000) });
-    if (!res.ok) await fail(res);
-    const data = (await res.json()) as { usage?: Usage; model?: string; content: ({ type: "text"; text: string } | { type: "tool_use"; id: string; name: string; input: Record<string, unknown> })[]; stop_reason: string };
-    addSpend(data.usage, data.model);
-    record(data.model, data.usage ?? {});
-    const calls = data.content.filter((b) => b.type === "tool_use") as { type: "tool_use"; id: string; name: string; input: Record<string, unknown> }[];
-    const text = data.content.filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("\n").trim();
-    if (data.stop_reason === "refusal") throw new Error("The model declined this request.");
-    if (!calls.length) return text || "Done.";
+    if (step > 0 && said.length && opts.onText) opts.onText("\n\n");
+    const turn = await streamTurn(system, msgs, tools, opts);
+    if (turn.text.trim()) said.push(turn.text.trim());
+    if (turn.stop === "refusal") throw new Error("The model declined this request.");
+    if (turn.stop === "aborted" || !turn.calls.length) return said.join("\n\n") || (turn.stop === "aborted" ? "" : "Done.");
     // The whole reply goes back unchanged, thinking blocks included, as the API requires.
-    msgs.push({ role: "assistant", content: data.content });
+    msgs.push({ role: "assistant", content: turn.content });
     const results = [];
-    for (const c of calls) {
+    for (const c of turn.calls) {
       let out: string;
       try {
         out = await handle(c.name, c.input ?? {});
@@ -329,5 +325,62 @@ export async function runAgent(system: string, history: Turn[], tools: Tool[], h
     }
     msgs.push({ role: "user", content: results });
   }
-  return "Stopped after eight steps. The work so far is saved on the case.";
+  return said.join("\n\n") || "Stopped after eight steps. The work so far is saved on the case.";
+}
+
+type Content = Record<string, unknown> & { type: string };
+/** One model turn, streamed: text is passed on as it arrives; the full content (text, tool calls, thinking with
+ *  its signature) is rebuilt exactly, so it can be sent back with the tool results. */
+async function streamTurn(system: string, msgs: Turn[], tools: Tool[], opts: { onText?: (t: string) => void; signal?: AbortSignal }) {
+  const r = request({ max_tokens: 16000, stream: true, system, tools, messages: msgs }, "medium");
+  const signal = opts.signal ? AbortSignal.any([opts.signal, AbortSignal.timeout(180_000)]) : AbortSignal.timeout(180_000);
+  const blocks: Content[] = [];
+  const partial: Record<number, string> = {};
+  let text = "", stop = "", model: string | undefined;
+  const used: Usage = {};
+  try {
+    const res = await fetch(`${base()}/v1/messages`, { method: "POST", headers: r.headers, body: r.body, signal });
+    if (!res.ok || !res.body) await fail(res);
+    const reader = res.body!.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i;
+      while ((i = buf.indexOf("\n")) >= 0) {
+        const line = buf.slice(0, i).trim();
+        buf = buf.slice(i + 1);
+        if (!line.startsWith("data:")) continue;
+        let ev: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+        try { ev = JSON.parse(line.slice(5)); } catch { continue; }
+        if (ev.type === "message_start") { model = ev.message?.model; Object.assign(used, ev.message?.usage ?? {}); }
+        else if (ev.type === "content_block_start") blocks[ev.index] = { ...ev.content_block };
+        else if (ev.type === "content_block_delta") {
+          const b = blocks[ev.index], d = ev.delta ?? {};
+          if (!b) continue;
+          if (d.type === "text_delta") { b.text = String(b.text ?? "") + d.text; text += d.text; opts.onText?.(d.text); }
+          else if (d.type === "input_json_delta") partial[ev.index] = (partial[ev.index] ?? "") + d.partial_json;
+          else if (d.type === "thinking_delta") b.thinking = String(b.thinking ?? "") + d.thinking;
+          else if (d.type === "signature_delta") b.signature = String(b.signature ?? "") + d.signature;
+        } else if (ev.type === "content_block_stop") {
+          const b = blocks[ev.index];
+          if (b?.type === "tool_use") { try { b.input = partial[ev.index] ? JSON.parse(partial[ev.index]) : {}; } catch { b.input = {}; } }
+        } else if (ev.type === "message_delta") {
+          stop = ev.delta?.stop_reason ?? stop;
+          used.output_tokens = (used.output_tokens ?? 0) + (ev.usage?.output_tokens ?? 0);
+        } else if (ev.type === "error") throw new Error(ev.error?.message ?? "The model service reported an error.");
+      }
+    }
+  } catch (e) {
+    if (!opts.signal?.aborted) throw e;
+    stop = "aborted";
+  } finally {
+    addSpend(used, model);
+    record(model, used);
+  }
+  const content = blocks.filter(Boolean);
+  const calls = content.filter((b) => b.type === "tool_use").map((b) => ({ id: String(b.id), name: String(b.name), input: (b.input ?? {}) as Record<string, unknown> }));
+  return { text, stop, content, calls };
 }
