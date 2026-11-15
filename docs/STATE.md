@@ -273,7 +273,15 @@ from the repo the same day. History is in git up to commit `341cf65`.
 * Live chat check (2026-11-15, Sonnet, about 3 cents): five questions answered in 3 to 5 seconds, 22 to 124 words,
   no feature list, no roadmap ("what are you working on next" got no leak). Found: one outdated citation (premium
   processing given as 8 CFR 103.7(e), now 106.4) and "Lincoln"/"I" mixed. Prompt tightened for both; not rerun live.
-* Case type test suite: offered, not run. Plan: about 12 short made up cases covering the form families (I-129,
+* Case type test (2026-11-15, live, $1.48 so far, cases in `lincoln/tests/case-types/` with KEY.md): free stand in run
+  of all 70 case types passed except the 10 forms not yet added. Live: marriage green card ($0.95; caught the marriage
+  date conflict, treated overstay and work as excused for an immediate relative, raised the I-864 shortfall without
+  computing it), spouse I-130 ($0.33; caught the marriage before the divorce was final), I-90 for a conditional
+  resident ($0.20; caught the wrong form). Two bugs fixed: identity facts (birth date, family name) dropped from
+  forms, and a form failing on a rate limit (calls now retry). Stopped by the $10 daily cap; 9 cases not run.
+  Cost finding: the green card package forms cost $0.79 because each form sends its full official instructions
+  (up to 60k tokens); trimming or sharing that cache across cases would cut form cost sharply.
+* Case type test suite, original plan: Plan: about 12 short made up cases covering the form families (I-129,
   I-140, I-130 with I-485 package, I-129F, I-751, I-589, N-400, I-90, I-821D, I-601A, I-539, I-290B), each with
   planted problems and a key; free stand in run first, then one live case, then the rest (estimated $6 to $9).
 * Models decided (Ismael, 2026-11-15): Sonnet 5.5 as LLM_MODEL for all legal work (reading, checks, forms, letters,
