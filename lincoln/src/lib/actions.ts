@@ -336,11 +336,14 @@ export async function updateProfile(form: FormData) {
   const { user, firm } = await requireUser();
   notInSample(firm, "/settings?tab=profile");
   const name = String(form.get("name") ?? "").trim().slice(0, 100);
-  const role = String(form.get("role") ?? "").trim().slice(0, 60);
+  const typed = String(form.get("role") ?? "").trim().slice(0, 60);
+  // The title is free text, but admin rights follow it, so a title that would grant or remove admin
+  // rights is not taken from here: nobody makes themselves an administrator, or loses it, by typing.
+  const role = typed && isAdmin(typed) === isAdmin(user.role) ? typed : user.role;
   const avatar = String(form.get("avatar") ?? "");
   if (!name) redirect("/settings?tab=profile&error=name");
   const d = db();
-  d.prepare("UPDATE users SET name = ?, initials = ?, role = ?, bar_number = ?, bar_state = ? WHERE id = ?").run(name, initialsOf(name), role || user.role, String(form.get("bar_number") ?? "").trim().slice(0, 40) || null, String(form.get("bar_state") ?? "").trim().slice(0, 40) || null, user.id);
+  d.prepare("UPDATE users SET name = ?, initials = ?, role = ?, bar_number = ?, bar_state = ? WHERE id = ?").run(name, initialsOf(name), role, String(form.get("bar_number") ?? "").trim().slice(0, 40) || null, String(form.get("bar_state") ?? "").trim().slice(0, 40) || null, user.id);
   if (avatar === "remove") d.prepare("UPDATE users SET avatar = NULL WHERE id = ?").run(user.id);
   else if (/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(avatar) && avatar.length < 400_000) d.prepare("UPDATE users SET avatar = ? WHERE id = ?").run(avatar, user.id);
   revalidatePath("/", "layout");
