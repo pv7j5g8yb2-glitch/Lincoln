@@ -37,7 +37,8 @@ function testModel(): string | null {
   if (!map || !w) return null;
   try {
     const name = (db().prepare("SELECT name FROM firms WHERE id = ?").get(w.firmId) as { name: string } | undefined)?.name;
-    const m = name ? (JSON.parse(map) as Record<string, string>)[name] : undefined;
+    // Phones turn straight quotes into curly ones when typed; both are accepted.
+    const m = name ? (JSON.parse(map.replace(/[\u201c\u201d]/g, '"')) as Record<string, string>)[name] : undefined;
     return typeof m === "string" && /^claude-[a-z0-9-]+$/.test(m) ? m : null;
   } catch {
     return null;
