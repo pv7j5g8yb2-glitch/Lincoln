@@ -140,7 +140,7 @@ personal in here.
 
 ## Lincoln: Microsoft sign in (checked 2026-11-15)
 
-* app.uselincoln.com has Google and Microsoft buttons (`/api/auth/microsoft`), using the `/common`
+* app.uselincoln.com runs on Render (service `lincoln-qm5g`), not Vercel. It has Google and Microsoft buttons (`/api/auth/microsoft`), using the `/common`
   endpoint. The app registration accepts both personal and work Microsoft accounts (tested).
 * It asks for a lot: Mail.ReadWrite, Mail.Send, Calendars.ReadWrite, Files.ReadWrite.All,
   Sites.Read.All, Team.ReadBasic.All, Channel.ReadBasic.All, ChannelMessage.Send.
