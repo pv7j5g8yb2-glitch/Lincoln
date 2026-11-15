@@ -1,6 +1,7 @@
 import Sidebar from "@/components/Sidebar";
 import TabBar from "@/components/TabBar";
 import Toaster from "@/components/Toaster";
+import Notifications from "@/components/Notifications";
 import { cookies } from "next/headers";
 import { TOAST_COOKIE } from "@/lib/toast";
 import { requireUser } from "@/lib/session";
@@ -17,6 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-dvh">
       <Toaster initial={notice} />
+      <Notifications enabled={!firm.demo} />
       <Sidebar
         firm={firm.name}
         user={{ name: user.name, initials: user.initials, avatar: user.avatar }}

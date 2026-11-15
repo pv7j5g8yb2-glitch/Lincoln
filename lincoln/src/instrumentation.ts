@@ -20,4 +20,8 @@ export async function register() {
   const { collectForms } = await import("./lib/fill");
   setInterval(() => void collectForms().catch(() => undefined), 60_000);
   setInterval(run, Number(process.env.LINCOLN_TICK_MS) || 5 * 60_000);
+  // New items for review become notifications for people who are not in the app.
+  const { scanReview } = await import("./lib/push");
+  scanReview();
+  setInterval(() => { try { scanReview(); } catch { /* next round */ } }, 20_000);
 }

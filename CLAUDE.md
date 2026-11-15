@@ -86,6 +86,10 @@ Notices after an action (Ismael, 2026-11-14) drop from the top as a soft rectang
 "Sent", "Deleted"), can be pushed up, and leave by themselves after 5 seconds. Drafted emails show Approve and Edit;
 Edit opens the text, then Save.
 
+**Notifications (Ismael, 2026-11-15).** Lincoln asks to allow notifications and sends them only when the person has
+left the app: work that lands in Review (batched) and chat replies finished in the background, like Claude. Chat replies
+always run to the end on the server, even when the app is closed. Every notification has a short title and one line.
+
 **Lincoln on phones and manual work (Ismael, 2026-11-14).** On phones Lincoln uses the Hopkins Liquid Glass
 tab bar (Home, Cases, +, Review, More), with a lens that glides, stretches and follows a finger, and the More
 menu as a glass sheet; no top bar or slide out menu. The app follows the device's light or dark setting.

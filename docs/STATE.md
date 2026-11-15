@@ -273,6 +273,17 @@ from the repo the same day. History is in git up to commit `341cf65`.
 * Live chat check (2026-11-15, Sonnet, about 3 cents): five questions answered in 3 to 5 seconds, 22 to 124 words,
   no feature list, no roadmap ("what are you working on next" got no leak). Found: one outdated citation (premium
   processing given as 8 CFR 103.7(e), now 106.4) and "Lincoln"/"I" mixed. Prompt tightened for both; not rerun live.
+* Notifications (Ismael, 2026-11-15): Lincoln asks once to allow notifications (a soft card a few seconds in, again two
+  weeks after Not now; switch in Settings, Profile). Web Push with no outside service: key derived from LINCOLN_SECRET,
+  messages signed and encrypted for the device. Sent only when the person is not in the app (the open app reports
+  presence every 20 seconds). Items landing in Review are batched over 20 seconds into one notification. Chat replies
+  now run on the server to the end even if the app is closed, reopen mid reply, Stop works from any page, and a reply
+  finished while away is a notification. iPhone only after adding Lincoln to the Home Screen. Signing out a device
+  stops its notifications. Not yet seen on a real phone. Lock screen previews show client names.
+* Case type test FINAL (2026-11-15): all 12 cases run, $4.27 in total. Every main planted problem was caught. Fixed from
+  it: identity facts dropped from forms, forms failing on rate limits, no knowledge of today's date, non-problems
+  reported as issues. Weak spots left: I-864 income not computed against the poverty guideline, Arrabally (advance
+  parole travel is not a departure) not known, still many low value issues per case.
 * Case type test (2026-11-15, live, $1.48 so far, cases in `lincoln/tests/case-types/` with KEY.md): free stand in run
   of all 70 case types passed except the 10 forms not yet added. Live: marriage green card ($0.95; caught the marriage
   date conflict, treated overstay and work as excused for an immediate relative, raised the I-864 shortfall without

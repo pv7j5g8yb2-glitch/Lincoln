@@ -153,6 +153,7 @@ export async function resetPassword(form: FormData) {
     d.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hashPassword(password), r.user_id);
     d.prepare("UPDATE password_resets SET used_at = ? WHERE user_id = ? AND used_at IS NULL").run(now(), r.user_id);
     d.prepare("DELETE FROM sessions WHERE user_id = ?").run(r.user_id);
+    d.prepare("DELETE FROM push_subs WHERE user_id = ?").run(r.user_id);
   })();
   redirect("/signin?reset=1");
 }
@@ -160,7 +161,8 @@ export async function resetPassword(form: FormData) {
 export async function signOut() {
   const jar = await cookies();
   const sid = jar.get(COOKIE)?.value;
-  if (sid) db().prepare("DELETE FROM sessions WHERE id = ?").run(sha(sid));
+  // A signed out device stops receiving notifications.
+  if (sid) { db().prepare("DELETE FROM sessions WHERE id = ?").run(sha(sid)); db().prepare("DELETE FROM push_subs WHERE session = ?").run(sha(sid)); }
   jar.delete(COOKIE);
   jar.delete(MFA_COOKIE);
   redirect("/signin");
@@ -377,6 +379,7 @@ export async function changePassword(form: FormData) {
     d.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hashPassword(next), user.id);
     // every other device is signed out
     d.prepare("DELETE FROM sessions WHERE user_id = ? AND id != ?").run(user.id, sha(sid));
+    d.prepare("DELETE FROM push_subs WHERE user_id = ? AND (session IS NULL OR session != ?)").run(user.id, sha(sid));
   })();
   await securityEvent(user.firm_id, user.id, "password_changed", "other devices signed out");
   await toast("Password changed");
@@ -548,8 +551,13 @@ export async function disableTwoStep(form: FormData) {
 export async function signOutSession(form: FormData) {
   const { user, firm, sessionId } = await requireUser({ setup: true });
   const target = String(form.get("session") ?? "");
-  if (target === "others") db().prepare("DELETE FROM sessions WHERE user_id = ? AND id != ?").run(user.id, sessionId);
-  else db().prepare("DELETE FROM sessions WHERE user_id = ? AND id = ? AND id != ?").run(user.id, target, sessionId);
+  if (target === "others") {
+    db().prepare("DELETE FROM sessions WHERE user_id = ? AND id != ?").run(user.id, sessionId);
+    db().prepare("DELETE FROM push_subs WHERE user_id = ? AND (session IS NULL OR session != ?)").run(user.id, sessionId);
+  } else if (target !== sessionId) {
+    db().prepare("DELETE FROM sessions WHERE user_id = ? AND id = ?").run(user.id, target);
+    db().prepare("DELETE FROM push_subs WHERE user_id = ? AND session = ?").run(user.id, target);
+  }
   await securityEvent(firm.id, user.id, "sessions_signed_out", target === "others" ? "all other devices" : "one device");
   await toast("Signed out");
   revalidatePath("/settings");
@@ -578,7 +586,7 @@ export async function deleteFirm(form: FormData) {
   for (const c of conns) await revokeAccess(c.provider, c.refresh_enc);
   const caseIds = (d.prepare("SELECT id FROM cases WHERE firm_id = ?").all(firm.id) as { id: string }[]).map((c) => c.id);
   d.transaction(() => {
-    for (const t of ["security_events", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "criteria", "documents", "cases", "kv"]) d.prepare(`DELETE FROM ${t} WHERE firm_id = ?`).run(firm.id);
+    for (const t of ["push_subs", "chat_threads", "forms", "security_events", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "criteria", "documents", "cases", "kv"]) d.prepare(`DELETE FROM ${t} WHERE firm_id = ?`).run(firm.id);
     d.prepare("DELETE FROM inbound_seen WHERE mailbox_id IN (SELECT id FROM mailboxes WHERE firm_id = ?)").run(firm.id);
     d.prepare("DELETE FROM mailboxes WHERE firm_id = ?").run(firm.id);
     d.prepare("DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE firm_id = ?)").run(firm.id);

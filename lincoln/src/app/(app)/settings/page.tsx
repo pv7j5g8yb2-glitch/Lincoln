@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NotificationSwitch } from "@/components/Notifications";
 import clsx from "clsx";
 import AvatarField from "@/components/AvatarField";
 import { Avatar, PageHead, btn, field, label } from "@/components/ui";
@@ -84,6 +85,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               <label className="block"><span className={label}>Email</span><input value={user.email} disabled className={clsx(field, "bg-side text-muted")} /></label>
               <div><button className={btn.primary}>Save</button></div>
             </form>
+          )}
+          {tab === "profile" && !firm.demo && (
+            <div className="mt-10 flex items-center justify-between gap-4 border-t border-line pt-6">
+              <span className="text-[14px] font-medium">Notifications on this device</span>
+              <NotificationSwitch />
+            </div>
           )}
 
           {tab === "security" && (

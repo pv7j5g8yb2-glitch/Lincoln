@@ -119,11 +119,12 @@ function SpeakButton({ id, text }: { id: string; text: string }) {
   );
 }
 
-export default function AssistantChat({ thread, threads: initialThreads, initial, q, connected, scope }: { thread: T | null; threads: T[]; initial: M[]; q: string; connected: boolean; scope: { id: string; name: string } | null }) {
+export default function AssistantChat({ thread, threads: initialThreads, initial, q, connected, scope, writing = null }: { thread: T | null; threads: T[]; initial: M[]; q: string; connected: boolean; scope: { id: string; name: string } | null; writing?: string | null }) {
   const router = useRouter();
-  const [msgs, setMsgs] = useState<M[]>(initial);
+  const [msgs, setMsgs] = useState<M[]>(writing === null ? initial : [...initial, { role: "assistant", content: writing }]);
   const [threads, setThreads] = useState<T[]>(initialThreads);
   const [threadId, setThreadId] = useState<string | null>(thread?.id ?? null);
+  const current = useRef<string | null>(thread?.id ?? null);
   const [title, setTitle] = useState<string | null>(thread?.title ?? null);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -157,6 +158,23 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
   }, []);
   useEffect(() => { if (follow.current) toBottom(false); }, [msgs]);
   useEffect(() => silence, []);
+  // A chat reopened while Lincoln is still writing follows the reply until it is saved, then shows the saved one.
+  useEffect(() => {
+    if (writing === null || !thread) return;
+    setBusy(true);
+    let live = true;
+    const poll = async () => {
+      while (live) {
+        await new Promise((r) => setTimeout(r, 900));
+        const r = (await fetch(`/api/assistant?t=${thread.id}`).then((x) => x.json()).catch(() => null)) as { writing?: boolean; text?: string } | null;
+        if (!live || !r) continue;
+        if (r.writing) setMsgs((m) => [...m.slice(0, -1), { role: "assistant", content: r.text ?? "" }]);
+        else { window.location.reload(); return; }
+      }
+    };
+    void poll();
+    return () => { live = false; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!menu) return;
     const close = () => { setMenu(null); setConfirmDelete(false); };
@@ -178,6 +196,7 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
     const ctl = new AbortController();
     stopper.current = ctl;
     let written = "";
+    let created: string | null = null;
     const show = (content: string, ids?: { user?: string; reply?: string | null }) => setMsgs((m) => {
       const out = m.slice(0, -2);
       out.push({ ...m[m.length - 2], ...(ids?.user ? { id: ids.user } : {}) });
@@ -199,16 +218,26 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
           const line = buf.slice(0, i);
           buf = buf.slice(i + 1);
           if (!line.trim()) continue;
-          const ev = JSON.parse(line) as { t?: string; done?: boolean; error?: string; reply?: string; threadId?: string; title?: string; changed?: boolean; ids?: { user: string; reply: string | null } };
+          const ev = JSON.parse(line) as { t?: string; thread?: string; done?: boolean; error?: string; reply?: string; threadId?: string; title?: string; changed?: boolean; ids?: { user: string; reply: string | null } };
+          // The chat exists on the server from the first moment, so it can be left and reopened mid reply.
+          if (ev.thread) {
+            current.current = ev.thread;
+            if (!threadId) {
+              created = ev.thread;
+              setThreadId(ev.thread);
+              setTitle(ev.title ?? null);
+              setThreads((x) => [{ id: ev.thread!, title: ev.title ?? "Chat" }, ...x]);
+              window.history.replaceState(null, "", link(ev.thread));
+            }
+            show(written, ev.ids);
+          }
           if (ev.t) { written += ev.t; show(written); }
           if (ev.error) throw new Error(ev.error);
           if (ev.done) {
             show(ev.reply ?? written, ev.ids);
-            if (!threadId && ev.threadId) {
-              setThreadId(ev.threadId);
-              setTitle(ev.title ?? null);
-              setThreads((x) => [{ id: ev.threadId!, title: ev.title ?? "Chat" }, ...x]);
-              window.history.replaceState(null, "", link(ev.threadId));
+            if (ev.threadId && ev.title) {
+              setTitle(ev.title);
+              setThreads((x) => x.map((y) => (y.id === ev.threadId ? { ...y, title: ev.title! } : y)));
             }
             if (ev.changed) router.refresh();
           }
@@ -221,13 +250,26 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
       } else {
         setMsgs((m) => (m[m.length - 1]?.content ? m : m.slice(0, -1)));
         setError(e instanceof Error ? e.message : "The request failed.");
+        // A new chat whose first question failed is not kept on the server.
+        if (created && !written) {
+          setThreadId(null); setTitle(null); current.current = null;
+          setThreads((x) => x.filter((y) => y.id !== created));
+          window.history.replaceState(null, "", base);
+        }
       }
     } finally {
       stopper.current = null;
       setBusy(false);
     }
   }
-  const stop = () => stopper.current?.abort();
+  // Stop ends the reply on the server, which then sends back what was written; the connection is only cut
+  // if the server does not answer.
+  const stop = () => {
+    const t = current.current;
+    if (t) void fetch("/api/assistant/stop", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ threadId: t }) }).catch(() => undefined);
+    const ctl = stopper.current;
+    setTimeout(() => { if (stopper.current === ctl) ctl?.abort(); }, t ? 4000 : 0);
+  };
 
   useEffect(() => {
     if (q && !sentInitial.current) {

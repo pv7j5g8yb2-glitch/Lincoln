@@ -2,6 +2,7 @@ import AssistantChat from "@/components/AssistantChat";
 import { requireUser } from "@/lib/session";
 import { caseById, chatThread, chatThreads, threadMessages } from "@/lib/queries";
 import { llmConfigured } from "@/lib/llm";
+import { flightFor } from "@/lib/inflight";
 
 export default async function Assistant({ searchParams }: { searchParams: Promise<{ q?: string; case?: string; t?: string }> }) {
   const { user, firm, viewer } = await requireUser();
@@ -19,6 +20,7 @@ export default async function Assistant({ searchParams }: { searchParams: Promis
       q={q.slice(0, 2000)}
       connected={llmConfigured()}
       scope={scope}
+      writing={open ? flightFor(open.id, user.id)?.text ?? null : null}
     />
   );
 }

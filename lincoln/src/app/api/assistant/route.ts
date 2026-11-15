@@ -2,6 +2,8 @@ import { limited } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { db, uid } from "@/lib/db";
 import { apiUser, viewer } from "@/lib/session";
+import { flightFor, flights, type Flight } from "@/lib/inflight";
+import { notify, preview } from "@/lib/push";
 import { caseById, caseDates, caseDrafts, cases, chatThread, threadMessages, criteria, documents, issues, pendingApprovals, upcomingDates } from "@/lib/queries";
 import { chat, forCase, llmConfigured, runAgent, type Tool } from "@/lib/llm";
 import { typeOf } from "@/lib/library";
@@ -22,6 +24,14 @@ const TOOLS: Tool[] = [
   { name: "fill_forms", description: "Fill a case's official forms from its file in the background: all the forms its type needs, or one named form (for example I-131 or I-907). Answers carry their sources; the rest stays blank for the attorney.", input_schema: { type: "object", properties: { case_id: { type: "string" }, form: { type: "string", description: "One form number, or leave out for all" } }, required: ["case_id"] } },
   { name: "resolve_issue", description: "Mark an open issue on a case as resolved, with the reason.", input_schema: { type: "object", properties: { issue_id: { type: "string" }, resolution: { type: "string" } }, required: ["issue_id", "resolution"] } },
 ];
+
+/** A reply still being written: its text so far, for a chat reopened while Lincoln writes. */
+export async function GET(req: Request) {
+  const s = await apiUser();
+  if (!s) return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+  const f = flightFor(new URL(req.url).searchParams.get("t") ?? "", s.user.id);
+  return NextResponse.json(f ? { writing: true, text: f.text } : { writing: false });
+}
 
 export async function POST(req: Request) {
   const s = await apiUser();
@@ -157,27 +167,39 @@ ${overview}`;
   }
   const history = thread ? threadMessages(F, s.user.id, thread.id).slice(-16).map((m) => ({ role: m.role as "user" | "assistant", content: m.content })) : [];
   const ins = d.prepare("INSERT INTO chat (id, firm_id, user_id, role, content, at, case_id, thread_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-  // The reply is streamed as newline separated JSON events: text as it is written, then the saved ids. A
-  // stop from the user ends the reply where it is and keeps what was written.
+  // The chat and the question are saved before the reply starts, so the chat exists even if the app is closed
+  // while Lincoln writes. The reply runs on the server to the end; only Stop ends it early.
+  const started = new Date().toISOString();
+  const created = !thread;
+  const id = thread?.id ?? uid();
+  if (created) d.prepare("INSERT INTO chat_threads (id, firm_id, user_id, case_id, title, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)").run(id, F, s.user.id, scope, text.replace(/\s+/g, " ").slice(0, 60), started, started);
+  if (flightFor(id, s.user.id)) return NextResponse.json({ error: "A reply is still being written in this chat." }, { status: 409 });
+  const userMsg = uid();
+  ins.run(userMsg, F, s.user.id, "user", text, started, scope, id);
+  const flight: Flight = { userId: s.user.id, text: "", ctl: new AbortController() };
+  flights.set(id, flight);
   const enc = new TextEncoder();
   const stream = new ReadableStream({
     async start(ctl) {
-      const send = (x: object) => { try { ctl.enqueue(enc.encode(JSON.stringify(x) + "\n")); } catch { /* closed */ } };
+      const send = (x: object) => { try { ctl.enqueue(enc.encode(JSON.stringify(x) + "\n")); } catch { /* the app was closed */ } };
+      send({ thread: id, title: thread?.title ?? text.replace(/\s+/g, " ").slice(0, 60), ids: { user: userMsg } });
       try {
-        const reply = await forCase({ firmId: F, caseId: scope, purpose: "assistant", userId: s!.user.id }, () => runAgent(system, [...history, { role: "user", content: text }], TOOLS, async (name, input) => `<data source="${name}">\n${(await handle(name, input)).replace(/<\/data>/gi, "")}\n</data>`, { onText: (t) => send({ t }), signal: req.signal }));
-        const now = new Date().toISOString();
-        let id = thread?.id;
-        let title = thread?.title;
-        if (!id) {
-          id = uid();
-          title = req.signal.aborted ? text.replace(/\s+/g, " ").slice(0, 60) : await nameChat(F, s!.user.id, text);
-          d.prepare("INSERT INTO chat_threads (id, firm_id, user_id, case_id, title, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)").run(id, F, s!.user.id, scope, title, now, now);
-        } else d.prepare("UPDATE chat_threads SET updated_at = ? WHERE id = ?").run(now, id);
-        const userId = uid(), replyId = uid();
-        ins.run(userId, F, s!.user.id, "user", text, now, scope, id);
-        if (reply.trim()) ins.run(replyId, F, s!.user.id, "assistant", reply, new Date(Date.now() + 1).toISOString(), scope, id);
-        send({ done: true, reply, changed: changed.any, threadId: id, title, ids: { user: userId, reply: reply.trim() ? replyId : null } });
+        const reply = await forCase({ firmId: F, caseId: scope, purpose: "assistant", userId: s!.user.id }, () => runAgent(system, [...history, { role: "user", content: text }], TOOLS, async (name, input) => `<data source="${name}">\n${(await handle(name, input)).replace(/<\/data>/gi, "")}\n</data>`, { onText: (t) => { flight.text += t; send({ t }); }, signal: flight.ctl.signal }));
+        const stopped = flight.ctl.signal.aborted;
+        let title = thread?.title ?? text.replace(/\s+/g, " ").slice(0, 60);
+        if (created && !stopped) { title = await nameChat(F, s!.user.id, text); d.prepare("UPDATE chat_threads SET title = ? WHERE id = ?").run(title, id); }
+        d.prepare("UPDATE chat_threads SET updated_at = ? WHERE id = ?").run(new Date().toISOString(), id);
+        const replyId = uid();
+        if (reply.trim()) ins.run(replyId, F, s!.user.id, "assistant", reply, new Date().toISOString(), scope, id);
+        flights.delete(id);
+        send({ done: true, reply, changed: changed.any, threadId: id, title, ids: { user: userMsg, reply: reply.trim() ? replyId : null } });
+        // Someone who left the app while Lincoln was writing gets the reply as a notification.
+        if (reply.trim() && !stopped) notify(s!.user.id, { title, body: preview(reply), url: `/assistant?${scope ? `case=${scope}&` : ""}t=${id}`, tag: `chat:${id}` }, { wait: 1500 });
       } catch (e) {
+        flights.delete(id);
+        // A question that got no reply is taken back, and so is a chat that only held it.
+        d.prepare("DELETE FROM chat WHERE id = ?").run(userMsg);
+        if (created) d.prepare("DELETE FROM chat_threads WHERE id = ?").run(id);
         send({ error: e instanceof Error ? e.message : "The model could not be reached." });
       }
       try { ctl.close(); } catch { /* closed */ }
