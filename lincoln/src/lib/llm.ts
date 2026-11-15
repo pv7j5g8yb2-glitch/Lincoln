@@ -92,7 +92,8 @@ export function userMonthUse(userId: string) {
   return { spent, limit: seatLimit() };
 }
 function guard() {
-  if (spentToday() >= budget()) throw new Error("Today's model budget is used up. It resets at midnight UTC.");
+  // LLM_DAILY_BUDGET_USD=0 turns the server wide daily cap off.
+  if (budget() > 0 && spentToday() >= budget()) throw new Error("Today's model budget is used up. It resets at midnight UTC.");
   const person = seatLimit() > 0 ? personOf(work.getStore()) : null;
   if (person) {
     const { spent, limit } = userMonthUse(person);
