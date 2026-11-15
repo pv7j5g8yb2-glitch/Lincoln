@@ -147,9 +147,22 @@ export async function chat(messages: Msg[], opts: { maxTokens?: number; effort?:
   guard();
   const model = opts.light ? lightModel() : mainModel();
   const r = request({ max_tokens: Math.max(opts.maxTokens ?? 4000, 4000), ...(system ? { system: opts.cache ? [{ type: "text", text: system, cache_control: { type: "ephemeral" } }] : system } : {}), messages: turns }, opts.effort ?? "low", model);
-  const res = await fetch(`${base()}/v1/messages`, { method: "POST", headers: r.headers, body: r.body, signal: AbortSignal.timeout(opts.timeoutMs ?? 120_000) });
-  if (!res.ok) await fail(res);
-  const data = (await res.json()) as Reply;
+  // A rate limit, an overloaded service or a dropped connection is waited out and retried, as reads are:
+  // several forms are filled at once, and one busy moment must not fail a form.
+  let data: Reply;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const res = await fetch(`${base()}/v1/messages`, { method: "POST", headers: r.headers, body: r.body, signal: AbortSignal.timeout(opts.timeoutMs ?? 120_000) });
+      if (!res.ok) await fail(res);
+      data = (await res.json()) as Reply;
+      break;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      const wait = Number(/retry after (\d+)/.exec(msg)?.[1] ?? 0);
+      if (attempt >= 4 || !/interrupt|overload|terminated|fetch failed|replied (429|5\d\d)/i.test(msg)) throw e;
+      await new Promise((ok) => setTimeout(ok, Math.min(60, wait || 4 * (attempt + 1)) * 1000));
+    }
+  }
   addSpend(data.usage, data.model ?? model);
   record(data.model ?? model, data.usage ?? {});
   check(data);

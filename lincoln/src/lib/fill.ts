@@ -77,7 +77,9 @@ async function run(firmId: string, caseId: string, opts: { refill?: boolean; onl
         return;
       }
       const answers: Answer[] = [];
-      for (const part of chunks) answers.push(...toAnswers(await chat([{ role: "system", content: system }, { role: "user", content: askFor(code, details, part) }], { maxTokens: 16000, effort: "medium", timeoutMs: 300_000, cache: true }), part));
+      // A reply that cannot be read is asked for once more before the form is marked failed.
+      const ask = async (part: Field[]) => toAnswers(await chat([{ role: "system", content: system }, { role: "user", content: askFor(code, details, part) }], { maxTokens: 16000, effort: "medium", timeoutMs: 300_000, cache: true }), part);
+      for (const part of chunks) answers.push(...(await ask(part).catch(() => ask(part))));
       d.prepare("UPDATE forms SET status = 'ready', answers = ?, updated_at = ? WHERE id = ?").run(JSON.stringify(dropContradictions(answers)), new Date().toISOString(), id);
       done.push(`${code} (${answers.length} of ${fields.length} fields)`);
     } catch {
