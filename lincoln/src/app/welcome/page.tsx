@@ -4,7 +4,7 @@ import "./landing.css";
 
 // A draft of the public landing page, open at /welcome for review but kept out of search until it is approved.
 // The link card on WhatsApp, iMessage, LinkedIn and the rest: the wordmark, the name and one short line.
-const LINE = "Lincoln runs immigration cases for law firms.";
+const LINE = "Lincoln is the platform built to meet the standards of the United States' leading immigration firms.";
 export const metadata: Metadata = {
   metadataBase: new URL("https://uselincoln.com"),
   title: "Lincoln",
