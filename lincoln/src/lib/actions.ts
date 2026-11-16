@@ -116,20 +116,21 @@ export async function joinFirm(token: string, form: FormData) {
 }
 
 /** An admin invites someone to the firm, with their role and whether they are an admin. */
-/** The account password, asked again before a sensitive change. Accounts that sign in only with Google or
- *  Microsoft have none, and pass. Tries are limited. */
-function passwordOk(userId: string, given: unknown) {
+/** The account password, asked again before a sensitive change. Always required: an account without one (signed
+ *  up with Google or Microsoft) must set one in Settings first. Tries are limited. */
+function passwordCheck(userId: string, given: unknown): "ok" | "wrong" | "none" {
   const row = db().prepare("SELECT password_hash FROM users WHERE id = ?").get(userId) as { password_hash: string | null } | undefined;
-  if (!row?.password_hash) return true;
-  if (limited(`confirm:${userId}`, 10)) return false;
-  return verifyPassword(String(given ?? ""), row.password_hash);
+  if (!row?.password_hash) return "none";
+  if (limited(`confirm:${userId}`, 10)) return "wrong";
+  return verifyPassword(String(given ?? ""), row.password_hash) ? "ok" : "wrong";
 }
+const passwordError = (r: "wrong" | "none") => (r === "none" ? "Set a password first" : "Wrong password");
 
 export async function inviteMember(form: FormData) {
   const { user, firm } = await requireUser();
   if (firm.demo || !user.admin) redirect("/settings?tab=firm&error=1");
   // Making someone an admin hands them the firm: the password is asked again.
-  if (form.get("admin") === "on" && !passwordOk(user.id, form.get("confirm_password"))) redirect("/settings?tab=firm&error=password");
+  if (form.get("admin") === "on") { const pw = passwordCheck(user.id, form.get("confirm_password")); if (pw !== "ok") redirect(`/settings?tab=firm&error=${pw === "none" ? "nopassword" : "password"}`); }
   const email = String(form.get("email") ?? "").trim().toLowerCase();
   const role = String(form.get("role") ?? "");
   if (!validEmail(email) || !ROLES.includes(role)) redirect("/settings?tab=firm&error=invite");
@@ -161,7 +162,8 @@ export async function newWordCodeAction(password?: string) {
   const { user, firm } = await requireUser();
   if (firm.demo) return { code: null };
   // The code opens every case this person can see from Word: the password is asked again.
-  if (!passwordOk(user.id, password)) return { code: null, error: "Wrong password" };
+  const pw = passwordCheck(user.id, password);
+  if (pw !== "ok") return { code: null, error: passwordError(pw) };
   const { newWordCode } = await import("./word");
   return { code: newWordCode(firm.id, user.id) };
 }
@@ -458,7 +460,8 @@ export async function setMemberRole(userId: string, role: string) {
 export async function setMemberAdmin(userId: string, on: boolean, password?: string) {
   const { user, firm } = await requireUser();
   if (firm.demo || !user.admin) return { error: "Not changed" };
-  if (!passwordOk(user.id, password)) return { error: "Wrong password" };
+  const pw = passwordCheck(user.id, password);
+  if (pw !== "ok") return { error: passwordError(pw) };
   const target = db().prepare("SELECT id, name, admin FROM users WHERE id = ? AND firm_id = ?").get(userId, firm.id) as { id: string; name: string; admin: number } | undefined;
   if (!target) return { error: "Not changed" };
   if (!on && target.admin && otherAdmins(firm.id, target.id) === 0) return { error: "A firm needs one admin" };
@@ -703,7 +706,7 @@ export async function setTwoStepRequired(form: FormData) {
   const on = form.get("on") === "1";
   if (on && !twoStep) redirect("/settings?tab=security&error=selffirst");
   // Turning the firm's requirement off weakens everyone's sign in: the password is asked again.
-  if (!on && !passwordOk(user.id, form.get("confirm_password"))) redirect("/settings?tab=security&error=current");
+  if (!on) { const pw = passwordCheck(user.id, form.get("confirm_password")); if (pw !== "ok") redirect(`/settings?tab=security&error=${pw === "none" ? "nopassword" : "current"}`); }
   db().prepare("UPDATE firms SET require_2fa = ? WHERE id = ?").run(on ? 1 : 0, firm.id);
   await securityEvent(firm.id, user.id, on ? "two_step_required" : "two_step_optional");
   await toast("Saved");

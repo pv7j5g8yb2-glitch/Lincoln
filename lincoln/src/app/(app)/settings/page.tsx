@@ -42,8 +42,8 @@ const device = deviceName;
 
 const MSG: Record<string, Record<string, string>> = {
   profile: { name: "Name required.", sample: "Not available in the sample workspace." },
-  security: { limited: "Too many attempts. Try again in 15 minutes.", sample: "Not available in the sample workspace.", current: "Wrong password.", password: "10 characters min.", code: "Wrong code.", breached: "This password appears in known data breaches.", required: "The firm requires two step sign in.", admin: "Administrators only.", selffirst: "Turn on two step sign in for this account first." },
-  firm: { invite: "A valid email and a role are needed.", member: "This email already has an account.", limited: "Too many invites. Try again later.", "1": "Administrators only.", sample: "Not available in the sample workspace.", delete: "Name or password did not match.", export: "Wrong password.", password: "Wrong password." },
+  security: { limited: "Too many attempts. Try again in 15 minutes.", sample: "Not available in the sample workspace.", current: "Wrong password.", nopassword: "Set a password first.", password: "10 characters min.", code: "Wrong code.", breached: "This password appears in known data breaches.", required: "The firm requires two step sign in.", admin: "Administrators only.", selffirst: "Turn on two step sign in for this account first." },
+  firm: { invite: "A valid email and a role are needed.", member: "This email already has an account.", limited: "Too many invites. Try again later.", "1": "Administrators only.", sample: "Not available in the sample workspace.", delete: "Name or password did not match.", export: "Wrong password.", password: "Wrong password.", nopassword: "Set a password in Security first." },
 };
 
 function Row({ children, className }: { children: React.ReactNode; className?: string }) {
