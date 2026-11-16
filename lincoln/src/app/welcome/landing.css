@@ -1,3 +1,8 @@
 @keyframes hero-in { from { opacity: 0; transform: translateY(18px); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
 .hero-in { animation: hero-in 1.1s cubic-bezier(.2,.8,.2,1) both; }
-@media (prefers-reduced-motion: reduce) { .hero-in { animation: none; } }
+/* The courthouse rises into its frame and settles. */
+@keyframes hero-photo { from { clip-path: inset(100% 0 0 0 round 20px); } to { clip-path: inset(0 0 0 0 round 20px); } }
+@keyframes hero-photo-img { from { transform: scale(1.18); } to { transform: scale(1); } }
+.hero-photo { animation: hero-photo 1.4s cubic-bezier(.7,0,.2,1) .25s both; }
+.hero-photo-img { animation: hero-photo-img 2.4s cubic-bezier(.2,.8,.2,1) .25s both; }
+@media (prefers-reduced-motion: reduce) { .hero-in, .hero-photo, .hero-photo-img { animation: none; } }

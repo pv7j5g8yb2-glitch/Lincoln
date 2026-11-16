@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-// Lincoln's public front page. Clean and quiet, in the app's own colours (light or dark with the device): large
-// serif type, one sentence that turns to ink word by word, and the work shown as the papers Lincoln hands back.
-// American English.
+// Lincoln's public front page. Warm white, serif type and Ismael's own photographs, with the work laid on top of
+// them. Motion stays quiet: photographs drift against the scroll, one sentence turns to ink word by word, each
+// piece of work settles into place, and the case papers spread across a desk fold into a filing packet in 3D.
+// American English. Every name and number on the page is made up.
 
 /** Progress of an element through the viewport: 0 when its top meets the bottom of the screen, 1 when its
  *  bottom leaves the top. */
@@ -27,17 +28,38 @@ function useProgress<T extends HTMLElement>() {
   return [ref, p] as const;
 }
 
-const ease = (x: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+/** Progress through a tall section whose content is pinned: 0 when it reaches the top, 1 when it lets go. */
+function usePinned<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [p, setP] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      raf = 0;
+      const el = ref.current; if (!el) return;
+      const r = el.getBoundingClientRect();
+      setP(Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - window.innerHeight))));
+    };
+    const on = () => { if (!raf) raf = requestAnimationFrame(tick); };
+    tick(); window.addEventListener("scroll", on, { passive: true }); window.addEventListener("resize", on);
+    return () => { window.removeEventListener("scroll", on); window.removeEventListener("resize", on); cancelAnimationFrame(raf); };
+  }, []);
+  return [ref, p] as const;
+}
+
+const clamp = (x: number) => Math.min(1, Math.max(0, x));
+const ease = (x: number) => 1 - Math.pow(1 - clamp(x), 3);
+const easeInOut = (x: number) => { const t = clamp(x); return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
 
 /** A sentence in grey that turns to ink word by word as it is scrolled past. */
 function Reveal({ text, className = "" }: { text: string; className?: string }) {
   const [ref, p] = useProgress<HTMLParagraphElement>();
   const words = text.split(" ");
-  const lit = Math.round(ease((p - 0.15) / 0.45) * words.length);
+  const lit = Math.round(ease((p - 0.15) / 0.42) * words.length);
   return (
     <p ref={ref} className={className}>
       {words.map((w, i) => (
-        <span key={i} className="transition-colors duration-500" style={{ color: i < lit ? "var(--color-ink)" : "color-mix(in srgb, var(--color-ink) 16%, transparent)" }}>{w}{" "}</span>
+        <span key={i} className="transition-colors duration-500" style={{ color: i < lit ? "#161614" : "rgba(22,22,20,0.16)" }}>{w}{" "}</span>
       ))}
     </p>
   );
@@ -48,31 +70,44 @@ function In({ children, delay = 0, className = "" }: { children: ReactNode | ((o
   const ref = useRef<HTMLDivElement>(null);
   const [on, setOn] = useState(false);
   useEffect(() => {
-    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setOn(true); io.disconnect(); } }, { threshold: 0.25 });
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setOn(true); io.disconnect(); } }, { threshold: 0.2 });
     io.observe(ref.current!); return () => io.disconnect();
   }, []);
   return (
-    <div ref={ref} className={`transition-all duration-[1000ms] ease-[cubic-bezier(.2,.8,.2,1)] ${on ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"} ${className}`} style={{ transitionDelay: `${delay}ms` }}>
+    <div ref={ref} className={`transition-all duration-[1100ms] ease-[cubic-bezier(.2,.8,.2,1)] motion-reduce:transition-none ${on ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"} ${className}`} style={{ transitionDelay: `${delay}ms` }}>
       {typeof children === "function" ? children(on) : children}
     </div>
   );
 }
 
-/* The papers Lincoln hands back, drawn in HTML. Every name and number is made up. */
-const card = "rounded-2xl bg-card ring-1 ring-line shadow-[0_1px_2px_rgba(0,0,0,0.03),0_24px_48px_-32px_rgba(0,0,0,0.28)]";
-const label = "text-[12px] font-medium uppercase tracking-[0.12em] text-faint";
+/** A photograph in a rounded frame that drifts slowly against the scroll. */
+function Photo({ src, pos = "50% 50%", dim = 1, className = "", children }: { src: string; pos?: string; dim?: number; className?: string; children?: ReactNode }) {
+  const [ref, p] = useProgress<HTMLDivElement>();
+  return (
+    <div ref={ref} className={`relative overflow-hidden rounded-[20px] bg-[#e4e1db] ${className}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt="" loading="lazy" className="absolute inset-x-0 -top-[7%] h-[114%] w-full object-cover will-change-transform motion-reduce:!transform-none" style={{ objectPosition: pos, transform: `translate3d(0,${(0.5 - p) * 10}%,0)`, filter: dim < 1 ? `brightness(${dim})` : undefined }} />
+      {children}
+    </div>
+  );
+}
+
+/* The work, laid on the photographs. */
+const card = "relative w-[86%] rounded-2xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_40px_80px_-24px_rgba(0,0,0,0.5)] md:w-[80%]";
+const label = "text-[12px] font-medium uppercase tracking-[0.12em] text-[#a09d96]";
+const rise = (on: boolean, d: number) => ({ className: `transition-all duration-700 ease-out motion-reduce:transition-none ${on ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`, style: { transitionDelay: `${d}ms` } });
 
 function MailCard({ on }: { on: boolean }) {
   return (
-    <div className={`${card} p-6`}>
+    <div className={`${card} p-5 md:p-6`}>
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-panel text-[13px] font-semibold">DR</div>
-        <div className="min-w-0"><p className="text-[14.5px] font-semibold">Daniel Reyes</p><p className="truncate text-[13px] text-muted">Green card for my wife</p></div>
-        <span className="ml-auto text-[12.5px] text-faint">8:02 AM</span>
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f4f3f0] text-[13px] font-semibold">DR</div>
+        <div className="min-w-0"><p className="text-[14.5px] font-semibold">Daniel Reyes</p><p className="truncate text-[13px] text-[#6b6862]">Green card for my wife</p></div>
+        <span className="ml-auto text-[12.5px] text-[#a09d96]">8:02 AM</span>
       </div>
-      <p className="mt-4 text-[14.5px] leading-relaxed text-muted">Hi, my wife Sofia and I want to apply for her green card. Her documents are attached.</p>
-      <div className={`mt-5 flex items-center justify-between rounded-xl bg-panel px-4 py-3 text-[13.5px] transition-all delay-300 duration-700 ${on ? "opacity-100" : "translate-y-1 opacity-0"}`}>
-        <span className="font-medium">Case opened</span><span className="text-muted">Sofia Reyes · I-485</span>
+      <p className="mt-4 text-[14.5px] leading-relaxed text-[#6b6862]">Hi, my wife Sofia and I want to apply for her green card. Her documents are attached.</p>
+      <div {...rise(on, 900)}>
+        <div className="mt-5 flex items-center justify-between rounded-xl bg-[#f4f3f0] px-4 py-3 text-[13.5px]"><span className="font-medium">Case opened</span><span className="text-[#6b6862]">Sofia Reyes · I-485</span></div>
       </div>
     </div>
   );
@@ -81,13 +116,15 @@ function MailCard({ on }: { on: boolean }) {
 function ReadCard({ on }: { on: boolean }) {
   const rows = [["Marriage date", "March 9 or March 19, 2024?", "pp. 1, 2"], ["Sponsor income", "Below the 2026 minimum", "p. 3"], ["Last entry", "B-2, June 14, 2022", "p. 1"]];
   return (
-    <div className={`${card} p-6`}>
+    <div className={`${card} p-5 md:p-6`}>
       <p className={label}>Sofia Reyes · For review</p>
-      <div className="mt-4 flex flex-col divide-y divide-line">
+      <div className="mt-3 flex flex-col divide-y divide-[#ebe9e4]">
         {rows.map(([a, b, c], i) => (
-          <div key={a} className={`flex items-center justify-between gap-3 py-3 transition-opacity duration-700 ${on ? "opacity-100" : "opacity-0"}`} style={{ transitionDelay: `${250 + i * 160}ms` }}>
-            <div className="min-w-0"><p className="text-[12.5px] text-faint">{a}</p><p className="truncate text-[14.5px] font-medium">{b}</p></div>
-            <span className="shrink-0 text-[12.5px] text-faint">{c}</span>
+          <div key={a} {...rise(on, 600 + i * 220)}>
+            <div className="flex items-center justify-between gap-3 py-3">
+              <div className="min-w-0"><p className="text-[12.5px] text-[#a09d96]">{a}</p><p className="truncate text-[14.5px] font-medium">{b}</p></div>
+              <span className="shrink-0 text-[12.5px] text-[#a09d96]">{c}</span>
+            </div>
           </div>
         ))}
       </div>
@@ -95,55 +132,95 @@ function ReadCard({ on }: { on: boolean }) {
   );
 }
 
-function FormCard({ on }: { on: boolean }) {
-  const fields = [["Family name", "Marquez Reyes"], ["Given name", "Sofia"], ["Date of birth", "08/21/1994"], ["Country of birth", "Colombia"]];
+function LetterCard({ on }: { on: boolean }) {
+  const cite = (t: string, d: number) => <span className={`rounded px-0.5 transition-colors duration-700 ${on ? "bg-[#efe6d6] text-[#7a5f35]" : "text-[#a09d96]"}`} style={{ transitionDelay: `${d}ms` }}>{t}</span>;
   return (
-    <div className={`${card} overflow-hidden`}>
-      <div className="flex items-center justify-between border-b border-line px-6 py-3.5"><p className="text-[13.5px] font-semibold">Form I-485</p><p className="text-[12.5px] text-faint">Part 1</p></div>
-      <div className="flex flex-col divide-y divide-line px-6">
-        {fields.map(([l, v], i) => (
-          <div key={l} className="flex items-center justify-between py-3">
-            <span className="text-[13.5px] text-muted">{l}</span>
-            <span className="inline-block overflow-hidden whitespace-nowrap font-mono text-[13.5px] transition-[max-width] duration-700 ease-out" style={{ maxWidth: on ? "14ch" : "0ch", transitionDelay: `${300 + i * 220}ms` }}>{v}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function LetterCard() {
-  return (
-    <div className={`${card} p-7`}>
+    <div className={`${card} p-6 md:p-7`}>
       <p className={label}>Support letter · Draft</p>
-      <p className="mt-4 font-serif text-[16px] leading-[1.75]">
-        Dr. Okoro&apos;s sensors detect lead in municipal water at a fraction of the current cost <span className="text-faint">(Exhibit 4)</span>. Two Massachusetts towns are now piloting the system <span className="text-faint">(Exhibit 7)</span>.
+      <p className="mt-4 font-serif text-[15.5px] leading-[1.75] md:text-[16px]">
+        Dr. Okoro&apos;s sensors detect lead in municipal water at a fraction of the current cost {cite("(Exhibit 4)", 900)}. Two Massachusetts towns are now piloting the system {cite("(Exhibit 7)", 1200)}.
       </p>
     </div>
   );
 }
 
-function ApproveCard() {
+function ApproveCard({ on }: { on: boolean }) {
   return (
-    <div className={`${card} p-6`}>
+    <div className={`${card} p-5 md:p-6`}>
       <p className={label}>Awaiting approval</p>
       <p className="mt-3 text-[19px] font-semibold tracking-[-0.01em]">Filing packet · Sofia Reyes</p>
-      <p className="mt-1 text-[14px] text-muted">Cover letter, 5 forms, 14 exhibits</p>
-      <div className="mt-6 flex gap-2.5">
-        <span className="rounded-full bg-ink px-5 py-2.5 text-[14px] font-medium text-canvas">Approve</span>
-        <span className="rounded-full px-5 py-2.5 text-[14px] font-medium ring-1 ring-edge">Review</span>
+      <p className="mt-1 text-[14px] text-[#6b6862]">Cover letter, 5 forms, 14 exhibits</p>
+      <div {...rise(on, 800)}>
+        <div className="mt-5 flex gap-2.5">
+          <span className="rounded-full bg-[#161614] px-5 py-2.5 text-[14px] font-medium text-white">Approve</span>
+          <span className="rounded-full px-5 py-2.5 text-[14px] font-medium ring-1 ring-[#d3cfc8]">Review</span>
+        </div>
       </div>
     </div>
   );
 }
 
-const STEPS: { title: string; line: string; Card: (p: { on: boolean }) => ReactNode }[] = [
-  { title: "Reads the mail.", line: "A client writes in. The case is open before anyone sees the email.", Card: MailCard },
-  { title: "Reads the file.", line: "Conflicts, gaps and bars, each with the page it came from.", Card: ReadCard },
-  { title: "Fills the forms.", line: "Official USCIS editions, filled from the documents.", Card: FormCard },
-  { title: "Drafts the letters.", line: "Support letters and RFE responses, cited to the evidence.", Card: LetterCard },
-  { title: "Asks you.", line: "Nothing is filed or sent without an attorney's approval.", Card: ApproveCard },
+const STEPS: { title: string; line: string; photo: string; pos?: string; dim?: number; Card: (p: { on: boolean }) => ReactNode }[] = [
+  { title: "Reads the mail.", line: "A client writes in. The case is open before anyone sees the email.", photo: "/landing/concrete.jpg", Card: MailCard },
+  { title: "Reads the file.", line: "Conflicts, gaps and bars, each with the page it came from.", photo: "/landing/marble.jpg", Card: ReadCard },
+  { title: "Drafts the letters.", line: "Support letters and RFE responses, cited to the evidence.", photo: "/landing/letters.jpg", dim: 0.55, Card: LetterCard },
+  { title: "Asks you.", line: "Nothing is filed or sent without an attorney's approval.", photo: "/landing/court.jpg", pos: "85% 30%", dim: 0.7, Card: ApproveCard },
 ];
+
+/* The 3D piece: the case papers lie spread across a desk, then fold into one filing packet as the page scrolls. */
+const SHEETS = ["Cover letter", "Form G-1145", "Form I-130", "Form I-130A", "Form I-864", "Form I-485", "Form I-765", "14 exhibits"];
+
+function Sheet({ title, i }: { title: string; i: number }) {
+  return (
+    <div className="relative h-full w-full rounded-[6px] bg-white p-4 shadow-[0_1px_0_rgba(0,0,0,0.04),0_18px_30px_-18px_rgba(0,0,0,0.45)] ring-1 ring-black/[0.06]">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#161614]">{title}</p>
+      <div className="mt-3 flex flex-col gap-[7px]">
+        {Array.from({ length: 11 }, (_, k) => <div key={k} className="h-[5px] rounded-full bg-[#ece9e3]" style={{ width: `${55 + ((k * 37 + i * 19) % 40)}%` }} />)}
+      </div>
+      {i === 0 && <p className="absolute bottom-4 left-4 font-serif text-[11px] italic text-[#6b6862]">Sofia Reyes</p>}
+    </div>
+  );
+}
+
+function Packet() {
+  const [ref, p] = usePinned<HTMLDivElement>();
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => { const on = () => setNarrow(window.innerWidth < 768); on(); window.addEventListener("resize", on); return () => window.removeEventListener("resize", on); }, []);
+  const W = 200, H = 260, gx = narrow ? 150 : 250, gy = narrow ? 200 : 300;
+  const done = ease((p - 0.78) / 0.12);
+  return (
+    <div ref={ref} className="relative h-[300vh]">
+      <div className="sticky top-0 flex h-dvh flex-col justify-center overflow-hidden">
+        <div className="mx-auto grid w-full max-w-[1200px] items-center gap-4 px-4 md:grid-cols-[minmax(0,420px)_1fr] md:gap-10 md:px-8">
+          <div className="relative z-10 pt-6 md:pt-0">
+            <h2 className="font-serif text-[34px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[56px]">The filing packet, assembled.</h2>
+            <p className="mt-4 max-w-[30ch] text-[16.5px] leading-[1.6] text-[#6b6862] md:text-[18px]">Forms, letters and exhibits in filing order, ready for review.</p>
+          </div>
+          <div className="relative flex h-[56vh] items-center justify-center [perspective:2000px] md:h-[78vh]">
+            <div className="relative [transform-style:preserve-3d]" style={{ width: W, height: H, transform: `scale(${narrow ? 0.8 : 1.15}) rotateX(${54 - 6 * easeInOut(p)}deg) rotateZ(${-34 + 6 * easeInOut(p)}deg)` }}>
+              {SHEETS.map((t, i) => {
+                // Spread on the desk in a loose grid, each sheet gathered in turn into one neat stack.
+                const k = easeInOut((p - 0.05 - i * 0.06) / 0.34);
+                const col = i % 4, row = Math.floor(i / 4);
+                const x = (col - 1.5) * gx * (1 - k), y = (row - 0.5) * gy * (1 - k);
+                const z = k * (SHEETS.length - i) * 7 + Math.sin(k * Math.PI) * 120;
+                const rot = (1 - k) * (((i * 53) % 13) - 6);
+                return (
+                  <div key={t} className="absolute inset-0 [transform-style:preserve-3d] motion-reduce:!transform-none" style={{ transform: `translate3d(${x}px,${y}px,${z}px) rotateZ(${rot}deg)` }}>
+                    <Sheet title={t} i={i} />
+                  </div>
+                );
+              })}
+            </div>
+            <div className="pointer-events-none absolute bottom-[6%] left-1/2 whitespace-nowrap rounded-full bg-[#161614] px-4 py-2 text-[13.5px] font-medium text-white shadow-[0_20px_40px_-16px_rgba(0,0,0,0.5)] transition-none" style={{ opacity: done, transform: `translate(-50%, ${(1 - done) * 12}px)` }}>
+              Awaiting approval · Sofia Reyes
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const TRUST = [
   ["Encrypted", "The database and every file, at rest."],
@@ -152,100 +229,114 @@ const TRUST = [
   ["Yours to take", "Export or delete everything, at any time."],
 ];
 
+function Close() {
+  const [ref, p] = useProgress<HTMLDivElement>();
+  return (
+    <div ref={ref} className="relative h-[560px] overflow-hidden rounded-[24px] bg-[#222] md:h-[760px]">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/landing/board.jpg" alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover motion-reduce:!transform-none" style={{ objectPosition: "50% 45%", filter: "brightness(0.6)", transform: `scale(${1.14 - 0.14 * ease(p * 1.7)})` }} />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent to-60%" />
+      <div className="absolute bottom-7 left-6 text-white md:bottom-14 md:left-14">
+        <In><h2 className="font-serif text-[48px] font-semibold leading-[1] tracking-[-0.035em] md:text-[88px]">Start your<br />first case.</h2></In>
+        <In delay={150}><Link href="/signup" className="mt-7 inline-block rounded-full bg-white px-6 py-3.5 text-[15.5px] font-medium text-[#161614] transition hover:bg-white/85 md:mt-8">Get started</Link></In>
+      </div>
+    </div>
+  );
+}
+
 export default function Landing() {
   const [scrolled, setScrolled] = useState(false);
+  const [hero, hp] = useProgress<HTMLDivElement>();
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 8);
     on(); window.addEventListener("scroll", on, { passive: true }); return () => window.removeEventListener("scroll", on);
   }, []);
   return (
-    <div className="min-h-dvh bg-canvas text-ink antialiased">
-      <header className={`sticky top-0 z-50 bg-canvas/85 backdrop-blur-md transition-[border-color] duration-300 ${scrolled ? "border-b border-line" : "border-b border-transparent"}`}>
-        <nav className="mx-auto flex h-16 max-w-[1120px] items-center justify-between px-5 md:px-8">
+    <div className="min-h-dvh overflow-x-clip bg-[#faf9f6] font-sans text-[#161614] antialiased selection:bg-[#efe6d6]">
+      <header className={`sticky top-0 z-50 bg-[#faf9f6]/85 backdrop-blur-md transition-[border-color] duration-300 ${scrolled ? "border-b border-[#ebe9e4]" : "border-b border-transparent"}`}>
+        <nav className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 md:px-8">
           <Link href="/welcome" className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/mark.png" alt="" width={26} height={26} className="rounded-[7px]" />
             <span className="font-serif text-[19px] font-semibold tracking-[-0.01em]">Lincoln</span>
           </Link>
           <div className="flex items-center gap-1">
-            <Link href="/signin" className="rounded-full px-4 py-2 text-[14.5px] text-muted transition hover:text-ink">Sign in</Link>
-            <Link href="/signup" className="rounded-full bg-ink px-4 py-2 text-[14.5px] font-medium text-canvas transition hover:opacity-85">Get started</Link>
+            <Link href="/signin" className="rounded-full px-3 py-2 text-[14.5px] text-[#6b6862] transition hover:text-[#161614] md:px-4">Sign in</Link>
+            <Link href="/signup" className="rounded-full bg-[#161614] px-4 py-2 text-[14.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
           </div>
         </nav>
       </header>
 
-      {/* Hero */}
-      <section className="mx-auto max-w-[1120px] px-5 pb-24 pt-20 md:px-8 md:pb-36 md:pt-36">
-        <p className="hero-in text-[14px] text-muted md:text-[15px]">For immigration law firms</p>
-        <h1 className="hero-in mt-5 max-w-[12ch] font-serif text-[50px] font-semibold leading-[1.0] tracking-[-0.035em] [animation-delay:100ms] md:text-[104px]">
-          The work, done before you ask.
-        </h1>
-        <p className="hero-in mt-7 max-w-[34ch] text-[17.5px] leading-[1.6] text-muted [animation-delay:200ms] md:text-[20px]">
-          Lincoln reads the firm&apos;s mail, opens each case, fills the forms and drafts the letters. You approve.
-        </p>
-        <div className="hero-in mt-9 flex items-center gap-3 [animation-delay:300ms]">
-          <Link href="/signup" className="rounded-full bg-ink px-6 py-3.5 text-[15.5px] font-medium text-canvas transition hover:opacity-85">Get started</Link>
-          <a href="#work" className="rounded-full px-5 py-3.5 text-[15.5px] font-medium text-ink transition hover:bg-panel">How it works</a>
+      {/* Hero: the words, and the courthouse rising into its frame. */}
+      <section className="mx-auto grid max-w-[1200px] items-end gap-9 px-4 pb-20 pt-11 md:grid-cols-[1fr_500px] md:gap-[72px] md:px-8 md:pb-28 md:pt-14">
+        <div>
+          <p className="hero-in text-[14px] text-[#6b6862] md:text-[15px]">For immigration law firms</p>
+          <h1 className="hero-in mt-5 font-serif text-[50px] font-semibold leading-[1] tracking-[-0.035em] [animation-delay:120ms] md:text-[92px]">The work, done before you ask.</h1>
+          <p className="hero-in mt-7 max-w-[32ch] text-[17.5px] leading-[1.6] text-[#6b6862] [animation-delay:240ms] md:text-[20px]">
+            Lincoln reads the firm&apos;s mail, opens each case, fills the forms and drafts the letters. You approve.
+          </p>
+          <div className="hero-in mt-9 flex items-center gap-2 [animation-delay:360ms] md:mb-3">
+            <Link href="/signup" className="rounded-full bg-[#161614] px-6 py-3.5 text-[15.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
+            <a href="#work" className="rounded-full px-5 py-3.5 text-[15.5px] font-medium transition hover:bg-[#f0eee9]">How it works</a>
+          </div>
+        </div>
+        <div ref={hero} className="hero-photo relative h-[440px] overflow-hidden rounded-[20px] bg-[#e4e1db] md:h-[640px]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/landing/court.jpg" alt="" fetchPriority="high" className="hero-photo-img absolute inset-x-0 -top-[6%] h-[112%] w-full object-cover" style={{ objectPosition: "30% 50%", translate: `0 ${(0.5 - hp) * 8}%` }} />
         </div>
       </section>
 
       {/* The statement, lit word by word. */}
-      <section className="border-t border-line">
-        <div className="mx-auto max-w-[1120px] px-5 py-28 md:px-8 md:py-44">
+      <section className="border-t border-[#ebe9e4]">
+        <div className="mx-auto max-w-[1200px] px-4 py-24 md:px-8 md:py-44">
           <Reveal className="max-w-[20ch] font-serif text-[36px] font-semibold leading-[1.12] tracking-[-0.025em] md:text-[68px]" text="Most of an immigration practice is paperwork. Lincoln does the paperwork. You practice law." />
         </div>
       </section>
 
-      {/* The work, one paper at a time. */}
-      <section id="work" className="scroll-mt-16 border-t border-line">
-        <div className="mx-auto flex max-w-[1120px] flex-col px-5 py-24 md:px-8 md:py-36">
+      {/* The work, on the photographs. */}
+      <section id="work" className="scroll-mt-16 border-t border-[#ebe9e4]">
+        <div className="mx-auto max-w-[1200px] px-4 py-14 md:px-8 md:py-24">
           {STEPS.map((s, i) => (
-            <In key={s.title} className={i ? "mt-24 md:mt-32" : ""}>
-              {(on) => (
-                <div className="grid items-center gap-8 md:grid-cols-[1fr_440px] md:gap-20">
-                  <div>
-                    <p className="font-mono text-[13px] text-faint">0{i + 1}</p>
-                    <h3 className="mt-2 font-serif text-[32px] font-semibold leading-[1.1] tracking-[-0.025em] md:text-[48px]">{s.title}</h3>
-                    <p className="mt-3 max-w-[30ch] text-[16.5px] leading-[1.6] text-muted md:text-[18px]">{s.line}</p>
-                  </div>
-                  <s.Card on={on} />
-                </div>
-              )}
-            </In>
+            <div key={s.title} className="grid items-center gap-7 py-10 md:grid-cols-2 md:gap-20 md:py-[70px]">
+              <In className={i % 2 ? "md:order-2" : ""}>
+                <p className="font-mono text-[13px] text-[#a09d96]">0{i + 1}</p>
+                <h3 className="mt-2 font-serif text-[34px] font-semibold leading-[1.05] tracking-[-0.025em] md:text-[52px]">{s.title}</h3>
+                <p className="mt-3 max-w-[30ch] text-[16.5px] leading-[1.6] text-[#6b6862] md:mt-4 md:text-[18px]">{s.line}</p>
+              </In>
+              <Photo src={s.photo} pos={s.pos} dim={s.dim} className="flex h-[480px] items-center justify-center md:h-[620px]">
+                <In delay={200} className="flex w-full justify-center">{(on) => <s.Card on={on} />}</In>
+              </Photo>
+            </div>
           ))}
         </div>
       </section>
 
+      <section className="border-t border-[#ebe9e4]"><Packet /></section>
+
       {/* Client files. */}
-      <section className="border-t border-line">
-        <div className="mx-auto grid max-w-[1120px] gap-12 px-5 py-24 md:grid-cols-2 md:gap-20 md:px-8 md:py-36">
+      <section className="border-t border-[#ebe9e4]">
+        <div className="mx-auto grid max-w-[1200px] gap-7 px-4 py-24 md:grid-cols-2 md:gap-20 md:px-8 md:py-36">
           <In><h2 className="font-serif text-[36px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[56px]">Built for client files.</h2></In>
           <div className="flex flex-col">
             {TRUST.map(([a, b], i) => (
-              <In key={a} delay={i * 80}>
-                <div className={`py-5 ${i ? "border-t border-line" : ""}`}><p className="text-[17px] font-medium">{a}</p><p className="mt-1 text-[15.5px] text-muted">{b}</p></div>
+              <In key={a} delay={i * 90}>
+                <div className={`py-5 ${i ? "border-t border-[#ebe9e4]" : "pt-1"}`}><p className="text-[17px] font-medium">{a}</p><p className="mt-1 text-[15.5px] text-[#6b6862]">{b}</p></div>
               </In>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Close. */}
-      <section className="border-t border-line">
-        <div className="mx-auto max-w-[1120px] px-5 pb-12 pt-28 md:px-8 md:pt-40">
-          <In>
-            <h2 className="font-serif text-[48px] font-semibold leading-[1.0] tracking-[-0.035em] md:text-[96px]">Start your first case.</h2>
-            <div className="mt-9"><Link href="/signup" className="inline-block rounded-full bg-ink px-6 py-3.5 text-[15.5px] font-medium text-canvas transition hover:opacity-85">Get started</Link></div>
-          </In>
-          <footer className="mt-32 flex flex-col gap-5 border-t border-line pt-8 text-[13px] text-faint md:flex-row md:items-center md:justify-between">
-            <span>© 2026 Lincoln. Not a law firm. Every draft is for attorney review.</span>
-            <div className="flex gap-6">
-              <Link href="/terms" className="hover:text-ink">Terms</Link>
-              <Link href="/privacy" className="hover:text-ink">Privacy</Link>
-              <a href="mailto:hello@uselincoln.com" className="hover:text-ink">hello@uselincoln.com</a>
-            </div>
-          </footer>
-        </div>
+      <section className="mx-auto max-w-[1200px] px-4 md:px-8">
+        <Close />
+        <footer className="flex flex-col gap-4 py-8 text-[13px] text-[#a09d96] md:flex-row md:items-center md:justify-between md:pb-10">
+          <span>© 2026 Lincoln. Not a law firm. Every draft is for attorney review.</span>
+          <div className="flex gap-6">
+            <Link href="/terms" className="hover:text-[#161614]">Terms</Link>
+            <Link href="/privacy" className="hover:text-[#161614]">Privacy</Link>
+            <a href="mailto:hello@uselincoln.com" className="hover:text-[#161614]">hello@uselincoln.com</a>
+          </div>
+        </footer>
       </section>
     </div>
   );

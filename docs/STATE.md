@@ -337,6 +337,12 @@ from the repo the same day. History is in git up to commit `341cf65`.
   MPN ID. No paid email needed: hello@uselincoln.com on Zoho Mail's free plan, and the custom domain is added free
   in the existing Entra directory (do not buy Microsoft 365 for this; Claude wrongly suggested it once). Google shows the logo only after brand verification. Home page in both branding pages stays https://app.uselincoln.com
   (Ismael, 2026-11-15) until the landing page is live; then change it to https://uselincoln.com in Google and Microsoft.
+* Landing page (2026-11-16): draft live for review at app.uselincoln.com/welcome (kept out of search, not linked).
+  Editorial direction: warm white, Literata, Ismael's own photographs (courthouse, concrete, marble, old letters,
+  boardroom; in lincoln/public/landing, 1080px wide, originals would be sharper), the work laid on the photos, the
+  word by word statement, and one 3D piece (case papers spread on a desk fold into a filing packet). Plan: home page
+  plus a Security page first; Pricing, Customers and Blog only once there is real content for them. Next: polish
+  with Ismael, then point uselincoln.com at it.
 
 1. Read and agree `docs/TEST-PLAN.md` (three weeks, no building before the stop rule).
 2. Parent or guardian conversation about ownership.
