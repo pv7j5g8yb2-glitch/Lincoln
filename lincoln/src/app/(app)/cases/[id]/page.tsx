@@ -24,6 +24,7 @@ import CopyLink from "@/components/CopyLink";
 import AssignMenu from "@/components/AssignMenu";
 import EvidenceGrid from "@/components/EvidenceGrid";
 import { translationsOf } from "@/lib/translate";
+import { statusOf } from "@/lib/uscis";
 import { isLawyerRole } from "@/lib/roles";
 import { caseLink, linkUrl } from "@/lib/client-intake";
 
@@ -55,6 +56,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
   const crit = criteria(firm.id, id);
   const asks = rfePoints(firm.id, id);
   const translated = translationsOf(firm.id, id);
+  const uscis = c.receipt ? statusOf(firm.id, id) : undefined;
   const forms = caseForms(firm.id, id);
   const all: [string, string, number | undefined, boolean][] = [["overview", "Overview", undefined, true], ["documents", "Documents", docs.length, docs.length > 0 || llmConfigured()], ["evidence", "Evidence", undefined, crit.length > 0 || asks.length > 0], ["forms", "Forms", forms.length, forms.length > 0], ["drafts", "Drafts", drafts.length, drafts.length > 0 || c.pages > 0], ["messages", "Messages", msgs.length, msgs.length > 0], ["activity", "Activity", undefined, true]];
   const tabs = all.filter((t) => t[3] || t[0] === tab);
@@ -68,7 +70,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
         <div className="min-w-0">
           <h1 className="serif flex items-center gap-2 text-[27px] font-medium leading-tight">{c.sensitive ? <Lock size={17} className="text-faint" /> : null}{c.client}</h1>
           <p className="mt-1.5 text-[13px] text-muted">
-            {c.type_code}{c.counterpart ? ` · ${c.counterpart}` : ""} · {c.stage}{c.receipt ? ` · ${c.receipt}` : ""}{c.sensitive ? " · Restricted" : ""}
+            {c.type_code}{c.counterpart ? ` · ${c.counterpart}` : ""} · {c.stage}{c.receipt ? ` · ${c.receipt}` : ""}{uscis?.text ? <span title={uscis.detail ?? undefined}> · {uscis.text}</span> : null}{c.sensitive ? " · Restricted" : ""}
           </p>
         </div>
         <div className="flex items-center gap-3">

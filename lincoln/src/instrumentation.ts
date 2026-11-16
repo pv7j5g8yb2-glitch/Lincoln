@@ -37,6 +37,13 @@ export async function register() {
     setTimeout(law, 60_000);
     setInterval(law, 12 * 3600_000);
   }
+  // USCIS case status for every case with a receipt number, once a day, when the firm has USCIS access.
+  const { uscisConfigured, watchStatuses } = await import("./lib/uscis");
+  if (uscisConfigured()) {
+    const status = () => void watchStatuses().catch((e) => console.error("USCIS status:", e instanceof Error ? e.message : "failed"));
+    setTimeout(status, 5 * 60_000);
+    setInterval(status, 3 * 3600_000);
+  }
   // Intake files a client never sent are removed after 30 days.
   const { sweepSessions } = await import("./lib/client-intake");
   setInterval(() => { try { sweepSessions(); } catch { /* next round */ } }, 6 * 3600_000);

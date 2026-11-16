@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS criteria (
 );
 CREATE TABLE IF NOT EXISTS addin_codes (hash TEXT PRIMARY KEY, firm_id TEXT NOT NULL, user_id TEXT NOT NULL, expires_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS addin_tokens (hash TEXT PRIMARY KEY, firm_id TEXT NOT NULL, user_id TEXT NOT NULL, created_at TEXT NOT NULL, last_used_at TEXT, expires_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS case_status (case_id TEXT PRIMARY KEY, firm_id TEXT NOT NULL, receipt TEXT NOT NULL, form TEXT, text TEXT, detail TEXT, modified TEXT, checked_at TEXT NOT NULL, changed_at TEXT, error TEXT);
 CREATE TABLE IF NOT EXISTS memory_edits (id TEXT PRIMARY KEY, firm_id TEXT NOT NULL, kind TEXT NOT NULL, before TEXT NOT NULL, after TEXT NOT NULL, at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS rfe_points (
   id TEXT PRIMARY KEY, firm_id TEXT NOT NULL, case_id TEXT NOT NULL, notice TEXT NOT NULL, n INTEGER NOT NULL, point TEXT NOT NULL,
@@ -73,7 +74,7 @@ CREATE INDEX IF NOT EXISTS i_appr_firm ON approvals(firm_id, status);
 CREATE INDEX IF NOT EXISTS i_msg_firm ON messages(firm_id, at);
 `;
 
-const TABLES = ["memory_edits", "addin_codes", "addin_tokens", "invites", "intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "usage", "access_log", "security_events", "mailboxes", "sessions", "kv", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "rfe_points", "criteria", "documents", "cases", "users", "firms"];
+const TABLES = ["case_status", "memory_edits", "addin_codes", "addin_tokens", "invites", "intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "usage", "access_log", "security_events", "mailboxes", "sessions", "kv", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "rfe_points", "criteria", "documents", "cases", "users", "firms"];
 
 /** Where the database lives. On Render this is the persistent disk (DATA_DIR=/var/data). */
 export const dataDir = () => process.env.DATA_DIR || path.join(process.cwd(), "data");

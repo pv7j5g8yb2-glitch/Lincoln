@@ -70,3 +70,16 @@ services:
       mountPath: /var/data
       sizeGB: 1
 ```
+
+## USCIS case status (optional, not set up yet)
+
+Lincoln checks USCIS case status through USCIS's own Case Status API (developer.uscis.gov). Access belongs to the
+company, so a parent or guardian applies: create a USCIS online account with the company email, join the Torch
+developer portal, create an app (sandbox credentials are issued at once), then request production access, which
+needs an affidavit (Form G-1595) and a 30 minute demo. Demo slots were booked through March 2027 when checked on
+2026-11-16. Once credentials exist, set on Render:
+
+* `USCIS_CLIENT_ID` and `USCIS_CLIENT_SECRET`: the app's credentials (secret values, never in the repository).
+* `USCIS_API_BASE`: leave unset for the sandbox; set to the production address USCIS gives with production access.
+
+USCIS's terms: only receipt numbers of the firm's own clients, never anyone else's.

@@ -5,6 +5,7 @@ import { PageHead, btn, field, label } from "@/components/ui";
 import { backUpNowAction, updateLawAction, setUpFirmAction } from "@/lib/actions";
 import { backupStatus, offsiteConfigured } from "@/lib/backup";
 import { lawStatus } from "@/lib/law";
+import { uscisConfigured } from "@/lib/uscis";
 import { db } from "@/lib/db";
 import { inviteUrl, isOps } from "@/lib/invites";
 import { requireUser } from "@/lib/session";
@@ -33,11 +34,24 @@ export default async function Ops({ searchParams }: { searchParams: Promise<{ in
       )}
       <BackupPanel />
       <LawPanel />
+      <UscisPanel />
       {firms.length > 0 && (
         <div className="mt-12 border-t border-line">
           {firms.map((f, i) => <div key={i} className="flex justify-between border-b border-line py-2.5 text-[13px]"><span>{f.name}</span><span className="text-faint">{f.members}</span></div>)}
         </div>
       )}
+    </div>
+  );
+}
+
+/** USCIS case status access and the last checks, for Lincoln staff only. */
+function UscisPanel() {
+  const on = uscisConfigured();
+  const s = db().prepare("SELECT COUNT(*) AS n, MAX(checked_at) AS last, SUM(error IS NOT NULL) AS failed FROM case_status").get() as { n: number; last: string | null; failed: number | null };
+  return (
+    <div className="mt-10 border-t border-line pt-6">
+      <span className="text-[14px] font-medium">USCIS case status</span>
+      <p className="mt-2 text-[13px] text-muted">{on ? `${s.n} receipts watched${s.last ? ` · Checked ${new Date(s.last).toUTCString()}` : ""}${s.failed ? ` · ${s.failed} failed` : ""}` : "Not set up"}</p>
     </div>
   );
 }
