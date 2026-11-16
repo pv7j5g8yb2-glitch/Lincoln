@@ -395,7 +395,7 @@ from the repo the same day. History is in git up to commit `341cf65`.
   zip folder goes into the case whose client it names ("Marquez, Sofia") or opens one (client and type from a form
   number in the folder name, otherwise from the documents), and files are read two cases at a time in the
   background. Checked with made up Docketwise style exports on the stand in model. Not yet: whole Drive or OneDrive
-  folder import. No direct connections to Docketwise and the like: they need partnerships, which Ismael ruled out.
+  folder import. No direct connections to Docketwise and the like: they need partnerships, which Ismael ruled out for now (not yet, not never).
 * USCIS case status (2026-11-16): built on USCIS's official Case Status API (developer.uscis.gov, OAuth client
   credentials, GET /case-status/{receipt}; format confirmed from USCIS's own article). Every case with a receipt is
   checked once a day; a change shows on the case header, is logged, notifies the attorney, and approval, denial or a

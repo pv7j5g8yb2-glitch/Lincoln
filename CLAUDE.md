@@ -101,8 +101,9 @@ platform for immigration firms, never against "a first version" or an MVP. Build
 valuable and convenient, keep the app simple and minimal, and let details appear only when needed or when the user
 asks for them (folded, on tap, on hover).
 
-**Integrations only if self serve (Ismael, 2026-11-16).** Never list, plan or build an integration that needs an official
-partnership, a partner programme, an application or demo, or contacting the company for API access (removed for this:
+**Integrations only if self serve, for now (Ismael, 2026-11-16).** Not yet, rather than never: until Lincoln is ready to
+pursue partnerships, do not list, plan or build an integration that needs an official partnership, a partner programme,
+an application or demo, or contacting the company for API access (removed for this:
 Docketwise, LollyLaw, INSZoom, eImmigration, iManage, NetDocuments, USCIS case status). Only services where Lincoln can
 register its own app or the firm can connect its own account. Importing a firm's own export is fine.
 
