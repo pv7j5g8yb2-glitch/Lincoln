@@ -296,8 +296,8 @@ function Steps() {
     };
   }, [ref]);
   return (
-    // Each step gets a long stretch of scroll; the marks are where each step sits fully in view.
-    <div ref={ref} className="relative [--step:72vh] md:[--step:64vh]" style={{ height: `calc(100vh + ${STEPS.length} * var(--step))` }}>
+    // The marks are where each step sits fully in view; each swipe moves from one to the next.
+    <div ref={ref} className="relative [--step:36vh] md:[--step:32vh]" style={{ height: `calc(100vh + ${STEPS.length} * var(--step))` }}>
       {STEPS.map((s, i) => <div key={s.title} ref={(el) => { marks.current[i] = el; }} aria-hidden className="step-mark pointer-events-none absolute left-0 h-px w-px" style={{ top: `calc(${i + 0.5} * var(--step))` }} />)}
       <div className="sticky top-16 flex h-[calc(100dvh-4rem)] items-center overflow-hidden">
         <div className="mx-auto grid w-full max-w-[1200px] gap-5 px-4 md:grid-cols-[minmax(0,1fr)_minmax(0,560px)] md:items-center md:gap-20 md:px-8">
