@@ -91,8 +91,10 @@ left the app: work that lands in Review (batched) and chat replies finished in t
 always run to the end on the server, even when the app is closed. Every notification has a short title and one line.
 
 **Branding and marketing words (Ismael, 2026-11-16).** Everything public facing (site, video, captions, names of
-features, posts) uses the words a billion dollar software company would use. Before naming or writing anything, ask how
-Claude, ChatGPT, Harvey or Legora would name it or say it, and match that bar. Lincoln is always "Lincoln", never "it".
+features, posts) uses the words a billion dollar software company would use. Always treat Lincoln as
+already a billion dollar legal tech company, in every decision, not only wording. Before naming or writing anything,
+ask how the best companies would do it, Claude, ChatGPT, Harvey and Legora above all since they are closest, and
+match that bar. Lincoln is always "Lincoln", never "it".
 Extremely clean and visually appealing: no subheadline under every heading, nothing that is not needed.
 
 **Landing page (Ismael, 2026-11-16).** It must be creative with a real wow factor, more expressive than the minimal app,
