@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { forgetFirmSessions } from "./client-intake";
-import { ROLES } from "./roles";
+import { FILING_APPROVALS, ROLES, isLawyerRole } from "./roles";
 import { acceptInvite, createInvite, findInvite, inviteUrl, isOps, setUpFirm } from "./invites";
 import { hashPassword, initialsOf, limited, newToken, sha, validEmail, validPassword, verifyPassword } from "./auth";
 import { mailConfigured as systemMailConfigured, sendSystemMail } from "./mailer";
@@ -250,6 +250,8 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
   const d = db();
   const a = approvalById(firm.id, approvalId, viewer);
   if (!a || a.status !== "pending") return;
+  // Filing packets, legal drafts and strategy decisions are signed off by a lawyer only; anyone may send them back.
+  if (decision === "approved" && FILING_APPROVALS.includes(a.kind) && !isLawyerRole(user.role)) return { error: "Attorney approval only" };
   const F = firm.id;
   const payload = JSON.parse(a.payload);
 
@@ -385,6 +387,24 @@ function notInSample(firm: { demo: number }, back: string) {
 }
 
 const otherAdmins = (firmId: string, userId: string) => (db().prepare("SELECT COUNT(*) AS n FROM users WHERE firm_id = ? AND id != ? AND admin = 1").get(firmId, userId) as { n: number }).n;
+
+/** Changes who a case is with. Admins and the case's attorney may; the attorney must hold a lawyer's role.
+ *  Approvals still waiting move to the new attorney. */
+export async function setCaseTeam(caseId: string, attorneyId: string, paralegalId: string) {
+  const { user, firm, viewer } = await requireUser();
+  const c = caseById(firm.id, caseId, viewer);
+  if (!c || firm.demo || !(user.admin || c.attorney_id === user.id)) return { error: "Not changed" };
+  const d = db();
+  const person = (id: string) => d.prepare("SELECT id, name, role FROM users WHERE id = ? AND firm_id = ?").get(id, firm.id) as { id: string; name: string; role: string } | undefined;
+  const att = person(attorneyId), par = person(paralegalId);
+  if (!att || !par) return { error: "Not changed" };
+  if (!isLawyerRole(att.role)) return { error: "Attorney must be a lawyer" };
+  d.prepare("UPDATE cases SET attorney_id = ?, paralegal_id = ? WHERE firm_id = ? AND id = ?").run(att.id, par.id, firm.id, c.id);
+  if (att.id !== c.attorney_id) d.prepare("UPDATE approvals SET assignee_id = ? WHERE firm_id = ? AND case_id = ? AND status = 'pending' AND assignee_id IS ?").run(att.id, firm.id, c.id, c.attorney_id);
+  log(firm.id, c.id, user.name, "assign", `Assigned the case to ${att.name}${par.id !== att.id ? ` with ${par.name}` : ""}.`);
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
 
 /** An admin sets anyone's role at the firm. */
 export async function setMemberRole(userId: string, role: string) {

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { limited } from "@/lib/auth";
 import { clientIp } from "@/lib/audit";
 import { fileKind } from "@/lib/pdf";
-import { MAX_BYTES, addSessionFile, lookup, newSession, removeSessionFile, submit } from "@/lib/client-intake";
+import { MAX_BYTES, addSessionFile, lookup, newSession, removeSessionFile, submit, submitMore } from "@/lib/client-intake";
 
 // The client's side of the intake link: one document at a time, then Send. No account: the link is the key.
 export async function POST(req: Request, ctx: { params: Promise<{ token: string }> }) {
@@ -30,6 +30,16 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
   if (body.action === "remove") {
     removeSessionFile(link, String(body.session ?? ""), String(body.id ?? ""));
     return NextResponse.json({ ok: true });
+  }
+  if (body.action === "more") {
+    if (limited(`intake-send:${ip}`, 10, 60 * 60_000)) return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 });
+    try {
+      await submitMore(link, String(body.session ?? ""));
+      return NextResponse.json({ ok: true });
+    } catch (e) {
+      const m = e instanceof Error ? e.message : "";
+      return NextResponse.json({ error: m === "empty" ? "Add a document first." : m === "closed" ? "This was already sent." : "Not sent. Try again." }, { status: 400 });
+    }
   }
   if (body.action === "send") {
     if (limited(`intake-send:${ip}`, 10, 60 * 60_000)) return NextResponse.json({ error: "Too many requests. Try again later." }, { status: 429 });

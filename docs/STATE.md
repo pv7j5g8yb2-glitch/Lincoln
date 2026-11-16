@@ -339,6 +339,12 @@ from the repo the same day. History is in git up to commit `341cf65`.
   (Ismael, 2026-11-15) until the landing page is live; then change it to https://uselincoln.com in Google and Microsoft.
 * Backups (2026-11-16): checked, encrypted database copies every six hours, optional off site bucket, restore
   script, status on /ops; see docs/RENDER.md. A second server needs a move to a hosted database (a separate project).
+* Team features (2026-11-16): only a lawyer role can approve filing work (packet, drafts for review, strategy
+  decisions); others see "For attorney approval" and the server refuses too. Team menu on each case: admins or the
+  case's attorney change the attorney (lawyer roles only) and paralegal; pending approvals move to the new attorney.
+  A case link the client already used is now their status page: stage in plain words (never the outcome), documents
+  received and still needed, and Send more documents (files only, appended to the case). Repeated issues from later
+  readings are no longer added twice.
 * Security requirements for selling to firms (bare minimum, mid market, BigLaw, and where Lincoln stands): saved in
   docs/RESEARCH.md, 'Security requirements for law firms'. Next: a parent asks Anthropic sales for zero data retention.
 * Team (2026-11-16): no public sign up (/signup goes to /start; Google or Microsoft sign in only joins an open

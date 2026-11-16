@@ -223,7 +223,9 @@ async function readCase(firmId: string, caseId: string, files: Uint8Array[], opt
       const docOf = (p: number) => ranges.find((x) => x.page_from && p >= x.page_from && p <= (x.page_to ?? x.page_from))?.n ?? 0;
 
       const insIssue = d.prepare("INSERT INTO issues (id, firm_id, case_id, kind, severity, title, detail, sources, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', ?)");
-      for (const x of (r.issues ?? []).slice(0, 60)) insIssue.run(uid(), firmId, caseId, ["conflict", "missing", "risk", "date"].includes(x.kind) ? x.kind : "risk", ["high", "medium", "low"].includes(x.severity) ? x.severity : "medium", str(x.title, 200), str(x.detail), JSON.stringify((x.pages ?? []).map(page).filter(Boolean)), now);
+      // A later reading often finds an issue already open; it is not added twice.
+      const open = new Set((d.prepare("SELECT title FROM issues WHERE firm_id = ? AND case_id = ? AND status = 'open'").all(firmId, caseId) as { title: string }[]).map((x) => x.title.trim().toLowerCase()));
+      for (const x of (r.issues ?? []).slice(0, 60)) if (!open.has(str(x.title, 200).trim().toLowerCase()) && open.add(str(x.title, 200).trim().toLowerCase())) insIssue.run(uid(), firmId, caseId, ["conflict", "missing", "risk", "date"].includes(x.kind) ? x.kind : "risk", ["high", "medium", "low"].includes(x.severity) ? x.severity : "medium", str(x.title, 200), str(x.detail), JSON.stringify((x.pages ?? []).map(page).filter(Boolean)), now);
 
       const insDate = d.prepare("INSERT INTO dates (id, firm_id, case_id, label, date, kind, source) VALUES (?, ?, ?, ?, ?, ?, ?)");
       const dates = (r.dates ?? []).filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(str(x.date))).slice(0, 40);
@@ -401,8 +403,11 @@ Reply with one JSON object and nothing else:
     const pages = (d.prepare("SELECT pages FROM cases WHERE firm_id = ? AND id = ?").get(firmId, caseId) as { pages: number }).pages;
     const found = (r.issues ?? []).filter((x) => typeof x.title === "string" && x.title.trim()).slice(0, 12);
     const ins = d.prepare("INSERT INTO issues (id, firm_id, case_id, kind, severity, title, detail, sources, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'open', ?)");
-    for (const x of found) ins.run(uid(), firmId, caseId, ["bar", "missing", "conflict", "risk"].includes(x.kind) ? x.kind : "risk", ["high", "medium", "low"].includes(x.severity) ? x.severity : "medium", x.title.slice(0, 200), String(x.detail ?? "").slice(0, 600), JSON.stringify((x.pages ?? []).filter((p) => Number.isInteger(p) && p >= 1 && p <= pages)), new Date().toISOString());
-    if (found.length) log(firmId, caseId, "check", `Second reading: ${found.length} more ${found.length === 1 ? "issue" : "issues"} opened.`, 20);
+    // An issue already open from the first reading is not opened twice.
+    const open = new Set((d.prepare("SELECT title FROM issues WHERE firm_id = ? AND case_id = ? AND status = 'open'").all(firmId, caseId) as { title: string }[]).map((x) => x.title.trim().toLowerCase()));
+    const fresh = found.filter((x) => { const k = x.title.slice(0, 200).trim().toLowerCase(); if (open.has(k)) return false; open.add(k); return true; });
+    for (const x of fresh) ins.run(uid(), firmId, caseId, ["bar", "missing", "conflict", "risk"].includes(x.kind) ? x.kind : "risk", ["high", "medium", "low"].includes(x.severity) ? x.severity : "medium", x.title.slice(0, 200), String(x.detail ?? "").slice(0, 600), JSON.stringify((x.pages ?? []).filter((p) => Number.isInteger(p) && p >= 1 && p <= pages)), new Date().toISOString());
+    if (fresh.length) log(firmId, caseId, "check", `Second reading: ${fresh.length} more ${fresh.length === 1 ? "issue" : "issues"} opened.`, 20);
   } catch {
     // The first reading stands on its own.
   }

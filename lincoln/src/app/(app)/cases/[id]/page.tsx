@@ -15,12 +15,14 @@ import ExportMenu from "@/components/ExportMenu";
 import { exportItems } from "@/lib/exports";
 import { connectionsOf } from "@/lib/integrations";
 import { requireUser } from "@/lib/session";
-import { caseActivity, caseApprovals, caseById, caseDates, caseDrafts, caseForms, caseMessages, criteria, documents, issues } from "@/lib/queries";
+import { caseActivity, caseApprovals, caseById, caseDates, caseDrafts, caseForms, caseMessages, criteria, documents, issues, people } from "@/lib/queries";
 import { ago, inDays, longDate } from "@/lib/format";
 import { llmConfigured, modelName } from "@/lib/llm";
 import type { LetterContent } from "@/lib/letter";
 import { recordAccess } from "@/lib/access";
 import CopyLink from "@/components/CopyLink";
+import AssignMenu from "@/components/AssignMenu";
+import { isLawyerRole } from "@/lib/roles";
 import { caseLink, linkUrl } from "@/lib/client-intake";
 
 const DOC_STATUS: Record<string, string> = { ok: "Usable", weak: "Low weight", excluded: "Excluded", draft: "Unsigned draft", duplicate: "Duplicate", superseded: "Superseded", needs_translation: "Translation required" };
@@ -68,6 +70,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {!firm.demo && <AssignMenu caseId={id} attorney={c.attorney_id} paralegal={c.paralegal_id} people={people(firm.id).map((p) => ({ id: p.id, name: p.name, initials: p.initials, lawyer: isLawyerRole(p.role) }))} canEdit={Boolean(user.admin) || c.attorney_id === user.id} />}
           {!firm.demo && <CopyLink url={linkUrl(caseLink(firm.id, id))} />}
           {docs.length > 0 && <ExportMenu label="Export" items={[...exportItems(firm.id, user.id, "case", id).map((i) => ({ ...i, label: i.label.replace(/^Open in (\w+.*)$/, "Exhibit index in $1").replace(/^Download \.xlsx$/, "Exhibit index .xlsx") })), ...exportItems(firm.id, user.id, "deck", id).map((i) => ({ ...i, label: i.label.replace(/^Open in (\w+.*)$/, "Summary deck in $1").replace(/^Download \.pptx$/, "Summary deck .pptx") }))]} />}
         </div>

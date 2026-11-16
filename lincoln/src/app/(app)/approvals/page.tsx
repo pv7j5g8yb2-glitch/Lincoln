@@ -4,12 +4,13 @@ import { ChevronLeft } from "lucide-react";
 import ApprovalPanel from "@/components/ApprovalPanel";
 import { Empty, PageHead } from "@/components/ui";
 import { requireUser } from "@/lib/session";
+import { FILING_APPROVALS, isLawyerRole } from "@/lib/roles";
 import { approvalById, decidedApprovals, messageById, pendingApprovals } from "@/lib/queries";
 import { ago, inDays } from "@/lib/format";
 import { packetPlan } from "@/lib/packet";
 
 export default async function Review({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
-  const { firm, viewer } = await requireUser();
+  const { user, firm, viewer } = await requireUser();
   const { id } = await searchParams;
   const pending = pendingApprovals(firm.id, viewer);
   const decided = decidedApprovals(firm.id, viewer);
@@ -49,7 +50,7 @@ export default async function Review({ searchParams }: { searchParams: Promise<{
                 </dl>
               )}
               <div className="mt-7">
-                <ApprovalPanel key={sel.id} id={sel.id} caseId={sel.case_id} kind={sel.kind} payload={payload} message={message ? { party: message.party, party_role: message.party_role, subject: message.subject, body: message.body } : null} />
+                <ApprovalPanel key={sel.id} id={sel.id} caseId={sel.case_id} kind={sel.kind} payload={payload} canApprove={isLawyerRole(user.role) || !FILING_APPROVALS.includes(sel.kind)} message={message ? { party: message.party, party_role: message.party_role, subject: message.subject, body: message.body } : null} />
               </div>
             </div>
           )}

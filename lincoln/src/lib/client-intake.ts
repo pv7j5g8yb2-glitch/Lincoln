@@ -186,6 +186,56 @@ export async function submit(link: Link, sessionId: string, matterId: string, ra
   return id;
 }
 
+/** Where the case stands, in words a client can read. Never the outcome or any legal view: a decision is
+ *  something the attorney tells the client. */
+const PLAIN: Record<string, string> = {
+  Intake: "Gathering documents", Evidence: "Gathering documents", Strategy: "Preparing your case", Drafting: "Preparing your case",
+  Review: "With your attorney for review", "Ready to file": "With your attorney for review", Filed: "Filed",
+  Response: "Preparing a response", Approved: "Decision received", Denied: "Decision received",
+};
+export const STATUS_STEPS = ["Gathering documents", "Preparing your case", "With your attorney for review", "Filed", "Decision received"];
+
+/** The client's status page for a case link, once they have sent their intake. Null before that. */
+export function caseStatus(link: Link) {
+  if (!link.case_id) return null;
+  const d = db();
+  const sent = d.prepare("SELECT files, updated_at FROM intake_sessions WHERE case_id = ? AND firm_id = ? AND status = 'sent' ORDER BY updated_at").all(link.case_id, link.firm_id) as { files: string; updated_at: string }[];
+  if (!sent.length) return null;
+  const c = d.prepare("SELECT client, stage FROM cases WHERE id = ? AND firm_id = ?").get(link.case_id, link.firm_id) as { client: string; stage: string } | undefined;
+  if (!c) return null;
+  const items = new Set<string>(), count = { n: 0 };
+  for (const s of sent) for (const f of JSON.parse(s.files) as FileMeta[]) { items.add(f.item); count.n++; }
+  const docs = link.matter?.documents ?? [];
+  return {
+    first: c.client === UNNAMED ? null : c.client.split(/\s+/)[0],
+    stage: PLAIN[c.stage] ?? "Preparing your case",
+    received: docs.filter((x) => items.has(x.id)).map((x) => x.label),
+    missing: docs.filter((x) => !x.optional && !items.has(x.id)).map((x) => x.label),
+    files: count.n,
+    last: sent[sent.length - 1].updated_at,
+  };
+}
+
+/** More documents for a case the client already sent: no questions this time, the files go into the case. */
+export async function submitMore(link: Link, sessionId: string) {
+  const s = session(link, sessionId);
+  if (!link.case_id || !s || s.status !== "open") throw new Error("closed");
+  const files = JSON.parse(s.files) as FileMeta[];
+  if (!files.length) throw new Error("empty");
+  const blobs = files.map((f) => new Uint8Array(decrypt(link.firm_id, fs.readFileSync(path.join(sessionDir(sessionId), f.id)))));
+  const d = db();
+  const c = d.prepare("SELECT client, attorney_id FROM cases WHERE id = ? AND firm_id = ?").get(link.case_id, link.firm_id) as { client: string; attorney_id: string } | undefined;
+  if (!c) throw new Error("closed");
+  d.prepare("INSERT INTO activity (id, firm_id, case_id, at, actor, kind, text, minutes) VALUES (?, ?, ?, ?, 'Lincoln', 'file', ?, 2)").run(uid(), link.firm_id, link.case_id, now(), `${c.client} sent ${files.length === 1 ? "one more document" : `${files.length} more documents`}.`);
+  d.prepare("UPDATE cases SET processing = 1 WHERE id = ?").run(link.case_id);
+  d.prepare("UPDATE intake_sessions SET status = 'sent', updated_at = ? WHERE id = ?").run(now(), sessionId);
+  fs.rmSync(sessionDir(sessionId), { recursive: true, force: true });
+  const caseId = link.case_id;
+  void processCase(link.firm_id, caseId, blobs, { append: true, fromClient: true }).catch(() => {
+    d.prepare("UPDATE cases SET processing = 0 WHERE id = ?").run(caseId);
+  });
+}
+
 /** Files of sessions never sent are removed after 30 days. */
 export function sweepSessions() {
   const d = db();

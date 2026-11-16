@@ -14,11 +14,13 @@ type Props = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload: any;
   message?: { party: string; party_role: string | null; subject: string; body: string } | null;
+  /** False when this person may not give this approval (filings are signed off by a lawyer). */
+  canApprove?: boolean;
 };
 
 const box = "rounded-xl border border-line bg-card";
 
-export default function ApprovalPanel({ id, caseId, kind, payload, message }: Props) {
+export default function ApprovalPanel({ id, caseId, kind, payload, message, canApprove = true }: Props) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [subject, setSubject] = useState(message?.subject ?? "");
@@ -43,7 +45,8 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message }: Pr
     start(async () => {
       setError(null);
       try {
-        await decideApproval(id, d);
+        const r = await decideApproval(id, d);
+        if (r && "error" in r) setError(r.error);
       } catch (e) {
         setError(e instanceof Error ? e.message : "The action failed. Nothing was changed.");
       }
@@ -51,9 +54,11 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message }: Pr
 
   const footer = (text: string, disabled = false) => (
     <div className="sticky bottom-0 mt-6 flex flex-wrap items-center gap-2 border-t border-line bg-card/95 py-3 backdrop-blur">
-      <button disabled={pending || disabled} onClick={() => decide("approved")} className="flex h-9 items-center gap-1.5 rounded-lg bg-ink px-4 text-[13px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98] disabled:opacity-35">
-        <Check size={14} /> {text}
-      </button>
+      {canApprove ? (
+        <button disabled={pending || disabled} onClick={() => decide("approved")} className="flex h-9 items-center gap-1.5 rounded-lg bg-ink px-4 text-[13px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98] disabled:opacity-35">
+          <Check size={14} /> {text}
+        </button>
+      ) : <span className="flex h-9 items-center rounded-lg bg-panel px-3.5 text-[13px] text-muted">For attorney approval</span>}
       <button disabled={pending} onClick={() => decide("rejected")} className="h-9 rounded-lg border border-line bg-card px-3.5 text-[13px] font-medium transition hover:bg-panel disabled:opacity-40">Return</button>
       {error && <span className="text-[12.5px] text-risk">{error}</span>}
     </div>

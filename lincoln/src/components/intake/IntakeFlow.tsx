@@ -39,9 +39,10 @@ async function checkPhoto(file: File): Promise<string | undefined> {
   } catch { return undefined; } finally { URL.revokeObjectURL(url); }
 }
 
-export default function IntakeFlow({ token, firm, fixed, name, matters }: { token: string; firm: string; fixed: string | null; name: string | null; matters: Matter[] }) {
-  const key = `lincoln_intake_${token}`;
-  const [s, setS] = useState<Saved>({ step: fixed ? "about" : "matter", matter: fixed, answers: name ? { name } : {}, session: null, files: [] });
+export default function IntakeFlow({ token, firm, fixed, name, matters, more = false, tracked = false }: { token: string; firm: string; fixed: string | null; name: string | null; matters: Matter[]; more?: boolean; tracked?: boolean }) {
+  // More documents for a case already sent: only the documents, then Send.
+  const key = `lincoln_intake_${more ? "more_" : ""}${token}`;
+  const [s, setS] = useState<Saved>({ step: more ? "documents" : fixed ? "about" : "matter", matter: fixed, answers: name ? { name } : {}, session: null, files: [] });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -57,7 +58,7 @@ export default function IntakeFlow({ token, firm, fixed, name, matters }: { toke
   useEffect(() => { try { localStorage.setItem(key, JSON.stringify(s)); } catch { /* not saved */ } }, [key, s]);
 
   const matter = useMemo(() => matters.find((m) => m.id === s.matter) ?? null, [matters, s.matter]);
-  const steps = [...(fixed ? [] : ["matter"]), "about", "case", "documents", "review"];
+  const steps = more ? ["documents"] : [...(fixed ? [] : ["matter"]), "about", "case", "documents", "review"];
   const at = steps.indexOf(s.step);
   const go = (step: string) => { setError(""); setS((o) => ({ ...o, step })); window.scrollTo({ top: 0 }); };
   const set = (id: string, v: string) => setS((o) => ({ ...o, answers: { ...o.answers, [id]: v } }));
@@ -96,7 +97,7 @@ export default function IntakeFlow({ token, firm, fixed, name, matters }: { toke
     if (!matter) return;
     setSending(true); setError("");
     try {
-      const res = await fetch(`/api/intake/${token}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "send", session: s.session, matter: matter.id, answers: s.answers }) });
+      const res = await fetch(`/api/intake/${token}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(more ? { action: "more", session: s.session } : { action: "send", session: s.session, matter: matter.id, answers: s.answers }) });
       const out = await res.json().catch(() => ({}));
       if (!res.ok) { setError(out.error ?? "Not sent. Try again."); setSending(false); return; }
       try { localStorage.removeItem(key); } catch { /* fine */ }
@@ -138,6 +139,7 @@ export default function IntakeFlow({ token, firm, fixed, name, matters }: { toke
           <div>
             <h1 className="text-[40px] font-semibold leading-[1.05] tracking-[-0.03em]">Thank you.</h1>
             <p className="mt-4 text-[18px] leading-[1.6] text-[#6b6862]">Everything was sent to {firm}. They will be in touch if anything else is needed.</p>
+            {tracked && <a href={`/intake/${token}`} className="mt-9 inline-block rounded-[10px] bg-[#161614] px-6 py-3.5 font-sans text-[15.5px] font-medium text-white transition hover:opacity-85">Your case</a>}
           </div>
         ) : s.step === "matter" ? (
           <>
@@ -171,7 +173,8 @@ export default function IntakeFlow({ token, firm, fixed, name, matters }: { toke
           </>
         ) : s.step === "documents" && matter ? (
           <>
-            <h1 className="text-[34px] font-semibold leading-[1.08] tracking-[-0.03em] md:text-[40px]">Your documents</h1>
+            {more && <a href={`/intake/${token}`} className="mb-5 inline-block font-sans text-[14.5px] text-[#6b6862] transition hover:text-[#161614]">← Your case</a>}
+            <h1 className="text-[34px] font-semibold leading-[1.08] tracking-[-0.03em] md:text-[40px]">{more ? "More documents" : "Your documents"}</h1>
             <p className="mt-3 text-[17px] leading-[1.6] text-[#6b6862]">A clear photo of each page, or a PDF.</p>
             <input ref={pick} type="file" accept="image/*,application/pdf" multiple className="hidden" onChange={(e) => void upload(e.target.files)} />
             <div className="mt-8 flex flex-col">
@@ -203,7 +206,7 @@ export default function IntakeFlow({ token, firm, fixed, name, matters }: { toke
               })}
             </div>
             {error && <p className="mt-6 font-sans text-[14.5px] text-[#9b2c24]">{error}</p>}
-            {nav(() => go("review"), "case")}
+            {more ? nav(() => { if (!s.files.length) { setError("Add a document first."); return; } void send(); }, undefined, sending ? "Sending" : "Send") : nav(() => go("review"), "case")}
           </>
         ) : s.step === "review" && matter ? (
           <>
