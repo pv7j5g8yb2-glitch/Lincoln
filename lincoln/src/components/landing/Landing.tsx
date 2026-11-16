@@ -53,9 +53,26 @@ const easeInOut = (x: number) => { const t = clamp(x); return t < 0.5 ? 4 * t * 
 
 /** A sentence in grey that turns to ink word by word as it is scrolled past. */
 function Reveal({ text, className = "" }: { text: string; className?: string }) {
-  const [ref, p] = useProgress<HTMLParagraphElement>();
+  // Always grey when the page opens, whatever the screen height: the words light up only with scrolling, from
+  // where the sentence first sits (or 88 percent of the way down the screen, if that is higher).
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [p, setP] = useState(0);
+  useEffect(() => {
+    let raf = 0, start = 0;
+    const base = () => { const el = ref.current; if (!el) return; const h = window.innerHeight; start = window.scrollY > 0 ? h * 0.88 : Math.min(h * 0.88, el.getBoundingClientRect().top); };
+    const tick = () => {
+      raf = 0;
+      const el = ref.current; if (!el) return;
+      setP(clamp((start - el.getBoundingClientRect().top) / (window.innerHeight * 0.45)));
+    };
+    const on = () => { if (!raf) raf = requestAnimationFrame(tick); };
+    const resize = () => { base(); on(); };
+    base(); tick();
+    window.addEventListener("scroll", on, { passive: true }); window.addEventListener("resize", resize);
+    return () => { window.removeEventListener("scroll", on); window.removeEventListener("resize", resize); cancelAnimationFrame(raf); };
+  }, []);
   const words = text.split(" ");
-  const lit = Math.round(ease((p - 0.15) / 0.42) * words.length);
+  const lit = Math.round(ease(p) * words.length);
   return (
     <p ref={ref} className={className}>
       {words.map((w, i) => (
@@ -420,14 +437,14 @@ export default function Landing() {
       </header>
 
       {/* Hero: the words, and the courthouse rising into its frame. */}
-      <section className="mx-auto grid max-w-[1200px] items-end gap-9 px-4 pb-20 pt-11 md:px-8 md:pb-28 md:pt-14 lg:grid-cols-[1fr_460px] lg:gap-16">
+      <section className="mx-auto grid max-w-[1200px] items-center gap-9 px-4 pb-20 pt-11 md:px-8 md:pb-28 md:pt-14 lg:grid-cols-[1fr_460px] lg:gap-16">
         <div>
           <p className={`hero-in ${eyebrow}`}>For immigration law firms</p>
           <h1 className="hero-in hero-title mt-4 font-serif font-semibold leading-[1.04] tracking-[-0.035em] [animation-delay:120ms]">Your work done before you even ask.</h1>
           <p className="hero-in hero-line mt-6 leading-[1.6] text-[#6b6862] [animation-delay:240ms]">
             Lincoln works autonomously for you, no need for prompts. Once it&apos;s done you review and approve.
           </p>
-          <div className="hero-in mt-9 flex items-center gap-2 [animation-delay:360ms] lg:mb-3">
+          <div className="hero-in mt-9 flex items-center gap-2 [animation-delay:360ms]">
             <Link href="/start" className="rounded-[10px] bg-[#161614] px-6 py-3.5 font-sans text-[15.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
             <a href="#work" className="rounded-[10px] px-5 py-3.5 font-sans text-[15.5px] font-medium transition hover:bg-[#f0eee9]">How it works</a>
           </div>
@@ -452,7 +469,7 @@ export default function Landing() {
 
       {/* Client files. */}
       <section className="border-t border-[#ebe9e4]">
-        <div className="mx-auto grid max-w-[1200px] gap-7 px-4 py-24 md:grid-cols-2 md:gap-20 md:px-8 md:py-36">
+        <div className="mx-auto grid max-w-[1200px] gap-7 px-4 py-24 md:grid-cols-2 md:items-center md:gap-20 md:px-8 md:py-36">
           <In><h2 className="font-serif text-[36px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[56px]">Built for privacy.</h2></In>
           <div className="flex flex-col">
             {TRUST.map(([a, b], i) => (
