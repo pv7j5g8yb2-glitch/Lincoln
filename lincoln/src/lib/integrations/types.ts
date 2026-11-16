@@ -19,7 +19,7 @@ export const OFFICE_MIME: Record<OfficeKind, string> = {
 };
 export const OFFICE_EXT: Record<OfficeKind, string> = { document: "docx", spreadsheet: "xlsx", presentation: "pptx" };
 
-export type Settings = { granted?: string; folderId?: string; teams?: { teamId: string; channelId: string; name: string }; watchUntil?: number; subId?: string; subUntil?: number };
+export type Settings = { granted?: string; folderId?: string; teams?: { teamId: string; channelId: string; name: string }; gchat?: { space: string; name: string }; watchUntil?: number; subId?: string; subUntil?: number };
 export const settingsOf = (c: Connection): Settings => { try { return JSON.parse(c.settings ?? "{}"); } catch { return {}; } };
 
 /** One plain address, nothing that could add headers or recipients. */

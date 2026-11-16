@@ -611,6 +611,23 @@ export async function disconnect(form: FormData) {
   revalidatePath("/", "layout");
 }
 
+export async function setChatSpace(form: FormData) {
+  const { user, firm } = await requireUser();
+  if (firm.demo) return;
+  const [space, ...name] = String(form.get("space") ?? "").split("|");
+  const c = db().prepare("SELECT id, settings FROM mailboxes WHERE firm_id = ? AND user_id = ? AND provider = 'google'").get(firm.id, user.id) as { id: string; settings: string | null } | undefined;
+  if (!c) return;
+  const s = JSON.parse(c.settings ?? "{}");
+  if (/^spaces\/[\w-]+$/.test(space)) {
+    s.gchat = { space, name: name.join("|") };
+    // Items for review and requests from this moment on.
+    setKv(firm.id, `teams:${c.id}`, new Date().toISOString());
+  }
+  else delete s.gchat;
+  db().prepare("UPDATE mailboxes SET settings = ? WHERE id = ?").run(JSON.stringify(s), c.id);
+  revalidatePath("/integrations");
+}
+
 export async function setTeamsChannel(form: FormData) {
   const { user, firm } = await requireUser();
   if (firm.demo) return;

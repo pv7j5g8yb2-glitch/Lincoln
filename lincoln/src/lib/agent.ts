@@ -5,7 +5,7 @@ import { EMAIL_STYLE } from "./style";
 import { firmStyle } from "./memory";
 import { UNNAMED, applyDateRules, draftForCase, processCase } from "./intake";
 import { fileKind } from "./pdf";
-import { addEvent, canReadTeams, channelMessages, downloadShared, ensurePush, fetchNew, replyInChannel, send, sendDraft, settingsOf, teamsPost, updateDraft, type Connection, type Inbound } from "./integrations";
+import { addEvent, canReadChat, canReadTeams, channelMessages, chatFile, chatMessages, chatPost, connectionsOf, docAsWord, downloadShared, ensurePush, googleDocIds, fetchNew, replyInChannel, send, sendDraft, settingsOf, teamsPost, updateDraft, type Connection, type Inbound } from "./integrations";
 import { isDocx, redline } from "./redline";
 
 // The part of Lincoln that works without being asked. Every incoming email is read, matched to a case
@@ -194,11 +194,11 @@ async function handleInstruction(firmId: string, mail: Inbound, msgId: string, m
  * Works out what an instruction asks for and opens the case at once. The slower part (reading files,
  * drafting) is returned as a promise, so a person typing into Lincoln is taken to the case straight away.
  */
-export function takeInstruction(firmId: string, member: Member, input: { text: string; subject?: string; from?: string; fromName?: string; files: { name: string; data: Uint8Array }[]; via: "email" | "app" }, open?: OpenCase[]): Promise<{ caseId: string | null; summary: string; work: Promise<void> }> {
+export function takeInstruction(firmId: string, member: Member, input: { text: string; subject?: string; from?: string; fromName?: string; files: { name: string; data: Uint8Array; google?: boolean }[]; via: "email" | "app" }, open?: OpenCase[]): Promise<{ caseId: string | null; summary: string; work: Promise<void> }> {
   return forCase({ firmId, purpose: "instruction", userId: member.id }, () => instruction(firmId, member, input, open));
 }
 
-async function instruction(firmId: string, member: Member, input: { text: string; subject?: string; from?: string; fromName?: string; files: { name: string; data: Uint8Array }[]; via: "email" | "app" }, open?: OpenCase[]): Promise<{ caseId: string | null; summary: string; work: Promise<void> }> {
+async function instruction(firmId: string, member: Member, input: { text: string; subject?: string; from?: string; fromName?: string; files: { name: string; data: Uint8Array; google?: boolean }[]; via: "email" | "app" }, open?: OpenCase[]): Promise<{ caseId: string | null; summary: string; work: Promise<void> }> {
   const d = db();
   open ??= d.prepare("SELECT id, ref, client, client_email, counterpart, type_code FROM cases WHERE firm_id = ? ORDER BY opened_at DESC LIMIT 200").all(firmId) as OpenCase[];
   const names = input.files.map((f) => f.name).join(", ") || "none";
@@ -223,8 +223,14 @@ Reply with one JSON object only:
  "dates": [{"label": "", "date": "YYYY-MM-DD"}]}`;
   const t = parseJson<{ case_id: string | null; new_case: (Triage["new_case"] & { client_email?: string | null }) | null; summary: string; draft: string | null; due: string | null; dates: Triage["dates"] }>(await chat([{ role: "system", content: "You are Lincoln, case software in a US immigration law firm. You take instructions from the firm's attorneys and staff. Write in American English. Reply with JSON only." }, { role: "user", content: prompt }], { maxTokens: 1200, light: true }));
   const summary = String(t.summary ?? "").slice(0, 300);
+  // A Google Doc linked in the instruction is read with the person's own Google account (only what they can open).
+  const own = connectionsOf(firmId, member.id).find((x) => x.provider === "google");
+  const linked: { name: string; data: Uint8Array; google: boolean }[] = [];
+  if (own) for (const id of googleDocIds(input.text)) {
+    try { const w = await docAsWord(own, id); if (w) linked.push({ name: w.name, data: new Uint8Array(w.data), google: true }); } catch { /* a Doc that cannot be opened is left out */ }
+  }
   const files = input.files.map((f) => f.data).filter((b) => fileKind(b)).slice(0, 20);
-  const words = input.files.filter((f) => isDocx(f.name, f.data)).slice(0, 5);
+  const words = [...input.files, ...linked].filter((f) => isDocx(f.name, f.data)).slice(0, 5);
   let caseId = open.some((c) => c.id === t.case_id) ? t.case_id : null;
   if (!caseId && (t.new_case || files.length || words.length)) {
     const code = String(t.new_case?.type_code ?? "").trim();
@@ -251,7 +257,7 @@ Reply with one JSON object only:
       const existing = (d.prepare("SELECT pages FROM cases WHERE id = ?").get(id) as { pages: number }).pages;
       await processCase(firmId, id, files, { append: existing > 0 });
     }
-    for (const w of words) await forCase({ firmId, caseId: id, purpose: "redline" }, () => redline(firmId, id, w.name, w.data, member.name)).catch(() => undefined);
+    for (const w of words) await forCase({ firmId, caseId: id, purpose: "redline" }, () => redline(firmId, id, w.name, w.data, member.name, { google: w.google ? own : undefined })).catch(() => undefined);
     if (!t.draft) return;
     const pages = (d.prepare("SELECT pages FROM cases WHERE id = ?").get(id) as { pages: number }).pages;
     if (pages < 1) {
@@ -381,7 +387,26 @@ export async function tick() {
         }
       }
       if (!fresh.length) d.prepare("INSERT OR IGNORE INTO kv (firm_id, key, value) VALUES (?, ?, ?)").run(c.firm_id, `teams:${c.id}`, since);
-      if (canReadTeams(c)) await teamsRequests(c, ch.teamId, ch.channelId);
+      if (canReadTeams(c)) await channelRequests(c, teamsChan(c, ch.teamId, ch.channelId));
+    }
+
+    // The same in the chosen Google Chat space.
+    const sp = settingsOf(c).gchat;
+    if (c.provider === "google" && sp && canReadChat(c)) {
+      const since = (d.prepare("SELECT value FROM kv WHERE firm_id = ? AND key = ?").get(c.firm_id, `teams:${c.id}`) as { value: string } | undefined)?.value ?? new Date(Date.now() - 3600_000).toISOString();
+      const fresh = d.prepare("SELECT a.id, a.title, a.created_at, k.client FROM approvals a JOIN cases k ON k.id = a.case_id WHERE a.firm_id = ? AND a.status = 'pending' AND a.created_at > ? ORDER BY a.created_at LIMIT 10").all(c.firm_id, since) as { id: string; title: string; created_at: string; client: string }[];
+      for (const a of fresh) {
+        try {
+          const posted = await chatPost(c, sp.space, `*For review:* ${a.title} (${a.client}). <${(process.env.APP_URL ?? "").replace(/\/$/, "")}/approvals?id=${a.id}|Open in Lincoln>`);
+          if (posted) d.prepare("INSERT OR IGNORE INTO kv (firm_id, key, value) VALUES (?, ?, '1')").run(c.firm_id, `teamsmine:${posted}`);
+          d.prepare("INSERT INTO kv (firm_id, key, value) VALUES (?, ?, ?) ON CONFLICT(firm_id, key) DO UPDATE SET value = excluded.value").run(c.firm_id, `teams:${c.id}`, a.created_at);
+        } catch (e) {
+          d.prepare("UPDATE mailboxes SET last_error = ? WHERE id = ?").run(`Google Chat: ${e instanceof Error ? e.message : "error"}`.slice(0, 200), c.id);
+          break;
+        }
+      }
+      if (!fresh.length) d.prepare("INSERT OR IGNORE INTO kv (firm_id, key, value) VALUES (?, ?, ?)").run(c.firm_id, `teams:${c.id}`, since);
+      await channelRequests(c, chatChan(c, sp.space));
     }
   }
 
@@ -389,47 +414,67 @@ export async function tick() {
   await import("./maildrafts").then((m) => m.syncDrafts()).catch(() => undefined);
 }
 
+type ChanMsg = { id: string; at: string; fromId: string; fromName: string; text: string; files: { name: string; get: () => Promise<{ name: string; data: Buffer; google?: boolean }> }[] };
+type Chan = { key: string; list: (since: string) => Promise<ChanMsg[]>; reply: (m: ChanMsg, text: string, link?: { url: string; label: string }) => Promise<unknown> };
+
+/** Teams: the chosen channel of the firm's team. Replies go in the message's thread. */
+function teamsChan(c: Connection, teamId: string, channelId: string): Chan {
+  const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  return {
+    key: `teamsread:${c.id}`,
+    list: async () => (await channelMessages(c, teamId, channelId)).map((m) => ({ ...m, files: m.files.map((f) => ({ name: f.name, get: async () => ({ name: f.name, data: await downloadShared(c, f.url) }) })) })),
+    reply: (m, text, link) => replyInChannel(c, teamId, channelId, m.id, `${esc(text)}${link ? ` <a href="${link.url}">${esc(link.label)}</a>` : ""}`),
+  };
+}
+
+/** Google Chat: the chosen space. Replies go in the message's thread. */
+function chatChan(c: Connection, space: string): Chan {
+  const threads = new Map<string, string>();
+  return {
+    key: `teamsread:${c.id}`,
+    list: async (since) => (await chatMessages(c, space, since)).map((m) => { threads.set(m.id, m.thread); return { ...m, files: m.files.map((f) => ({ name: f.name, get: async () => ({ ...(await chatFile(c, f)), google: Boolean(f.drive) }) })) }; }),
+    reply: (m, text, link) => chatPost(c, space, `${text}${link ? ` <${link.url}|${link.label}>` : ""}`, threads.get(m.id) || undefined),
+  };
+}
+
 /**
- * Requests posted in the firm's Lincoln channel in Teams are taken like any instruction: Lincoln answers in the
- * thread, does the work and replies there when it is ready for review. Only people with a Lincoln account in
- * the firm are acted on.
+ * Requests posted in the firm's Lincoln channel (Teams) or space (Google Chat) are taken like any instruction:
+ * Lincoln answers in the thread, does the work and replies there when it is ready. Only people with a Lincoln
+ * account in the firm are acted on; Lincoln's own posts never are.
  */
-async function teamsRequests(c: Connection, teamId: string, channelId: string) {
+async function channelRequests(c: Connection, chan: Chan) {
   const d = db();
-  const key = `teamsread:${c.id}`;
-  const since = (d.prepare("SELECT value FROM kv WHERE firm_id = ? AND key = ?").get(c.firm_id, key) as { value: string } | undefined)?.value;
-  let list: Awaited<ReturnType<typeof channelMessages>>;
-  try { list = await channelMessages(c, teamId, channelId); }
-  catch (e) { d.prepare("UPDATE mailboxes SET last_error = ? WHERE id = ?").run(`Teams: ${e instanceof Error ? e.message : "error"}`.slice(0, 200), c.id); return; }
-  const save = (at: string) => d.prepare("INSERT INTO kv (firm_id, key, value) VALUES (?, ?, ?) ON CONFLICT(firm_id, key) DO UPDATE SET value = excluded.value").run(c.firm_id, key, at);
+  const since = (d.prepare("SELECT value FROM kv WHERE firm_id = ? AND key = ?").get(c.firm_id, chan.key) as { value: string } | undefined)?.value;
+  const save = (at: string) => d.prepare("INSERT INTO kv (firm_id, key, value) VALUES (?, ?, ?) ON CONFLICT(firm_id, key) DO UPDATE SET value = excluded.value").run(c.firm_id, chan.key, at);
   // The first look only marks where reading starts: older messages are not instructions to act on now.
-  if (!since) { save(list.reduce((m, x) => (x.at > m ? x.at : m), now())); return; }
+  if (!since) { save(now()); return; }
+  let list: ChanMsg[];
+  try { list = await chan.list(since); }
+  catch (e) { d.prepare("UPDATE mailboxes SET last_error = ? WHERE id = ?").run(`${c.provider === "google" ? "Google Chat" : "Teams"}: ${e instanceof Error ? e.message : "error"}`.slice(0, 200), c.id); return; }
   const app = (process.env.APP_URL ?? "").replace(/\/$/, "");
-  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
   for (const m of list.filter((x) => x.at > since).sort((a, b) => a.at.localeCompare(b.at))) {
     save(m.at);
     if (d.prepare("SELECT 1 FROM kv WHERE firm_id = ? AND key = ?").get(c.firm_id, `teamsmine:${m.id}`)) continue;
     if (!m.text.trim() && !m.files.length) continue;
-    const member = (d.prepare("SELECT u.id, u.name, u.role FROM identities i JOIN users u ON u.id = i.user_id WHERE i.provider = 'microsoft' AND i.subject LIKE ? AND u.firm_id = ?").get(`%:${m.fromId}`, c.firm_id)
-      ?? d.prepare("SELECT id, name, role FROM users WHERE firm_id = ? AND lower(name) = lower(?)").get(c.firm_id, m.fromName)) as Member | undefined;
+    const member = (d.prepare("SELECT u.id, u.name, u.role FROM identities i JOIN users u ON u.id = i.user_id WHERE i.provider = ? AND (i.subject = ? OR i.subject LIKE ?) AND u.firm_id = ?").get(c.provider, m.fromId, `%:${m.fromId}`, c.firm_id)
+      ?? (m.fromName ? d.prepare("SELECT id, name, role FROM users WHERE firm_id = ? AND lower(name) = lower(?)").get(c.firm_id, m.fromName) : undefined)) as Member | undefined;
     if (!member) continue;
-    const files: { name: string; data: Uint8Array }[] = [];
+    const files: { name: string; data: Uint8Array; google?: boolean }[] = [];
     for (const f of m.files.slice(0, 10)) {
-      try { files.push({ name: f.name, data: new Uint8Array(await downloadShared(c, f.url)) }); } catch { /* a file Lincoln cannot open is left out */ }
+      try { const x = await f.get(); files.push({ name: x.name, data: new Uint8Array(x.data), google: x.google }); } catch { /* a file Lincoln cannot open is left out */ }
     }
     try {
       const r = await takeInstruction(c.firm_id, member, { text: m.text, files, via: "app" });
-      const first = member.name.split(" ")[0];
-      if (!r.caseId) { await replyInChannel(c, teamId, channelId, m.id, `${esc(first)}, I couldn't tell which case this is for. Could you add the client's name?`); continue; }
+      if (!r.caseId) { await chan.reply(m, `${member.name.split(" ")[0]}, I couldn't tell which case this is for. Could you add the client's name?`); continue; }
       const k = d.prepare("SELECT client FROM cases WHERE id = ?").get(r.caseId) as { client: string };
-      await replyInChannel(c, teamId, channelId, m.id, `On it. ${esc(r.summary)}`);
+      await chan.reply(m, `On it. ${r.summary}`);
       const id = r.caseId, started = now();
       void r.work.then(async () => {
         const left = d.prepare("SELECT COUNT(*) AS n FROM approvals WHERE firm_id = ? AND case_id = ? AND status = 'pending' AND created_at >= ?").get(c.firm_id, id, started) as { n: number };
-        await replyInChannel(c, teamId, channelId, m.id, `${left.n ? "Ready for review" : "Done"}: ${esc(k.client)}. <a href="${app}/cases/${id}">Open in Lincoln</a>`).catch(() => undefined);
+        await chan.reply(m, `${left.n ? "Ready for review" : "Done"}: ${k.client}.`, { url: `${app}/cases/${id}`, label: "Open in Lincoln" }).catch(() => undefined);
       });
     } catch (e) {
-      console.error("Teams request:", e instanceof Error ? e.message : "error");
+      console.error("Channel request:", e instanceof Error ? e.message : "error");
     }
   }
 }

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { Connection } from "./integrations";
 import JSZip from "jszip";
 import { db, uid } from "./db";
 import { chat, forCase, parseJson } from "./llm";
@@ -119,7 +120,7 @@ Reply with one JSON object and nothing else:
 const fileOf = (caseId: string, id: string) => path.join(pagesDir(caseId), `redline-${id.replace(/[^\w-]/g, "")}.docx.lnc`);
 
 /** Marks up a Word document that arrived on a case and puts it in Review. */
-export async function redline(firmId: string, caseId: string, name: string, data: Uint8Array, from: string) {
+export async function redline(firmId: string, caseId: string, name: string, data: Uint8Array, from: string, opts: { google?: Connection } = {}) {
   const d = db();
   const zip = await JSZip.loadAsync(data);
   const xml = await zip.file("word/document.xml")?.async("string");
@@ -134,8 +135,10 @@ export async function redline(firmId: string, caseId: string, name: string, data
   const marked = `${name.replace(/\.docx$/i, "")} (marked up).docx`;
   d.prepare("INSERT INTO redlines (id, firm_id, case_id, name, source, changes, notes, summary, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)").run(id, firmId, caseId, marked.slice(0, 200), from.slice(0, 120), out.changes, out.notes, summary, now);
   const c = d.prepare("SELECT attorney_id, client FROM cases WHERE firm_id = ? AND id = ?").get(firmId, caseId) as { attorney_id: string; client: string };
-  const brief = out.changes + out.notes ? `${out.changes} ${out.changes === 1 ? "change" : "changes"} and ${out.notes} ${out.notes === 1 ? "comment" : "comments"}, tracked in Word.${summary ? ` ${summary}` : ""}` : `Nothing to change.${summary ? ` ${summary}` : ""}`;
-  d.prepare("INSERT INTO approvals (id, firm_id, case_id, kind, title, brief, payload, status, assignee_id, created_at) VALUES (?, ?, ?, 'redline', ?, ?, ?, 'pending', ?, ?)").run(uid(), firmId, caseId, `Marked up: ${name}`.slice(0, 160), brief.slice(0, 500), JSON.stringify({ fileId: id }), c.attorney_id, now);
+  // A Google Doc comes back as a Google Doc in the client's folder: the tracked changes become suggestions.
+  const docUrl = opts.google ? await import("./workspace").then((w) => w.saveAsGoogleDoc(firmId, caseId, opts.google!, marked.replace(/\.docx$/i, ""), out.data)).catch(() => null) : null;
+  const brief = out.changes + out.notes ? `${out.changes} ${out.changes === 1 ? "change" : "changes"} and ${out.notes} ${out.notes === 1 ? "comment" : "comments"}, ${docUrl ? "as suggestions in Google Docs" : "tracked in Word"}.${summary ? ` ${summary}` : ""}` : `Nothing to change.${summary ? ` ${summary}` : ""}`;
+  d.prepare("INSERT INTO approvals (id, firm_id, case_id, kind, title, brief, payload, status, assignee_id, created_at) VALUES (?, ?, ?, 'redline', ?, ?, ?, 'pending', ?, ?)").run(uid(), firmId, caseId, `Marked up: ${docUrl ? name.replace(/\.docx$/i, "") : name}`.slice(0, 160), brief.slice(0, 500), JSON.stringify(docUrl ? { fileId: id, docUrl } : { fileId: id }), c.attorney_id, now);
   d.prepare("INSERT INTO activity (id, firm_id, case_id, at, actor, kind, text, minutes) VALUES (?, ?, ?, ?, 'Lincoln', 'draft', ?, ?)").run(uid(), firmId, caseId, now, `Marked up ${name} from ${from}: ${out.changes} tracked changes, ${out.notes} comments.`, 30);
   d.prepare("UPDATE cases SET state = 'needs_you' WHERE firm_id = ? AND id = ?").run(firmId, caseId);
   notify(c.attorney_id, { title: c.client, body: `Marked up: ${name}`, url: `/cases/${caseId}`, tag: `redline:${id}` });

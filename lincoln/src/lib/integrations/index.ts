@@ -16,7 +16,8 @@ export const PROVIDERS: { id: Provider; name: string; services: string[]; config
   { id: "microsoft", name: "Microsoft", services: ["Outlook", "Word", "Excel", "PowerPoint", "OneDrive", "SharePoint", "Teams"], configured: microsoft.configured },
 ];
 export const isProvider = (v: string): v is Provider => v === "google" || v === "microsoft";
-export const authUrl = (p: Provider, state: string, mode: "auth" | "connect" = "connect", teams = false) => (p === "microsoft" ? microsoft.authUrl(state, mode, teams) : google.authUrl(state, mode));
+/** more: the same sign in, also asking for the firm's Lincoln channel (Teams) or space (Google Chat). */
+export const authUrl = (p: Provider, state: string, mode: "auth" | "connect" = "connect", more = false) => (p === "microsoft" ? microsoft.authUrl(state, mode, more) : google.authUrl(state, mode, more));
 
 export const connectionsOf = (firmId: string, userId?: string) =>
   (userId
@@ -46,7 +47,7 @@ async function store(p: Provider, firmId: string, userId: string, t: Exchanged) 
   const d = db();
   // Reconnecting keeps the choices made before (the Teams channel, Lincoln's folder, where the channel was read up to).
   const before = d.prepare("SELECT settings FROM mailboxes WHERE firm_id = ? AND user_id = ? AND provider = ?").get(firmId, userId, p) as { settings: string | null } | undefined;
-  const kept = (() => { try { const s = JSON.parse(before?.settings ?? "{}"); return { teams: s.teams, folderId: s.folderId, teamsSince: s.teamsSince }; } catch { return {}; } })();
+  const kept = (() => { try { const s = JSON.parse(before?.settings ?? "{}"); return { teams: s.teams, gchat: s.gchat, folderId: s.folderId, teamsSince: s.teamsSince }; } catch { return {}; } })();
   d.prepare("DELETE FROM mailboxes WHERE firm_id = ? AND user_id = ? AND provider = ?").run(firmId, userId, p);
   const id = uid();
   d.prepare("INSERT INTO mailboxes (id, firm_id, user_id, provider, email, refresh_enc, access_enc, expires_at, created_at, settings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(id, firmId, userId, p, t.email, seal(t.refresh), seal(t.access), t.expires, new Date().toISOString(), JSON.stringify({ ...kept, granted: t.granted }));
@@ -144,6 +145,11 @@ export const deleteDraft = (c: Connection, id: string) => P[c.provider].deleteDr
 export const readDraft = (c: Connection, id: string, m: { to: string; subject: string; threadId?: string | null; since: string }) => (c.provider === "google" ? google.readDraft(c, id, m) : microsoft.readDraft(c, id, m));
 export const searchMail = (c: Connection, q: string, max?: number) => P[c.provider].searchMail(c, q, max);
 export const readMail = (c: Connection, id: string) => P[c.provider].readMessage(c, id);
-export const saveFile = (c: Connection, path: string[], name: string, mime: string, data: Buffer) => P[c.provider].saveFile(c, path, name, mime, data);
+export const saveFile = (c: Connection, path: string[], name: string, mime: string, data: Buffer, as?: string) => (c.provider === "google" ? google.saveFile(c, path, name, mime, data, as) : microsoft.saveFile(c, path, name, mime, data));
 export const canReadTeams = (c: Connection) => c.provider === "microsoft" && /ChannelMessage\.Read\.All/i.test(settingsOf(c).granted ?? "");
 export { channelMessages, replyInChannel, downloadShared } from "./microsoft";
+
+export const canReadChat = (c: Connection) => c.provider === "google" && /chat\.messages\.readonly/.test(settingsOf(c).granted ?? "");
+export { chatSpaces, chatMessages, chatPost, chatFile, docAsWord, type ChatMessage } from "./google";
+/** Google Doc ids in a piece of text (links to docs.google.com/document/d/...). */
+export const googleDocIds = (text: string) => [...new Set([...text.matchAll(/docs\.google\.com\/document\/(?:u\/\d+\/)?d\/([\w-]{20,})/g)].map((m) => m[1]))].slice(0, 5);

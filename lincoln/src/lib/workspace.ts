@@ -44,7 +44,7 @@ export function folderOf(firmId: string, caseId: string) {
 }
 
 /** After an approval: the approved work goes into the client's folder. */
-export async function saveApproved(firmId: string, caseId: string, kind: string, payload: { draftId?: string; fileId?: string }) {
+export async function saveApproved(firmId: string, caseId: string, kind: string, payload: { draftId?: string; fileId?: string; docUrl?: string }) {
   if ((kind === "draft_review" || kind === "translation") && payload.draftId) {
     const dr = db().prepare("SELECT title, content FROM drafts WHERE firm_id = ? AND id = ?").get(firmId, payload.draftId) as { title: string; content: string } | undefined;
     if (!dr) return;
@@ -53,9 +53,18 @@ export async function saveApproved(firmId: string, caseId: string, kind: string,
   } else if (kind === "packet") {
     const { buildPacket } = await import("./packet");
     await saveToFolder(firmId, caseId, "Filing packet", "pdf", await buildPacket(firmId, caseId));
-  } else if (kind === "redline" && payload.fileId) {
+  } else if (kind === "redline" && payload.fileId && !payload.docUrl) {
     const { redlineFile } = await import("./redline");
     const f = redlineFile(firmId, payload.fileId);
     if (f) await saveToFolder(firmId, caseId, f.name.replace(/\.docx$/i, ""), "docx", f.data);
   }
+}
+
+/** Saves a marked up Word file into the client's folder as a Google Doc, so its tracked changes become suggestions. */
+export async function saveAsGoogleDoc(firmId: string, caseId: string, conn: Connection, name: string, data: Uint8Array) {
+  const c = db().prepare("SELECT client, type_code FROM cases WHERE firm_id = ? AND id = ?").get(firmId, caseId) as { client: string; type_code: string } | undefined;
+  if (!c || conn.provider !== "google") return null;
+  const r = await saveFile(conn, ["Clients", folderName(c.client, c.type_code)], name.replace(/[\\/:*?"<>|#%']/g, "").trim().slice(0, 120) || "Document", MIME.docx, Buffer.from(data), "application/vnd.google-apps.document");
+  db().prepare("INSERT INTO kv (firm_id, key, value) VALUES (?, ?, ?) ON CONFLICT(firm_id, key) DO UPDATE SET value = excluded.value").run(firmId, `folder:${caseId}`, JSON.stringify({ url: r.folder, where: "Google Drive" }));
+  return r.link;
 }

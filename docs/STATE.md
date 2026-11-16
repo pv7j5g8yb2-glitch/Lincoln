@@ -21,8 +21,17 @@ pages, Word export, a scripted "demo world". See `lincoln/README.md` for what wo
   ("On it."), and answered again with a link when ready. Only people with a Lincoln account in the firm count.
 * The chat can search the person's own mail and files (only what they can already open) and read what it finds
   into a case.
-* Tested against a stand-in Microsoft 365 (`lincoln/tests/eval/workspace-check.mts`, 17 checks pass). Not yet
-  tested: the Gmail draft path, the chat search tools, and anything against the real Google or Microsoft APIs.
+* Google Workspace has the same (2026-11-16, Ismael asked): "Add Google Chat" on the Google card asks for the
+  Chat permissions, then a space is chosen; items for review are posted there and requests are taken and answered in
+  their thread. A Google Doc posted in a request, linked in any request (chat, email, Lincoln's chat) is marked up and
+  saved back into the client's folder as a Google Doc, the tracked changes becoming suggestions. There is no button
+  inside Google Docs: that needs a Workspace add-on published through Google's Marketplace review.
+* Before Google Chat works live: in Lincoln's Google Cloud project, enable the Google Chat API and fill in its
+  configuration (app name and icon); the three Chat scopes go into the OAuth verification with the Gmail ones.
+* Tested against stand-ins (`lincoln/tests/eval/workspace-check.mts` for Microsoft, 17 checks;
+  `workspace-google-check.mts` for Google, 16 checks; both pass). Not yet tested: the chat search tools, and
+  anything against the real Google or Microsoft APIs (including whether Google turns the tracked changes into
+  suggestions exactly as expected).
 
 Second pass (2026-11-13, after Ismael's feedback): interface stripped back and rewritten with no
 second person; real sign up, sign in, sign out and password reset (scrypt hashes, hashed session and

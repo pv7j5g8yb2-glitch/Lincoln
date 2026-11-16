@@ -174,9 +174,9 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message, canA
   if (kind === "redline") {
     return (
       <div>
-        <a href={`/api/redline/${payload?.fileId ?? ""}`} className={clsx(box, "flex items-center gap-3 px-4 py-4 transition hover:border-ink")}>
+        <a href={payload?.docUrl ?? `/api/redline/${payload?.fileId ?? ""}`} target={payload?.docUrl ? "_blank" : undefined} rel="noreferrer" className={clsx(box, "flex items-center gap-3 px-4 py-4 transition hover:border-ink")}>
           <FileText size={18} className="text-muted" />
-          <span className="flex-1 text-[14px] font-medium">Open in Word</span>
+          <span className="flex-1 text-[14px] font-medium">{payload?.docUrl ? "Open in Google Docs" : "Open in Word"}</span>
         </a>
         {footer("Done")}
       </div>

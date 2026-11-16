@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { btn } from "./ui";
-import { disconnect, setTeamsChannel } from "@/lib/actions";
-import { PROVIDERS, canReadTeams, checkHealth, connectionsOf, settingsOf, teamsChannels } from "@/lib/integrations";
+import { disconnect, setChatSpace, setTeamsChannel } from "@/lib/actions";
+import { PROVIDERS, canReadChat, canReadTeams, chatSpaces, checkHealth, connectionsOf, settingsOf, teamsChannels } from "@/lib/integrations";
 import { CircleAlert } from "lucide-react";
 import type { User, Firm } from "@/lib/session";
 import WordConnect from "./WordConnect";
@@ -42,6 +42,9 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
   const ms = conns.find((c) => c.provider === "microsoft");
   let channels: { teamId: string; channelId: string; name: string }[] = [];
   if (ms) { try { channels = await teamsChannels(ms); } catch { channels = []; } }
+  const gc = conns.find((c) => c.provider === "google" && canReadChat(c));
+  let spaces: { space: string; name: string }[] = [];
+  if (gc) { try { spaces = await chatSpaces(gc); } catch { spaces = []; } }
   const problem = error ? ({ google: "Google is not configured on this server.", microsoft: "Microsoft is not configured on this server.", state: "The sign in expired. Try again.", connect: "The sign in was not completed.", sample: "Not available in the sample workspace." } as Record<string, string>)[error] : null;
 
   return (
@@ -91,6 +94,17 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
                     <button className={btn.secondary}>Save</button>
                   </form>
                 )}
+                {c && p.id === "google" && (canReadChat(c) ? (
+                  <form action={setChatSpace} className="mt-4 flex items-center gap-2">
+                    <select name="space" defaultValue={settingsOf(c).gchat ? `${settingsOf(c).gchat!.space}|${settingsOf(c).gchat!.name}` : ""} className="h-8 min-w-0 flex-1 rounded-lg border border-line bg-card px-2 text-[12.5px] outline-none focus:border-ink">
+                      <option value="">Google Chat off</option>
+                      {spaces.map((x) => <option key={x.space} value={`${x.space}|${x.name}`}>{x.name}</option>)}
+                    </select>
+                    <button className={btn.secondary}>Save</button>
+                  </form>
+                ) : (
+                  <a href="/api/connect/google?chat=1" className="mt-3 inline-block text-[12.5px] text-muted underline-offset-2 transition hover:text-ink hover:underline">Add Google Chat</a>
+                ))}
                 {c && p.id === "microsoft" && settingsOf(c).teams && !canReadTeams(c) && (
                   <a href="/api/connect/microsoft?teams=1" className="mt-2 inline-block text-[12.5px] text-muted underline-offset-2 transition hover:text-ink hover:underline">Take requests from this channel</a>
                 )}

@@ -15,7 +15,7 @@ import { prepareForms } from "@/lib/fill";
 import { EMAIL_STYLE } from "@/lib/style";
 import { PROCESS } from "@/lib/process";
 import { draftForCase, processCase } from "@/lib/intake";
-import { connectionsOf, download, firmMailbox, readMail, searchFiles, searchMail } from "@/lib/integrations";
+import { connectionsOf, docAsWord, download, firmMailbox, googleDocIds, readMail, searchFiles, searchMail } from "@/lib/integrations";
 import { fileKind } from "@/lib/pdf";
 
 const TOOLS: Tool[] = [
@@ -30,6 +30,7 @@ const TOOLS: Tool[] = [
   { name: "search_mail", description: "Search the mailbox the user has connected (their own mail only, nothing they cannot already read): past correspondence with a client, an employer, a consulate. Takes words, a name or an address.", input_schema: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } },
   { name: "search_files", description: "Search the user's own Google Drive, OneDrive or SharePoint (only files they can already open) for PDFs and scans by name: an old filing, a passport scan, an approval notice.", input_schema: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } },
   { name: "add_to_case", description: "Read a file found with search_files, or the PDF attachments of an email found with search_mail, into a case's file.", input_schema: { type: "object", properties: { case_id: { type: "string" }, file_id: { type: "string" }, email_id: { type: "string" } }, required: ["case_id"] } },
+  { name: "mark_up", description: "Mark up a Google Doc for a case as the responsible attorney would: corrections against the case record as suggestions and comments, in a copy in the client's folder that opens in Google Docs. Takes the Doc's link.", input_schema: { type: "object", properties: { case_id: { type: "string" }, link: { type: "string" } }, required: ["case_id", "link"] } },
   { name: "resolve_issue", description: "Mark an open issue on a case as resolved, with the reason.", input_schema: { type: "object", properties: { issue_id: { type: "string" }, resolution: { type: "string" } }, required: ["issue_id", "resolution"] } },
 ];
 
@@ -158,6 +159,19 @@ export async function POST(req: Request) {
       }
       return out.join("\n") || "Nothing found.";
     }
+    if (name === "mark_up") {
+      const x = own(input.case_id);
+      const g = mine.find((m) => m.provider === "google");
+      const id = googleDocIds(String(input.link ?? ""))[0];
+      if (!id) return "That is not a Google Docs link.";
+      if (!g) return "No Google account of this user is connected (Settings, Integrations).";
+      const w = await docAsWord(g, id).catch(() => null);
+      if (!w) return "That Doc could not be opened with this user's Google account.";
+      const { redline } = await import("@/lib/redline");
+      void forCase({ firmId: F, caseId: x.id, purpose: "redline" }, () => redline(F, x.id, w.name, new Uint8Array(w.data), s!.user.name, { google: g })).catch(() => undefined);
+      changed.any = true;
+      return "Marking it up now. The marked up copy appears in Review and in the client's folder in a few minutes.";
+    }
     if (name === "add_to_case") {
       const x = own(input.case_id);
       if ((d.prepare("SELECT processing FROM cases WHERE id = ?").get(x.id) as { processing: number }).processing) return "The case is still reading files; try again in a minute.";
@@ -197,7 +211,7 @@ What Lincoln does, so you can describe it accurately when asked:
 - Approved emails are sent from the attorney's own mailbox. One reminder goes out, under the firm's rule, when a client has not replied in 3 days. Dates within 14 days are raised as issues.
 - Checks every case on its own: a second reading looks for bars (status violations, prior denials or removals, misrepresentation, criminal history, unauthorized work, the J-1 home residency rule), missing items and conflicting facts; passport and I-94 dates and the H-1B six year limit are calculated in code, not by the model; every cited sentence in a draft is checked against its page.
 - Drafts any document from the file with every fact cited to its page. Drafts open in Word or Google Docs; case lists and exhibit indexes export to Excel or Google Sheets; a case summary deck exports to PowerPoint or Google Slides. Client files can be imported from Google Drive, OneDrive or SharePoint. Case dates are added to the attorney's Google or Outlook calendar. Items for review can be posted to a Teams channel.
-- In this conversation you can use tools: find and read cases, open cases, draft documents, prepare emails for approval, add dates, resolve issues, search the law library, and search the user's own connected mail and files and read what is found into a case. Use them rather than telling the user to do it.
+- In this conversation you can use tools: find and read cases, open cases, draft documents, prepare emails for approval, add dates, resolve issues, search the law library, search the user's own connected mail and files and read what is found into a case, and mark up a Google Doc from its link. Use them rather than telling the user to do it.
 - Translates every document in a case that is not in English as soon as it is read, marking anything unreadable as [illegible], with the translator's certificate under 8 CFR 103.2(b)(3) ready for a competent translator to check and sign; the translation goes behind the original in the filing packet.
 ${uscisConfigured() ? "- Checks USCIS case status daily for every case with a receipt number and acts on changes (approval, denial, request for evidence).\n" : ""}- Holds a law library, updated from the official publications: the INA (8 U.S.C.), 8 CFR, 20 CFR 655 and 656, and 22 CFR 40 to 42. It does not hold the USCIS Policy Manual, the Foreign Affairs Manual, AAO or BIA decisions or case law.
 - Fills the official USCIS forms the case needs from the file, each answer with its source and the rest left blank (the firm adds each blank form once), assembles the filing packet (cover letter, forms, letters, exhibit index, tabbed exhibits) for one final review, and on an RFE, NOID or NOIR sets the printed deadline and drafts the full response.

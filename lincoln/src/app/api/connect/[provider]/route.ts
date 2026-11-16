@@ -13,8 +13,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ provider
   if (s.firm.demo) return NextResponse.redirect(new URL("/integrations?error=sample", appUrl()));
   if (!isProvider(provider) || !PROVIDERS.find((p) => p.id === provider)!.configured()) return NextResponse.redirect(new URL(`/integrations?error=${provider}`, appUrl()));
   const state = newToken();
-  // ?teams=1: the same Microsoft sign in, also asking to read the firm's Lincoln channel in Teams.
-  const teams = provider === "microsoft" && new URL(req.url).searchParams.get("teams") === "1";
+  // ?teams=1 (Microsoft) or ?chat=1 (Google): the same sign in, also asking to read the firm's Lincoln channel
+  // in Teams or space in Google Chat.
+  const q = new URL(req.url).searchParams;
+  const teams = provider === "microsoft" ? q.get("teams") === "1" : q.get("chat") === "1";
   (await cookies()).set("lincoln_oauth", `${teams ? "teams" : "connect"}.${provider}.${state}`, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 600 });
   return NextResponse.redirect(authUrl(provider, state, "connect", teams));
 }
