@@ -92,7 +92,9 @@ always run to the end on the server, even when the app is closed. Every notifica
 
 **Landing page (Ismael, 2026-11-16).** It must be creative with a real wow factor, more expressive than the minimal app,
 and must not look like the typical AI built site (animated product demo hero, gradients, glass cards, bento grids); he
-rejected "Lincoln working a case live" as a hero for that reason.
+rejected "Lincoln working a case live" as a hero for that reason. On 2026-11-16 he rejected a dark page with a 3D ray marched L as "AI slop" and "horror":
+the direction is now clean and minimal (the app's own colours, large serif type, quiet motion). Framer is connected
+(his free workspace) and is an option for building and hosting it.
 
 **Lincoln on phones and manual work (Ismael, 2026-11-14).** On phones Lincoln uses the Hopkins Liquid Glass
 tab bar (Home, Cases, +, Review, More), with a lens that glides, stretches and follows a finger, and the More
