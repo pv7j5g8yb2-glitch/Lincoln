@@ -30,7 +30,7 @@ type Reading = {
 export const UNNAMED = "New client";
 
 // Today's date is part of the prompt, so a deadline or expiry already past is seen as past.
-const systemPrompt = () => `You are Lincoln, case software used inside a US immigration law firm. You prepare work for a licensed attorney, who decides everything. You are not a lawyer and you never invent facts.
+export const systemPrompt = () => `You are Lincoln, case software used inside a US immigration law firm. You prepare work for a licensed attorney, who decides everything. You are not a lawyer and you never invent facts.
 
 Today is ${new Date().toISOString().slice(0, 10)}. A date in the file before today has passed; one after today has not.
 
@@ -271,8 +271,10 @@ async function readCase(firmId: string, caseId: string, files: Uint8Array[], opt
     d.prepare("UPDATE cases SET processing = 0 WHERE firm_id = ? AND id = ?").run(firmId, caseId);
     // A notice from an agency is acted on straight away: deadline, receipt number, response.
     if (r.notice) await actOnNotice(firmId, caseId, r.notice).catch(() => undefined);
-    // With the file read, the forms the case needs are filled from it, in the background.
+    // With the file read, the forms the case needs are filled from it, and every document not in English is
+    // translated, in the background.
     void import("./fill").then((m) => m.prepareForms(firmId, caseId)).catch(() => undefined);
+    void import("./translate").then((m) => m.translateCase(firmId, caseId)).catch(() => undefined);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
     d.prepare("UPDATE cases SET processing = 0, note = ?, pages = COALESCE(?, pages) WHERE firm_id = ? AND id = ?").run(`The file could not be read. ${msg}`.slice(0, isTestRun() ? 900 : 300), before, firmId, caseId);

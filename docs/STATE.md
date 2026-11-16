@@ -370,6 +370,15 @@ from the repo the same day. History is in git up to commit `341cf65`.
   Cite and Quote. Only /word may be framed, and only by Microsoft's Office domains. Tested in a browser with a stand
   in for Word; NOT yet tried in real Word or checked with Microsoft's manifest validator (that needs Word and
   network access to Microsoft). AppSource listing is a later step.
+* Accuracy record (2026-11-16): `lincoln/tests/eval/` sends all 20 test cases (7 adversarial, 13 case types) to
+  Lincoln as client emails through the real mail path, waits for everything Lincoln does on its own, grades it against
+  machine keys (`checks.json`: required findings and bad failures) and writes a dated scorecard to `results/`. Harness
+  checked free on a stand in model. Live run not done yet (needs Ismael's approval for the credits).
+* Translations (2026-11-16): every document read that is not in English gets an English translation at once (every
+  word, stamps and seals described, [illegible] where unreadable, nothing guessed), with the 8 CFR 103.2(b)(3)
+  translator's certificate ready to sign. It is a draft (review, edit, Word export, add-in) with a Review item for the
+  case's paralegal; the Documents tab links it; the filing packet puts it behind the original. A competent translator
+  must check and sign; Lincoln is never the translator. Checked on the stand in model only.
 * Security requirements for selling to firms (bare minimum, mid market, BigLaw, and where Lincoln stands): saved in
   docs/RESEARCH.md, 'Security requirements for law firms'. Next: a parent asks Anthropic sales for zero data retention.
 * Team (2026-11-16): no public sign up (/signup goes to /start; Google or Microsoft sign in only joins an open

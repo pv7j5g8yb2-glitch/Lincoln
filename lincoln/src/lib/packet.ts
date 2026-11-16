@@ -29,7 +29,7 @@ export function packetPlan(firmId: string, caseId: string): PacketPlan {
   const d = db();
   const forms = (d.prepare("SELECT code, title, status, fields, answers FROM forms WHERE firm_id = ? AND case_id = ? ORDER BY CASE code WHEN 'G-28' THEN 0 ELSE 1 END, rowid").all(firmId, caseId) as { code: string; title: string; status: string; fields: number; answers: string }[])
     .map((f) => ({ code: f.code, title: f.title, answered: (JSON.parse(f.answers) as unknown[]).length, fields: f.fields, ready: f.status === "ready" && hasTemplate(f.code) }));
-  const letters = (d.prepare("SELECT title, status, content FROM drafts WHERE firm_id = ? AND case_id = ? AND status IN ('approved', 'for_review') ORDER BY updated_at").all(firmId, caseId) as { title: string; status: string; content: string }[])
+  const letters = (d.prepare("SELECT title, status, content FROM drafts WHERE firm_id = ? AND case_id = ? AND status IN ('approved', 'for_review') AND kind != 'translation' ORDER BY updated_at").all(firmId, caseId) as { title: string; status: string; content: string }[])
     .map((x) => ({ title: x.title, status: x.status, notes: notesIn(JSON.parse(x.content) as Content) }));
   const exhibits = (d.prepare("SELECT n, title, page_from, page_to, status FROM documents WHERE firm_id = ? AND case_id = ? ORDER BY n").all(firmId, caseId) as Doc[])
     .filter((x) => USABLE.has(x.status) && x.page_from)
@@ -116,7 +116,7 @@ export async function buildPacket(firmId: string, caseId: string): Promise<Uint8
   }
 
   // Letters
-  for (const x of d.prepare("SELECT title, content FROM drafts WHERE firm_id = ? AND case_id = ? AND status IN ('approved', 'for_review') ORDER BY updated_at").all(firmId, caseId) as { title: string; content: string }[]) {
+  for (const x of d.prepare("SELECT title, content FROM drafts WHERE firm_id = ? AND case_id = ? AND status IN ('approved', 'for_review') AND kind != 'translation' ORDER BY updated_at").all(firmId, caseId) as { title: string; content: string }[]) {
     const lw = new Writer(pdf, font, bold);
     lw.line(x.title, 14, { bold: true, gap: 10 });
     for (const s of (JSON.parse(x.content) as Content).sections ?? []) {
@@ -131,6 +131,10 @@ export async function buildPacket(firmId: string, caseId: string): Promise<Uint8
     iw.line("Index of Exhibits", 14, { bold: true, gap: 12 });
     for (const e of plan.exhibits) iw.line(`Exhibit ${e.n}. ${e.title} (${e.pages} ${e.pages === 1 ? "page" : "pages"})`, 11, { gap: 2 });
     const docs = (d.prepare("SELECT n, title, page_from, page_to, status FROM documents WHERE firm_id = ? AND case_id = ? ORDER BY n").all(firmId, caseId) as Doc[]).filter((x) => USABLE.has(x.status) && x.page_from);
+    const translations = new Map<number, string>();
+    for (const t of d.prepare("SELECT content FROM drafts WHERE firm_id = ? AND case_id = ? AND kind = 'translation' AND status IN ('approved', 'for_review')").all(firmId, caseId) as { content: string }[]) {
+      try { const n = (JSON.parse(t.content) as { translation?: { doc: number } }).translation?.doc; if (n) translations.set(n, t.content); } catch { /* skip */ }
+    }
     for (const [i, doc] of docs.entries()) {
       const tab = pdf.addPage([W, H]);
       const label = `Exhibit ${i + 1}`;
@@ -144,6 +148,16 @@ export async function buildPacket(firmId: string, caseId: string): Promise<Uint8
         const scale = Math.min((W - 36) / img.width, (H - 36) / img.height);
         const pg = pdf.addPage([W, H]);
         pg.drawImage(img, { x: (W - img.width * scale) / 2, y: (H - img.height * scale) / 2, width: img.width * scale, height: img.height * scale });
+      }
+      // The English translation and its certificate go straight behind the original, as USCIS expects.
+      const tr = translations.get(doc.n);
+      if (tr) {
+        const tw = new Writer(pdf, font, bold);
+        tw.line(`${label}: English translation`, 13, { bold: true, gap: 10 });
+        for (const s of (JSON.parse(tr) as Content).sections ?? []) {
+          if (s.heading) tw.line(s.heading, 12, { bold: true, gap: 4 });
+          for (const p of s.paras ?? []) { const t = p.filter((g) => g.k !== "note").map((g) => g.t).join(""); if (t.trim()) tw.line(t, 11, { gap: 6 }); }
+        }
       }
     }
   }
