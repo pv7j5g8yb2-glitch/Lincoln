@@ -476,6 +476,27 @@ export async function setMemberAdmin(userId: string, on: boolean, password?: str
   return { ok: true };
 }
 
+/** First run, step one: name, role and photo. */
+export async function saveSetupProfile(form: FormData) {
+  const { user, firm } = await requireUser({ setup: true });
+  if (firm.demo) redirect("/");
+  const name = String(form.get("name") ?? "").trim().slice(0, 100);
+  const role = String(form.get("role") ?? "").trim();
+  if (!name || !ROLES.includes(role)) redirect("/setup?step=profile&error=name");
+  const d = db();
+  d.prepare("UPDATE users SET name = ?, initials = ?, role = ? WHERE id = ?").run(name, initialsOf(name), role, user.id);
+  const avatar = String(form.get("avatar") ?? "");
+  if (avatar === "remove") d.prepare("UPDATE users SET avatar = NULL WHERE id = ?").run(user.id);
+  else if (/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(avatar) && avatar.length < 400_000) d.prepare("UPDATE users SET avatar = ? WHERE id = ?").run(avatar, user.id);
+  setKv(firm.id, `setup:${user.id}`, "1");
+  // Someone who connected an account before (by signing in with it) is done.
+  if (d.prepare("SELECT 1 FROM mailboxes WHERE firm_id = ? AND user_id = ?").get(firm.id, user.id)) {
+    d.prepare("UPDATE users SET setup_at = ? WHERE id = ?").run(now(), user.id);
+    redirect("/");
+  }
+  redirect("/setup");
+}
+
 export async function updateProfile(form: FormData) {
   const { user, firm } = await requireUser();
   notInSample(firm, "/settings?tab=profile");
@@ -609,6 +630,16 @@ export async function disconnect(form: FormData) {
   await securityEvent(firm.id, user.id, "disconnected", provider);
   await toast("Disconnected");
   revalidatePath("/", "layout");
+}
+
+/** An integration Lincoln does not connect to yet: the firm's request is recorded for the Lincoln team. */
+export async function requestIntegration(form: FormData) {
+  const { user, firm } = await requireUser();
+  const name = String(form.get("name") ?? "").trim().slice(0, 40);
+  if (!/^[\w .-]+$/.test(name)) return;
+  setKv(firm.id, `wants:${name}`, JSON.stringify({ by: user.id, at: now() }));
+  await toast("Requested");
+  revalidatePath("/integrations");
 }
 
 export async function setChatSpace(form: FormData) {

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { db } from "./db";
 import { sha } from "./passwords";
 
-export type User = { id: string; firm_id: string; name: string; email: string; role: string; initials: string; avatar: string | null; admin: number };
+export type User = { id: string; firm_id: string; name: string; email: string; role: string; initials: string; avatar: string | null; admin: number; setup_at: string | null };
 export type Firm = { id: string; name: string; demo: number; require_2fa: number };
 /** Who is looking: restricted (sensitive) cases are visible only to their team and to administrators. */
 export type Viewer = { id: string; admin: boolean };
@@ -24,7 +24,7 @@ export async function currentUser(): Promise<{ user: User; firm: Firm; sessionId
   if (!sid) return null;
   const d = db();
   const hashed = sha(sid);
-  const row = d.prepare("SELECT u.id, u.firm_id, u.name, u.email, u.role, u.initials, u.avatar, u.admin, u.totp_enc IS NOT NULL AS two FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.id = ? AND s.created_at > ? AND (s.last_seen IS NULL OR s.last_seen > ?)").get(hashed, new Date(Date.now() - SESSION_HOURS * 3600_000).toISOString(), new Date(Date.now() - IDLE_HOURS * 3600_000).toISOString()) as (User & { two: number }) | undefined;
+  const row = d.prepare("SELECT u.id, u.firm_id, u.name, u.email, u.role, u.initials, u.avatar, u.admin, u.setup_at, u.totp_enc IS NOT NULL AS two FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.id = ? AND s.created_at > ? AND (s.last_seen IS NULL OR s.last_seen > ?)").get(hashed, new Date(Date.now() - SESSION_HOURS * 3600_000).toISOString(), new Date(Date.now() - IDLE_HOURS * 3600_000).toISOString()) as (User & { two: number }) | undefined;
   if (!row) return null;
   const { two, ...user } = row;
   const firm = d.prepare("SELECT id, name, demo, require_2fa FROM firms WHERE id = ?").get(user.firm_id) as Firm;

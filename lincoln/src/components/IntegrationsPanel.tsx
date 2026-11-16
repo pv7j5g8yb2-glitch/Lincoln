@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import { btn } from "./ui";
-import { disconnect, setChatSpace, setTeamsChannel } from "@/lib/actions";
+import { disconnect, requestIntegration, setChatSpace, setTeamsChannel } from "@/lib/actions";
+import { kv } from "@/lib/queries";
 import { PROVIDERS, canReadChat, canReadTeams, chatSpaces, checkHealth, connectionsOf, settingsOf, teamsChannels } from "@/lib/integrations";
 import { CircleAlert } from "lucide-react";
 import type { User, Firm } from "@/lib/session";
@@ -76,7 +77,7 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
                     <a href={`/api/connect/${p.id}`} className="font-medium text-ink underline underline-offset-4">Reconnect</a>
                   </div>
                 )}
-                {!c && <div className="mt-4 flex flex-wrap gap-2">
+                {!c && <div className={clsx("mt-4 gap-2", p.services.length === 6 ? "grid w-fit grid-cols-3" : "flex flex-wrap")}>
                   {p.services.map((s) => (
                     <span key={s} className={clsx("flex items-center gap-1.5 rounded-full border px-2 py-1 text-[12px]", c ? "border-line text-ink" : "border-line text-muted")}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -120,12 +121,15 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
       </section>
 
       <section>
-        <h2 className="mb-1 text-[13px] font-medium">Planned</h2>
+        <h2 className="mb-1 text-[13px] font-medium">Others</h2>
         <div className="grid border-t border-line sm:grid-cols-2 sm:gap-x-10">
           {PLANNED.flatMap(([, items]) => items).map(([name]) => (
-            <div key={name} className="flex items-center gap-3 border-b border-line py-2.5">
+            <div key={name} className="flex items-center gap-3 border-b border-line py-2">
               <Logo name={name} size={22} />
-              <span className="text-[13px]">{name}</span>
+              <span className="flex-1 text-[13px]">{name}</span>
+              {kv(firm.id, `wants:${name}`)
+                ? <span className="px-3 text-[12px] text-faint">Requested</span>
+                : <form action={requestIntegration}><input type="hidden" name="name" value={name} /><button className={btn.secondary}>Connect</button></form>}
             </div>
           ))}
         </div>

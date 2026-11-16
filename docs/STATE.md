@@ -6,6 +6,17 @@ draft of the app is in `lincoln/` (Next.js, SQLite): Harvey style interface, a d
 cases, the full Halász O-1A case, approvals by decision, the support letter with facts linked to their
 pages, Word export, a scripted "demo world". See `lincoln/README.md` for what works and what is scripted.
 
+**App changes (Ismael, 2026-11-16, evening):**
+* First run setup (`/setup`), required and not skippable: name, role and photo, then Microsoft 365 or Google Workspace.
+  The app redirects there until the account is connected (users.setup_at). Accounts already connected count as set up.
+* Home is "Good morning/afternoon/evening, <first name>" by the device's own clock (morning 5:00 to 11:59, afternoon
+  12:00 to 19:59, evening 20:00 to 4:59; checked every minute) and the five cases Lincoln worked on most recently, each
+  with its last action and "For review" where something waits. The chat box left Home (New case and + remain).
+* Chat boxes are soft cornered rectangles with the controls below the text on larger screens; phones keep the pill.
+* Integrations: Google services in two rows of three; Word add-in is Download first, then Code and a short guide;
+  "Planned" is now "Others", each with Connect, which records the firm's request ("Requested") for the Lincoln team.
+* Library search says "Search"; New case sits in the middle of the screen.
+
 **Landing video (Ismael, 2026-11-16): on hold until the interface is locked.** It replaces the "All your cases in one
 place" section and goes right after the hero, before the grey sentence that lights up. It shows Lincoln's whole value
 with real screens, is calm and easy to follow (not long, not rushed), and uses a realistic made up firm with real

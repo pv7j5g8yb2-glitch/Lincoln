@@ -19,7 +19,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
       <PageHead title="Library" />
       <form action="/library" className="relative">
         <Search size={16} strokeWidth={1.8} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-faint" />
-        <input name="q" defaultValue={q} autoComplete="off" placeholder="8 CFR 214.2(o)(3)(iii), INA 212(a)(9)(B), or words" className="h-11 w-full rounded-xl border border-line bg-card pl-10 pr-3 text-[14.5px] outline-none transition placeholder:text-faint focus:border-ink" />
+        <input name="q" defaultValue={q} autoComplete="off" placeholder="Search" className="h-11 w-full rounded-xl border border-line bg-card pl-10 pr-3 text-[14.5px] outline-none transition placeholder:text-faint focus:border-ink" />
       </form>
 
       {!q ? (

@@ -1,25 +1,55 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { X } from "lucide-react";
 import { disconnectWordAction, newWordCodeAction } from "@/lib/actions";
 import { notify } from "./Toaster";
 import { confirmBox } from "./Confirm";
 import { btn } from "./ui";
 
-/** The Word add-in: its manifest, and a one time code to connect it. */
+const KEY = "lincoln-word-downloaded";
+
+/** The Word add-in: download it, then a one time code connects it. The steps open once the file is downloaded. */
 export default function WordConnect({ connected }: { connected: boolean }) {
   const [code, setCode] = useState<string | null>(null);
   const [on, setOn] = useState(connected);
+  const [downloaded, setDownloaded] = useState(connected);
+  const [guide, setGuide] = useState(false);
   const [pending, start] = useTransition();
+  useEffect(() => { try { if (localStorage.getItem(KEY)) setDownloaded(true); } catch { /* private window */ } }, []);
+  const getCode = async () => {
+    const ok = await confirmBox({ password: true });
+    if (!ok) return;
+    start(async () => { const r = await newWordCodeAction(ok.password); if (r.code) { setCode(r.code); setOn(false); } else if ("error" in r && r.error) notify(r.error); });
+  };
+  const codeBox = code && (
+    <button onClick={() => { void navigator.clipboard?.writeText(code).then(() => notify("Copied"), () => undefined); }} className="mt-4 w-full rounded-xl border border-line bg-panel py-3 text-center font-mono text-[20px] tracking-[0.18em] transition hover:border-edge" title="Copy">{code}</button>
+  );
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
-        <a href="/word/manifest.xml" className={btn.secondary} download>Manifest</a>
-        <button disabled={pending} onClick={async () => { const ok = await confirmBox({ password: true }); if (!ok) return; start(async () => { const r = await newWordCodeAction(ok.password); if (r.code) { setCode(r.code); setOn(false); } else if ("error" in r && r.error) notify(r.error); }); }} className={btn.primary}>{on ? "New code" : "Code"}</button>
+        <a href="/word/manifest.xml" download onClick={() => { try { localStorage.setItem(KEY, "1"); } catch { /* fine */ } setDownloaded(true); setGuide(true); }} className={downloaded ? btn.secondary : btn.primary}>Download</a>
+        {downloaded && <button disabled={pending} onClick={() => void getCode()} className={btn.primary}>{on ? "New code" : "Code"}</button>}
+        {downloaded && <button onClick={() => setGuide(true)} className={btn.ghost}>Steps</button>}
         {on && <button disabled={pending} onClick={async () => { if (!(await confirmBox())) return; start(async () => { await disconnectWordAction(); setOn(false); notify("Disconnected"); }); }} className={btn.ghost}>Disconnect</button>}
       </div>
-      {code && (
-        <button onClick={() => { void navigator.clipboard?.writeText(code).then(() => notify("Copied"), () => undefined); }} className="mt-4 w-full rounded-xl border border-line bg-panel py-3 text-center font-mono text-[20px] tracking-[0.18em] transition hover:border-edge" title="Copy">{code}</button>
+      {!guide && codeBox}
+      {guide && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 p-6 backdrop-blur-[2px]" onMouseDown={(e) => { if (e.target === e.currentTarget) setGuide(false); }}>
+          <div role="dialog" aria-modal="true" aria-labelledby="word-guide" className="rise w-full max-w-[420px] rounded-2xl border border-line bg-card p-6 text-ink shadow-[0_24px_60px_-20px_rgba(0,0,0,0.45)]">
+            <div className="flex items-center justify-between">
+              <h2 id="word-guide" className="text-[17px] font-semibold">Add Lincoln to Word</h2>
+              <button onClick={() => setGuide(false)} aria-label="Close" className="rounded-full p-1 text-faint transition hover:text-ink"><X size={18} /></button>
+            </div>
+            <ol className="mt-5 flex flex-col gap-3.5 text-[14px] leading-relaxed">
+              {["In Word: Home, Add-ins, More Add-ins.", "My Add-ins, Upload My Add-in, then the downloaded file.", "Open Lincoln from the Home tab and enter the code."].map((t, i) => (
+                <li key={i} className="flex gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-panel text-[12px] font-medium">{i + 1}</span><span className="pt-0.5">{t}</span></li>
+              ))}
+            </ol>
+            {code ? codeBox : <button disabled={pending} onClick={() => void getCode()} className={`${btn.primary} mt-6 w-full justify-center`}>Code</button>}
+            <p className="mt-5 border-t border-line pt-4 text-[12.5px] leading-relaxed text-muted">For the whole firm at once: Microsoft 365 admin center, Settings, Integrated apps, Upload custom apps.</p>
+          </div>
+        </div>
       )}
     </div>
   );

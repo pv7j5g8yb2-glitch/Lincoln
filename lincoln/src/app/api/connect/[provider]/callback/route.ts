@@ -52,9 +52,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ provider
   try {
     const email = await connect(provider, s.firm.id, s.user.id, code, mode === "teams");
     await securityEvent(s.firm.id, s.user.id, "connected", `${provider} ${email}`);
+    // First run: a connected account completes setup.
+    if (!s.user.setup_at) {
+      db().prepare("UPDATE users SET setup_at = ? WHERE id = ?").run(new Date().toISOString(), s.user.id);
+      return go("/");
+    }
     return go(`/integrations?connected=${provider}`);
   } catch (e) {
     console.error("Connection failed", provider, e instanceof Error ? e.message : e);
-    return go("/integrations?error=connect");
+    return go(s.user.setup_at ? "/integrations?error=connect" : "/setup?error=connect");
   }
 }
