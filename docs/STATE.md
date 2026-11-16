@@ -341,6 +341,9 @@ from the repo the same day. History is in git up to commit `341cf65`.
   serves both; src/proxy.ts shows the landing page on uselincoln.com/, keeps /terms and /privacy, sends www to the
   bare domain and every other path to app.uselincoln.com. Needs uselincoln.com added in Render and DNS at GoDaddy
   (A @ 216.24.57.1, CNAME www to the onrender.com host; Zoho MX and TXT untouched). Kept out of search until approved.
+  Done 2026-11-16: GoDaddy records set, uselincoln.com verified in Render with a certificate. The duplicate Render
+  service (made by a Blueprint from render.yaml) and an old market-research service were deleted; render.yaml was
+  moved to docs/RENDER.md so no Blueprint can recreate the copy.
   Editorial direction: warm white, Literata, Ismael's own photographs (courthouse, concrete, marble, old letters,
   boardroom; in lincoln/public/landing, 1080px wide, originals would be sharper), the work laid on the photos, the
   word by word statement, and one 3D piece (case papers spread on a desk fold into a filing packet). Plan: home page
