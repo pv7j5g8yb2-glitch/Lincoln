@@ -90,6 +90,11 @@ Edit opens the text, then Save.
 left the app: work that lands in Review (batched) and chat replies finished in the background, like Claude. Chat replies
 always run to the end on the server, even when the app is closed. Every notification has a short title and one line.
 
+**Branding and marketing words (Ismael, 2026-11-16).** Everything public facing (site, video, captions, names of
+features, posts) uses the words a billion dollar software company would use. Before naming or writing anything, ask how
+Claude, ChatGPT, Harvey or Legora would name it or say it, and match that bar. Lincoln is always "Lincoln", never "it".
+Extremely clean and visually appealing: no subheadline under every heading, nothing that is not needed.
+
 **Landing page (Ismael, 2026-11-16).** It must be creative with a real wow factor, more expressive than the minimal app,
 and must not look like the typical AI built site (animated product demo hero, gradients, glass cards, bento grids); he
 rejected "Lincoln working a case live" as a hero for that reason. On 2026-11-16 he rejected a dark page with a 3D ray marched L as "AI slop" and "horror":
