@@ -1,8 +1,10 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState, useTransition } from "react";
 import clsx from "clsx";
 import ExportMenu, { type ExportItem } from "./ExportMenu";
+import { saveDraftEdit } from "@/lib/actions";
+import { notify } from "./Toaster";
 import type { Section, Seg } from "@/lib/halasz";
 
 type Hover = { doc?: string; page: number; x: number; y: number } | null;
@@ -11,8 +13,26 @@ type Props = { caseId: string; draftId: string; title: string; subtitle: string;
 
 const PAGE_REF = /\((?:pp?\.|page)\s?(\d+)[^)]*\)|\[Attorney:[^\]]*\]/g;
 
-export default function DraftView({ caseId, title, subtitle, sections, facts, calls, notes, status, generic, by, exports }: Props) {
+// A paragraph as the text an attorney edits: page references stay as (p. 12), attorney notes as [Attorney: ...].
+const asText = (p: Seg[]) => p.map((g) => (g.k === "note" ? ` [Attorney: ${g.t.trim()}]` : g.k === "fact" && g.page ? `${g.t} (p. ${g.page})` : g.t)).join("").trim();
+
+/** A textarea that grows with its text, set in the draft's own type. */
+function Grow({ value, onChange, className }: { value: string; onChange: (v: string) => void; className?: string }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => { const el = ref.current; if (el) { el.style.height = "auto"; el.style.height = `${el.scrollHeight}px`; } }, [value]);
+  return <textarea ref={ref} value={value} rows={1} onChange={(e) => onChange(e.target.value)} className={clsx("w-full resize-none overflow-hidden rounded-md bg-transparent outline-none ring-line transition focus:bg-panel/60 focus:ring-1", className)} />;
+}
+
+export default function DraftView({ caseId, draftId, title, subtitle, sections, facts, calls, notes, status, generic, by, exports }: Props) {
   const [focus, setFocus] = useState(false);
+  const [editing, setEditing] = useState<{ heading: string; paras: string[] }[] | null>(null);
+  const [pending, start] = useTransition();
+  const save = () => start(async () => {
+    if (!editing) return;
+    const r = await saveDraftEdit(draftId, editing.map((s) => ({ heading: s.heading, paras: s.paras.flatMap((p) => p.split(/\n\s*\n/)) })));
+    if (r && "error" in r && r.error) { notify(r.error); return; }
+    setEditing(null); notify("Saved");
+  });
   const [hover, setHover] = useState<Hover>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -73,14 +93,31 @@ export default function DraftView({ caseId, title, subtitle, sections, facts, ca
           <div className="truncate text-[14px] font-medium">{title}</div>
           <div className="text-[12.5px] text-faint">{status === "approved" ? "Approved" : "Draft for review"} · {facts} sourced facts{calls ? ` · ${calls} judgment calls` : ""}{notes ? ` · ${notes} attorney notes` : ""}{by ? ` · ${by}` : ""}</div>
         </div>
-        <button onClick={() => setFocus((v) => !v)} className={clsx("h-8 rounded-lg border px-3 text-[12.5px] font-medium transition", focus ? "border-ink bg-ink text-canvas" : "border-line bg-card hover:bg-panel")}>Review mode</button>
-        <ExportMenu items={exports} label="Open" />
+        {editing ? (
+          <>
+            <button disabled={pending} onClick={() => setEditing(null)} className="h-8 rounded-lg px-3 text-[12.5px] font-medium text-muted transition hover:bg-panel hover:text-ink">Cancel</button>
+            <button disabled={pending} onClick={save} className="h-8 rounded-lg bg-ink px-3.5 text-[12.5px] font-medium text-canvas transition hover:opacity-90 disabled:opacity-50">{pending ? "Saving" : "Save"}</button>
+          </>
+        ) : (
+          <>
+            <button onClick={() => setFocus((v) => !v)} className={clsx("h-8 rounded-lg border px-3 text-[12.5px] font-medium transition", focus ? "border-ink bg-ink text-canvas" : "border-line bg-card hover:bg-panel")}>Review mode</button>
+            <button onClick={() => { setFocus(false); setEditing(sections.map((s) => ({ heading: s.heading, paras: s.paras.map(asText) }))); }} className="h-8 rounded-lg border border-line bg-card px-3 text-[12.5px] font-medium transition hover:bg-panel">Edit</button>
+            <ExportMenu items={exports} label="Open" />
+          </>
+        )}
       </div>
 
       <article className="mx-auto max-w-[740px] rounded-xl border border-line bg-card px-5 py-9 shadow-[0_1px_3px_rgba(22,22,20,0.04)] md:px-14 md:py-14">
         <h2 className="serif mb-1 text-[22px] font-medium">{title}</h2>
         <p className="mb-10 text-[12.5px] text-faint">{subtitle}</p>
-        {sections.map((s) => (
+        {editing ? editing.map((s, si) => (
+          <section key={si} className="mb-8">
+            {(s.heading || si > 0) && <Grow value={s.heading} onChange={(v) => setEditing((e) => e!.map((x, i) => (i === si ? { ...x, heading: v } : x)))} className="serif mb-1 px-1 text-[16.5px] font-medium" />}
+            {s.paras.map((p, pi) => (
+              <Grow key={pi} value={p} onChange={(v) => setEditing((e) => e!.map((x, i) => (i === si ? { ...x, paras: x.paras.map((q, j) => (j === pi ? v : q)) } : x)))} className="serif mb-2.5 px-1 text-[15px] leading-[1.75]" />
+            ))}
+          </section>
+        )) : sections.map((s) => (
           <section key={s.id} className="mb-8">
             {s.heading && <h3 className="serif mb-1 text-[16.5px] font-medium">{s.heading}</h3>}
             {s.cite && <p className="mb-2 text-[12px] text-faint">{s.cite}</p>}

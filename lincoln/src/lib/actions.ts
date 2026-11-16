@@ -706,7 +706,7 @@ export async function deleteFirm(form: FormData) {
   const caseIds = (d.prepare("SELECT id FROM cases WHERE firm_id = ?").all(firm.id) as { id: string }[]).map((c) => c.id);
   forgetFirmSessions(firm.id);
   d.transaction(() => {
-    for (const t of ["addin_codes", "addin_tokens", "invites", "intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "security_events", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "rfe_points", "criteria", "documents", "cases", "kv"]) d.prepare(`DELETE FROM ${t} WHERE firm_id = ?`).run(firm.id);
+    for (const t of ["memory_edits", "addin_codes", "addin_tokens", "invites", "intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "security_events", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "rfe_points", "criteria", "documents", "cases", "kv"]) d.prepare(`DELETE FROM ${t} WHERE firm_id = ?`).run(firm.id);
     d.prepare("DELETE FROM inbound_seen WHERE mailbox_id IN (SELECT id FROM mailboxes WHERE firm_id = ?)").run(firm.id);
     d.prepare("DELETE FROM mailboxes WHERE firm_id = ?").run(firm.id);
     d.prepare("DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE firm_id = ?)").run(firm.id);
@@ -752,6 +752,28 @@ export async function sortMessage(form: FormData) {
   revalidatePath("/", "layout");
 }
 
+/** An admin removes one of the writing preferences Lincoln learned. */
+export async function removeStyleRule(kind: "draft" | "email", index: number) {
+  const { user, firm } = await requireUser();
+  if (!user.admin) return;
+  const { removeRule } = await import("./memory");
+  removeRule(firm.id, kind, index);
+  await toast("Removed");
+  revalidatePath("/settings");
+}
+
+/** The firm's version of a draft, saved as its next version. Lincoln learns the firm's preferences from the changes. */
+export async function saveDraftEdit(draftId: string, sections: { heading: string; paras: string[] }[]) {
+  const { firm, viewer } = await requireUser();
+  const d = db();
+  const dr = d.prepare("SELECT case_id FROM drafts WHERE firm_id = ? AND id = ?").get(firm.id, draftId) as { case_id: string } | undefined;
+  if (!dr || !caseById(firm.id, dr.case_id, viewer)) return { error: "Not saved" };
+  const { applyDraftEdit } = await import("./memory");
+  if (!applyDraftEdit(firm.id, draftId, sections, !firm.demo)) return { error: "Not saved" };
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
 /** The attorney's edits to a drafted email, saved before it is approved. */
 export async function saveMessage(approvalId: string, subject: string, body: string) {
   const { firm, viewer } = await requireUser();
@@ -759,6 +781,12 @@ export async function saveMessage(approvalId: string, subject: string, body: str
   if (!a || a.status !== "pending" || a.kind !== "message") return;
   const messageId = (JSON.parse(a.payload) as { messageId?: string }).messageId;
   if (!messageId || !body.trim()) return;
+  const was = db().prepare("SELECT body FROM messages WHERE firm_id = ? AND id = ?").get(firm.id, messageId) as { body: string } | undefined;
+  if (was && !firm.demo) {
+    const { recordEdit } = await import("./memory");
+    const split = (t: string) => t.split(/\n\s*\n/).map((x) => x.trim()).filter(Boolean);
+    recordEdit(firm.id, "email", split(was.body), split(body));
+  }
   db().prepare("UPDATE messages SET subject = ?, body = ? WHERE firm_id = ? AND id = ? AND state = 'needs_approval'").run(subject.trim().slice(0, 200) || "(no subject)", body.trim().slice(0, 20000), firm.id, messageId);
   await toast("Saved");
   revalidatePath("/", "layout");

@@ -133,6 +133,7 @@ function Main({ api }: { api: (path: string, body?: unknown) => Promise<any> }) 
 function Drafts({ api, caseId }: { api: (path: string, body?: unknown) => Promise<any>; caseId: string }) {
   const [list, setList] = useState<Draft[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [inserted, setInserted] = useState<string | null>(null);
   useEffect(() => { setList(null); api(`?op=drafts&case=${encodeURIComponent(caseId)}`).then(setList).catch(() => setList([])); }, [api, caseId]);
   const insert = async (d: Draft) => {
     setBusy(d.id);
@@ -140,8 +141,24 @@ function Drafts({ api, caseId }: { api: (path: string, body?: unknown) => Promis
       const { blocks } = await api(`?op=draft&id=${encodeURIComponent(d.id)}`) as { blocks: { kind: string; text: string }[] };
       const html = blocks.map((b) => b.kind === "title" ? `<h1>${esc(b.text)}</h1>` : b.kind === "heading" ? `<h2>${esc(b.text)}</h2>` : `<p>${esc(b.text)}</p>`).join("");
       await inWord(async (ctx) => { ctx.document.getSelection().insertHtml(html, "Replace"); await ctx.sync(); });
+      setInserted(d.id);
       notify("Inserted");
     } catch { notify("Not inserted"); } finally { setBusy(null); }
+  };
+  // The document as edited in Word goes back to Lincoln as the draft's next version.
+  const saveBack = async (d: Draft) => {
+    setBusy(d.id);
+    try {
+      const blocks = await inWord(async (ctx) => {
+        const p = ctx.document.body.paragraphs; p.load("items/text,items/styleBuiltIn,items/style"); await ctx.sync();
+        return p.items.map((x: { text: string; styleBuiltIn?: string; style?: string }) => {
+          const st = String(x.styleBuiltIn ?? x.style ?? "");
+          return { text: x.text, title: /^title$/i.test(st), heading: /^heading/i.test(st) };
+        });
+      });
+      await api("", { op: "saveDraft", draft: d.id, blocks });
+      notify("Saved");
+    } catch { notify("Not saved"); } finally { setBusy(null); }
   };
   if (!list) return <p className="py-6 text-center text-[12.5px] text-faint">Loading</p>;
   if (!list.length) return <p className="py-6 text-center text-[12.5px] text-faint">No drafts</p>;
@@ -150,7 +167,9 @@ function Drafts({ api, caseId }: { api: (path: string, body?: unknown) => Promis
       {list.map((d) => (
         <li key={d.id} className="flex items-center gap-3 border-b border-line py-3">
           <div className="min-w-0 flex-1"><p className="truncate text-[13px] font-medium">{d.title}</p><p className="text-[11.5px] text-faint">v{d.version} · {STATUS[d.status] ?? d.status}</p></div>
-          <button disabled={busy !== null} onClick={() => void insert(d)} className={btn.secondary}>{busy === d.id ? "Inserting" : "Insert"}</button>
+          {inserted === d.id
+            ? <button disabled={busy !== null} onClick={() => void saveBack(d)} className={btn.primary}>{busy === d.id ? "Saving" : "Save to Lincoln"}</button>
+            : <button disabled={busy !== null} onClick={() => void insert(d)} className={btn.secondary}>{busy === d.id ? "Inserting" : "Insert"}</button>}
         </li>
       ))}
     </ul>

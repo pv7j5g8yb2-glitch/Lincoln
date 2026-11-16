@@ -2,6 +2,7 @@ import { db, uid } from "./db";
 import { chat, forCase, llmConfigured, parseJson } from "./llm";
 import { LIBRARY, typeOf } from "./library";
 import { EMAIL_STYLE } from "./style";
+import { firmStyle } from "./memory";
 import { UNNAMED, applyDateRules, draftForCase, processCase } from "./intake";
 import { fileKind } from "./pdf";
 import { addEvent, ensurePush, fetchNew, send, settingsOf, teamsPost, type Connection, type Inbound } from "./integrations";
@@ -391,7 +392,7 @@ ${mail.text.slice(0, 6000)}
 </email>
 
 Write the reply.
-${EMAIL_STYLE}
+${EMAIL_STYLE}${firmStyle(firmId, "email")}
 Reply with one JSON object: {"subject": "", "body": ""}` },
     ], { maxTokens: 1500 }));
     return r.body?.trim() ? { subject: r.subject ?? "", body: r.body } : null;
@@ -419,7 +420,7 @@ Still needed on the case (internal notes, for context only):
 ${missing.map((x) => `- ${x.title}: ${x.detail}`).join("\n") || "- nothing else recorded"}
 
 Write a short, friendly follow up from ${sender} that picks up the earlier email and asks again for what is still outstanding.
-${EMAIL_STYLE}` },
+${EMAIL_STYLE}${firmStyle(m.firm_id, "email")}` },
     ], { maxTokens: 1200 });
     if (text.trim().length > 40) return text.trim().slice(0, 4000);
   } catch {

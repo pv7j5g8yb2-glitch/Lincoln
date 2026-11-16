@@ -379,6 +379,14 @@ from the repo the same day. History is in git up to commit `341cf65`.
   translator's certificate ready to sign. It is a draft (review, edit, Word export, add-in) with a Review item for the
   case's paralegal; the Documents tab links it; the filing packet puts it behind the original. A competent translator
   must check and sign; Lincoln is never the translator. Checked on the stand in model only.
+* Firm memory (2026-11-16): drafts now have Edit, then Save (each save is a new version), and the Word add-in has
+  Save to Lincoln after Insert. Every change to a Lincoln document or email (emails through Edit before approval) is
+  kept paragraph by paragraph; after three, a light model call distils at most 12 general writing preferences per firm
+  (documents and emails separately; never client facts or legal positions) that every later draft, reply, reminder and
+  chat email follows. Admins see and remove them in Settings, Firm, Writing style (folded; hidden until there are
+  some; a removed one is not learned again). Approved documents are the firm's precedent: a new draft of the same
+  kind and case type follows the best earlier one's structure and tone, with the other client's names replaced and
+  an instruction never to use its facts; sensitive cases are never used. Checked on the stand in model only.
 * Security requirements for selling to firms (bare minimum, mid market, BigLaw, and where Lincoln stands): saved in
   docs/RESEARCH.md, 'Security requirements for law firms'. Next: a parent asks Anthropic sales for zero data retention.
 * Team (2026-11-16): no public sign up (/signup goes to /start; Google or Microsoft sign in only joins an open

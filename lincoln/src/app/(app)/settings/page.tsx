@@ -3,7 +3,7 @@ import { NotificationSwitch } from "@/components/Notifications";
 import clsx from "clsx";
 import AvatarField from "@/components/AvatarField";
 import { Avatar, PageHead, btn, field, label } from "@/components/ui";
-import { changePassword, confirmTwoStep, deleteFirm, disableTwoStep, setTwoStepRequired, signOutSession, startTwoStep, updateFirm, updateProfile } from "@/lib/actions";
+import { changePassword, confirmTwoStep, deleteFirm, disableTwoStep, setTwoStepRequired, signOutSession, startTwoStep, updateFirm, updateProfile, removeStyleRule } from "@/lib/actions";
 import { db } from "@/lib/db";
 import QRCode from "qrcode";
 import { otpauth } from "@/lib/totp";
@@ -21,6 +21,7 @@ import AdminSwitch from "@/components/AdminSwitch";
 import { inviteMember, revokeInvite } from "@/lib/actions";
 import { inviteUrl, pendingInvites } from "@/lib/invites";
 import RoleSelect from "@/components/RoleSelect";
+import { rules } from "@/lib/memory";
 
 const TABS: [string, string][] = [["profile", "Profile"], ["security", "Security"], ["firm", "Firm"], ["automation", "Automation"]];
 
@@ -240,6 +241,27 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 <div className="mt-4"><span className={label}>Invite link</span><CopyLink inline url={inviteUrl(params.invite)} /></div>
               )}
             </>
+          )}
+
+          {tab === "firm" && (rules(firm.id, "draft").length > 0 || rules(firm.id, "email").length > 0) && (
+            <details className="group mt-12">
+              <summary className="flex cursor-pointer list-none items-center justify-between text-[14px] font-medium [&::-webkit-details-marker]:hidden">
+                Writing style<span className="text-[12px] font-normal text-faint group-open:hidden">{rules(firm.id, "draft").length + rules(firm.id, "email").length}</span>
+              </summary>
+              {(["draft", "email"] as const).filter((k) => rules(firm.id, k).length).map((k) => (
+                <div key={k} className="mt-4">
+                  <p className="mb-1 text-[12px] text-faint">{k === "draft" ? "Documents" : "Emails"}</p>
+                  <ul className="border-t border-line">
+                    {rules(firm.id, k).map((r, i) => (
+                      <li key={i} className="flex items-start gap-3 border-b border-line py-2.5 text-[13px]">
+                        <span className="min-w-0 flex-1 leading-relaxed">{r}</span>
+                        {admin && <form action={removeStyleRule.bind(null, k, i)}><button className="text-[12px] text-faint transition hover:text-ink" aria-label="Remove">Remove</button></form>}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </details>
           )}
 
           {tab === "firm" && admin && !firm.demo && (

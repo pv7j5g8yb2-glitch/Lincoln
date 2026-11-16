@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { db, uid } from "@/lib/db";
 import { limited } from "@/lib/auth";
 import { clientIp } from "@/lib/audit";
 import { recordAccess } from "@/lib/access";
@@ -50,6 +51,22 @@ export async function POST(req: Request) {
   const s = wordUser(req);
   if (!s) return no("Not connected", 401);
   if (body.op === "disconnect") { endWord(s.user.id); return NextResponse.json({ ok: true }); }
+  if (body.op === "saveDraft") {
+    // The document as edited in Word becomes the draft's next version; headings start new sections.
+    const dr = draftById(s.firm.id, String(body.draft ?? ""));
+    if (!dr || !caseById(s.firm.id, dr.case_id, viewer(s.user))) return no("Not found", 404);
+    const blocks = (Array.isArray(body.blocks) ? body.blocks : []).slice(0, 3000) as { heading?: boolean; title?: boolean; text?: string }[];
+    const sections: { heading: string; paras: string[] }[] = [{ heading: "", paras: [] }];
+    for (const b of blocks) {
+      const text = String(b.text ?? "").trim();
+      if (!text || b.title || text.toLowerCase() === dr.title.toLowerCase()) continue;
+      if (b.heading) sections.push({ heading: text, paras: [] }); else sections[sections.length - 1].paras.push(text);
+    }
+    const { applyDraftEdit } = await import("@/lib/memory");
+    if (!applyDraftEdit(s.firm.id, dr.id, sections.filter((x) => x.heading || x.paras.length), !s.firm.demo)) return no("Not saved", 400);
+    db().prepare("INSERT INTO activity (id, firm_id, case_id, at, actor, kind, text, minutes) VALUES (?, ?, ?, ?, ?, 'draft', ?, 0)").run(uid(), s.firm.id, dr.case_id, new Date().toISOString(), s.user.name, `Saved ${dr.title} from Word as a new version.`);
+    return NextResponse.json({ ok: true });
+  }
   if (body.op === "check") {
     const c = caseById(s.firm.id, String(body.case ?? ""), viewer(s.user));
     if (!c) return no("Not found", 404);
