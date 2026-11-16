@@ -29,6 +29,14 @@ export async function register() {
   const backup = () => void backupNow().catch(() => undefined);
   setTimeout(backup, 3 * 60_000);
   setInterval(backup, 6 * 3600_000);
+  // The law library: filled from the official releases a minute in, then checked twice a day (downloads only when a
+  // new release is out).
+  if (process.env.LAW_SYNC !== "off") {
+    const { syncLaw } = await import("./lib/law");
+    const law = () => void syncLaw().catch(() => undefined);
+    setTimeout(law, 60_000);
+    setInterval(law, 12 * 3600_000);
+  }
   // Intake files a client never sent are removed after 30 days.
   const { sweepSessions } = await import("./lib/client-intake");
   setInterval(() => { try { sweepSessions(); } catch { /* next round */ } }, 6 * 3600_000);

@@ -2,8 +2,9 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import CopyLink from "@/components/CopyLink";
 import { PageHead, btn, field, label } from "@/components/ui";
-import { backUpNowAction, setUpFirmAction } from "@/lib/actions";
+import { backUpNowAction, updateLawAction, setUpFirmAction } from "@/lib/actions";
 import { backupStatus, offsiteConfigured } from "@/lib/backup";
+import { lawStatus } from "@/lib/law";
 import { db } from "@/lib/db";
 import { inviteUrl, isOps } from "@/lib/invites";
 import { requireUser } from "@/lib/session";
@@ -31,11 +32,29 @@ export default async function Ops({ searchParams }: { searchParams: Promise<{ in
         <div className="mt-8"><span className={label}>Admin invite for {firm}</span><CopyLink inline url={inviteUrl(invite)} /></div>
       )}
       <BackupPanel />
+      <LawPanel />
       {firms.length > 0 && (
         <div className="mt-12 border-t border-line">
           {firms.map((f, i) => <div key={i} className="flex justify-between border-b border-line py-2.5 text-[13px]"><span>{f.name}</span><span className="text-faint">{f.members}</span></div>)}
         </div>
       )}
+    </div>
+  );
+}
+
+/** The law library's sources and last check, for Lincoln staff only. */
+function LawPanel() {
+  const l = lawStatus();
+  return (
+    <div className="mt-10 border-t border-line pt-6">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[14px] font-medium">Law library</span>
+        <form action={updateLawAction}><button className={btn.secondary}>Update now</button></form>
+      </div>
+      <p className="mt-2 text-[13px] text-muted">
+        {l.counts.length ? l.counts.map((c) => `${c.source} ${c.n}`).join(" · ") : "Empty"}
+        {l.checked ? ` · Checked ${new Date(l.checked).toUTCString()}` : ""}{l.error ? ` · ${l.error}` : ""}
+      </p>
     </div>
   );
 }

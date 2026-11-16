@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import clsx from "clsx";
-import { Blocks, ChevronsUpDown, CircleCheck, CircleHelp, FolderClosed, House, Inbox, LogOut, PanelLeft, Play, RotateCcw, Settings, SquarePen } from "lucide-react";
+import { Blocks, ChevronsUpDown, CircleCheck, CircleHelp, FolderClosed, House, Inbox, LogOut, PanelLeft, Play, RotateCcw, Scale, Settings, SquarePen } from "lucide-react";
 import { advanceDemo, resetDemoAction, signOut } from "@/lib/actions";
 import { Avatar } from "./ui";
 
@@ -67,6 +67,7 @@ export default function Sidebar({ firm, user, review, recent, demo }: Props) {
         {item("/cases", "Cases", FolderClosed)}
         {item("/approvals", "Review", CircleCheck, review)}
         {item("/inbox", "Inbox", Inbox)}
+        {item("/library", "Library", Scale)}
         {item("/integrations", "Integrations", Blocks)}
       </nav>
       {recent.length > 0 && (

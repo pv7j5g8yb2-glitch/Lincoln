@@ -145,6 +145,15 @@ export async function revokeInvite(form: FormData) {
 }
 
 /** Lincoln staff make a backup on demand. */
+export async function updateLawAction() {
+  const { user } = await requireUser();
+  if (!isOps(user.email)) redirect("/");
+  const { syncLaw } = await import("./law");
+  const r = await syncLaw();
+  await toast(r.errors.length ? "Update failed" : "Updated");
+  redirect("/ops");
+}
+
 export async function backUpNowAction() {
   const { user } = await requireUser();
   if (!isOps(user.email)) redirect("/");

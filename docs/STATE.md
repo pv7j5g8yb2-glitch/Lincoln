@@ -351,6 +351,15 @@ from the repo the same day. History is in git up to commit `341cf65`.
   requirements down the side, documents across, each cell linked to its page. "Met" only stands with a real page;
   pages not in the file are dropped. Export menu: Evidence grid .xlsx (one row per piece of evidence, filterable).
   The same notice sent twice is not answered twice.
+* Law library (2026-11-16): the INA (8 U.S.C., with INA section numbers), all of 8 CFR, 20 CFR 655 and 656, and
+  22 CFR 40 to 42, from the official downloads only (Law Revision Counsel XML release points, eCFR API). About 7,300
+  passages, each with its exact citation and a link to the official text; filled a minute after the server starts,
+  then checked twice a day and downloaded only when a new release is out (13 seconds for a full load). Search by
+  citation ("8 CFR 214.2(o)(3)(iii)", "INA 212(a)(9)(B)(v)") or words, on the Library page (sidebar, and More on
+  phones), in the chat (search_law tool), and in drafting: every provision a request or the case's requirements cite
+  is given to the draft as official text, and other provisions get an Attorney note to confirm. Status and Update now
+  on /ops. Not in the library yet: USCIS Policy Manual, BIA and AAO decisions, Visa Bulletin, fee schedule (their
+  sites were not tried; only sources with official downloads go in, never scraped). LAW_SYNC=off turns syncing off.
 * Security requirements for selling to firms (bare minimum, mid market, BigLaw, and where Lincoln stands): saved in
   docs/RESEARCH.md, 'Security requirements for law firms'. Next: a parent asks Anthropic sales for zero data retention.
 * Team (2026-11-16): no public sign up (/signup goes to /start; Google or Microsoft sign in only joins an open
