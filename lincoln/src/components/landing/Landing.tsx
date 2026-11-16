@@ -93,8 +93,8 @@ function Photo({ src, pos = "50% 50%", dim = 1, className = "", children }: { sr
 }
 
 /* The work, laid on the photographs. */
-const card = "relative w-[86%] rounded-2xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_40px_80px_-24px_rgba(0,0,0,0.5)] md:w-[80%]";
-const eyebrow = "text-[12.5px] font-medium uppercase tracking-[0.16em] text-[#8a867f] md:text-[13px]";
+const card = "relative w-[86%] rounded-2xl bg-white font-sans shadow-[0_1px_2px_rgba(0,0,0,0.04),0_40px_80px_-24px_rgba(0,0,0,0.5)] md:w-[80%]";
+const eyebrow = "font-sans text-[12.5px] font-medium uppercase tracking-[0.16em] text-[#8a867f] md:text-[13px]";
 const label = "text-[12px] font-medium uppercase tracking-[0.12em] text-[#a09d96]";
 const rise = (on: boolean, d: number) => ({ className: `transition-all duration-700 ease-out motion-reduce:transition-none ${on ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`, style: { transitionDelay: `${d}ms` } });
 
@@ -165,7 +165,7 @@ const STEPS: { title: string; line: string; photo: string; pos?: string; dim?: n
   { title: "Reads your mail.", line: "A client writes in. The case is open before anyone sees the email.", photo: "/landing/concrete.jpg", Card: MailCard },
   { title: "Reads your files.", line: "Conflicts, gaps and bars, each with the page it came from.", photo: "/landing/marble.jpg", Card: ReadCard },
   { title: "Drafts your letters.", line: "Support letters and RFE responses, cited to the evidence.", photo: "/landing/letters.jpg", dim: 0.55, Card: LetterCard },
-  { title: "Asks for approval.", line: "Nothing is filed or sent without an attorney's approval.", photo: "/landing/court.jpg", pos: "85% 30%", dim: 0.7, Card: ApproveCard },
+  { title: "Asks for approval.", line: "Nothing is filed or sent without an attorney's approval.", photo: "/landing/columns.jpg", pos: "50% 50%", Card: ApproveCard },
 ];
 
 /* The 3D piece: the case papers lie spread across a desk, then fold into one filing packet as the page scrolls. */
@@ -173,7 +173,7 @@ const SHEETS = ["Cover letter", "Form G-1145", "Form I-130", "Form I-130A", "For
 
 function Sheet({ title, i }: { title: string; i: number }) {
   return (
-    <div className="relative h-full w-full rounded-[6px] bg-white p-4 shadow-[0_1px_0_rgba(0,0,0,0.04),0_18px_30px_-18px_rgba(0,0,0,0.45)] ring-1 ring-black/[0.06]">
+    <div className="relative h-full w-full rounded-[6px] bg-white p-4 font-sans shadow-[0_1px_0_rgba(0,0,0,0.04),0_18px_30px_-18px_rgba(0,0,0,0.45)] ring-1 ring-black/[0.06]">
       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#161614]">{title}</p>
       <div className="mt-3 flex flex-col gap-[7px]">
         {Array.from({ length: 11 }, (_, k) => <div key={k} className="h-[5px] rounded-full bg-[#ece9e3]" style={{ width: `${55 + ((k * 37 + i * 19) % 40)}%` }} />)}
@@ -194,7 +194,7 @@ function Packet() {
         <div className="mx-auto grid w-full max-w-[1200px] items-center gap-4 px-4 md:grid-cols-[minmax(0,420px)_1fr] md:gap-10 md:px-8">
           <div className="relative z-10 pt-6 md:pt-0">
             <h2 className="font-serif text-[34px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[56px]">All your cases in one place.</h2>
-            <p className="mt-4 max-w-[30ch] text-[16.5px] leading-[1.6] text-[#6b6862] md:text-[18px]">Forms, letters and exhibits in filing order, ready for review.</p>
+            <p className="mt-4 max-w-[30ch] text-[17.5px] leading-[1.6] text-[#6b6862] md:text-[19px]">Forms, letters and exhibits in filing order, ready for review.</p>
           </div>
           <div className="relative flex h-[56vh] items-center justify-center [perspective:2000px] md:h-[78vh]">
             <div className="relative [transform-style:preserve-3d]" style={{ width: W, height: H, transform: `scale(${narrow ? 0.8 : 1.15}) rotateX(${54 - 6 * easeInOut(p)}deg) rotateZ(${-34 + 6 * easeInOut(p)}deg)` }}>
@@ -232,10 +232,10 @@ function Close() {
     <div ref={ref} className="relative h-[560px] overflow-hidden rounded-[24px] bg-[#222] md:h-[760px]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/landing/board.jpg" alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover motion-reduce:!transform-none" style={{ objectPosition: "50% 45%", filter: "brightness(0.6)", transform: `scale(${1.14 - 0.14 * ease(p * 1.7)})` }} />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent to-60%" />
-      <div className="absolute bottom-7 left-6 text-white md:bottom-14 md:left-14">
+      <div className="absolute inset-0 bg-black/25" />
+      <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-white">
         <In><h2 className="font-serif text-[48px] font-semibold leading-[1] tracking-[-0.035em] md:text-[88px]">Start your<br />first case.</h2></In>
-        <In delay={150}><Link href="/start" className="mt-7 inline-block rounded-full bg-white px-6 py-3.5 text-[15.5px] font-medium text-[#161614] transition hover:bg-white/85 md:mt-8">Get started</Link></In>
+        <In delay={150}><Link href="/start" className="mt-7 inline-block rounded-full bg-white px-6 py-3.5 font-sans text-[15.5px] font-medium text-[#161614] transition hover:bg-white/85 md:mt-8">Get started</Link></In>
       </div>
     </div>
   );
@@ -280,31 +280,31 @@ export default function Landing() {
     on(); window.addEventListener("scroll", on, { passive: true }); return () => window.removeEventListener("scroll", on);
   }, []);
   return (
-    <div className="min-h-dvh overflow-x-clip bg-[#faf9f6] font-sans text-[#161614] antialiased selection:bg-[#efe6d6]">
+    <div className="min-h-dvh overflow-x-clip bg-[#faf9f6] font-serif text-[#161614] antialiased selection:bg-[#efe6d6]">
       <header className={`sticky top-0 z-50 bg-[#faf9f6]/85 backdrop-blur-md transition-[border-color] duration-300 ${scrolled ? "border-b border-[#ebe9e4]" : "border-b border-transparent"}`}>
         <nav className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 md:px-8">
           <Link href="/" className="font-serif text-[26px] font-semibold tracking-[-0.02em] md:text-[28px]">Lincoln</Link>
           <div className="flex items-center gap-1">
-            <Link href="/signin" className="rounded-full px-3 py-2 text-[14.5px] text-[#6b6862] transition hover:text-[#161614] md:px-4">Sign in</Link>
-            <Link href="/start" className="rounded-full bg-[#161614] px-4 py-2 text-[14.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
+            <Link href="/signin" className="rounded-full px-3 py-2 font-sans text-[14.5px] text-[#6b6862] transition hover:text-[#161614] md:px-4">Sign in</Link>
+            <Link href="/start" className="rounded-full bg-[#161614] px-4 py-2 font-sans text-[14.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
           </div>
         </nav>
       </header>
 
       {/* Hero: the words, and the courthouse rising into its frame. */}
-      <section className="mx-auto grid max-w-[1200px] items-end gap-9 px-4 pb-20 pt-11 md:grid-cols-[1fr_500px] md:gap-[72px] md:px-8 md:pb-28 md:pt-14">
+      <section className="mx-auto grid max-w-[1200px] items-end gap-9 px-4 pb-20 pt-11 md:px-8 md:pb-28 md:pt-14 lg:grid-cols-[1fr_460px] lg:gap-16">
         <div>
           <p className={`hero-in ${eyebrow}`}>For immigration law firms</p>
-          <h1 className="hero-in mt-4 font-serif text-[50px] font-semibold leading-[1] tracking-[-0.035em] [animation-delay:120ms] md:text-[92px]">Your work done before you even ask.</h1>
-          <p className="hero-in mt-7 max-w-[32ch] text-[17.5px] leading-[1.6] text-[#6b6862] [animation-delay:240ms] md:text-[20px]">
+          <h1 className="hero-in hero-title mt-4 font-serif font-semibold leading-[1.04] tracking-[-0.035em] [animation-delay:120ms]">Your work done before you even ask.</h1>
+          <p className="hero-in hero-line mt-6 leading-[1.6] text-[#6b6862] [animation-delay:240ms]">
             Lincoln works autonomously for you, no need for prompts. Once it&apos;s done you review and approve.
           </p>
-          <div className="hero-in mt-9 flex items-center gap-2 [animation-delay:360ms] md:mb-3">
-            <Link href="/start" className="rounded-full bg-[#161614] px-6 py-3.5 text-[15.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
-            <a href="#work" className="rounded-full px-5 py-3.5 text-[15.5px] font-medium transition hover:bg-[#f0eee9]">How it works</a>
+          <div className="hero-in mt-9 flex items-center gap-2 [animation-delay:360ms] lg:mb-3">
+            <Link href="/start" className="rounded-full bg-[#161614] px-6 py-3.5 font-sans text-[15.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
+            <a href="#work" className="rounded-full px-5 py-3.5 font-sans text-[15.5px] font-medium transition hover:bg-[#f0eee9]">How it works</a>
           </div>
         </div>
-        <div ref={hero} className="hero-photo relative h-[440px] overflow-hidden rounded-[20px] bg-[#e4e1db] md:h-[640px]">
+        <div ref={hero} className="hero-photo relative h-[440px] overflow-hidden rounded-[20px] bg-[#e4e1db] md:h-[560px] lg:h-[620px]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/landing/court.jpg" alt="" fetchPriority="high" className="hero-photo-img absolute inset-x-0 -top-[6%] h-[112%] w-full object-cover" style={{ objectPosition: "30% 50%", translate: `0 ${(0.5 - hp) * 8}%` }} />
         </div>
@@ -325,7 +325,7 @@ export default function Landing() {
               <In className={i % 2 ? "md:order-2" : ""}>
                 <p className={eyebrow}>0{i + 1}</p>
                 <h3 className="mt-3 font-serif text-[34px] font-semibold leading-[1.05] tracking-[-0.025em] md:text-[52px]">{s.title}</h3>
-                <p className="mt-3 max-w-[30ch] text-[16.5px] leading-[1.6] text-[#6b6862] md:mt-4 md:text-[18px]">{s.line}</p>
+                <p className="mt-3 max-w-[30ch] text-[17.5px] leading-[1.6] text-[#6b6862] md:mt-4 md:text-[19px]">{s.line}</p>
               </In>
               <Photo src={s.photo} pos={s.pos} dim={s.dim} className="flex h-[480px] items-center justify-center md:h-[620px]">
                 <In delay={200} className="flex w-full justify-center">{(on) => <s.Card on={on} />}</In>
@@ -344,7 +344,7 @@ export default function Landing() {
           <div className="flex flex-col">
             {TRUST.map(([a, b], i) => (
               <In key={a} delay={i * 90}>
-                <div className={`py-5 ${i ? "border-t border-[#ebe9e4]" : "pt-1"}`}><p className="text-[17px] font-medium">{a}</p><p className="mt-1 text-[15.5px] text-[#6b6862]">{b}</p></div>
+                <div className={`py-5 ${i ? "border-t border-[#ebe9e4]" : "pt-1"}`}><p className="text-[19px] font-semibold tracking-[-0.01em]">{a}</p><p className="mt-1 text-[16.5px] text-[#6b6862]">{b}</p></div>
               </In>
             ))}
           </div>

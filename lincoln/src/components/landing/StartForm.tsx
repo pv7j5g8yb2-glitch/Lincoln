@@ -56,13 +56,13 @@ export default function StartForm() {
         {state === "sent" ? (
           <div className="hero-in pt-10">
             <h1 className="font-serif text-[44px] font-semibold leading-[1.02] tracking-[-0.035em] md:text-[64px]">Thank you.</h1>
-            <p className="mt-5 max-w-[34ch] text-[17.5px] leading-[1.6] text-[#6b6862]">We&apos;ll reply by email with a quote and next steps.</p>
+            <p className="mt-5 max-w-[34ch] font-serif text-[18px] leading-[1.6] text-[#6b6862]">We&apos;ll reply by email with a quote and next steps.</p>
             <Link href="/" className="mt-9 inline-block rounded-full bg-[#161614] px-6 py-3.5 text-[15.5px] font-medium text-white transition hover:opacity-85">Back to Lincoln</Link>
           </div>
         ) : (
           <>
             <h1 className="hero-in font-serif text-[44px] font-semibold leading-[1.02] tracking-[-0.035em] md:text-[64px]">Get started</h1>
-            <p className="hero-in mt-4 max-w-[38ch] text-[17px] leading-[1.6] text-[#6b6862] [animation-delay:100ms] md:text-[18px]">A few questions about your firm. We reply by email with a quote.</p>
+            <p className="hero-in mt-4 max-w-[38ch] font-serif text-[17.5px] leading-[1.6] text-[#6b6862] [animation-delay:100ms] md:text-[19px]">A few questions about your firm. We reply by email with a quote.</p>
 
             <form onSubmit={submit} className="hero-in mt-10 flex flex-col gap-8 [animation-delay:200ms]" noValidate>
               <div className="flex flex-col gap-4">
