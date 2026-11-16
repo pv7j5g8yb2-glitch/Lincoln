@@ -96,6 +96,11 @@ rejected "Lincoln working a case live" as a hero for that reason. On 2026-11-16 
 the direction is now clean and minimal (the app's own colours, large serif type, quiet motion). Framer is connected
 (his free workspace) and is an option for building and hosting it.
 
+**The bar is the game changer (Ismael, 2026-11-16).** Judge Lincoln against being the complete, game changing
+platform for immigration firms, never against "a first version" or an MVP. Build only what a firm will find genuinely
+valuable and convenient, keep the app simple and minimal, and let details appear only when needed or when the user
+asks for them (folded, on tap, on hover).
+
 **Lincoln on phones and manual work (Ismael, 2026-11-14).** On phones Lincoln uses the Hopkins Liquid Glass
 tab bar (Home, Cases, +, Review, More), with a lens that glides, stretches and follows a finger, and the More
 menu as a glass sheet; no top bar or slide out menu. The app follows the device's light or dark setting.
