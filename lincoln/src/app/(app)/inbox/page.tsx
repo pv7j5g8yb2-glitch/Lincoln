@@ -9,7 +9,7 @@ export default async function InboxPage() {
   return (
     <div className="rise">
       <PageHead title="Inbox" />
-      {all.length === 0 ? <Empty>No case mail</Empty> : <MessageList items={all} showCase cases={all.some((m) => m.state === "unsure") ? cases(firm.id, viewer).map((c) => ({ id: c.id, client: c.client, type_code: c.type_code })) : []} />}
+      {all.length === 0 ? <Empty page>No new mail yet</Empty> : <MessageList items={all} showCase cases={all.some((m) => m.state === "unsure") ? cases(firm.id, viewer).map((c) => ({ id: c.id, client: c.client, type_code: c.type_code })) : []} />}
     </div>
   );
 }

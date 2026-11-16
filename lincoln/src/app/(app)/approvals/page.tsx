@@ -23,7 +23,7 @@ export default async function Review({ searchParams }: { searchParams: Promise<{
     <div className="rise">
       <PageHead title="Review" />
       {pending.length === 0 ? (
-        <Empty>Nothing for review</Empty>
+        <Empty page>Nothing for review yet</Empty>
       ) : (
         <div className="grid gap-10 lg:grid-cols-[260px_1fr]">
           <ul className={clsx("flex-col border-t border-line", id ? "hidden lg:flex" : "flex")}>
