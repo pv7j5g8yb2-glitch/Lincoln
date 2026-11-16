@@ -6,6 +6,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransitio
 import clsx from "clsx";
 import { Blocks, CircleCheck, CircleHelp, Ellipsis, FolderClosed, House, Inbox, LogOut, Play, Plus, RotateCcw, Scale, Settings } from "lucide-react";
 import { advanceDemo, resetDemoAction, signOut } from "@/lib/actions";
+import { confirmBox } from "./Confirm";
 import { Avatar } from "./ui";
 
 // The phone tab bar, as on iOS 26: a floating capsule of glass with a lens behind the selected tab.
@@ -241,11 +242,11 @@ export default function TabBar({ firm, user, review, demo }: Props) {
           <>
             <div className="lg-rule" />
             {demo.next && <button disabled={pending} onClick={() => start(async () => { await advanceDemo(); setSheet(false); })} className={sheetItem}><Play size={18} strokeWidth={1.7} /><span className="min-w-0 truncate">{pending ? "Running" : "Run next event"}</span></button>}
-            <button disabled={pending} onClick={() => start(() => resetDemoAction())} className={sheetItem}><RotateCcw size={18} strokeWidth={1.7} />Reset sample data</button>
+            <button disabled={pending} onClick={async () => { if (await confirmBox()) start(() => resetDemoAction()); }} className={sheetItem}><RotateCcw size={18} strokeWidth={1.7} />Reset sample data</button>
           </>
         )}
         <div className="lg-rule" />
-        <button onClick={() => start(() => signOut())} className={sheetItem}><LogOut size={18} strokeWidth={1.7} />Sign out</button>
+        <button onClick={async () => { if (await confirmBox()) start(() => signOut()); }} className={sheetItem}><LogOut size={18} strokeWidth={1.7} />Sign out</button>
       </div>
 
       <nav className="lg-bar" aria-label="Main">

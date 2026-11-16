@@ -22,6 +22,7 @@ import { inviteMember, revokeInvite } from "@/lib/actions";
 import { inviteUrl, pendingInvites } from "@/lib/invites";
 import RoleSelect from "@/components/RoleSelect";
 import { rules } from "@/lib/memory";
+import { ConfirmButton } from "@/components/Confirm";
 
 const TABS: [string, string][] = [["profile", "Profile"], ["security", "Security"], ["firm", "Firm"], ["automation", "Automation"]];
 
@@ -42,7 +43,7 @@ const device = deviceName;
 const MSG: Record<string, Record<string, string>> = {
   profile: { name: "Name required.", sample: "Not available in the sample workspace." },
   security: { limited: "Too many attempts. Try again in 15 minutes.", sample: "Not available in the sample workspace.", current: "Wrong password.", password: "10 characters min.", code: "Wrong code.", breached: "This password appears in known data breaches.", required: "The firm requires two step sign in.", admin: "Administrators only.", selffirst: "Turn on two step sign in for this account first." },
-  firm: { invite: "A valid email and a role are needed.", member: "This email already has an account.", limited: "Too many invites. Try again later.", "1": "Administrators only.", sample: "Not available in the sample workspace.", delete: "Name or password did not match.", export: "Wrong password." },
+  firm: { invite: "A valid email and a role are needed.", member: "This email already has an account.", limited: "Too many invites. Try again later.", "1": "Administrators only.", sample: "Not available in the sample workspace.", delete: "Name or password did not match.", export: "Wrong password.", password: "Wrong password." },
 };
 
 function Row({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -158,7 +159,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 <form action={setTwoStepRequired} className="mt-3 flex items-center justify-between gap-4 border-b border-line pb-3">
                   <input type="hidden" name="on" value={firm.require_2fa ? "0" : "1"} />
                   <span className="text-[13px]">Required for everyone in the firm<span className="text-faint"> · {firm.require_2fa ? "On" : "Off"}</span></span>
-                  <button className={btn.ghost}>{firm.require_2fa ? "Turn off" : "Turn on"}</button>
+                  <ConfirmButton password={Boolean(firm.require_2fa)} className={btn.ghost}>{firm.require_2fa ? "Turn off" : "Turn on"}</ConfirmButton>
                 </form>
               )}
 
@@ -167,11 +168,11 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 {sessions.map((x) => (
                   <Row key={x.id}>
                     <span className="min-w-0 flex-1"><span className="block truncate text-[13px]">{device(x.agent)}{x.id === sessionId ? <span className="text-faint"> · this device</span> : null}</span><span className="block text-[12px] text-faint">{x.ip ? `${x.ip} · ` : ""}{ago(x.last_seen ?? x.created_at)}</span></span>
-                    {x.id !== sessionId && <form action={signOutSession}><input type="hidden" name="session" value={x.id} /><button className={btn.ghost}>Sign out</button></form>}
+                    {x.id !== sessionId && <form action={signOutSession}><input type="hidden" name="session" value={x.id} /><ConfirmButton className={btn.ghost}>Sign out</ConfirmButton></form>}
                   </Row>
                 ))}
               </div>
-              {sessions.length > 1 && <form action={signOutSession} className="mt-2"><input type="hidden" name="session" value="others" /><button className={btn.ghost}>Sign out all other devices</button></form>}
+              {sessions.length > 1 && <form action={signOutSession} className="mt-2"><input type="hidden" name="session" value="others" /><ConfirmButton className={btn.ghost}>Sign out all other devices</ConfirmButton></form>}
 
               {events.length > 0 && <h2 className="mb-1 mt-12 text-[14px] font-medium">Security activity</h2>}
               <div className={events.length ? "border-t border-line" : undefined}>
@@ -225,7 +226,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 {admin && !firm.demo && pendingInvites(firm.id).map((i) => (
                   <Row key={i.token_hash}>
                     <span className="min-w-0 flex-1"><span className="block truncate text-[13px]">{i.email}</span><span className="block truncate text-[12px] text-faint">Invited{i.role ? ` · ${i.role}` : ""}{i.admin ? " · Admin" : ""}</span></span>
-                    <form action={revokeInvite}><input type="hidden" name="id" value={i.token_hash} /><button className={btn.ghost}>Remove</button></form>
+                    <form action={revokeInvite}><input type="hidden" name="id" value={i.token_hash} /><ConfirmButton className={btn.ghost}>Remove</ConfirmButton></form>
                   </Row>
                 ))}
               </div>
@@ -234,7 +235,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                   <input name="email" type="email" required placeholder="Email" className={clsx(field, "!w-auto min-w-[200px] flex-1")} />
                   <select name="role" defaultValue="Attorney" className={clsx(field, "!w-[180px]")}>{ROLES.map((r) => <option key={r} value={r}>{r}</option>)}</select>
                   <label className="flex items-center gap-2 px-1 text-[13px] text-muted"><input type="checkbox" name="admin" className="h-4 w-4 accent-ink" /> Admin</label>
-                  <button className={btn.primary}>Invite</button>
+                  <ConfirmButton askIf="admin" passwordIf="admin" className={btn.primary}>Invite</ConfirmButton>
                 </form>
               )}
               {admin && params.invite && /^[\w-]{20,80}$/.test(params.invite) && (
@@ -255,7 +256,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                     {rules(firm.id, k).map((r, i) => (
                       <li key={i} className="flex items-start gap-3 border-b border-line py-2.5 text-[13px]">
                         <span className="min-w-0 flex-1 leading-relaxed">{r}</span>
-                        {admin && <form action={removeStyleRule.bind(null, k, i)}><button className="text-[12px] text-faint transition hover:text-ink" aria-label="Remove">Remove</button></form>}
+                        {admin && <form action={removeStyleRule.bind(null, k, i)}><ConfirmButton className="text-[12px] text-faint transition hover:text-ink">Remove</ConfirmButton></form>}
                       </li>
                     ))}
                   </ul>

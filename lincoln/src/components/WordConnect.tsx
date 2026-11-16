@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { disconnectWordAction, newWordCodeAction } from "@/lib/actions";
 import { notify } from "./Toaster";
+import { confirmBox } from "./Confirm";
 import { btn } from "./ui";
 
 /** The Word add-in: its manifest, and a one time code to connect it. */
@@ -14,8 +15,8 @@ export default function WordConnect({ connected }: { connected: boolean }) {
     <div>
       <div className="flex flex-wrap items-center gap-2">
         <a href="/word/manifest.xml" className={btn.secondary} download>Manifest</a>
-        <button disabled={pending} onClick={() => start(async () => { const r = await newWordCodeAction(); if (r.code) { setCode(r.code); setOn(false); } })} className={btn.primary}>{on ? "New code" : "Code"}</button>
-        {on && <button disabled={pending} onClick={() => start(async () => { await disconnectWordAction(); setOn(false); notify("Disconnected"); })} className={btn.ghost}>Disconnect</button>}
+        <button disabled={pending} onClick={async () => { const ok = await confirmBox({ password: true }); if (!ok) return; start(async () => { const r = await newWordCodeAction(ok.password); if (r.code) { setCode(r.code); setOn(false); } else if ("error" in r && r.error) notify(r.error); }); }} className={btn.primary}>{on ? "New code" : "Code"}</button>
+        {on && <button disabled={pending} onClick={async () => { if (!(await confirmBox())) return; start(async () => { await disconnectWordAction(); setOn(false); notify("Disconnected"); }); }} className={btn.ghost}>Disconnect</button>}
       </div>
       {code && (
         <button onClick={() => { void navigator.clipboard?.writeText(code).then(() => notify("Copied"), () => undefined); }} className="mt-4 w-full rounded-xl border border-line bg-panel py-3 text-center font-mono text-[20px] tracking-[0.18em] transition hover:border-edge" title="Copy">{code}</button>

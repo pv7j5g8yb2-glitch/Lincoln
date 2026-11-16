@@ -116,9 +116,20 @@ export async function joinFirm(token: string, form: FormData) {
 }
 
 /** An admin invites someone to the firm, with their role and whether they are an admin. */
+/** The account password, asked again before a sensitive change. Accounts that sign in only with Google or
+ *  Microsoft have none, and pass. Tries are limited. */
+function passwordOk(userId: string, given: unknown) {
+  const row = db().prepare("SELECT password_hash FROM users WHERE id = ?").get(userId) as { password_hash: string | null } | undefined;
+  if (!row?.password_hash) return true;
+  if (limited(`confirm:${userId}`, 10)) return false;
+  return verifyPassword(String(given ?? ""), row.password_hash);
+}
+
 export async function inviteMember(form: FormData) {
   const { user, firm } = await requireUser();
   if (firm.demo || !user.admin) redirect("/settings?tab=firm&error=1");
+  // Making someone an admin hands them the firm: the password is asked again.
+  if (form.get("admin") === "on" && !passwordOk(user.id, form.get("confirm_password"))) redirect("/settings?tab=firm&error=password");
   const email = String(form.get("email") ?? "").trim().toLowerCase();
   const role = String(form.get("role") ?? "");
   if (!validEmail(email) || !ROLES.includes(role)) redirect("/settings?tab=firm&error=invite");
@@ -146,9 +157,11 @@ export async function revokeInvite(form: FormData) {
 
 /** Lincoln staff make a backup on demand. */
 /** A one time code for connecting the Word add-in; shown once. */
-export async function newWordCodeAction() {
+export async function newWordCodeAction(password?: string) {
   const { user, firm } = await requireUser();
   if (firm.demo) return { code: null };
+  // The code opens every case this person can see from Word: the password is asked again.
+  if (!passwordOk(user.id, password)) return { code: null, error: "Wrong password" };
   const { newWordCode } = await import("./word");
   return { code: newWordCode(firm.id, user.id) };
 }
@@ -442,9 +455,10 @@ export async function setMemberRole(userId: string, role: string) {
 }
 
 /** An admin makes someone an admin, or takes it away. A firm always keeps at least one admin. */
-export async function setMemberAdmin(userId: string, on: boolean) {
+export async function setMemberAdmin(userId: string, on: boolean, password?: string) {
   const { user, firm } = await requireUser();
   if (firm.demo || !user.admin) return { error: "Not changed" };
+  if (!passwordOk(user.id, password)) return { error: "Wrong password" };
   const target = db().prepare("SELECT id, name, admin FROM users WHERE id = ? AND firm_id = ?").get(userId, firm.id) as { id: string; name: string; admin: number } | undefined;
   if (!target) return { error: "Not changed" };
   if (!on && target.admin && otherAdmins(firm.id, target.id) === 0) return { error: "A firm needs one admin" };
@@ -688,6 +702,8 @@ export async function setTwoStepRequired(form: FormData) {
   if (firm.demo || !user.admin) redirect("/settings?tab=security&error=admin");
   const on = form.get("on") === "1";
   if (on && !twoStep) redirect("/settings?tab=security&error=selffirst");
+  // Turning the firm's requirement off weakens everyone's sign in: the password is asked again.
+  if (!on && !passwordOk(user.id, form.get("confirm_password"))) redirect("/settings?tab=security&error=current");
   db().prepare("UPDATE firms SET require_2fa = ? WHERE id = ?").run(on ? 1 : 0, firm.id);
   await securityEvent(firm.id, user.id, on ? "two_step_required" : "two_step_optional");
   await toast("Saved");

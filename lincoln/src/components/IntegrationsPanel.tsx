@@ -5,6 +5,7 @@ import { PROVIDERS, checkHealth, connectionsOf, settingsOf, teamsChannels } from
 import { CircleAlert } from "lucide-react";
 import type { User, Firm } from "@/lib/session";
 import WordConnect from "./WordConnect";
+import { ConfirmButton } from "./Confirm";
 import { wordConnected } from "@/lib/word";
 
 /** Brand logos live in /public/logos. Shown at a fixed size inside a soft tile. */
@@ -58,7 +59,7 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
                     {c && <span className="block truncate text-[12px] text-faint">{c.email}</span>}
                   </span>
                   {c ? (
-                    <form action={disconnect}><input type="hidden" name="provider" value={p.id} /><button className={btn.ghost}>Disconnect</button></form>
+                    <form action={disconnect}><input type="hidden" name="provider" value={p.id} /><ConfirmButton className={btn.ghost}>Disconnect</ConfirmButton></form>
                   ) : p.configured() ? (
                     <a href={`/api/connect/${p.id}`} className={clsx(btn.primary, "press")}>Connect</a>
                   ) : (

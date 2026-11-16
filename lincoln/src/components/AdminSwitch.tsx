@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { setMemberAdmin } from "@/lib/actions";
 import { notify } from "./Toaster";
+import { confirmBox } from "./Confirm";
 
 /** An admin's switch for whether someone at the firm is an admin. Saves on change. */
 export default function AdminSwitch({ userId, on }: { userId: string; on: boolean }) {
@@ -17,11 +18,13 @@ export default function AdminSwitch({ userId, on }: { userId: string; on: boolea
         aria-checked={value}
         aria-label="Admin"
         disabled={pending}
-        onClick={() => {
+        onClick={async () => {
           const next = !value;
+          const ok = await confirmBox({ password: true });
+          if (!ok) return;
           setValue(next);
           start(async () => {
-            const r = await setMemberAdmin(userId, next);
+            const r = await setMemberAdmin(userId, next, ok.password);
             if ("error" in r) { setValue(!next); notify(r.error ?? "Not changed"); } else notify("Saved");
           });
         }}

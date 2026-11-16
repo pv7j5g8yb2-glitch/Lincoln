@@ -7,6 +7,7 @@ import { ArrowDown, Check, ChevronDown, ChevronLeft, Copy, MoreHorizontal, Pause
 import Composer from "./Composer";
 import Markdown from "./Markdown";
 import { deleteChat, renameChat, startCase } from "@/lib/actions";
+import { confirmBox } from "./Confirm";
 
 type M = { id?: string; role: string; content: string };
 type T = { id: string; title: string };
@@ -325,9 +326,7 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
         {menu === "more" && threadId && (
           <div onClick={(e) => e.stopPropagation()} className="absolute right-0 top-11 z-30 w-48 rounded-2xl border border-line bg-card p-1.5 shadow-lg">
             <button onClick={() => { setMenu(null); setRenaming(title ?? ""); }} className="w-full rounded-xl px-3 py-2 text-left text-[14px] transition hover:bg-panel">Rename</button>
-            {confirmDelete
-              ? <button onClick={() => start(() => deleteChat(threadId))} className="w-full rounded-xl px-3 py-2 text-left text-[14px] font-medium text-risk transition hover:bg-risk-bg">Delete this chat</button>
-              : <button onClick={() => setConfirmDelete(true)} className="w-full rounded-xl px-3 py-2 text-left text-[14px] text-risk transition hover:bg-risk-bg">Delete</button>}
+            <button onClick={async () => { setMenu(null); if (await confirmBox()) start(() => deleteChat(threadId)); }} className="w-full rounded-xl px-3 py-2 text-left text-[14px] text-risk transition hover:bg-risk-bg">Delete</button>
           </div>
         )}
       </div>

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import clsx from "clsx";
 import { Blocks, ChevronsUpDown, CircleCheck, CircleHelp, FolderClosed, House, Inbox, LogOut, PanelLeft, Play, RotateCcw, Scale, Settings, SquarePen } from "lucide-react";
 import { advanceDemo, resetDemoAction, signOut } from "@/lib/actions";
+import { confirmBox } from "./Confirm";
 import { Avatar } from "./ui";
 
 type Props = {
@@ -95,11 +96,11 @@ export default function Sidebar({ firm, user, review, recent, demo }: Props) {
                     <span><span className="block">{pending ? "Running" : "Run next event"}</span><span className="block text-[11.5px] leading-snug text-faint">{demo.next}</span></span>
                   </button>
                 )}
-                <button disabled={pending} onClick={() => start(() => resetDemoAction())} className={menuItem}><RotateCcw size={14} strokeWidth={1.7} />Reset sample data</button>
+                <button disabled={pending} onClick={async () => { if (await confirmBox()) start(() => resetDemoAction()); }} className={menuItem}><RotateCcw size={14} strokeWidth={1.7} />Reset sample data</button>
               </>
             )}
             <div className="mx-1 my-1 border-t border-line" />
-            <button onClick={() => start(() => signOut())} className={menuItem}><LogOut size={14} strokeWidth={1.7} />Sign out</button>
+            <button onClick={async () => { if (await confirmBox()) start(() => signOut()); }} className={menuItem}><LogOut size={14} strokeWidth={1.7} />Sign out</button>
           </div>
         )}
         <button onClick={() => setMenu((v) => !v)} aria-expanded={menu} className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition hover:bg-ink/[0.04]">

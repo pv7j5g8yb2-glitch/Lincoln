@@ -107,6 +107,11 @@ an application or demo, or contacting the company for API access (removed for th
 Docketwise, LollyLaw, INSZoom, eImmigration, iManage, NetDocuments, USCIS case status). Only services where Lincoln can
 register its own app or the firm can connect its own account. Importing a firm's own export is fine.
 
+**Confirm important actions (Ismael, 2026-11-16).** Every important or hard to undo action asks first with one small
+box: "Are you sure?", Yes (black in light mode, white in dark) and an always red No, nothing else. Sensitive changes
+(giving or removing admin, inviting an admin, the Word add-in code, turning off the firm's two step rule) also ask for
+the account password in the same box. Component: `lincoln/src/components/Confirm.tsx`.
+
 **Lincoln on phones and manual work (Ismael, 2026-11-14).** On phones Lincoln uses the Hopkins Liquid Glass
 tab bar (Home, Cases, +, Review, More), with a lens that glides, stretches and follows a finger, and the More
 menu as a glass sheet; no top bar or slide out menu. The app follows the device's light or dark setting.
