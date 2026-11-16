@@ -18,6 +18,3 @@
   .hero-title { font-size: calc((min(100vw, 1200px) - 588px) / 9.6); }
   .hero-line { font-size: min(calc((min(100vw, 1200px) - 588px) / 25), 20px); }
 }
-/* The steps scene: the page settles on a step after a scroll, and only there (proximity, so the rest scrolls freely). */
-html:has(.snap-steps) { scroll-snap-type: y proximity; }
-.snap-steps .snap-start { scroll-snap-align: start; scroll-snap-stop: always; }
