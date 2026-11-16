@@ -213,7 +213,10 @@ function Steps() {
   const [ref, p] = usePinned<HTMLDivElement>();
   const at = Math.min(STEPS.length - 1, Math.floor(p * STEPS.length * 0.999));
   return (
-    <div ref={ref} className="relative h-[230vh] md:h-[250vh]">
+    // Each step gets a long stretch of scroll, and the page settles on a step when a scroll ends (the snap points
+    // below, with scroll-snap in landing.css), so a light touch never skips one.
+    <div ref={ref} className="snap-steps relative [--step:72vh] md:[--step:64vh]" style={{ height: `calc(100vh + ${STEPS.length} * var(--step))` }}>
+      {STEPS.map((s, i) => <div key={s.title} aria-hidden className="pointer-events-none absolute left-0 h-px w-px snap-start" style={{ top: `calc(${i + 0.5} * var(--step))` }} />)}
       <div className="sticky top-16 flex h-[calc(100dvh-4rem)] items-center overflow-hidden">
         <div className="mx-auto grid w-full max-w-[1200px] gap-5 px-4 md:grid-cols-[minmax(0,1fr)_minmax(0,560px)] md:items-center md:gap-20 md:px-8">
           {/* Phones: only the step in view, above the frame. */}
