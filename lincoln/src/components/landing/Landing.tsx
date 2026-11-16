@@ -211,14 +211,94 @@ function Packet() {
  *  light up one by one; on the right one frame crossfades between the photographs and the work changes on it. */
 function Steps() {
   const [ref, p] = usePinned<HTMLDivElement>();
-  // The step in view changes only once the scroll is clearly into the next one, so it never flickers at the edge.
-  const held = useRef(0);
-  const raw = p * STEPS.length;
-  if (raw > held.current + 1.12 || raw < held.current - 0.12) held.current = Math.max(0, Math.min(STEPS.length - 1, Math.floor(raw)));
-  const at = held.current;
+  const marks = useRef<(HTMLDivElement | null)[]>([]);
+  const [at, setAt] = useState(0);
+  const atRef = useRef(0);
+  useEffect(() => {
+    // The step comes from where the page is against fixed marks in the section, never from the window's height, so
+    // a phone's address bar showing or hiding cannot change it. Inside the section, and only there, one swipe or one
+    // scroll moves exactly one step: the page glides to it and the rest of that gesture (a phone's glide included)
+    // is ignored. Swiping past the first or last step lets the page go, and before and after the section the page
+    // scrolls freely.
+    const root = document.documentElement;
+    const smooth: ScrollBehavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+    let raf = 0, inside = false, lockedUntil = 0, wheel = 0, touchY: number | null = null;
+    const geometry = () => {
+      const wrap = ref.current, m = marks.current;
+      if (!wrap || m.some((x) => !x)) return null;
+      const top = wrap.getBoundingClientRect().top + window.scrollY;
+      const tops = m.map((x) => x!.offsetTop);
+      return { top, tops, step: tops[1] - tops[0], off: window.scrollY - top };
+    };
+    const glide = (y: number) => {
+      lockedUntil = Date.now() + 850;
+      // Stops a phone's glide in its tracks before moving, so it cannot carry on past the step.
+      root.style.overflow = "hidden";
+      requestAnimationFrame(() => { root.style.overflow = ""; window.scrollTo({ top: y, behavior: smooth }); });
+    };
+    const move = (dir: number) => {
+      const g = geometry(); if (!g) return;
+      const last = g.tops.length - 1, next = atRef.current + dir;
+      if (next < 0) glide(g.top + g.tops[0] - g.step * 0.7);
+      else if (next > last) glide(g.top + g.tops[last] + g.step * 0.7);
+      else glide(g.top + g.tops[next]);
+    };
+    const tick = () => {
+      raf = 0;
+      const g = geometry(); if (!g) return;
+      const last = g.tops.length - 1;
+      const now = g.off > g.tops[0] - g.step * 0.5 && g.off < g.tops[last] + g.step * 0.5;
+      let i = 0;
+      while (i < last && g.off >= g.tops[i] + g.step * 0.5) i++;
+      atRef.current = i; setAt(i);
+      // Coming into the section, from above or below, the page settles on the first or last step.
+      if (now && !inside && Date.now() > lockedUntil) glide(g.top + g.tops[g.off < (g.tops[0] + g.tops[last]) / 2 ? 0 : last]);
+      inside = now;
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(tick); };
+    const onWheel = (e: WheelEvent) => {
+      if (!inside) return;
+      e.preventDefault();
+      if (Date.now() < lockedUntil) { wheel = 0; return; }
+      wheel += e.deltaY;
+      if (Math.abs(wheel) >= 30) { const dir = Math.sign(wheel); wheel = 0; move(dir); }
+    };
+    const onTouchStart = (e: TouchEvent) => { touchY = e.touches[0]?.clientY ?? null; };
+    const onTouchMove = (e: TouchEvent) => { if (inside) e.preventDefault(); };
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!inside || touchY === null) return;
+      const dy = touchY - (e.changedTouches[0]?.clientY ?? touchY);
+      touchY = null;
+      if (Math.abs(dy) < 24 || Date.now() < lockedUntil) return;
+      move(Math.sign(dy));
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (!inside || e.altKey || e.ctrlKey || e.metaKey) return;
+      const dir = ["ArrowDown", "PageDown", " "].includes(e.key) ? 1 : ["ArrowUp", "PageUp"].includes(e.key) ? -1 : 0;
+      if (!dir) return;
+      e.preventDefault();
+      if (Date.now() >= lockedUntil) move(e.shiftKey && e.key === " " ? -1 : dir);
+    };
+    tick();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("keydown", onKey);
+    return () => {
+      cancelAnimationFrame(raf); root.style.overflow = "";
+      window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll);
+      window.removeEventListener("wheel", onWheel); window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove); window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [ref]);
   return (
-    // Each step gets a long stretch of scroll, so a light touch never skips one. Nothing else on the page changes.
+    // Each step gets a long stretch of scroll; the marks are where each step sits fully in view.
     <div ref={ref} className="relative [--step:72vh] md:[--step:64vh]" style={{ height: `calc(100vh + ${STEPS.length} * var(--step))` }}>
+      {STEPS.map((s, i) => <div key={s.title} ref={(el) => { marks.current[i] = el; }} aria-hidden className="step-mark pointer-events-none absolute left-0 h-px w-px" style={{ top: `calc(${i + 0.5} * var(--step))` }} />)}
       <div className="sticky top-16 flex h-[calc(100dvh-4rem)] items-center overflow-hidden">
         <div className="mx-auto grid w-full max-w-[1200px] gap-5 px-4 md:grid-cols-[minmax(0,1fr)_minmax(0,560px)] md:items-center md:gap-20 md:px-8">
           {/* Phones: only the step in view, above the frame. */}
