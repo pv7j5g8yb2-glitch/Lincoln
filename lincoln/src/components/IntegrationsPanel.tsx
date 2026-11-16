@@ -31,7 +31,7 @@ const LOGO_FILE: Record<string, string> = {
 const PLANNED: [string, [string, string][]][] = [
   ["Documents", [["Dropbox", "Files"], ["Box", "Files"], ["iManage", "Document management"], ["NetDocuments", "Document management"]]],
   ["Signatures and messaging", [["DocuSign", "Signatures"], ["Slack", "Notices"]]],
-  ["Migration", [["Docketwise", "Cases and documents"], ["LollyLaw", "Cases and documents"], ["INSZoom", "Cases and documents"], ["eImmigration", "Cases and documents"], ["Clio", "Matters and documents"], ["Spreadsheet import", "Anything else"]]],
+  ["Migration", [["Docketwise", "Cases and documents"], ["LollyLaw", "Cases and documents"], ["INSZoom", "Cases and documents"], ["eImmigration", "Cases and documents"], ["Clio", "Matters and documents"]]],
   ["Government and finance", [["USCIS case status", "Receipt status, through the official USCIS API"], ["LawPay", "Payments"], ["QuickBooks", "Accounts"], ["Zapier", "Other tools"]]],
 ];
 

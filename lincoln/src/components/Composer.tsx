@@ -25,7 +25,7 @@ const speechApi = () => {
  * One line that grows with the text. Enter sends, Shift and Enter adds a line. The + attaches files;
  * the microphone dictates into the box where the browser supports speech recognition.
  */
-export default function Composer({ value, onChange, onSend, onStop, busy, placeholder = "Ask Lincoln anything", autoFocus, attach = true }: { value: string; onChange: (v: string) => void; onSend: (files: File[]) => void; onStop?: () => void; busy?: boolean; placeholder?: string; autoFocus?: boolean; attach?: boolean }) {
+export default function Composer({ value, onChange, onSend, onStop, busy, placeholder = "Ask Lincoln anything", autoFocus, attach = true, accept = ACCEPT }: { value: string; onChange: (v: string) => void; onSend: (files: File[]) => void; onStop?: () => void; busy?: boolean; placeholder?: string; autoFocus?: boolean; attach?: boolean; accept?: string }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const picker = useRef<HTMLInputElement>(null);
   const [fly, setFly] = useState(0);
@@ -95,7 +95,7 @@ export default function Composer({ value, onChange, onSend, onStop, busy, placeh
         {attach && (
           <>
             <button type="button" onClick={() => picker.current?.click()} aria-label="Add files" className={iconBtn}><Plus size={18} strokeWidth={1.8} /></button>
-            <input ref={picker} type="file" multiple accept={ACCEPT} className="hidden" onChange={(e) => { setFiles([...files, ...Array.from(e.target.files ?? [])].slice(0, 40)); e.target.value = ""; }} />
+            <input ref={picker} type="file" multiple accept={accept} className="hidden" onChange={(e) => { setFiles([...files, ...Array.from(e.target.files ?? [])].slice(0, 40)); e.target.value = ""; }} />
           </>
         )}
         <textarea

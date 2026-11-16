@@ -387,6 +387,15 @@ from the repo the same day. History is in git up to commit `341cf65`.
   some; a removed one is not learned again). Approved documents are the firm's precedent: a new draft of the same
   kind and case type follows the best earlier one's structure and tone, with the other client's names replaced and
   an instruction never to use its facts; sensitive cases are never used. Checked on the stand in model only.
+* Import, switching in a day (2026-11-16): the New case box also takes an old system's case list (CSV or Excel,
+  any software; the biggest sheet is used) and zips of client folders (up to 150 MB each). Lincoln maps the columns
+  with one light model call (client, email, type, petitioner, receipt, status, attorney, opened, every important
+  date, notes), opens a case per row with the stage inferred from the old status, dates and receipt kept, the
+  attorney matched by name, date rules applied, and duplicates (same receipt, or same client and type) skipped. Each
+  zip folder goes into the case whose client it names ("Marquez, Sofia") or opens one (client and type from a form
+  number in the folder name, otherwise from the documents), and files are read two cases at a time in the
+  background. Checked with made up Docketwise style exports on the stand in model. Not yet: whole Drive or OneDrive
+  folder import, and direct API connections to Docketwise and others (need their partner access).
 * Security requirements for selling to firms (bare minimum, mid market, BigLaw, and where Lincoln stands): saved in
   docs/RESEARCH.md, 'Security requirements for law firms'. Next: a parent asks Anthropic sales for zero data retention.
 * Team (2026-11-16): no public sign up (/signup goes to /start; Google or Microsoft sign in only joins an open
