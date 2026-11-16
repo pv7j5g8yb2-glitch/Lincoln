@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db, uid } from "@/lib/db";
 import { connection, isProvider, upload, type OfficeKind } from "@/lib/integrations";
 import { OFFICE_EXT, OFFICE_MIME } from "@/lib/integrations/types";
-import { caseDeck, caseXlsx, casesXlsx, draftDocx } from "@/lib/office";
+import { caseDeck, caseXlsx, casesXlsx, draftDocx, evidenceXlsx } from "@/lib/office";
 import { caseById, draftById } from "@/lib/queries";
 import { apiUser, viewer } from "@/lib/session";
 import { recordAccess } from "@/lib/access";
@@ -24,6 +24,10 @@ export async function GET(req: Request) {
     kind = "document"; name = `${c?.client ?? "Case"} ${dr.title} v${dr.version}`; data = await draftDocx(dr); caseId = dr.case_id;
   } else if (what === "cases") {
     kind = "spreadsheet"; name = `${s.firm.name} cases ${new Date().toISOString().slice(0, 10)}`; data = await casesXlsx(F);
+  } else if (what === "evidence") {
+    const c = caseById(F, id, V);
+    if (!c) return new Response("Not found", { status: 404 });
+    caseId = c.id; kind = "spreadsheet"; name = `${c.client} evidence`; data = await evidenceXlsx(F, c.id);
   } else if (what === "case" || what === "deck") {
     const c = caseById(F, id, V);
     if (!c) return new Response("Not found", { status: 404 });

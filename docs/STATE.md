@@ -345,6 +345,12 @@ from the repo the same day. History is in git up to commit `341cf65`.
   A case link the client already used is now their status page: stage in plain words (never the outcome), documents
   received and still needed, and Send more documents (files only, appended to the case). Repeated issues from later
   readings are no longer added twice.
+* Evidence grid (2026-11-16): when an RFE, NOID or NOIR arrives, Lincoln maps each point the agency raised to the
+  pages that answer it (graded 1 to 4, met, partial or missing, what is still needed and from whom), from the case
+  record in one short text call, and writes the response with that map. The Evidence tab is now a grid: points and
+  requirements down the side, documents across, each cell linked to its page. "Met" only stands with a real page;
+  pages not in the file are dropped. Export menu: Evidence grid .xlsx (one row per piece of evidence, filterable).
+  The same notice sent twice is not answered twice.
 * Security requirements for selling to firms (bare minimum, mid market, BigLaw, and where Lincoln stands): saved in
   docs/RESEARCH.md, 'Security requirements for law firms'. Next: a parent asks Anthropic sales for zero data retention.
 * Team (2026-11-16): no public sign up (/signup goes to /start; Google or Microsoft sign in only joins an open

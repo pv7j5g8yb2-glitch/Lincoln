@@ -2,7 +2,7 @@ import { Document, HeadingLevel, Packer, Paragraph, TextRun } from "docx";
 import ExcelJS from "exceljs";
 import PptxGenJS from "pptxgenjs";
 import type { LetterContent } from "./letter";
-import { caseById, caseDates, cases, criteria, documents, issues } from "./queries";
+import { caseById, caseDates, cases, criteria, documents, issues, rfePoints } from "./queries";
 
 // The files Lincoln hands to Word, Excel and PowerPoint, or to Docs, Sheets and Slides.
 
@@ -54,6 +54,29 @@ export async function caseXlsx(firmId: string, caseId: string) {
   sheet(wb, "Issues", ["Issue", "Kind", "Severity", "Detail", "Pages", "Status", "Resolution"],
     issues(firmId, caseId).map((i) => [i.title, i.kind, i.severity, i.detail, (JSON.parse(i.sources) as number[]).join(", "), i.status, i.resolution]), [36, 10, 10, 70, 12, 10, 40]);
   sheet(wb, "Dates", ["Date", "Event", "Source"], caseDates(firmId, caseId).map((t) => [t.date, t.label, t.source]), [12, 40, 36]);
+  return Buffer.from(await wb.xlsx.writeBuffer());
+}
+
+const GRADE = ["Excluded", "In the file", "Relevant", "Supports the fact", "Meets the standard", "Approved by attorney"];
+const STATUS: Record<string, string> = { claim: "Claim", more: "More evidence required", no: "Do not claim", met: "Met", partial: "Partial", missing: "Missing" };
+
+/** The evidence grid: every requirement and every point an agency raised, one row per piece of evidence, with
+ *  its document, page and grade, so a team can sort and filter it in Excel. */
+export async function evidenceXlsx(firmId: string, caseId: string) {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "Lincoln";
+  const docs = documents(firmId, caseId);
+  const rows = (items: { label: string; cite: string; status: string; gap: string | null; ev: { doc: number; page: number; grade: number; note?: string }[] }[]) =>
+    items.flatMap((k) => (k.ev.length ? k.ev : [null]).map((e) => [k.label, k.cite, STATUS[k.status] ?? k.status, e ? (docs.find((d) => d.n === e.doc)?.title ?? "") : "", e?.page ?? null, e ? GRADE[e.grade] ?? "" : "", e?.note ?? "", k.gap ?? ""]));
+  const rfe = rfePoints(firmId, caseId);
+  for (const notice of [...new Set(rfe.map((p) => p.notice))]) {
+    const short = notice.replace("Request for Evidence", "RFE").replace("Notice of Intent to Deny", "NOID").replace("Notice of Intent to Revoke", "NOIR").replace(" of ", " ");
+    sheet(wb, short.slice(0, 31).replace(/[\\/?*[\]:]/g, ""), ["Point", "No.", "Status", "Document", "Page", "Grade", "Shows", "Still needed"],
+      rows(rfe.filter((p) => p.notice === notice).map((p) => ({ label: p.point, cite: String(p.n), status: p.status, gap: p.gap, ev: JSON.parse(p.evidence) }))), [60, 6, 12, 36, 7, 18, 40, 50]);
+  }
+  const crit = criteria(firmId, caseId);
+  if (crit.length || !rfe.length) sheet(wb, "Requirements", ["Requirement", "Citation", "Status", "Document", "Page", "Grade", "Shows", "Gap"],
+    rows(crit.map((k) => ({ label: k.name, cite: k.citation, status: k.recommendation, gap: k.weakness || null, ev: JSON.parse(k.evidence) }))), [40, 22, 18, 36, 7, 18, 40, 50]);
   return Buffer.from(await wb.xlsx.writeBuffer());
 }
 

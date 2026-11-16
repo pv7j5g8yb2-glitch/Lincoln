@@ -15,19 +15,18 @@ import ExportMenu from "@/components/ExportMenu";
 import { exportItems } from "@/lib/exports";
 import { connectionsOf } from "@/lib/integrations";
 import { requireUser } from "@/lib/session";
-import { caseActivity, caseApprovals, caseById, caseDates, caseDrafts, caseForms, caseMessages, criteria, documents, issues, people } from "@/lib/queries";
+import { caseActivity, caseApprovals, caseById, caseDates, caseDrafts, caseForms, caseMessages, criteria, documents, issues, people, rfePoints } from "@/lib/queries";
 import { ago, inDays, longDate } from "@/lib/format";
 import { llmConfigured, modelName } from "@/lib/llm";
 import type { LetterContent } from "@/lib/letter";
 import { recordAccess } from "@/lib/access";
 import CopyLink from "@/components/CopyLink";
 import AssignMenu from "@/components/AssignMenu";
+import EvidenceGrid from "@/components/EvidenceGrid";
 import { isLawyerRole } from "@/lib/roles";
 import { caseLink, linkUrl } from "@/lib/client-intake";
 
 const DOC_STATUS: Record<string, string> = { ok: "Usable", weak: "Low weight", excluded: "Excluded", draft: "Unsigned draft", duplicate: "Duplicate", superseded: "Superseded", needs_translation: "Translation required" };
-const GRADES = ["Excluded", "In the file", "Relevant", "Supports the fact", "Meets the standard", "Approved by attorney"];
-const REC: Record<string, string> = { claim: "Claim", more: "More evidence required", no: "Do not claim", met: "Met", partial: "Partial", missing: "Missing" };
 const KIND: Record<string, string> = { date: "Date", conflict: "Conflict", missing: "Missing", risk: "Risk", bar: "Bar" };
 const pageLink = "text-muted underline decoration-line underline-offset-4 transition hover:text-ink hover:decoration-ink";
 
@@ -53,8 +52,9 @@ export default async function CasePage({ params, searchParams }: { params: Promi
   const upcoming = dates.filter((d) => d.date >= todayIso);
   const past = dates.filter((d) => d.date < todayIso).reverse();
   const crit = criteria(firm.id, id);
+  const asks = rfePoints(firm.id, id);
   const forms = caseForms(firm.id, id);
-  const all: [string, string, number | undefined, boolean][] = [["overview", "Overview", undefined, true], ["documents", "Documents", docs.length, docs.length > 0 || llmConfigured()], ["evidence", "Evidence", undefined, crit.length > 0], ["forms", "Forms", forms.length, forms.length > 0], ["drafts", "Drafts", drafts.length, drafts.length > 0 || c.pages > 0], ["messages", "Messages", msgs.length, msgs.length > 0], ["activity", "Activity", undefined, true]];
+  const all: [string, string, number | undefined, boolean][] = [["overview", "Overview", undefined, true], ["documents", "Documents", docs.length, docs.length > 0 || llmConfigured()], ["evidence", "Evidence", undefined, crit.length > 0 || asks.length > 0], ["forms", "Forms", forms.length, forms.length > 0], ["drafts", "Drafts", drafts.length, drafts.length > 0 || c.pages > 0], ["messages", "Messages", msgs.length, msgs.length > 0], ["activity", "Activity", undefined, true]];
   const tabs = all.filter((t) => t[3] || t[0] === tab);
   const none = <Empty>No records</Empty>;
 
@@ -72,7 +72,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
         <div className="flex items-center gap-3">
           {!firm.demo && <AssignMenu caseId={id} attorney={c.attorney_id} paralegal={c.paralegal_id} people={people(firm.id).map((p) => ({ id: p.id, name: p.name, initials: p.initials, lawyer: isLawyerRole(p.role) }))} canEdit={Boolean(user.admin) || c.attorney_id === user.id} />}
           {!firm.demo && <CopyLink url={linkUrl(caseLink(firm.id, id))} />}
-          {docs.length > 0 && <ExportMenu label="Export" items={[...exportItems(firm.id, user.id, "case", id).map((i) => ({ ...i, label: i.label.replace(/^Open in (\w+.*)$/, "Exhibit index in $1").replace(/^Download \.xlsx$/, "Exhibit index .xlsx") })), ...exportItems(firm.id, user.id, "deck", id).map((i) => ({ ...i, label: i.label.replace(/^Open in (\w+.*)$/, "Summary deck in $1").replace(/^Download \.pptx$/, "Summary deck .pptx") }))]} />}
+          {docs.length > 0 && <ExportMenu label="Export" items={[...exportItems(firm.id, user.id, "case", id).map((i) => ({ ...i, label: i.label.replace(/^Open in (\w+.*)$/, "Exhibit index in $1").replace(/^Download \.xlsx$/, "Exhibit index .xlsx") })), ...exportItems(firm.id, user.id, "deck", id).map((i) => ({ ...i, label: i.label.replace(/^Open in (\w+.*)$/, "Summary deck in $1").replace(/^Download \.pptx$/, "Summary deck .pptx") })), ...(crit.length || asks.length ? exportItems(firm.id, user.id, "evidence", id).map((i) => ({ ...i, label: i.label.replace(/^Open in (\w+.*)$/, "Evidence grid in $1").replace(/^Download \.xlsx$/, "Evidence grid .xlsx") })) : [])]} />}
         </div>
       </div>
 
@@ -219,38 +219,23 @@ export default async function CasePage({ params, searchParams }: { params: Promi
       ))}
 
       {tab === "evidence" && (() => {
-        if (crit.length === 0) return none;
+        if (crit.length === 0 && asks.length === 0) return none;
+        const notices = [...new Set(asks.map((a) => a.notice))];
+        const head = (t: string) => <h2 className="mb-3 mt-10 text-[13px] font-medium text-muted first:mt-0">{t}</h2>;
         return (
-          <div className="flex flex-col">
-            {crit.map((k) => {
-              const ev = JSON.parse(k.evidence) as { doc: number; page: number; grade: number; note?: string }[];
-              return (
-                <section key={k.id} className="border-t border-line py-5 first:border-0 first:pt-0">
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <h3 className="text-[14.5px] font-medium">{k.name}{k.citation ? <span className="ml-2 text-[12px] font-normal text-faint">{k.citation}</span> : null}</h3>
-                    <span className="text-[12.5px] font-medium">{REC[k.recommendation] ?? k.recommendation}{k.strength ? <span className="font-normal text-faint"> · {k.strength}</span> : null}</span>
-                  </div>
-                  <p className="mt-1 max-w-[680px] text-[13px] leading-relaxed">{k.summary}</p>
-                  {k.weakness && <p className="mt-1 max-w-[680px] text-[13px] leading-relaxed text-muted">{k.weakness}</p>}
-                  {ev.length > 0 && (
-                    <ul className="mt-3">
-                      {ev.map((e, i) => {
-                        const d = docs.find((x) => x.n === e.doc);
-                        return (
-                          <li key={i} className="flex items-center gap-3 py-1.5 text-[12.5px]">
-                            <a href={`/api/pages/${id}/${e.page}`} target="_blank" className={clsx("min-w-0 flex-1 truncate transition hover:underline", e.grade === 0 && "text-faint line-through")}>{d?.title ?? "Document"} <span className="text-faint">p. {e.page}</span></a>
-                            <span className="hidden w-[170px] shrink-0 truncate text-right text-[12px] text-faint md:block">{e.note ?? GRADES[e.grade]}</span>
-                            <span className="flex shrink-0 items-center gap-[3px]" title={GRADES[e.grade]}>
-                              {[1, 2, 3, 4, 5].map((g) => <span key={g} className={clsx("h-[5px] w-3 rounded-full", g <= e.grade ? "bg-ink" : "bg-line")} />)}
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </section>
-              );
-            })}
+          <div>
+            {notices.map((n) => (
+              <section key={n}>
+                {head(n)}
+                <EvidenceGrid caseId={id} docs={docs} rows={asks.filter((a) => a.notice === n).map((a) => ({ id: a.id, title: `${a.n}. ${a.point}`, status: a.status, gap: a.gap, ev: JSON.parse(a.evidence) }))} />
+              </section>
+            ))}
+            {crit.length > 0 && (
+              <section>
+                {notices.length > 0 && head("Requirements")}
+                <EvidenceGrid caseId={id} docs={docs} rows={crit.map((k) => ({ id: k.id, title: k.name, cite: k.citation, status: k.recommendation, gap: k.weakness, ev: JSON.parse(k.evidence) }))} />
+              </section>
+            )}
           </div>
         );
       })()}

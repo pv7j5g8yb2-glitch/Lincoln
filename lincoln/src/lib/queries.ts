@@ -34,6 +34,8 @@ export const caseById = (firm: string, id: string, v?: Viewer) => {
   return c && !hiddenCases(firm, v).has(c.id) ? c : undefined;
 };
 export const documents = (firm: string, c: string) => all<Doc>("SELECT * FROM documents WHERE firm_id = ? AND case_id = ? ORDER BY n", firm, c);
+export type RfePoint = { id: string; notice: string; n: number; point: string; status: string; evidence: string; gap: string | null; created_at: string };
+export const rfePoints = (firm: string, c: string) => all<RfePoint>("SELECT * FROM rfe_points WHERE firm_id = ? AND case_id = ? ORDER BY created_at DESC, n", firm, c);
 export const criteria = (firm: string, c: string) => all<Criterion>("SELECT * FROM criteria WHERE firm_id = ? AND case_id = ? ORDER BY n", firm, c);
 export const issues = (firm: string, c: string) => all<Issue>("SELECT * FROM issues WHERE firm_id = ? AND case_id = ? ORDER BY CASE status WHEN 'open' THEN 0 ELSE 1 END, CASE severity WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END, rowid", firm, c);
 export const caseDates = (firm: string, c: string) => all<DateRow>("SELECT * FROM dates WHERE firm_id = ? AND case_id = ? ORDER BY date", firm, c);
