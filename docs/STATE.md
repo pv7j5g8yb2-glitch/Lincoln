@@ -6,6 +6,16 @@ draft of the app is in `lincoln/` (Next.js, SQLite): Harvey style interface, a d
 cases, the full Halász O-1A case, approvals by decision, the support letter with facts linked to their
 pages, Word export, a scripted "demo world". See `lincoln/README.md` for what works and what is scripted.
 
+**Landing video (Ismael, 2026-11-16): on hold until the interface is locked.** It replaces the "All your cases in one
+place" section and goes right after the hero, before the grey sentence that lights up. It shows Lincoln's whole value
+with real screens, is calm and easy to follow (not long, not rushed), and uses a realistic made up firm with real
+looking names, cases and profile photos (never "Test"). Captions follow the marketing words rule in CLAUDE.md.
+What the two Harvey references he sent do well: one serif title line per beat across the top; the real product UI
+centred on a dark textured canvas; a second panel slides in beside it with an activity log whose steps tick in one by
+one; slow zooms into the detail that matters; the wordmark small at the bottom; abstract collage and paper texture
+transitions with kinetic type between product shots, ending on the logo. A first draft (scratchpad film.html, cream
+canvas, 44 seconds) was stopped before rendering.
+
 **Built 2026-11-16, after Legora's Microsoft 365 launch (all autonomous):**
 * Emails waiting for approval are also drafts in the sender's own Gmail or Outlook (replies sit in the client's
   thread). Edits made in the mailbox come back into Lincoln and teach the firm's style; a draft sent from the
