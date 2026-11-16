@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS criteria (
   id TEXT PRIMARY KEY, firm_id TEXT NOT NULL, case_id TEXT NOT NULL, n INTEGER NOT NULL, code TEXT NOT NULL, name TEXT NOT NULL,
   citation TEXT NOT NULL, recommendation TEXT NOT NULL, strength TEXT NOT NULL, summary TEXT, weakness TEXT, evidence TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS addin_codes (hash TEXT PRIMARY KEY, firm_id TEXT NOT NULL, user_id TEXT NOT NULL, expires_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS addin_tokens (hash TEXT PRIMARY KEY, firm_id TEXT NOT NULL, user_id TEXT NOT NULL, created_at TEXT NOT NULL, last_used_at TEXT, expires_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS rfe_points (
   id TEXT PRIMARY KEY, firm_id TEXT NOT NULL, case_id TEXT NOT NULL, notice TEXT NOT NULL, n INTEGER NOT NULL, point TEXT NOT NULL,
   status TEXT NOT NULL, evidence TEXT NOT NULL, gap TEXT, created_at TEXT NOT NULL
@@ -70,7 +72,7 @@ CREATE INDEX IF NOT EXISTS i_appr_firm ON approvals(firm_id, status);
 CREATE INDEX IF NOT EXISTS i_msg_firm ON messages(firm_id, at);
 `;
 
-const TABLES = ["invites", "intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "usage", "access_log", "security_events", "mailboxes", "sessions", "kv", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "rfe_points", "criteria", "documents", "cases", "users", "firms"];
+const TABLES = ["addin_codes", "addin_tokens", "invites", "intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "usage", "access_log", "security_events", "mailboxes", "sessions", "kv", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "rfe_points", "criteria", "documents", "cases", "users", "firms"];
 
 /** Where the database lives. On Render this is the persistent disk (DATA_DIR=/var/data). */
 export const dataDir = () => process.env.DATA_DIR || path.join(process.cwd(), "data");

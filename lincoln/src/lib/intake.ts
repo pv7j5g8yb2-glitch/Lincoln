@@ -436,6 +436,26 @@ type Claim = { para: number; at: number; text: string; pages: number[] };
  * support gets an attorney note straight after the citation. Returns how many failed.
  */
 async function checkCitations(firmId: string, caseId: string, paras: string[], pageCount: number): Promise<{ paras: string[]; checked: number; failed: number }> {
+  const { claims, verdict } = await verifyClaims(firmId, caseId, paras, pageCount);
+  // Notes go in from the end of each paragraph so earlier positions stay valid.
+  const out = [...paras];
+  for (const c of [...claims].sort((a, b) => b.para - a.para || b.at - a.at)) {
+    const v = verdict.get(c);
+    if (v) out[c.para] = `${out[c.para].slice(0, c.at)} [Attorney: ${v}.]${out[c.para].slice(c.at)}`;
+  }
+  return { paras: out, checked: claims.length, failed: verdict.size };
+}
+
+/** Each sentence of a document that cites a page of the client file, checked against that page. For the Word add-in. */
+export async function checkDocument(firmId: string, caseId: string, paras: string[]) {
+  const pages = (db().prepare("SELECT pages FROM cases WHERE firm_id = ? AND id = ?").get(firmId, caseId) as { pages: number } | undefined)?.pages ?? 0;
+  // Lincoln's Word exports cite as "(Passport, client file p. 3)"; read as "(p. 3)".
+  const plainCites = paras.map((p) => p.replace(/\(([^()]{1,160}?),\s*client file (pp?\.\s*[\d,\s\-–and]+)\)/g, "($2)"));
+  const { claims, verdict } = await forCase({ firmId, caseId, purpose: "verify" }, () => verifyClaims(firmId, caseId, plainCites, pages));
+  return { checked: claims.length, problems: claims.filter((c) => verdict.has(c)).map((c) => ({ para: c.para, text: c.text, problem: verdict.get(c)! })) };
+}
+
+async function verifyClaims(firmId: string, caseId: string, paras: string[], pageCount: number) {
   const claims: Claim[] = [];
   paras.forEach((text, para) => {
     let prev = 0;
@@ -448,8 +468,8 @@ async function checkCitations(firmId: string, caseId: string, paras: string[], p
       prev = end;
     }
   });
-  if (!claims.length) return { paras, checked: 0, failed: 0 };
   const verdict = new Map<Claim, string>();
+  if (!claims.length) return { claims, verdict };
   for (const c of claims) if (c.pages.some((p) => p < 1 || p > pageCount)) verdict.set(c, `p. ${c.pages.join(", ")} is not in the file`);
   // Batches of claims whose cited pages fit in one request.
   const open = claims.filter((c) => !verdict.has(c));
@@ -476,13 +496,7 @@ Reply with one JSON object and nothing else:
       if (x.verdict === "contradicted") verdict.set(c, `${where} says otherwise${x.note ? `: ${String(x.note).replace(/[[\]]/g, "").slice(0, 160)}` : ""}`);
     }
   }
-  // Notes go in from the end of each paragraph so earlier positions stay valid.
-  const out = [...paras];
-  for (const c of [...claims].sort((a, b) => b.para - a.para || b.at - a.at)) {
-    const v = verdict.get(c);
-    if (v) out[c.para] = `${out[c.para].slice(0, c.at)} [Attorney: ${v}.]${out[c.para].slice(c.at)}`;
-  }
-  return { paras: out, checked: claims.length, failed: verdict.size };
+  return { claims, verdict };
 }
 
 /**

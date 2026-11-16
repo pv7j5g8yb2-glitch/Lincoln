@@ -1,3 +1,11 @@
+const WORD = [
+  { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://appsforoffice.microsoft.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://appsforoffice.microsoft.com; font-src 'self' data:; connect-src 'self'; frame-src https://appsforoffice.microsoft.com; frame-ancestors 'self' https://*.officeapps.live.com https://*.office.com https://*.office365.com https://*.microsoft365.com https://*.cloud.microsoft https://*.sharepoint.com https://*.officeppe.com; base-uri 'self'; form-action 'self'; object-src 'none'" },
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "same-origin" },
+  { key: "X-Robots-Tag", value: "noindex, nofollow" },
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: ["better-sqlite3-multiple-ciphers", "pdfjs-dist", "@napi-rs/canvas", "exceljs", "pptxgenjs"],
@@ -10,7 +18,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: "/:path*",
+        source: "/:path((?!word$|word/).*)",
         headers: [
           // Only Lincoln's own code, styles and images run here; nothing may frame it; forms post only to Lincoln.
           { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'" },
@@ -23,6 +31,10 @@ const nextConfig = {
           { key: "X-Robots-Tag", value: "noindex, nofollow" },
         ],
       },
+      // The Word add-in's pane: Word on the web shows it in a frame on Microsoft's domains, and it runs
+      // Microsoft's Office.js. It still talks only to Lincoln.
+      { source: "/word", headers: WORD },
+      { source: "/word/:path*", headers: WORD },
     ];
   },
 };

@@ -145,6 +145,20 @@ export async function revokeInvite(form: FormData) {
 }
 
 /** Lincoln staff make a backup on demand. */
+/** A one time code for connecting the Word add-in; shown once. */
+export async function newWordCodeAction() {
+  const { user, firm } = await requireUser();
+  if (firm.demo) return { code: null };
+  const { newWordCode } = await import("./word");
+  return { code: newWordCode(firm.id, user.id) };
+}
+
+export async function disconnectWordAction() {
+  const { user } = await requireUser();
+  const { endWord } = await import("./word");
+  endWord(user.id);
+}
+
 export async function updateLawAction() {
   const { user } = await requireUser();
   if (!isOps(user.email)) redirect("/");
@@ -692,7 +706,7 @@ export async function deleteFirm(form: FormData) {
   const caseIds = (d.prepare("SELECT id FROM cases WHERE firm_id = ?").all(firm.id) as { id: string }[]).map((c) => c.id);
   forgetFirmSessions(firm.id);
   d.transaction(() => {
-    for (const t of ["invites", "intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "security_events", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "rfe_points", "criteria", "documents", "cases", "kv"]) d.prepare(`DELETE FROM ${t} WHERE firm_id = ?`).run(firm.id);
+    for (const t of ["addin_codes", "addin_tokens", "invites", "intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "security_events", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "rfe_points", "criteria", "documents", "cases", "kv"]) d.prepare(`DELETE FROM ${t} WHERE firm_id = ?`).run(firm.id);
     d.prepare("DELETE FROM inbound_seen WHERE mailbox_id IN (SELECT id FROM mailboxes WHERE firm_id = ?)").run(firm.id);
     d.prepare("DELETE FROM mailboxes WHERE firm_id = ?").run(firm.id);
     d.prepare("DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE firm_id = ?)").run(firm.id);

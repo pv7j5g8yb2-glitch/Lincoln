@@ -360,6 +360,16 @@ from the repo the same day. History is in git up to commit `341cf65`.
   is given to the draft as official text, and other provisions get an Attorney note to confirm. Status and Update now
   on /ops. Not in the library yet: USCIS Policy Manual, BIA and AAO decisions, Visa Bulletin, fee schedule (their
   sites were not tried; only sources with official downloads go in, never scraped). LAW_SYNC=off turns syncing off.
+* Word add-in (2026-11-16): Integrations, Word add-in gives the manifest (lincoln-word.xml) and a one time code
+  (8 characters, 10 minutes, one use). Install in Word: Insert, Add-ins, My Add-ins, Upload My Add-in (or a firm's
+  Microsoft 365 admin deploys it to everyone). A Lincoln button appears on the Home tab; the pane connects with the
+  code and then holds its own token (hash only on the server, 90 days, ended by a new code or Disconnect; the firm's
+  two step rule still applies). In the pane: pick a case, Insert any draft at the cursor (headings and citations
+  kept), Check the open document (every "(p. N)" or "(Doc, client file p. N)" claim against the page, every Exhibit N
+  against the exhibit index, every INA and CFR citation against the current official text), and Library search with
+  Cite and Quote. Only /word may be framed, and only by Microsoft's Office domains. Tested in a browser with a stand
+  in for Word; NOT yet tried in real Word or checked with Microsoft's manifest validator (that needs Word and
+  network access to Microsoft). AppSource listing is a later step.
 * Security requirements for selling to firms (bare minimum, mid market, BigLaw, and where Lincoln stands): saved in
   docs/RESEARCH.md, 'Security requirements for law firms'. Next: a parent asks Anthropic sales for zero data retention.
 * Team (2026-11-16): no public sign up (/signup goes to /start; Google or Microsoft sign in only joins an open

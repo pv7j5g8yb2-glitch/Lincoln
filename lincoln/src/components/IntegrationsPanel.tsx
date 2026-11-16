@@ -4,6 +4,8 @@ import { disconnect, setTeamsChannel } from "@/lib/actions";
 import { PROVIDERS, checkHealth, connectionsOf, settingsOf, teamsChannels } from "@/lib/integrations";
 import { CircleAlert } from "lucide-react";
 import type { User, Firm } from "@/lib/session";
+import WordConnect from "./WordConnect";
+import { wordConnected } from "@/lib/word";
 
 /** Brand logos live in /public/logos. Shown at a fixed size inside a soft tile. */
 export function Logo({ name, size = 28 }: { name: string; size?: number }) {
@@ -27,7 +29,7 @@ const LOGO_FILE: Record<string, string> = {
 };
 
 const PLANNED: [string, [string, string][]][] = [
-  ["Documents", [["Word add-in", "Lincoln inside Word"], ["Dropbox", "Files"], ["Box", "Files"], ["iManage", "Document management"], ["NetDocuments", "Document management"]]],
+  ["Documents", [["Dropbox", "Files"], ["Box", "Files"], ["iManage", "Document management"], ["NetDocuments", "Document management"]]],
   ["Signatures and messaging", [["DocuSign", "Signatures"], ["Slack", "Notices"]]],
   ["Migration", [["Docketwise", "Cases and documents"], ["LollyLaw", "Cases and documents"], ["INSZoom", "Cases and documents"], ["eImmigration", "Cases and documents"], ["Clio", "Matters and documents"], ["Spreadsheet import", "Anything else"]]],
   ["Government and finance", [["USCIS case status", "Receipt status, through the official USCIS API"], ["LawPay", "Payments"], ["QuickBooks", "Accounts"], ["Zapier", "Other tools"]]],
@@ -91,6 +93,10 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
               </div>
             );
           })}
+          <div className="rounded-2xl border border-line bg-card p-5">
+            <div className="mb-4 flex items-center gap-3"><Logo name="Word" size={26} /><span className="text-[14px] font-medium">Word add-in</span></div>
+            <WordConnect connected={Boolean(wordConnected(user.id))} />
+          </div>
         </div>
         {problem && <p className="mt-3 text-[13px] text-risk">{problem}</p>}
       </section>

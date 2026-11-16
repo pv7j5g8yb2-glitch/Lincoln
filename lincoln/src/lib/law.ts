@@ -286,10 +286,32 @@ export function lawForModel(query: string) {
   return hits.map((h) => `${h.cite}${h.alias ? ` (${h.alias})` : ""}: ${h.heading} [${h.version}; ${h.url}]\n${h.text.slice(0, 3000)}`).join("\n\n---\n\n");
 }
 
+/** Whether a citation exists in the current official text: "ok", "missing" (no such section or subdivision), or
+ *  null when it is outside what the library holds. */
+export function checkCite(cite: string): "ok" | "missing" | null {
+  const c = cite.replace(/\s+/g, " ").trim();
+  const cfr = /^(\d+) C\.?\s?F\.?\s?R\.? (\d+)\.\d+/i.exec(c);
+  if (cfr && !CFR_PARTS.some((p) => p.title === Number(cfr[1]) && (!p.part || p.part === Number(cfr[2])))) return null;
+  if (!cfr && !/^(INA|8 U\.?\s?S\.?\s?C)/i.test(c)) return null;
+  if (!lawStatus().counts.length) return null;
+  const sub = /((?:\([a-zA-Z0-9]+\))*)$/.exec(c)?.[1] ?? "";
+  const hits = byCite(c, 1) ?? [];
+  if (!hits.length) return "missing";
+  if (sub && !hits[0].labels.split(" ").some((l) => l === sub || l.startsWith(sub))) return "missing";
+  return "ok";
+}
+
+const CITATION = /\b\d+\s*C\.?\s?F\.?\s?R\.?\s*§*\s*\d+\.\d+[a-z]?(?:\([a-zA-Z0-9]+\))*|\bINA\s*(?:§+|section|sec\.)?\s*\d+[A-Z]?(?:\([a-zA-Z0-9]+\))*|\b8\s*U\.?\s?S\.?\s?C\.?\s*§*\s*\d+[a-z]*(?:\([a-zA-Z0-9]+\))*/g;
+const tidy = (c: string) => c.replace(/\s+/g, " ").replace(/§\s*/g, "").replace(/\b(section|sec\.)\s*/i, "").trim();
+
 /** Citations written in free text: "8 CFR 214.2(o)(3)(iii)", "INA § 212(a)(9)(B)", "8 U.S.C. 1182(h)". */
 export function citationsIn(text: string) {
-  const re = /\b\d+\s*C\.?\s?F\.?\s?R\.?\s*§*\s*\d+\.\d+[a-z]?(?:\([a-zA-Z0-9]+\))*|\bINA\s*(?:§+|section|sec\.)?\s*\d+[A-Z]?(?:\([a-zA-Z0-9]+\))*|\b8\s*U\.?\s?S\.?\s?C\.?\s*§*\s*\d+[a-z]*(?:\([a-zA-Z0-9]+\))*/g;
-  return [...new Set((text.match(re) ?? []).map((c) => c.replace(/\s+/g, " ").replace(/§\s*/g, "").replace(/\b(section|sec\.)\s*/i, "").trim()))];
+  return [...new Set((text.match(CITATION) ?? []).map(tidy))];
+}
+
+/** Each citation as written (to find it in a document) and as read. */
+export function citationMatches(text: string) {
+  return [...new Map((text.match(CITATION) ?? []).map((raw) => [raw, { raw, cite: tidy(raw) }])).values()];
 }
 
 /** The official text of each provision cited, for a draft to quote and cite exactly. Empty when the library is not loaded. */
