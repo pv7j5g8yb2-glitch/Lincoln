@@ -395,14 +395,15 @@ from the repo the same day. History is in git up to commit `341cf65`.
   zip folder goes into the case whose client it names ("Marquez, Sofia") or opens one (client and type from a form
   number in the folder name, otherwise from the documents), and files are read two cases at a time in the
   background. Checked with made up Docketwise style exports on the stand in model. Not yet: whole Drive or OneDrive
-  folder import, and direct API connections to Docketwise and others (need their partner access).
+  folder import. No direct connections to Docketwise and the like: they need partnerships, which Ismael ruled out.
 * USCIS case status (2026-11-16): built on USCIS's official Case Status API (developer.uscis.gov, OAuth client
   credentials, GET /case-status/{receipt}; format confirmed from USCIS's own article). Every case with a receipt is
   checked once a day; a change shows on the case header, is logged, notifies the attorney, and approval, denial or a
   request for evidence moves the stage (denial and RFE also raise a high issue). Off until USCIS_CLIENT_ID and
   USCIS_CLIENT_SECRET are set (steps in docs/RENDER.md). Access is for the company: sandbox at once, production after
   Form G-1595 and a demo; demo slots booked through March 2027 (checked 2026-11-16). Tested against a stand in shaped
-  like the documented sandbox only.
+  like the documented sandbox only. Removed from the Integrations page on 2026-11-16 (needs a USCIS application and
+  demo); the code stays off unless the credentials are ever set.
 * Security requirements for selling to firms (bare minimum, mid market, BigLaw, and where Lincoln stands): saved in
   docs/RESEARCH.md, 'Security requirements for law firms'. Next: a parent asks Anthropic sales for zero data retention.
 * Team (2026-11-16): no public sign up (/signup goes to /start; Google or Microsoft sign in only joins an open

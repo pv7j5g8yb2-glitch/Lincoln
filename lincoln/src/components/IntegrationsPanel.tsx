@@ -24,15 +24,15 @@ const LOGO_FILE: Record<string, string> = {
   Google: "google.svg", Gmail: "gmail.svg", Drive: "drive.svg", Docs: "docs.svg", Sheets: "sheets.svg", Slides: "slides.svg", Calendar: "calendar.svg",
   Microsoft: "microsoft.svg", Outlook: "outlook.svg", Word: "word.svg", Excel: "excel.svg", PowerPoint: "powerpoint.svg", OneDrive: "onedrive.svg", SharePoint: "sharepoint.svg", Teams: "teams.svg",
   "Word add-in": "word.svg", Dropbox: "dropbox.svg", Box: "box.svg", DocuSign: "docusign.svg", Slack: "slack.svg",
-  Docketwise: "docketwise.png", LollyLaw: "lollylaw.png", INSZoom: "inszoom.png", eImmigration: "eimmigration.png", Clio: "clio.png", "Spreadsheet import": "excel.svg",
-  "USCIS case status": "uscis.png", LawPay: "lawpay.png", QuickBooks: "quickbooks.svg", iManage: "imanage.png", NetDocuments: "netdocuments.png", Zapier: "zapier.svg",
+  Clio: "clio.png", LawPay: "lawpay.png", QuickBooks: "quickbooks.svg", Zapier: "zapier.svg",
 };
 
+// Only services a firm can connect without Lincoln needing a partnership or the company's permission.
 const PLANNED: [string, [string, string][]][] = [
-  ["Documents", [["Dropbox", "Files"], ["Box", "Files"], ["iManage", "Document management"], ["NetDocuments", "Document management"]]],
+  ["Documents", [["Dropbox", "Files"], ["Box", "Files"]]],
   ["Signatures and messaging", [["DocuSign", "Signatures"], ["Slack", "Notices"]]],
-  ["Migration", [["Docketwise", "Cases and documents"], ["LollyLaw", "Cases and documents"], ["INSZoom", "Cases and documents"], ["eImmigration", "Cases and documents"], ["Clio", "Matters and documents"]]],
-  ["Government and finance", [["USCIS case status", "Receipt status, through the official USCIS API"], ["LawPay", "Payments"], ["QuickBooks", "Accounts"], ["Zapier", "Other tools"]]],
+  ["Practice management", [["Clio", "Matters and documents"]]],
+  ["Finance and other tools", [["LawPay", "Payments"], ["QuickBooks", "Accounts"], ["Zapier", "Other tools"]]],
 ];
 
 export default async function IntegrationsPanel({ user, firm, connected, error, inbound, recheck }: { user: User; firm: Firm; connected?: string; error?: string; inbound?: string; recheck?: boolean }) {
