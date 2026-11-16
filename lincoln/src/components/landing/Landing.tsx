@@ -80,18 +80,6 @@ function In({ children, delay = 0, className = "" }: { children: ReactNode | ((o
   );
 }
 
-/** A photograph in a rounded frame that drifts slowly against the scroll. */
-function Photo({ src, pos = "50% 50%", dim = 1, className = "", children }: { src: string; pos?: string; dim?: number; className?: string; children?: ReactNode }) {
-  const [ref, p] = useProgress<HTMLDivElement>();
-  return (
-    <div ref={ref} className={`relative overflow-hidden rounded-[20px] bg-[#e4e1db] ${className}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" loading="lazy" className="absolute inset-x-0 -top-[7%] h-[114%] w-full object-cover will-change-transform motion-reduce:!transform-none" style={{ objectPosition: pos, transform: `translate3d(0,${(0.5 - p) * 10}%,0)`, filter: dim < 1 ? `brightness(${dim})` : undefined }} />
-      {children}
-    </div>
-  );
-}
-
 /* The work, laid on the photographs. */
 const card = "relative w-[86%] rounded-2xl bg-white font-sans shadow-[0_1px_2px_rgba(0,0,0,0.04),0_40px_80px_-24px_rgba(0,0,0,0.5)] md:w-[80%]";
 const eyebrow = "font-sans text-[12.5px] font-medium uppercase tracking-[0.16em] text-[#8a867f] md:text-[13px]";
@@ -219,6 +207,61 @@ function Packet() {
   );
 }
 
+/** The four steps as one scene: the page holds still while the scroll moves through them. On the left the steps
+ *  light up one by one; on the right one frame crossfades between the photographs and the work changes on it. */
+function Steps() {
+  const [ref, p] = usePinned<HTMLDivElement>();
+  const at = Math.min(STEPS.length - 1, Math.floor(p * STEPS.length * 0.999));
+  return (
+    <div ref={ref} className="relative h-[230vh] md:h-[250vh]">
+      <div className="sticky top-16 flex h-[calc(100dvh-4rem)] items-center overflow-hidden">
+        <div className="mx-auto grid w-full max-w-[1200px] gap-5 px-4 md:grid-cols-[minmax(0,1fr)_minmax(0,560px)] md:items-center md:gap-20 md:px-8">
+          {/* Phones: only the step in view, above the frame. */}
+          <div className="md:hidden">
+            <div className="flex items-center gap-3">
+              <p className={eyebrow}>0{at + 1} / 0{STEPS.length}</p>
+              <div className="h-px flex-1 bg-[#ebe9e4]"><div className="h-px bg-[#161614] transition-[width] duration-500" style={{ width: `${((at + 1) / STEPS.length) * 100}%` }} /></div>
+            </div>
+            <div className="relative mt-3 h-[112px]">
+              {STEPS.map((s, i) => (
+                <div key={s.title} className="absolute inset-0 transition-all duration-500 ease-out" style={{ opacity: i === at ? 1 : 0, transform: `translateY(${i === at ? 0 : i < at ? -14 : 14}px)` }}>
+                  <h3 className="font-serif text-[30px] font-semibold leading-[1.1] tracking-[-0.025em]">{s.title}</h3>
+                  <p className="mt-2 text-[16.5px] leading-[1.55] text-[#6b6862]">{s.line}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Laptops: every step listed, the one in view in ink, a thin line filling beside them. */}
+          <div className="relative hidden pl-7 md:block">
+            <div className="absolute bottom-2 left-0 top-2 w-px bg-[#ebe9e4]"><div className="w-px bg-[#161614] transition-[height] duration-500" style={{ height: `${((at + 1) / STEPS.length) * 100}%` }} /></div>
+            {STEPS.map((s, i) => (
+              <div key={s.title} className={`transition-all duration-500 ${i ? "mt-9" : ""}`} style={{ opacity: i === at ? 1 : 0.28 }}>
+                <p className={eyebrow}>0{i + 1}</p>
+                <h3 className="mt-2 font-serif text-[40px] font-semibold leading-[1.05] tracking-[-0.025em] lg:text-[46px]">{s.title}</h3>
+                <div className="grid transition-all duration-500" style={{ gridTemplateRows: i === at ? "1fr" : "0fr" }}>
+                  <p className="overflow-hidden text-[18px] leading-[1.6] text-[#6b6862]"><span className="block max-w-[32ch] pt-3">{s.line}</span></p>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* The frame: photographs crossfade, the work on them changes with the step. */}
+          <div className="relative h-[min(56vh,520px)] overflow-hidden rounded-[20px] bg-[#e4e1db] md:h-[min(74vh,640px)]">
+            {STEPS.map((s, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={s.photo} src={s.photo} alt="" className="absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-[900ms] ease-out" style={{ objectPosition: s.pos ?? "50% 50%", filter: s.dim ? `brightness(${s.dim})` : undefined, opacity: i === at ? 1 : 0, transform: `scale(${i === at ? 1.02 + p * 0.04 : 1.1})` }} />
+            ))}
+            {STEPS.map((s, i) => (
+              <div key={s.title} className="absolute inset-0 flex items-center justify-center transition-all duration-700 ease-out" style={{ opacity: i === at ? 1 : 0, transform: `translateY(${i === at ? 0 : i < at ? -28 : 28}px) scale(${i === at ? 1 : 0.97})`, pointerEvents: i === at ? "auto" : "none" }}>
+                <s.Card on={i === at} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const TRUST = [
   ["Encrypted", "The database and every file, at rest."],
   ["Never used for training", "Client files are not used to train AI models."],
@@ -317,23 +360,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* The work, on the photographs. */}
-      <section id="work" className="scroll-mt-16 border-t border-[#ebe9e4]">
-        <div className="mx-auto max-w-[1200px] px-4 py-14 md:px-8 md:py-24">
-          {STEPS.map((s, i) => (
-            <div key={s.title} className="grid items-center gap-7 py-10 md:grid-cols-2 md:gap-20 md:py-[70px]">
-              <In className={i % 2 ? "md:order-2" : ""}>
-                <p className={eyebrow}>0{i + 1}</p>
-                <h3 className="mt-3 font-serif text-[34px] font-semibold leading-[1.05] tracking-[-0.025em] md:text-[52px]">{s.title}</h3>
-                <p className="mt-3 max-w-[30ch] text-[17.5px] leading-[1.6] text-[#6b6862] md:mt-4 md:text-[19px]">{s.line}</p>
-              </In>
-              <Photo src={s.photo} pos={s.pos} dim={s.dim} className="flex h-[480px] items-center justify-center md:h-[620px]">
-                <In delay={200} className="flex w-full justify-center">{(on) => <s.Card on={on} />}</In>
-              </Photo>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* The work: one pinned scene that moves through the four steps as the page scrolls. */}
+      <section id="work" className="border-t border-[#ebe9e4]"><Steps /></section>
 
       <section className="border-t border-[#ebe9e4]"><Packet /></section>
 
