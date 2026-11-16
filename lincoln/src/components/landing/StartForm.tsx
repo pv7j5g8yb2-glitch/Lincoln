@@ -47,7 +47,7 @@ export default function StartForm() {
   return (
     <div className="min-h-dvh bg-[#faf9f6] font-sans text-[#161614] antialiased selection:bg-[#efe6d6]">
       <header className="mx-auto flex h-16 max-w-[1200px] items-center px-4 md:px-8">
-        <Link href="/" aria-label="Back" className="-ml-2 flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-[#f0eee9]">
+        <Link href="/" aria-label="Back" className="-ml-2 flex h-10 w-10 items-center justify-center rounded-[10px] transition hover:bg-[#f0eee9]">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
         </Link>
       </header>
@@ -57,7 +57,7 @@ export default function StartForm() {
           <div className="hero-in pt-10">
             <h1 className="font-serif text-[44px] font-semibold leading-[1.02] tracking-[-0.035em] md:text-[64px]">Thank you.</h1>
             <p className="mt-5 max-w-[34ch] font-serif text-[18px] leading-[1.6] text-[#6b6862]">We&apos;ll reply by email with a quote and next steps.</p>
-            <Link href="/" className="mt-9 inline-block rounded-full bg-[#161614] px-6 py-3.5 text-[15.5px] font-medium text-white transition hover:opacity-85">Back to Lincoln</Link>
+            <Link href="/" className="mt-9 inline-block rounded-[10px] bg-[#161614] px-6 py-3.5 text-[15.5px] font-medium text-white transition hover:opacity-85">Back to Lincoln</Link>
           </div>
         ) : (
           <>
@@ -81,7 +81,7 @@ export default function StartForm() {
                       const on = q.multi ? ((v[q.id] as string[] | undefined) ?? []).includes(o) : v[q.id] === o;
                       return (
                         <button key={o} type="button" aria-pressed={on} onClick={() => (q.multi ? toggle(q.id, o) : set(q.id, o))}
-                          className={`rounded-full px-4 py-2.5 text-[15px] transition ${on ? "bg-[#161614] text-white" : "bg-white ring-1 ring-[#e2dfd8] hover:ring-[#b9b5ad]"}`}>
+                          className={`rounded-[10px] px-4 py-2.5 text-[15px] transition ${on ? "bg-[#161614] text-white" : "bg-white ring-1 ring-[#e2dfd8] hover:ring-[#b9b5ad]"}`}>
                           {o}
                         </button>
                       );
@@ -97,7 +97,7 @@ export default function StartForm() {
 
               {error && <p className="text-[14.5px] text-[#9b2c24]">{error}</p>}
               <div>
-                <button type="submit" disabled={state === "sending"} className="rounded-full bg-[#161614] px-7 py-3.5 text-[15.5px] font-medium text-white transition hover:opacity-85 disabled:opacity-50">
+                <button type="submit" disabled={state === "sending"} className="rounded-[10px] bg-[#161614] px-7 py-3.5 text-[15.5px] font-medium text-white transition hover:opacity-85 disabled:opacity-50">
                   {state === "sending" ? "Sending" : "Send"}
                 </button>
               </div>

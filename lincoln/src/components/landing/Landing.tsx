@@ -153,8 +153,8 @@ function ApproveCard({ on }: { on: boolean }) {
       <p className="mt-1 text-[14px] text-[#6b6862]">Cover letter, 5 forms, 14 exhibits</p>
       <div {...rise(on, 800)}>
         <div className="mt-5 flex gap-2.5">
-          <span className="rounded-full bg-[#161614] px-5 py-2.5 text-[14px] font-medium text-white">Approve</span>
-          <span className="rounded-full px-5 py-2.5 text-[14px] font-medium ring-1 ring-[#d3cfc8]">Review</span>
+          <span className="rounded-[10px] bg-[#161614] px-5 py-2.5 text-[14px] font-medium text-white">Approve</span>
+          <span className="rounded-[10px] px-5 py-2.5 text-[14px] font-medium ring-1 ring-[#d3cfc8]">Review</span>
         </div>
       </div>
     </div>
@@ -235,14 +235,14 @@ function Close() {
       <div className="absolute inset-0 bg-black/25" />
       <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-white">
         <In><h2 className="font-serif text-[48px] font-semibold leading-[1] tracking-[-0.035em] md:text-[88px]">Start your<br />first case.</h2></In>
-        <In delay={150}><Link href="/start" className="mt-7 inline-block rounded-full bg-white px-6 py-3.5 font-sans text-[15.5px] font-medium text-[#161614] transition hover:bg-white/85 md:mt-8">Get started</Link></In>
+        <In delay={150}><Link href="/start" className="mt-7 inline-block rounded-[10px] bg-white px-6 py-3.5 font-sans text-[15.5px] font-medium text-[#161614] transition hover:bg-white/85 md:mt-8">Get started</Link></In>
       </div>
     </div>
   );
 }
 
 function Footer() {
-  const icon = "flex h-10 w-10 items-center justify-center rounded-full ring-1 ring-[#e2dfd8] text-[#161614] transition hover:bg-[#f0eee9]";
+  const icon = "flex h-10 w-10 items-center justify-center rounded-[10px] ring-1 ring-[#e2dfd8] text-[#161614] transition hover:bg-[#f0eee9]";
   return (
     <footer className="mt-20 border-t border-[#ebe9e4] md:mt-28">
       <div className="mx-auto max-w-[1200px] px-4 pb-10 pt-14 md:px-8 md:pb-12 md:pt-20">
@@ -285,8 +285,8 @@ export default function Landing() {
         <nav className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 md:px-8">
           <Link href="/" className="font-serif text-[26px] font-semibold tracking-[-0.02em] md:text-[28px]">Lincoln</Link>
           <div className="flex items-center gap-1">
-            <Link href="/signin" className="rounded-full px-3 py-2 font-sans text-[14.5px] text-[#6b6862] transition hover:text-[#161614] md:px-4">Sign in</Link>
-            <Link href="/start" className="rounded-full bg-[#161614] px-4 py-2 font-sans text-[14.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
+            <Link href="/signin" className="rounded-[9px] px-3 py-2 font-sans text-[14.5px] text-[#6b6862] transition hover:text-[#161614] md:px-4">Sign in</Link>
+            <Link href="/start" className="rounded-[9px] bg-[#161614] px-4 py-2 font-sans text-[14.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
           </div>
         </nav>
       </header>
@@ -300,8 +300,8 @@ export default function Landing() {
             Lincoln works autonomously for you, no need for prompts. Once it&apos;s done you review and approve.
           </p>
           <div className="hero-in mt-9 flex items-center gap-2 [animation-delay:360ms] lg:mb-3">
-            <Link href="/start" className="rounded-full bg-[#161614] px-6 py-3.5 font-sans text-[15.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
-            <a href="#work" className="rounded-full px-5 py-3.5 font-sans text-[15.5px] font-medium transition hover:bg-[#f0eee9]">How it works</a>
+            <Link href="/start" className="rounded-[10px] bg-[#161614] px-6 py-3.5 font-sans text-[15.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
+            <a href="#work" className="rounded-[10px] px-5 py-3.5 font-sans text-[15.5px] font-medium transition hover:bg-[#f0eee9]">How it works</a>
           </div>
         </div>
         <div ref={hero} className="hero-photo relative h-[440px] overflow-hidden rounded-[20px] bg-[#e4e1db] md:h-[560px] lg:h-[620px]">
