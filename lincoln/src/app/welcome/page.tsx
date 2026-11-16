@@ -7,10 +7,10 @@ import "./landing.css";
 const LINE = "Lincoln is the platform built to meet the standards of the United States' leading immigration firms.";
 export const metadata: Metadata = {
   metadataBase: new URL("https://uselincoln.com"),
-  title: "Lincoln",
+  title: { absolute: "Lincoln | Legal AI" },
   description: LINE,
-  openGraph: { type: "website", url: "https://uselincoln.com", siteName: "Lincoln", title: "Lincoln", description: LINE, images: [{ url: "/og.png", width: 1200, height: 630, alt: "Lincoln" }] },
-  twitter: { card: "summary_large_image", title: "Lincoln", description: LINE, images: ["/og.png"] },
+  openGraph: { type: "website", url: "https://uselincoln.com", siteName: "Lincoln", title: "Lincoln | Legal AI", description: LINE, images: [{ url: "/og.png", width: 1200, height: 630, alt: "Lincoln" }] },
+  twitter: { card: "summary_large_image", title: "Lincoln | Legal AI", description: LINE, images: ["/og.png"] },
   robots: { index: false, follow: false },
 };
 
