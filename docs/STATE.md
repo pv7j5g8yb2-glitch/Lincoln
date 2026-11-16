@@ -337,6 +337,11 @@ from the repo the same day. History is in git up to commit `341cf65`.
   MPN ID. No paid email needed: hello@uselincoln.com on Zoho Mail's free plan, and the custom domain is added free
   in the existing Entra directory (do not buy Microsoft 365 for this; Claude wrongly suggested it once). Google shows the logo only after brand verification. Home page in both branding pages stays https://app.uselincoln.com
   (Ismael, 2026-11-15) until the landing page is live; then change it to https://uselincoln.com in Google and Microsoft.
+* Intake link (idea, 2026-11-16, not built): the firm sends each new client one link (engagement email, text or a
+  website button); the client answers case type questions and photographs documents; Lincoln checks each document
+  on arrival, chases what is missing, opens the case and works it to a filing packet. Makes Lincoln the start of
+  every case whatever the first contact was (call, walk in, WhatsApp, email). Unverified: how immigration firms
+  actually take in new clients and receive documents; check by reading what lawyers and paralegals wrote publicly.
 * Landing page (2026-11-16): lives at uselincoln.com (Ismael: app.uselincoln.com is strictly the app). One Next app
   serves both; src/proxy.ts shows the landing page on uselincoln.com/, keeps /terms and /privacy, sends www to the
   bare domain and every other path to app.uselincoln.com. Needs uselincoln.com added in Render and DNS at GoDaddy

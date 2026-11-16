@@ -186,6 +186,10 @@ build` before every push to the session branch; Render deploys from it. A grep f
   provider (only if actually signed), where data is stored, how to delete it.
 * **No made up proof.** No logos, quotes, stats or "pilots" that did not happen.
 * **No scraping and no ways round a site's bot protection.**
+* **Client intake link (Ismael, 2026-11-16).** Lincoln starts and finishes the whole case and does the legal
+  analysis (eligibility, route, issues), but all of it goes to the attorney for review. Anything a client sees (the
+  intake link, reminders) only asks for the answers and documents the case type needs; it never tells the client
+  whether they qualify or gives any legal answer.
 * **Unauthorised practice of law:** the product prepares documents for lawyers. It does not give
   legal advice to the public.
 
