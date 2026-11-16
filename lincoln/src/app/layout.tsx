@@ -7,7 +7,6 @@ export const metadata: Metadata = {
   title: "Lincoln",
   applicationName: "Lincoln",
   appleWebApp: { capable: true, title: "Lincoln", statusBarStyle: "default" },
-  description: "Lincoln runs immigration cases for law firms. A licensed attorney reviews and signs everything.",
   robots: { index: false, follow: false },
 };
 export const viewport: Viewport = {
