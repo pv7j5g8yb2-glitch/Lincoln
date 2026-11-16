@@ -168,6 +168,9 @@ build` before every push to the session branch; Render deploys from it. A grep f
 * How firms buy (Ismael, 2026-11-16): not self serve and not demo calls for now. Every Get started button on
   uselincoln.com opens a form (/start) with the questions needed for a quote; a person replies by email with the quote
   and instructions. Demo calls only later, once there are experienced sales reps. Sign in stays for active users.
+  No public sign up (Ismael, 2026-11-16): Lincoln sets up each firm from /ops (staff emails in LINCOLN_OPS_EMAILS)
+  with an admin invite for the person who contacted us. That admin invites everyone else, sets their roles and
+  decides who else is admin. Admin is a permission, not a job title; a firm always keeps one admin.
 * No video or phone calls with buyers. Selling and talking to customers in writing is fine (email,
   DMs, LinkedIn), as long as it is a normal human conversation, not template pitching.
 

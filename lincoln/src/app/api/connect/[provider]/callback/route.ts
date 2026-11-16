@@ -31,7 +31,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ provider
   if (mode === "auth") {
     try {
       const r = await signInWith(provider, code);
-      if ("error" in r) return go(r.error === "exists" ? "/signin?error=linked" : `/signin?error=provider&code=${r.error}`);
+      if ("error" in r) return go(r.error === "exists" ? "/signin?error=linked" : r.error === "noaccount" ? "/signin?error=noaccount" : `/signin?error=provider&code=${r.error}`);
       await securityEvent(r.firmId, r.userId, r.created ? "account_created" : "sign_in", `with ${provider === "google" ? "Google" : "Microsoft"}`);
       const u = db().prepare("SELECT totp_enc FROM users WHERE id = ?").get(r.userId) as { totp_enc: string | null };
       if (u.totp_enc) return go(await beginChallenge(r.userId));

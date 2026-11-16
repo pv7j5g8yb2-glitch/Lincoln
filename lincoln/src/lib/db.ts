@@ -66,7 +66,7 @@ CREATE INDEX IF NOT EXISTS i_appr_firm ON approvals(firm_id, status);
 CREATE INDEX IF NOT EXISTS i_msg_firm ON messages(firm_id, at);
 `;
 
-const TABLES = ["intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "usage", "access_log", "security_events", "mailboxes", "sessions", "kv", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "criteria", "documents", "cases", "users", "firms"];
+const TABLES = ["invites", "intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "usage", "access_log", "security_events", "mailboxes", "sessions", "kv", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "criteria", "documents", "cases", "users", "firms"];
 
 /** Where the database lives. On Render this is the persistent disk (DATA_DIR=/var/data). */
 export const dataDir = () => process.env.DATA_DIR || path.join(process.cwd(), "data");
@@ -99,11 +99,16 @@ export function db(): Database.Database {
   d.exec("CREATE INDEX IF NOT EXISTS i_usage_firm ON usage(firm_id, at)");
   d.exec("CREATE TABLE IF NOT EXISTS intake_links (token TEXT PRIMARY KEY, firm_id TEXT NOT NULL, case_id TEXT, created_at TEXT NOT NULL)");
   d.exec("CREATE TABLE IF NOT EXISTS intake_sessions (id TEXT PRIMARY KEY, token TEXT NOT NULL, firm_id TEXT NOT NULL, case_id TEXT, files TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)");
+  d.exec("CREATE TABLE IF NOT EXISTS invites (token_hash TEXT PRIMARY KEY, firm_id TEXT NOT NULL, email TEXT NOT NULL, role TEXT, admin INTEGER NOT NULL DEFAULT 0, invited_by TEXT, created_at TEXT NOT NULL, expires_at TEXT NOT NULL, used_at TEXT)");
   d.exec("CREATE TABLE IF NOT EXISTS enquiries (id TEXT PRIMARY KEY, at TEXT NOT NULL, name TEXT NOT NULL, email TEXT NOT NULL, firm TEXT NOT NULL, answers TEXT NOT NULL, ip TEXT)");
   d.exec("CREATE TABLE IF NOT EXISTS known_devices (user_id TEXT NOT NULL, device TEXT NOT NULL, first_seen TEXT NOT NULL, PRIMARY KEY (user_id, device))");
-  for (const [table, col, type] of [["users", "avatar", "TEXT"], ["cases", "processing", "INTEGER NOT NULL DEFAULT 0"], ["cases", "note", "TEXT"], ["chat", "case_id", "TEXT"], ["cases", "client_email", "TEXT"], ["messages", "email", "TEXT"], ["messages", "thread_id", "TEXT"], ["messages", "mailbox_id", "TEXT"], ["mailboxes", "settings", "TEXT"], ["users", "totp_enc", "TEXT"], ["users", "totp_pending_enc", "TEXT"], ["users", "totp_last_step", "INTEGER"], ["users", "recovery", "TEXT"], ["sessions", "ip", "TEXT"], ["sessions", "agent", "TEXT"], ["sessions", "last_seen", "TEXT"], ["firms", "key_enc", "TEXT"], ["firms", "require_2fa", "INTEGER NOT NULL DEFAULT 0"], ["issues", "rule", "TEXT"], ["firms", "address", "TEXT"], ["firms", "phone", "TEXT"], ["firms", "email", "TEXT"], ["users", "bar_number", "TEXT"], ["users", "bar_state", "TEXT"], ["cases", "receipt", "TEXT"], ["forms", "batch", "TEXT"], ["usage", "user_id", "TEXT"], ["chat", "thread_id", "TEXT"], ["intake_links", "user_id", "TEXT"]]) {
+  for (const [table, col, type] of [["users", "avatar", "TEXT"], ["cases", "processing", "INTEGER NOT NULL DEFAULT 0"], ["cases", "note", "TEXT"], ["chat", "case_id", "TEXT"], ["cases", "client_email", "TEXT"], ["messages", "email", "TEXT"], ["messages", "thread_id", "TEXT"], ["messages", "mailbox_id", "TEXT"], ["mailboxes", "settings", "TEXT"], ["users", "totp_enc", "TEXT"], ["users", "totp_pending_enc", "TEXT"], ["users", "totp_last_step", "INTEGER"], ["users", "recovery", "TEXT"], ["sessions", "ip", "TEXT"], ["sessions", "agent", "TEXT"], ["sessions", "last_seen", "TEXT"], ["firms", "key_enc", "TEXT"], ["firms", "require_2fa", "INTEGER NOT NULL DEFAULT 0"], ["issues", "rule", "TEXT"], ["firms", "address", "TEXT"], ["firms", "phone", "TEXT"], ["firms", "email", "TEXT"], ["users", "bar_number", "TEXT"], ["users", "bar_state", "TEXT"], ["cases", "receipt", "TEXT"], ["forms", "batch", "TEXT"], ["usage", "user_id", "TEXT"], ["chat", "thread_id", "TEXT"], ["intake_links", "user_id", "TEXT"], ["users", "admin", "INTEGER NOT NULL DEFAULT 0"]]) {
     const cols = d.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
-    if (!cols.some((c) => c.name === col)) d.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`);
+    if (!cols.some((c) => c.name === col)) {
+      d.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`);
+      // Admin became a permission of its own (2026-11-16): whoever was an admin by role keeps it, once.
+      if (table === "users" && col === "admin") d.exec("UPDATE users SET admin = 1 WHERE role LIKE '%dmin%' OR role LIKE '%anaging%'");
+    }
   }
   d.exec("CREATE INDEX IF NOT EXISTS i_usage_user ON usage(user_id, at)");
   // Chats became separate threads (2026-11-15): each earlier conversation becomes one thread, named after its first question.
@@ -156,7 +161,8 @@ function ensureOwner(d: Database.Database) {
   d.transaction(() => {
     if (existing) d.prepare("DELETE FROM users WHERE id = ?").run(existing.id);
     d.prepare("INSERT OR IGNORE INTO firms (id, name, demo) VALUES ('f_owner', ?, 0)").run((process.env.SEED_USER_FIRM ?? "").trim() || "New firm");
-    d.prepare("INSERT INTO users (id, firm_id, name, email, role, initials, password_hash, created_at) VALUES ('u_owner', 'f_owner', ?, ?, 'Administrator', ?, ?, ?)").run(name, email, initials, hashPassword(pass), new Date().toISOString());
+    d.prepare("INSERT INTO users (id, firm_id, name, email, role, initials, password_hash, created_at) VALUES ('u_owner', 'f_owner', ?, ?, 'Managing partner', ?, ?, ?)").run(name, email, initials, hashPassword(pass), new Date().toISOString());
+    d.prepare("UPDATE users SET admin = 1 WHERE id = 'u_owner'").run();
   })();
 }
 

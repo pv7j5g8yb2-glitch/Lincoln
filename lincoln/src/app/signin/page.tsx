@@ -11,6 +11,7 @@ const ERR: Record<string, string> = {
   expired: "Sign in expired. Try again.",
   provider: "Sign in failed.",
   linked: "An account with this email exists. Sign in with its password.",
+  noaccount: "No Lincoln account uses this email.",
 };
 
 export default async function SignIn({ searchParams }: { searchParams: Promise<{ error?: string; code?: string; reset?: string; deleted?: string }> }) {
@@ -19,7 +20,7 @@ export default async function SignIn({ searchParams }: { searchParams: Promise<{
   return (
     <AuthShell
       title="Welcome back"
-      footer={<Link href="/signup" className="font-medium text-ink hover:underline">Create an account</Link>}
+      footer={<Link href="/start" className="font-medium text-ink hover:underline">Get started</Link>}
     >
       {error && ERR[error] && <Notice>{ERR[error]}{code ? <span className="mt-1 block font-mono text-[11.5px] opacity-80">{code.replace(/[^\w.-]/g, "").slice(0, 40)}</span> : null}</Notice>}
       {reset && <Notice tone="ok">Password updated.</Notice>}

@@ -12,7 +12,7 @@ export type Activity = { id: string; case_id: string | null; at: string; actor: 
 export type Approval = { id: string; case_id: string; kind: string; title: string; brief: string; least_sure: string | null; if_wrong: string | null; payload: string; status: string; assignee_id: string; created_at: string; decided_at: string | null; decided_by: string | null; due: string | null; client?: string; type_code?: string };
 export type Message = { id: string; case_id: string | null; direction: string; party: string; party_role: string | null; subject: string; body: string; at: string; state: string; lincoln_note: string | null; email?: string | null; client?: string | null };
 export type Draft = { id: string; case_id: string; title: string; kind: string; status: string; version: number; content: string; updated_at: string };
-export type Person = { id: string; name: string; email: string; role: string; initials: string; avatar: string | null };
+export type Person = { id: string; name: string; email: string; role: string; initials: string; avatar: string | null; admin: number };
 
 const all = <T>(sql: string, ...a: unknown[]) => db().prepare(sql).all(...a) as T[];
 
@@ -26,7 +26,7 @@ export function hiddenCases(firm: string, v?: Viewer): Set<string> {
 const visible = <T extends { case_id?: string | null; id?: string }>(rows: T[], hidden: Set<string>, key: "case_id" | "id" = "case_id") => (hidden.size ? rows.filter((r) => !hidden.has(String(r[key] ?? ""))) : rows);
 const one = <T>(sql: string, ...a: unknown[]) => db().prepare(sql).get(...a) as T | undefined;
 
-export const people = (firm: string) => all<Person>("SELECT id, name, email, role, initials, avatar FROM users WHERE firm_id = ? ORDER BY rowid", firm);
+export const people = (firm: string) => all<Person>("SELECT id, name, email, role, initials, avatar, admin FROM users WHERE firm_id = ? ORDER BY rowid", firm);
 export const cases = (firm: string, v?: Viewer) => visible(all<Case>("SELECT * FROM cases WHERE firm_id = ? ORDER BY CASE state WHEN 'needs_you' THEN 0 WHEN 'moving' THEN 1 WHEN 'waiting' THEN 2 ELSE 3 END, opened_at DESC", firm), hiddenCases(firm, v), "id");
 export const recentCases = (firm: string, limit = 6, v?: Viewer) => visible(all<Case>("SELECT * FROM cases WHERE firm_id = ? ORDER BY opened_at DESC LIMIT ?", firm, limit), hiddenCases(firm, v), "id");
 export const caseById = (firm: string, id: string, v?: Viewer) => {

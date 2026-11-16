@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import { db } from "@/lib/db";
-import { apiUser, isAdmin } from "@/lib/session";
+import { apiUser } from "@/lib/session";
 import { verifyPassword, limited } from "@/lib/auth";
 import { loadPage } from "@/lib/storage";
 import { recordAccess } from "@/lib/access";
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   const s = await apiUser();
   if (!s) return new Response("Sign in first", { status: 401 });
   if (req.headers.get("sec-fetch-site") && req.headers.get("sec-fetch-site") !== "same-origin") return new Response("Refused", { status: 403 });
-  if (s.firm.demo || !isAdmin(s.user.role)) return new Response("Administrators only", { status: 403 });
+  if (s.firm.demo || !s.user.admin) return new Response("Administrators only", { status: 403 });
   const form = await req.formData();
   const d = db();
   const row = d.prepare("SELECT password_hash FROM users WHERE id = ?").get(s.user.id) as { password_hash: string | null };

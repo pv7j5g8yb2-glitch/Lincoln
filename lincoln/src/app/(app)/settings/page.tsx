@@ -16,7 +16,10 @@ import { deviceName } from "@/lib/device";
 import { accessRecord } from "@/lib/access";
 import CopyLink from "@/components/CopyLink";
 import { firmLink, linkUrl, memberLink } from "@/lib/client-intake";
-import { ADMIN_ROLES, ROLES, STAFF_ROLES } from "@/lib/roles";
+import { ROLES } from "@/lib/roles";
+import AdminSwitch from "@/components/AdminSwitch";
+import { inviteMember, revokeInvite } from "@/lib/actions";
+import { inviteUrl, pendingInvites } from "@/lib/invites";
 import RoleSelect from "@/components/RoleSelect";
 
 const TABS: [string, string][] = [["profile", "Profile"], ["security", "Security"], ["firm", "Firm"], ["automation", "Automation"]];
@@ -31,21 +34,21 @@ const RULES: [string, string, boolean][] = [
   ["Other messages", "", false],
   ["Strategy and eligibility", "", false],
 ];
-const EVENT: Record<string, string> = { sign_in: "Signed in", sign_in_failed: "Wrong password", sign_in_code_failed: "Wrong two step code", recovery_code_used: "Recovery code used", password_changed: "Password changed", password_reset_requested: "Password reset requested", password_reset: "Password reset", two_step_on: "Two step sign in turned on", two_step_off: "Two step sign in turned off", two_step_required: "Two step sign in required for the firm", two_step_optional: "Two step sign in made optional for the firm", role_changed: "Role changed", connected: "Account connected", disconnected: "Account disconnected", sessions_signed_out: "Devices signed out", account_created: "Account created", firm_exported: "Firm exported" };
+const EVENT: Record<string, string> = { sign_in: "Signed in", sign_in_failed: "Wrong password", sign_in_code_failed: "Wrong two step code", recovery_code_used: "Recovery code used", password_changed: "Password changed", password_reset_requested: "Password reset requested", password_reset: "Password reset", two_step_on: "Two step sign in turned on", two_step_off: "Two step sign in turned off", two_step_required: "Two step sign in required for the firm", two_step_optional: "Two step sign in made optional for the firm", role_changed: "Role changed", member_invited: "Invited to the firm", admin_given: "Made an admin", admin_removed: "Admin removed", connected: "Account connected", disconnected: "Account disconnected", sessions_signed_out: "Devices signed out", account_created: "Account created", firm_exported: "Firm exported" };
 const ACCESS: Record<string, string> = { case_viewed: "Opened", page_viewed: "Viewed", exported: "Exported", firm_exported: "Exported" };
 const device = deviceName;
 
 const MSG: Record<string, Record<string, string>> = {
   profile: { name: "Name required.", sample: "Not available in the sample workspace." },
   security: { limited: "Too many attempts. Try again in 15 minutes.", sample: "Not available in the sample workspace.", current: "Wrong password.", password: "10 characters min.", code: "Wrong code.", breached: "This password appears in known data breaches.", required: "The firm requires two step sign in.", admin: "Administrators only.", selffirst: "Turn on two step sign in for this account first." },
-  firm: { "1": "Administrators only.", sample: "Not available in the sample workspace.", delete: "Name or password did not match.", export: "Wrong password." },
+  firm: { invite: "A valid email and a role are needed.", member: "This email already has an account.", limited: "Too many invites. Try again later.", "1": "Administrators only.", sample: "Not available in the sample workspace.", delete: "Name or password did not match.", export: "Wrong password." },
 };
 
 function Row({ children, className }: { children: React.ReactNode; className?: string }) {
   return <div className={clsx("flex items-center gap-4 border-b border-line py-3", className)}>{children}</div>;
 }
 
-export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ tab?: string; saved?: string; error?: string; connected?: string; inbound?: string; setup?: string; codes?: string }> }) {
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ tab?: string; saved?: string; error?: string; connected?: string; inbound?: string; setup?: string; codes?: string; invite?: string }> }) {
   const { user, firm, viewer, sessionId, twoStep: hasTwoStep } = await requireUser({ setup: true });
   const params = await searchParams;
   const mustSetUp = Boolean(firm.require_2fa) && !hasTwoStep;
@@ -59,7 +62,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const sessions = tab === "security" ? (d.prepare("SELECT id, ip, agent, created_at, last_seen FROM sessions WHERE user_id = ? AND created_at > ? ORDER BY last_seen DESC").all(user.id, new Date(Date.now() - SESSION_HOURS * 3600_000).toISOString()) as { id: string; ip: string | null; agent: string | null; created_at: string; last_seen: string | null }[]) : [];
   const events = tab === "security" ? (d.prepare("SELECT id, kind, detail, ip, at FROM security_events WHERE user_id = ? ORDER BY at DESC LIMIT 12").all(user.id) as { id: string; kind: string; detail: string | null; ip: string | null; at: string }[]) : [];
   const hasPassword = Boolean((db().prepare("SELECT password_hash FROM users WHERE id = ?").get(user.id) as { password_hash: string | null }).password_hash);
-  const admin = /admin|managing/i.test(user.role);
+  const admin = Boolean(user.admin);
   const details = d.prepare("SELECT address, phone, email FROM firms WHERE id = ?").get(firm.id) as { address: string | null; phone: string | null; email: string | null };
   const bar = d.prepare("SELECT bar_number, bar_state FROM users WHERE id = ?").get(user.id) as { bar_number: string | null; bar_state: string | null };
   const err = error && tab !== "integrations" ? MSG[tab]?.[error] : null;
@@ -83,7 +86,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               <label className="block"><span className={label}>Name</span><input name="name" required maxLength={100} defaultValue={user.name} className={field} /></label>
               <label className="block"><span className={label}>Role</span>
                 <select name="role" defaultValue={user.role} className={field}>
-                  {[...new Set([...(!admin ? STAFF_ROLES : people(firm.id).some((p) => p.id !== user.id && /admin|managing/i.test(p.role)) ? ROLES : ADMIN_ROLES), user.role])].map((r) => <option key={r} value={r}>{r}</option>)}
+                  {[...new Set([...ROLES, user.role])].map((r) => <option key={r} value={r}>{r}</option>)}
                 </select>
               </label>
               <div className="grid gap-5 sm:grid-cols-2">
@@ -213,10 +216,29 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                   <Row key={p.id}>
                     <Avatar initials={p.initials} src={p.avatar} size={28} />
                     <span className="min-w-0 flex-1"><span className="block truncate text-[13px]">{p.name}{p.id === user.id ? <span className="text-faint"> (this account)</span> : null}</span><span className="block truncate text-[12px] text-faint">{p.email}</span></span>
-                    {admin && !firm.demo ? <RoleSelect userId={p.id} role={p.role} roles={ROLES} /> : <span className="hidden text-[12.5px] text-muted sm:block">{p.role}</span>}
+                    {admin && !firm.demo ? (
+                      <><RoleSelect userId={p.id} role={p.role} roles={ROLES} /><AdminSwitch userId={p.id} on={Boolean(p.admin)} /></>
+                    ) : <span className="hidden text-[12.5px] text-muted sm:block">{p.role}{p.admin ? " · Admin" : ""}</span>}
+                  </Row>
+                ))}
+                {admin && !firm.demo && pendingInvites(firm.id).map((i) => (
+                  <Row key={i.token_hash}>
+                    <span className="min-w-0 flex-1"><span className="block truncate text-[13px]">{i.email}</span><span className="block truncate text-[12px] text-faint">Invited{i.role ? ` · ${i.role}` : ""}{i.admin ? " · Admin" : ""}</span></span>
+                    <form action={revokeInvite}><input type="hidden" name="id" value={i.token_hash} /><button className={btn.ghost}>Remove</button></form>
                   </Row>
                 ))}
               </div>
+              {admin && !firm.demo && (
+                <form action={inviteMember} className="mt-5 flex flex-wrap items-center gap-2">
+                  <input name="email" type="email" required placeholder="Email" className={clsx(field, "!w-auto min-w-[200px] flex-1")} />
+                  <select name="role" defaultValue="Attorney" className={clsx(field, "!w-[180px]")}>{ROLES.map((r) => <option key={r} value={r}>{r}</option>)}</select>
+                  <label className="flex items-center gap-2 px-1 text-[13px] text-muted"><input type="checkbox" name="admin" className="h-4 w-4 accent-ink" /> Admin</label>
+                  <button className={btn.primary}>Invite</button>
+                </form>
+              )}
+              {admin && params.invite && /^[\w-]{20,80}$/.test(params.invite) && (
+                <div className="mt-4"><span className={label}>Invite link</span><CopyLink inline url={inviteUrl(params.invite)} /></div>
+              )}
             </>
           )}
 

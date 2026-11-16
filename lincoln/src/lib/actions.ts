@@ -2,13 +2,14 @@
 
 import { cookies } from "next/headers";
 import { forgetFirmSessions } from "./client-intake";
-import { ROLES, STAFF_ROLES } from "./roles";
+import { ROLES } from "./roles";
+import { acceptInvite, createInvite, findInvite, inviteUrl, isOps, setUpFirm } from "./invites";
 import { hashPassword, initialsOf, limited, newToken, sha, validEmail, validPassword, verifyPassword } from "./auth";
 import { mailConfigured as systemMailConfigured, sendSystemMail } from "./mailer";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db, resetDemo, uid } from "./db";
-import { COOKIE, MFA_COOKIE, isAdmin, requireUser } from "./session";
+import { COOKIE, MFA_COOKIE, requireUser } from "./session";
 import { clientIp, securityEvent } from "./audit";
 import { beginChallenge, createSession } from "./login";
 import { verify as verifyTotp } from "./totp";
@@ -96,26 +97,63 @@ export async function verifySignInCode(form: FormData) {
   redirect("/");
 }
 
-export async function signUp(form: FormData) {
+/** Joining a firm through an invite link: the person sets their name, role and password. */
+export async function joinFirm(token: string, form: FormData) {
+  const inv = findInvite(token);
+  if (!inv) redirect(`/join/${token}?error=expired`);
   const name = String(form.get("name") ?? "").trim().slice(0, 100);
-  const firmName = String(form.get("firm") ?? "").trim().slice(0, 120);
-  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  const role = String(form.get("role") ?? "");
   const password = String(form.get("password") ?? "");
-  if (limited(`up:${await clientKey()}`, 10)) redirect("/signup?error=limited");
-  if (!name || !firmName || !validEmail(email)) redirect("/signup?error=fields");
-  if (!validPassword(password)) redirect("/signup?error=password");
-  const d = db();
-  if (d.prepare("SELECT 1 FROM users WHERE email = ?").get(email)) redirect("/signup?error=exists");
-  if (await breached(password)) redirect("/signup?error=breached");
-  const firmId = "f_" + uid();
-  const userId = "u_" + uid();
-  d.transaction(() => {
-    d.prepare("INSERT INTO firms (id, name, demo) VALUES (?, ?, 0)").run(firmId, firmName);
-    d.prepare("INSERT INTO users (id, firm_id, name, email, role, initials, password_hash, created_at) VALUES (?, ?, ?, ?, 'Administrator', ?, ?, ?)").run(userId, firmId, name, email, initialsOf(name), hashPassword(password), now());
-  })();
-  await securityEvent(firmId, userId, "account_created");
+  if (limited(`join:${await clientKey()}`, 10)) redirect(`/join/${token}?error=limited`);
+  if (!name || !ROLES.includes(role)) redirect(`/join/${token}?error=fields`);
+  if (!validPassword(password)) redirect(`/join/${token}?error=password`);
+  if (await breached(password)) redirect(`/join/${token}?error=breached`);
+  const userId = acceptInvite(inv, name, password, role);
+  if (!userId) redirect(`/join/${token}?error=exists`);
+  await securityEvent(inv.firm_id, userId, "account_created");
   await startSession(userId);
   redirect("/");
+}
+
+/** An admin invites someone to the firm, with their role and whether they are an admin. */
+export async function inviteMember(form: FormData) {
+  const { user, firm } = await requireUser();
+  if (firm.demo || !user.admin) redirect("/settings?tab=firm&error=1");
+  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  const role = String(form.get("role") ?? "");
+  if (!validEmail(email) || !ROLES.includes(role)) redirect("/settings?tab=firm&error=invite");
+  if (limited(`invite:${user.id}`, 30, 60 * 60_000)) redirect("/settings?tab=firm&error=limited");
+  if (db().prepare("SELECT 1 FROM users WHERE email = ?").get(email)) redirect("/settings?tab=firm&error=member");
+  const token = createInvite(firm.id, email, { role, admin: form.get("admin") === "on", by: user.id });
+  let sent = false;
+  if (systemMailConfigured()) {
+    try { await sendSystemMail(email, `${user.name} invited you to ${firm.name} on Lincoln`, `${user.name} invited you to join ${firm.name} on Lincoln.\n\nJoin here: ${inviteUrl(token)}\n\nThe link works once and expires in 14 days.`); sent = true; } catch { sent = false; }
+  }
+  await securityEvent(firm.id, user.id, "member_invited", email);
+  revalidatePath("/settings");
+  if (sent) { await toast("Invited"); redirect("/settings?tab=firm"); }
+  redirect(`/settings?tab=firm&invite=${encodeURIComponent(token)}`);
+}
+
+export async function revokeInvite(form: FormData) {
+  const { user, firm } = await requireUser();
+  if (firm.demo || !user.admin) redirect("/settings?tab=firm&error=1");
+  db().prepare("DELETE FROM invites WHERE firm_id = ? AND token_hash = ? AND used_at IS NULL").run(firm.id, String(form.get("id") ?? ""));
+  revalidatePath("/settings");
+  await toast("Removed");
+  redirect("/settings?tab=firm");
+}
+
+/** Lincoln staff set up a firm for the person who contacted us. Returns their admin invite link. */
+export async function setUpFirmAction(form: FormData) {
+  const { user } = await requireUser();
+  if (!isOps(user.email)) redirect("/");
+  const name = String(form.get("firm") ?? "").trim().slice(0, 120);
+  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  if (!name || !validEmail(email)) redirect("/ops?error=fields");
+  if (db().prepare("SELECT 1 FROM users WHERE email = ?").get(email)) redirect("/ops?error=exists");
+  const { token } = setUpFirm(name, email);
+  redirect(`/ops?invite=${encodeURIComponent(token)}&firm=${encodeURIComponent(name)}`);
 }
 
 export async function requestReset(form: FormData) {
@@ -336,17 +374,29 @@ function notInSample(firm: { demo: number }, back: string) {
   if (firm.demo) redirect(`${back}${back.includes("?") ? "&" : "?"}error=sample`);
 }
 
-const otherAdmins = (firmId: string, userId: string) => (db().prepare("SELECT role FROM users WHERE firm_id = ? AND id != ?").all(firmId, userId) as { role: string }[]).filter((u) => isAdmin(u.role)).length;
+const otherAdmins = (firmId: string, userId: string) => (db().prepare("SELECT COUNT(*) AS n FROM users WHERE firm_id = ? AND id != ? AND admin = 1").get(firmId, userId) as { n: number }).n;
 
-/** An admin sets anyone's role at the firm, admin roles included. The firm always keeps at least one admin. */
+/** An admin sets anyone's role at the firm. */
 export async function setMemberRole(userId: string, role: string) {
   const { user, firm } = await requireUser();
-  if (firm.demo || !isAdmin(user.role) || !ROLES.includes(role)) return { error: "Not changed" };
-  const target = db().prepare("SELECT id, name, role FROM users WHERE id = ? AND firm_id = ?").get(userId, firm.id) as { id: string; name: string; role: string } | undefined;
+  if (firm.demo || !user.admin || !ROLES.includes(role)) return { error: "Not changed" };
+  const target = db().prepare("SELECT id, name FROM users WHERE id = ? AND firm_id = ?").get(userId, firm.id) as { id: string; name: string } | undefined;
   if (!target) return { error: "Not changed" };
-  if (isAdmin(target.role) && !isAdmin(role) && otherAdmins(firm.id, target.id) === 0) return { error: "A firm needs one admin" };
   db().prepare("UPDATE users SET role = ? WHERE id = ?").run(role, target.id);
   await securityEvent(firm.id, user.id, "role_changed", `${target.name}: ${role}`);
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/** An admin makes someone an admin, or takes it away. A firm always keeps at least one admin. */
+export async function setMemberAdmin(userId: string, on: boolean) {
+  const { user, firm } = await requireUser();
+  if (firm.demo || !user.admin) return { error: "Not changed" };
+  const target = db().prepare("SELECT id, name, admin FROM users WHERE id = ? AND firm_id = ?").get(userId, firm.id) as { id: string; name: string; admin: number } | undefined;
+  if (!target) return { error: "Not changed" };
+  if (!on && target.admin && otherAdmins(firm.id, target.id) === 0) return { error: "A firm needs one admin" };
+  db().prepare("UPDATE users SET admin = ? WHERE id = ?").run(on ? 1 : 0, target.id);
+  await securityEvent(firm.id, user.id, on ? "admin_given" : "admin_removed", target.name);
   revalidatePath("/", "layout");
   return { ok: true };
 }
@@ -356,9 +406,8 @@ export async function updateProfile(form: FormData) {
   notInSample(firm, "/settings?tab=profile");
   const name = String(form.get("name") ?? "").trim().slice(0, 100);
   const typed = String(form.get("role") ?? "").trim().slice(0, 60);
-  // Roles come from a fixed list. Only an admin may choose an admin role, and the last admin cannot drop it.
-  const allowed = isAdmin(user.role) ? ROLES : STAFF_ROLES;
-  const role = allowed.includes(typed) && (isAdmin(typed) || !isAdmin(user.role) || otherAdmins(firm.id, user.id) > 0) ? typed : user.role;
+  // A job title from the list; admin rights are separate and not changed here.
+  const role = ROLES.includes(typed) ? typed : user.role;
   const avatar = String(form.get("avatar") ?? "");
   if (!name) redirect("/settings?tab=profile&error=name");
   const d = db();
@@ -407,7 +456,7 @@ export async function updateFirm(form: FormData) {
   const { user, firm } = await requireUser();
   notInSample(firm, "/settings?tab=firm");
   const name = String(form.get("firm") ?? "").trim().slice(0, 120);
-  if (!name || !/admin|managing/i.test(user.role)) redirect("/settings?tab=firm&error=1");
+  if (!name || !user.admin) redirect("/settings?tab=firm&error=1");
   const opt = (k: string, n: number) => String(form.get(k) ?? "").trim().slice(0, n) || null;
   db().prepare("UPDATE firms SET name = ?, address = ?, phone = ?, email = ? WHERE id = ?").run(name, opt("address", 200), opt("phone", 40), opt("email", 120), firm.id);
   revalidatePath("/", "layout");
@@ -443,7 +492,7 @@ export async function disconnectMailbox() {
 /** Issues a new secret forwarding address for the firm. The old one stops working. */
 export async function newInboundAddress() {
   const { user, firm } = await requireUser();
-  if (!isAdmin(user.role) || firm.demo) return;
+  if (!user.admin || firm.demo) return;
   const token = newToken();
   setKv(firm.id, "inbound_hash", sha(token));
   redirect(`/integrations?inbound=${token}`);
@@ -583,7 +632,7 @@ export async function signOutSession(form: FormData) {
 /** Administrators can require two step sign in for everyone in the firm, once their own is on. */
 export async function setTwoStepRequired(form: FormData) {
   const { user, firm, twoStep } = await requireUser();
-  if (firm.demo || !isAdmin(user.role)) redirect("/settings?tab=security&error=admin");
+  if (firm.demo || !user.admin) redirect("/settings?tab=security&error=admin");
   const on = form.get("on") === "1";
   if (on && !twoStep) redirect("/settings?tab=security&error=selffirst");
   db().prepare("UPDATE firms SET require_2fa = ? WHERE id = ?").run(on ? 1 : 0, firm.id);
@@ -595,7 +644,7 @@ export async function setTwoStepRequired(form: FormData) {
 /** Permanently deletes the firm: every case, file, message, connection and account. Administrators only. */
 export async function deleteFirm(form: FormData) {
   const { user, firm } = await requireUser();
-  if (firm.demo || !isAdmin(user.role)) redirect("/settings?tab=firm&error=1");
+  if (firm.demo || !user.admin) redirect("/settings?tab=firm&error=1");
   const row = db().prepare("SELECT password_hash FROM users WHERE id = ?").get(user.id) as { password_hash: string | null };
   if (limited(`del:${user.id}`, 5) || !verifyPassword(String(form.get("password") ?? ""), row.password_hash) || String(form.get("confirm") ?? "").trim() !== firm.name) redirect("/settings?tab=firm&error=delete");
   const d = db();
@@ -604,7 +653,7 @@ export async function deleteFirm(form: FormData) {
   const caseIds = (d.prepare("SELECT id FROM cases WHERE firm_id = ?").all(firm.id) as { id: string }[]).map((c) => c.id);
   forgetFirmSessions(firm.id);
   d.transaction(() => {
-    for (const t of ["intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "security_events", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "criteria", "documents", "cases", "kv"]) d.prepare(`DELETE FROM ${t} WHERE firm_id = ?`).run(firm.id);
+    for (const t of ["invites", "intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "security_events", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "criteria", "documents", "cases", "kv"]) d.prepare(`DELETE FROM ${t} WHERE firm_id = ?`).run(firm.id);
     d.prepare("DELETE FROM inbound_seen WHERE mailbox_id IN (SELECT id FROM mailboxes WHERE firm_id = ?)").run(firm.id);
     d.prepare("DELETE FROM mailboxes WHERE firm_id = ?").run(firm.id);
     d.prepare("DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE firm_id = ?)").run(firm.id);

@@ -337,10 +337,11 @@ from the repo the same day. History is in git up to commit `341cf65`.
   MPN ID. No paid email needed: hello@uselincoln.com on Zoho Mail's free plan, and the custom domain is added free
   in the existing Entra directory (do not buy Microsoft 365 for this; Claude wrongly suggested it once). Google shows the logo only after brand verification. Home page in both branding pages stays https://app.uselincoln.com
   (Ismael, 2026-11-15) until the landing page is live; then change it to https://uselincoln.com in Google and Microsoft.
-* Roles (Ismael, 2026-11-16): Role is a dropdown (lib/roles.ts). Admin rights follow the role. Only admins can give
-  or take admin roles, for anyone, from Settings, Firm, Members; everyone else sees the staff roles only. A firm
-  always keeps one admin. Firm link cases go to every admin: all are notified and see it; the first admin is the
-  name on the case (forms need one). No invites yet, so a firm has one member until that is built.
+* Team (2026-11-16): no public sign up (/signup goes to /start; Google or Microsoft sign in only joins an open
+  invite). Lincoln staff set up firms at app.uselincoln.com/ops (needs LINCOLN_OPS_EMAILS on Render) and get an admin
+  invite link to send. Admins invite people from Settings, Firm (role, Admin switch; emailed if Resend is set up,
+  otherwise a link to copy), change roles and switch admin on or off; a firm always keeps one admin. Role is a job
+  title only (lib/roles.ts). Firm link cases go to every admin (all notified); the first admin is the name on it.
 * Intake link (built 2026-11-16, tested with a stand-in model): the firm has one link (Settings, Firm), every member
   their own (Settings, Profile; cases from it are assigned to them; firm link cases go to the admin, Ismael 2026-11-16) and every case its own (Client link on the case
   page). The client picks a topic, then the matter in plain words (65 matters in 12 topics covering every case type

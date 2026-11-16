@@ -1,4 +1,5 @@
 import { db, uid } from "../db";
+import { acceptInvite, inviteForEmail } from "../invites";
 import { seal } from "../secret";
 import * as google from "./google";
 import * as microsoft from "./microsoft";
@@ -86,13 +87,8 @@ export const teamsChannels = (c: Connection) => microsoft.channels(c);
 export const teamsPost = (c: Connection, teamId: string, channelId: string, html: string) => microsoft.post(c, teamId, channelId, html);
 
 const CONSUMER = /^(gmail|googlemail|outlook|hotmail|live|msn|icloud|me|mac|yahoo|aol|proton|protonmail|pm)\./i;
-const firmNameFrom = (email: string) => {
-  const domain = email.split("@")[1] ?? "";
-  if (!domain || CONSUMER.test(domain)) return "New firm";
-  return domain.split(".")[0].split(/[-_]/).filter(Boolean).map((w) => w[0].toUpperCase() + w.slice(1)).join(" ") || "New firm";
-};
 
-export type SignInResult = { userId: string; firmId: string; created: boolean } | { error: "exists" | "unverified" | "sample" };
+export type SignInResult = { userId: string; firmId: string; created: boolean } | { error: "exists" | "unverified" | "sample" | "noaccount" };
 
 /**
  * Sign in or sign up with Google or Microsoft. A returning account is found by the provider's own
@@ -111,13 +107,14 @@ export async function signInWith(p: Provider, code: string): Promise<SignInResul
   if (!t.accountEmail || !t.subject) return { error: "unverified" };
   // An existing password account is never taken over by email: it connects from Settings first.
   if (d.prepare("SELECT 1 FROM users WHERE email = ?").get(t.accountEmail)) return { error: "exists" };
-  const firmId = "f_" + uid(), userId = "u_" + uid();
+  // No account is made from a Google or Microsoft sign in alone: only someone with an open invite joins, into the
+  // firm that invited them. Lincoln sets up firms itself.
+  const inv = inviteForEmail(t.accountEmail);
+  if (!inv) return { error: "noaccount" };
   const name = (t.name || t.accountEmail.split("@")[0]).slice(0, 100);
-  const initials = name.split(/\s+/).filter(Boolean).map((w) => w[0].toUpperCase()).slice(0, 2).join("") || "U";
-  d.transaction(() => {
-    d.prepare("INSERT INTO firms (id, name, demo) VALUES (?, ?, 0)").run(firmId, firmNameFrom(t.accountEmail));
-    d.prepare("INSERT INTO users (id, firm_id, name, email, role, initials, password_hash, created_at) VALUES (?, ?, ?, ?, 'Administrator', ?, NULL, ?)").run(userId, firmId, name, t.accountEmail, initials, new Date().toISOString());
-  })();
+  const userId = acceptInvite(inv, name, null, inv.role ?? "Attorney");
+  if (!userId) return { error: "exists" };
+  const firmId = inv.firm_id;
   linkIdentity(p, t.subject, userId);
   if (t.refresh) await store(p, firmId, userId, t);
   return { userId, firmId, created: true };

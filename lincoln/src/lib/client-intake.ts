@@ -8,7 +8,6 @@ import { UNNAMED, processCase } from "./intake";
 import { typeOf } from "./library";
 import { ABOUT, matterById, matterForCode, type Matter } from "./intake-matters";
 import { isLawyerRole } from "./roles";
-import { isAdmin } from "./session";
 import { notify } from "./push";
 
 // The client intake link. A firm has one link for its website, every member has their own (cases from it are
@@ -158,10 +157,10 @@ export async function submit(link: Link, sessionId: string, matterId: string, ra
   } else {
     // The firm's link (the website) goes to the firm's admin. A member's link makes the case theirs; when that
     // member is not a lawyer (a paralegal, a case manager), a lawyer at the firm is responsible, with them on it.
-    const people = d.prepare("SELECT id, role FROM users WHERE firm_id = ? ORDER BY created_at").all(link.firm_id) as { id: string; role: string }[];
-    const admin = people.find((p) => isAdmin(p.role)) ?? people[0];
+    const people = d.prepare("SELECT id, role, admin FROM users WHERE firm_id = ? ORDER BY created_at").all(link.firm_id) as { id: string; role: string; admin: number }[];
+    const admin = people.find((p) => p.admin) ?? people[0];
     const member = link.user_id ? people.find((p) => p.id === link.user_id) : undefined;
-    const lawyer = people.find((p) => isLawyerRole(p.role) && !isAdmin(p.role)) ?? admin;
+    const lawyer = people.find((p) => isLawyerRole(p.role) && !p.admin) ?? admin;
     const attorney = member ? (isLawyerRole(member.role) ? member.id : lawyer?.id ?? member.id) : admin?.id ?? null;
     const paralegal = member?.id ?? attorney;
     const ty = typeOf(matter.code, matter.code ? null : "Client intake");
@@ -173,7 +172,7 @@ export async function submit(link: Link, sessionId: string, matterId: string, ra
   // Everyone the case is for hears about it when they are away: every admin for the firm's link, the member for
   // their own link. A case link's case is already someone's and shows in their Review as it is read.
   if (!link.case_id) {
-    const to = link.user_id ? [link.user_id] : (d.prepare("SELECT id, role FROM users WHERE firm_id = ?").all(link.firm_id) as { id: string; role: string }[]).filter((u) => isAdmin(u.role)).map((u) => u.id);
+    const to = link.user_id ? [link.user_id] : (d.prepare("SELECT id FROM users WHERE firm_id = ? AND admin = 1").all(link.firm_id) as { id: string }[]).map((u) => u.id);
     for (const u of to) notify(u, { title: "New client", body: `${answers.name}. ${matter.label}.`, url: `/cases/${id}`, tag: `intake:${id}` });
   }
   d.prepare("INSERT INTO activity (id, firm_id, case_id, at, actor, kind, text, minutes) VALUES (?, ?, ?, ?, 'Lincoln', 'file', ?, 5)").run(uid(), link.firm_id, id, now(), `${answers.name} sent the intake questionnaire${files.length ? ` and ${files.length === 1 ? "one document" : `${files.length} documents`}` : ""}.`);

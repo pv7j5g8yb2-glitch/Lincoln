@@ -37,6 +37,7 @@ export function seed(d: Database.Database) {
   insUser.run("u_james", F, "James Whitaker", "james@kestrel.example", "Attorney", "JW", null, iso(0));
   insUser.run("u_daniel", F, "Daniel Kim", "daniel@kestrel.example", "Paralegal", "DK", null, iso(0));
   insUser.run("u_aisha", F, "Aisha Rahman", "aisha@kestrel.example", "Paralegal", "AR", null, iso(0));
+  d.prepare("UPDATE users SET admin = 1 WHERE id = 'u_maria'").run();
 
   const insCase = d.prepare(`INSERT INTO cases (id, firm_id, ref, client, counterpart, type_code, type_name, family, stage, state, waiting_on, summary, attorney_id, paralegal_id, opened_at, next_date, next_date_label, sensitive, pages)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
