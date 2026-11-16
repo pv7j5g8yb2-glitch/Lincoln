@@ -9,6 +9,7 @@ import { typeOf } from "./library";
 import { ABOUT, matterById, matterForCode, type Matter } from "./intake-matters";
 import { isLawyerRole } from "./roles";
 import { isAdmin } from "./session";
+import { notify } from "./push";
 
 // The client intake link. A firm has one link for its website, every member has their own (cases from it are
 // theirs), and a case can have its own link, tied to that client and case type. The client answers the questions and sends documents; on Send the answers
@@ -169,6 +170,12 @@ export async function submit(link: Link, sessionId: string, matterId: string, ra
       VALUES (?, ?, ?, ?, NULL, ?, ?, ?, 'Intake', 'moving', ?, ?, ?, ?, ?, 0, 1, ?)`).run(caseId, link.firm_id, `${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`, answers.name, ty.code, ty.name, ty.family, `Opened from the client's intake: ${matter.label.toLowerCase()}.`, attorney, paralegal, now(), ty.family === "Humanitarian" ? 1 : 0, email);
   }
   const id = caseId;
+  // Everyone the case is for hears about it when they are away: every admin for the firm's link, the member for
+  // their own link. A case link's case is already someone's and shows in their Review as it is read.
+  if (!link.case_id) {
+    const to = link.user_id ? [link.user_id] : (d.prepare("SELECT id, role FROM users WHERE firm_id = ?").all(link.firm_id) as { id: string; role: string }[]).filter((u) => isAdmin(u.role)).map((u) => u.id);
+    for (const u of to) notify(u, { title: "New client", body: `${answers.name}. ${matter.label}.`, url: `/cases/${id}`, tag: `intake:${id}` });
+  }
   d.prepare("INSERT INTO activity (id, firm_id, case_id, at, actor, kind, text, minutes) VALUES (?, ?, ?, ?, 'Lincoln', 'file', ?, 5)").run(uid(), link.firm_id, id, now(), `${answers.name} sent the intake questionnaire${files.length ? ` and ${files.length === 1 ? "one document" : `${files.length} documents`}` : ""}.`);
   d.prepare("UPDATE cases SET processing = 1 WHERE id = ?").run(id);
   d.prepare("UPDATE intake_sessions SET status = 'sent', case_id = ?, updated_at = ? WHERE id = ?").run(id, now(), sessionId);

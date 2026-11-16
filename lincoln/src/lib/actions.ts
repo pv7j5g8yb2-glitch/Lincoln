@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { forgetFirmSessions } from "./client-intake";
-import { ADMIN_ROLES, STAFF_ROLES } from "./roles";
+import { ROLES, STAFF_ROLES } from "./roles";
 import { hashPassword, initialsOf, limited, newToken, sha, validEmail, validPassword, verifyPassword } from "./auth";
 import { mailConfigured as systemMailConfigured, sendSystemMail } from "./mailer";
 import { redirect } from "next/navigation";
@@ -336,14 +336,29 @@ function notInSample(firm: { demo: number }, back: string) {
   if (firm.demo) redirect(`${back}${back.includes("?") ? "&" : "?"}error=sample`);
 }
 
+const otherAdmins = (firmId: string, userId: string) => (db().prepare("SELECT role FROM users WHERE firm_id = ? AND id != ?").all(firmId, userId) as { role: string }[]).filter((u) => isAdmin(u.role)).length;
+
+/** An admin sets anyone's role at the firm, admin roles included. The firm always keeps at least one admin. */
+export async function setMemberRole(userId: string, role: string) {
+  const { user, firm } = await requireUser();
+  if (firm.demo || !isAdmin(user.role) || !ROLES.includes(role)) return { error: "Not changed" };
+  const target = db().prepare("SELECT id, name, role FROM users WHERE id = ? AND firm_id = ?").get(userId, firm.id) as { id: string; name: string; role: string } | undefined;
+  if (!target) return { error: "Not changed" };
+  if (isAdmin(target.role) && !isAdmin(role) && otherAdmins(firm.id, target.id) === 0) return { error: "A firm needs one admin" };
+  db().prepare("UPDATE users SET role = ? WHERE id = ?").run(role, target.id);
+  await securityEvent(firm.id, user.id, "role_changed", `${target.name}: ${role}`);
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
 export async function updateProfile(form: FormData) {
   const { user, firm } = await requireUser();
   notInSample(firm, "/settings?tab=profile");
   const name = String(form.get("name") ?? "").trim().slice(0, 100);
   const typed = String(form.get("role") ?? "").trim().slice(0, 60);
-  // Roles come from a fixed list. Admin rights follow the role, so a choice that would grant or remove them is
-  // not taken from here: nobody makes themselves an administrator, or loses it, from their own profile.
-  const role = [...ADMIN_ROLES, ...STAFF_ROLES].includes(typed) && isAdmin(typed) === isAdmin(user.role) ? typed : user.role;
+  // Roles come from a fixed list. Only an admin may choose an admin role, and the last admin cannot drop it.
+  const allowed = isAdmin(user.role) ? ROLES : STAFF_ROLES;
+  const role = allowed.includes(typed) && (isAdmin(typed) || !isAdmin(user.role) || otherAdmins(firm.id, user.id) > 0) ? typed : user.role;
   const avatar = String(form.get("avatar") ?? "");
   if (!name) redirect("/settings?tab=profile&error=name");
   const d = db();

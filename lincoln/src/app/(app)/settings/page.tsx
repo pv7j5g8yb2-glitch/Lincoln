@@ -16,7 +16,8 @@ import { deviceName } from "@/lib/device";
 import { accessRecord } from "@/lib/access";
 import CopyLink from "@/components/CopyLink";
 import { firmLink, linkUrl, memberLink } from "@/lib/client-intake";
-import { ADMIN_ROLES, STAFF_ROLES } from "@/lib/roles";
+import { ADMIN_ROLES, ROLES, STAFF_ROLES } from "@/lib/roles";
+import RoleSelect from "@/components/RoleSelect";
 
 const TABS: [string, string][] = [["profile", "Profile"], ["security", "Security"], ["firm", "Firm"], ["automation", "Automation"]];
 
@@ -30,7 +31,7 @@ const RULES: [string, string, boolean][] = [
   ["Other messages", "", false],
   ["Strategy and eligibility", "", false],
 ];
-const EVENT: Record<string, string> = { sign_in: "Signed in", sign_in_failed: "Wrong password", sign_in_code_failed: "Wrong two step code", recovery_code_used: "Recovery code used", password_changed: "Password changed", password_reset_requested: "Password reset requested", password_reset: "Password reset", two_step_on: "Two step sign in turned on", two_step_off: "Two step sign in turned off", two_step_required: "Two step sign in required for the firm", two_step_optional: "Two step sign in made optional for the firm", connected: "Account connected", disconnected: "Account disconnected", sessions_signed_out: "Devices signed out", account_created: "Account created", firm_exported: "Firm exported" };
+const EVENT: Record<string, string> = { sign_in: "Signed in", sign_in_failed: "Wrong password", sign_in_code_failed: "Wrong two step code", recovery_code_used: "Recovery code used", password_changed: "Password changed", password_reset_requested: "Password reset requested", password_reset: "Password reset", two_step_on: "Two step sign in turned on", two_step_off: "Two step sign in turned off", two_step_required: "Two step sign in required for the firm", two_step_optional: "Two step sign in made optional for the firm", role_changed: "Role changed", connected: "Account connected", disconnected: "Account disconnected", sessions_signed_out: "Devices signed out", account_created: "Account created", firm_exported: "Firm exported" };
 const ACCESS: Record<string, string> = { case_viewed: "Opened", page_viewed: "Viewed", exported: "Exported", firm_exported: "Exported" };
 const device = deviceName;
 
@@ -82,7 +83,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               <label className="block"><span className={label}>Name</span><input name="name" required maxLength={100} defaultValue={user.name} className={field} /></label>
               <label className="block"><span className={label}>Role</span>
                 <select name="role" defaultValue={user.role} className={field}>
-                  {[...new Set([...(admin ? ADMIN_ROLES : STAFF_ROLES), user.role])].map((r) => <option key={r} value={r}>{r}</option>)}
+                  {[...new Set([...(!admin ? STAFF_ROLES : people(firm.id).some((p) => p.id !== user.id && /admin|managing/i.test(p.role)) ? ROLES : ADMIN_ROLES), user.role])].map((r) => <option key={r} value={r}>{r}</option>)}
                 </select>
               </label>
               <div className="grid gap-5 sm:grid-cols-2">
@@ -212,7 +213,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                   <Row key={p.id}>
                     <Avatar initials={p.initials} src={p.avatar} size={28} />
                     <span className="min-w-0 flex-1"><span className="block truncate text-[13px]">{p.name}{p.id === user.id ? <span className="text-faint"> (this account)</span> : null}</span><span className="block truncate text-[12px] text-faint">{p.email}</span></span>
-                    <span className="hidden text-[12.5px] text-muted sm:block">{p.role}</span>
+                    {admin && !firm.demo ? <RoleSelect userId={p.id} role={p.role} roles={ROLES} /> : <span className="hidden text-[12.5px] text-muted sm:block">{p.role}</span>}
                   </Row>
                 ))}
               </div>
