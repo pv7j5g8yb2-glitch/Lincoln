@@ -255,7 +255,7 @@ export default function Landing() {
     <div className="min-h-dvh overflow-x-clip bg-[#faf9f6] font-sans text-[#161614] antialiased selection:bg-[#efe6d6]">
       <header className={`sticky top-0 z-50 bg-[#faf9f6]/85 backdrop-blur-md transition-[border-color] duration-300 ${scrolled ? "border-b border-[#ebe9e4]" : "border-b border-transparent"}`}>
         <nav className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 md:px-8">
-          <Link href="/welcome" className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/mark.png" alt="" width={26} height={26} className="rounded-[7px]" />
             <span className="font-serif text-[19px] font-semibold tracking-[-0.01em]">Lincoln</span>
