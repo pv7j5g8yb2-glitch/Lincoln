@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import CopyLink from "@/components/CopyLink";
 import { PageHead, btn, field, label } from "@/components/ui";
-import { setUpFirmAction } from "@/lib/actions";
+import { backUpNowAction, setUpFirmAction } from "@/lib/actions";
+import { backupStatus, offsiteConfigured } from "@/lib/backup";
 import { db } from "@/lib/db";
 import { inviteUrl, isOps } from "@/lib/invites";
 import { requireUser } from "@/lib/session";
@@ -29,11 +30,29 @@ export default async function Ops({ searchParams }: { searchParams: Promise<{ in
       {invite && /^[\w-]{20,80}$/.test(invite) && (
         <div className="mt-8"><span className={label}>Admin invite for {firm}</span><CopyLink inline url={inviteUrl(invite)} /></div>
       )}
+      <BackupPanel />
       {firms.length > 0 && (
         <div className="mt-12 border-t border-line">
           {firms.map((f, i) => <div key={i} className="flex justify-between border-b border-line py-2.5 text-[13px]"><span>{f.name}</span><span className="text-faint">{f.members}</span></div>)}
         </div>
       )}
+    </div>
+  );
+}
+
+/** The last backup, for Lincoln staff only. */
+function BackupPanel() {
+  const b = backupStatus();
+  return (
+    <div className="mt-12 border-t border-line pt-6">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[14px] font-medium">Backups</span>
+        <form action={backUpNowAction}><button className={btn.secondary}>Back up now</button></form>
+      </div>
+      <p className="mt-2 text-[13px] text-muted">
+        {b ? `${b.ok ? "Last" : "Failed"} ${new Date(b.at).toUTCString()}${b.ok ? ` · ${(b.bytes / 1e6).toFixed(1)} MB` : ` · ${b.error ?? ""}`}` : "None yet"}
+        {" · "}{offsiteConfigured() ? (b?.offsite ? (b.offsite.ok ? `Off site ${b.offsite.sent} sent` : `Off site failed · ${b.offsite.error ?? ""}`) : "Off site set") : "Off site not set"}
+      </p>
     </div>
   );
 }

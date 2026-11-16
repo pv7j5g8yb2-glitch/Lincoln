@@ -144,6 +144,16 @@ export async function revokeInvite(form: FormData) {
   redirect("/settings?tab=firm");
 }
 
+/** Lincoln staff make a backup on demand. */
+export async function backUpNowAction() {
+  const { user } = await requireUser();
+  if (!isOps(user.email)) redirect("/");
+  const { backupNow } = await import("./backup");
+  const r = await backupNow();
+  await toast(r.ok ? "Backed up" : "Backup failed");
+  redirect("/ops");
+}
+
 /** Lincoln staff set up a firm for the person who contacted us. Returns their admin invite link. */
 export async function setUpFirmAction(form: FormData) {
   const { user } = await requireUser();

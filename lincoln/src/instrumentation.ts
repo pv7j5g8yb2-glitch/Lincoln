@@ -24,6 +24,11 @@ export async function register() {
   const { scanReview } = await import("./lib/push");
   scanReview();
   setInterval(() => { try { scanReview(); } catch { /* next round */ } }, 20_000);
+  // A checked copy of the database every six hours (and off site when a bucket is set). The first a few minutes in.
+  const { backupNow } = await import("./lib/backup");
+  const backup = () => void backupNow().catch(() => undefined);
+  setTimeout(backup, 3 * 60_000);
+  setInterval(backup, 6 * 3600_000);
   // Intake files a client never sent are removed after 30 days.
   const { sweepSessions } = await import("./lib/client-intake");
   setInterval(() => { try { sweepSessions(); } catch { /* next round */ } }, 6 * 3600_000);
