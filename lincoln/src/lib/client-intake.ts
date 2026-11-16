@@ -8,11 +8,11 @@ import { UNNAMED, processCase } from "./intake";
 import { typeOf } from "./library";
 import { ABOUT, matterById, matterForCode, type Matter } from "./intake-matters";
 
-// The client intake link. A firm has one link for its website and emails; a case can also have its own link,
-// tied to that client and case type. The client answers the questions and sends documents; on Send the answers
+// The client intake link. A firm has one link for its website, every member has their own (cases from it are
+// theirs), and a case can have its own link, tied to that client and case type. The client answers the questions and sends documents; on Send the answers
 // become a questionnaire page and, with the documents, go into the case, where Lincoln reads them like any file.
 
-export type Link = { token: string; firm_id: string; case_id: string | null; firm: string; matter: Matter | null; client: string | null };
+export type Link = { token: string; firm_id: string; case_id: string | null; user_id: string | null; firm: string; matter: Matter | null; client: string | null };
 
 const now = () => new Date().toISOString();
 const newToken = () => crypto.randomBytes(18).toString("base64url");
@@ -22,10 +22,20 @@ export const linkUrl = (token: string) => `${appUrl()}/intake/${token}`;
 /** The firm's own link, made the first time it is asked for. */
 export function firmLink(firmId: string) {
   const d = db();
-  const row = d.prepare("SELECT token FROM intake_links WHERE firm_id = ? AND case_id IS NULL").get(firmId) as { token: string } | undefined;
+  const row = d.prepare("SELECT token FROM intake_links WHERE firm_id = ? AND case_id IS NULL AND user_id IS NULL").get(firmId) as { token: string } | undefined;
   if (row) return row.token;
   const token = newToken();
   d.prepare("INSERT INTO intake_links (token, firm_id, case_id, created_at) VALUES (?, ?, NULL, ?)").run(token, firmId, now());
+  return token;
+}
+
+/** A member's own link: cases that come through it are assigned to that person. */
+export function memberLink(firmId: string, userId: string) {
+  const d = db();
+  const row = d.prepare("SELECT token FROM intake_links WHERE firm_id = ? AND user_id = ? AND case_id IS NULL").get(firmId, userId) as { token: string } | undefined;
+  if (row) return row.token;
+  const token = newToken();
+  d.prepare("INSERT INTO intake_links (token, firm_id, case_id, user_id, created_at) VALUES (?, ?, NULL, ?, ?)").run(token, firmId, userId, now());
   return token;
 }
 
@@ -41,10 +51,10 @@ export function caseLink(firmId: string, caseId: string) {
 
 export function lookup(token: string): Link | null {
   if (!/^[\w-]{16,40}$/.test(token)) return null;
-  const r = db().prepare("SELECT l.token, l.firm_id, l.case_id, f.name AS firm, f.demo, c.type_code, c.client FROM intake_links l JOIN firms f ON f.id = l.firm_id LEFT JOIN cases c ON c.id = l.case_id AND c.firm_id = l.firm_id WHERE l.token = ?").get(token) as { token: string; firm_id: string; case_id: string | null; firm: string; demo: number; type_code: string | null; client: string | null } | undefined;
+  const r = db().prepare("SELECT l.token, l.firm_id, l.case_id, l.user_id, f.name AS firm, f.demo, c.type_code, c.client FROM intake_links l JOIN firms f ON f.id = l.firm_id LEFT JOIN cases c ON c.id = l.case_id AND c.firm_id = l.firm_id WHERE l.token = ?").get(token) as { token: string; firm_id: string; case_id: string | null; user_id: string | null; firm: string; demo: number; type_code: string | null; client: string | null } | undefined;
   if (!r || r.demo) return null;
   if (r.case_id && r.type_code === null) return null; // the case was deleted
-  return { token: r.token, firm_id: r.firm_id, case_id: r.case_id, firm: r.firm, matter: r.case_id ? matterForCode(r.type_code) : null, client: r.client && r.client !== UNNAMED ? r.client : null };
+  return { token: r.token, firm_id: r.firm_id, case_id: r.case_id, user_id: r.user_id, firm: r.firm, matter: r.case_id ? matterForCode(r.type_code) : null, client: r.client && r.client !== UNNAMED ? r.client : null };
 }
 
 // Files sent before Send wait here, encrypted with the firm's key, under a session the client's browser keeps.
@@ -143,12 +153,16 @@ export async function submit(link: Link, sessionId: string, matterId: string, ra
   if (caseId) {
     d.prepare("UPDATE cases SET client = CASE WHEN client = ? THEN ? ELSE client END, client_email = COALESCE(client_email, ?) WHERE id = ? AND firm_id = ?").run(UNNAMED, answers.name, email, caseId, link.firm_id);
   } else {
-    // A new case from the firm's link goes to the firm's first attorney, or its first member.
-    const owner = d.prepare("SELECT id FROM users WHERE firm_id = ? ORDER BY CASE WHEN role LIKE '%ttorney%' THEN 0 ELSE 1 END, created_at LIMIT 1").get(link.firm_id) as { id: string } | undefined;
+    // A member's link makes the case theirs (a paralegal's goes to the firm's attorney, with the paralegal on it).
+    // The firm's link goes to the firm's first attorney, or its first member.
+    const lead = d.prepare("SELECT id FROM users WHERE firm_id = ? ORDER BY CASE WHEN role LIKE '%ttorney%' THEN 0 ELSE 1 END, created_at LIMIT 1").get(link.firm_id) as { id: string } | undefined;
+    const member = link.user_id ? d.prepare("SELECT id, role FROM users WHERE id = ? AND firm_id = ?").get(link.user_id, link.firm_id) as { id: string; role: string } | undefined : undefined;
+    const attorney = member && !/paralegal|assistant/i.test(member.role) ? member.id : lead?.id ?? null;
+    const paralegal = member?.id ?? attorney;
     const ty = typeOf(matter.code, matter.code ? null : "Client intake");
     caseId = "c_" + uid();
     d.prepare(`INSERT INTO cases (id, firm_id, ref, client, counterpart, type_code, type_name, family, stage, state, summary, attorney_id, paralegal_id, opened_at, sensitive, pages, processing, client_email)
-      VALUES (?, ?, ?, ?, NULL, ?, ?, ?, 'Intake', 'moving', ?, ?, ?, ?, ?, 0, 1, ?)`).run(caseId, link.firm_id, `${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`, answers.name, ty.code, ty.name, ty.family, `Opened from the client's intake: ${matter.label.toLowerCase()}.`, owner?.id ?? null, owner?.id ?? null, now(), ty.family === "Humanitarian" ? 1 : 0, email);
+      VALUES (?, ?, ?, ?, NULL, ?, ?, ?, 'Intake', 'moving', ?, ?, ?, ?, ?, 0, 1, ?)`).run(caseId, link.firm_id, `${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`, answers.name, ty.code, ty.name, ty.family, `Opened from the client's intake: ${matter.label.toLowerCase()}.`, attorney, paralegal, now(), ty.family === "Humanitarian" ? 1 : 0, email);
   }
   const id = caseId;
   d.prepare("INSERT INTO activity (id, firm_id, case_id, at, actor, kind, text, minutes) VALUES (?, ?, ?, ?, 'Lincoln', 'file', ?, 5)").run(uid(), link.firm_id, id, now(), `${answers.name} sent the intake questionnaire${files.length ? ` and ${files.length === 1 ? "one document" : `${files.length} documents`}` : ""}.`);

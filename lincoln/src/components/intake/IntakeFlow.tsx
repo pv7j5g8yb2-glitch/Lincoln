@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ABOUT, type Field, type Matter } from "@/lib/intake-matters";
+import { ABOUT, GROUPS, type Field, type Matter } from "@/lib/intake-matters";
 
 // The page a client opens from their law firm's link. Plain questions, then their documents, then Send.
 // Progress stays on the phone, so a client can stop and come back. Nothing here gives legal answers.
@@ -47,6 +47,7 @@ export default function IntakeFlow({ token, firm, fixed, name, matters }: { toke
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const pick = useRef<HTMLInputElement>(null);
+  const [group, setGroup] = useState<string | null>(null);
   const target = useRef<string>("");
 
   // Pick up where the client left off on this phone.
@@ -140,11 +141,18 @@ export default function IntakeFlow({ token, firm, fixed, name, matters }: { toke
           </div>
         ) : s.step === "matter" ? (
           <>
-            <h1 className="text-[34px] font-semibold leading-[1.08] tracking-[-0.03em] md:text-[40px]">What do you need help with?</h1>
+            {group && <button type="button" onClick={() => setGroup(null)} className="mb-5 font-sans text-[14.5px] text-[#6b6862] transition hover:text-[#161614]">← All topics</button>}
+            <h1 className="text-[34px] font-semibold leading-[1.08] tracking-[-0.03em] md:text-[40px]">{group ?? "What do you need help with?"}</h1>
             <div className="mt-8 flex flex-col gap-2.5">
-              {matters.map((m) => (
-                <button key={m.id} type="button" onClick={() => { setS((o) => ({ ...o, matter: m.id })); go("about"); }} className={`rounded-2xl px-5 py-4 text-left font-sans text-[16px] transition ${s.matter === m.id ? "bg-[#161614] text-white" : "bg-white ring-1 ring-[#e2dfd8] hover:ring-[#b9b5ad]"}`}>{m.label}</button>
-              ))}
+              {group
+                ? matters.filter((m) => m.group === group).map((m) => (
+                  <button key={m.id} type="button" onClick={() => { setS((o) => ({ ...o, matter: m.id })); go("about"); }} className={`rounded-2xl px-5 py-4 text-left font-sans text-[16px] transition ${s.matter === m.id ? "bg-[#161614] text-white" : "bg-white ring-1 ring-[#e2dfd8] hover:ring-[#b9b5ad]"}`}>{m.label}</button>
+                ))
+                : GROUPS.map((g) => (
+                  <button key={g} type="button" onClick={() => { setGroup(g); window.scrollTo({ top: 0 }); }} className="flex items-center justify-between gap-3 rounded-2xl bg-white px-5 py-4 text-left font-sans text-[16px] ring-1 ring-[#e2dfd8] transition hover:ring-[#b9b5ad]">
+                    <span>{g}</span><span className="text-[#b1ada5]">›</span>
+                  </button>
+                ))}
             </div>
           </>
         ) : s.step === "about" ? (

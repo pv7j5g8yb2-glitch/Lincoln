@@ -15,7 +15,7 @@ import { ago } from "@/lib/format";
 import { deviceName } from "@/lib/device";
 import { accessRecord } from "@/lib/access";
 import CopyLink from "@/components/CopyLink";
-import { firmLink, linkUrl } from "@/lib/client-intake";
+import { firmLink, linkUrl, memberLink } from "@/lib/client-intake";
 
 const TABS: [string, string][] = [["profile", "Profile"], ["security", "Security"], ["firm", "Firm"], ["automation", "Automation"]];
 
@@ -93,6 +93,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               <span className="text-[14px] font-medium">Notifications on this device</span>
               <NotificationSwitch />
             </div>
+          )}
+          {tab === "profile" && !firm.demo && (
+            <section className="mt-10 border-t border-line pt-6">
+              <h2 className="mb-2 text-[14px] font-medium">Intake link</h2>
+              <CopyLink inline url={linkUrl(memberLink(firm.id, user.id))} />
+            </section>
           )}
 
           {tab === "security" && (
@@ -191,7 +197,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               </form>
               {!firm.demo && (
                 <>
-                  <h2 className="mb-2 mt-10 text-[14px] font-medium">Intake link</h2>
+                  <h2 className="mb-2 mt-10 text-[14px] font-medium">Firm intake link</h2>
                   <CopyLink inline url={linkUrl(firmLink(firm.id))} />
                 </>
               )}
