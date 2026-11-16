@@ -40,7 +40,7 @@ export default function AuthShell({ title, children, footer, below }: { title: s
             {footer && <div className="px-8 py-4 text-center text-[13px] text-muted">{footer}</div>}
           </div>
           {below && <div className="mt-6 text-center">{below}</div>}
-          <p className="mt-5 text-center text-[12px] leading-relaxed text-faint sm:-mx-6 sm:whitespace-nowrap">
+          <p className="mt-14 text-center text-[12px] leading-relaxed text-faint sm:-mx-6 sm:whitespace-nowrap">
             By continuing you agree to the <Link href="/terms" className="underline decoration-edge underline-offset-2 hover:text-ink">Terms of Service</Link> and <Link href="/privacy" className="underline decoration-edge underline-offset-2 hover:text-ink">Privacy Policy</Link>.
           </p>
         </div>
