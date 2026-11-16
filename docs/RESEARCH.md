@@ -994,3 +994,15 @@ Replies in the Tenet launch thread and the "make Harvey more engaging" thread. H
 * For Lincoln: formal documents (letters to USCIS, briefs, declarations, RFE responses) are drafted without
   contractions by default (built 2026-11-15). Client emails stay human and may use them. Not built yet:
   remembering each attorney's or firm's own style rules when told once.
+
+## Market size and security for law firms (2026-11-16)
+* Immigration is not a BigLaw practice: the Am Law 200 is mostly litigation and corporate work. Corporate immigration
+  is dominated by Fragomen; family and removal work by solos, small firms and nonprofits. Lincoln's buyers are small
+  and mid firms. AILA gives its own size as 16,000+ (2026 media kit) or 18,000+ US lawyers (website); figures vary.
+  445 seats (the goal) is roughly 3% of that, before counting paralegals.
+* Security for small firms (from a Google AI thread, checked where possible): the bare minimum is SOC 2 Type I, one
+  pentest, cyber and tech E&O insurance, a DPA, and a zero data retention agreement; quoted at about $20k to $35k in
+  year one (unverified). BigLaw extras (SOC 2 Type II, ISO 27001 and 42001, BYOK, SSO, vCISO) are not needed for
+  Lincoln's buyers yet. HIPAA does not normally apply to immigration firms.
+* Anthropic zero data retention is not self serve: Anthropic's sales team reviews and enables it per organisation
+  (docs: platform.claude.com, API and data retention). Lincoln does not have it yet and must not claim it.
