@@ -20,19 +20,20 @@ export const configured = () => Boolean(process.env.MICROSOFT_CLIENT_ID && proce
 const LOGIN = "https://login.microsoftonline.com/common/oauth2/v2.0";
 const GRAPH = "https://graph.microsoft.com/v1.0";
 
-export function authUrl(state: string, _mode: "auth" | "connect" = "connect") {
-  const q = new URLSearchParams({ client_id: process.env.MICROSOFT_CLIENT_ID!, redirect_uri: callback("microsoft"), response_type: "code", response_mode: "query", scope: SCOPES.join(" "), prompt: "select_account", state });
+/** With teams, the sign in also asks for reading the firm's Lincoln channel (a Microsoft 365 admin approves it once). */
+export function authUrl(state: string, _mode: "auth" | "connect" = "connect", teams = false) {
+  const q = new URLSearchParams({ client_id: process.env.MICROSOFT_CLIENT_ID!, redirect_uri: callback("microsoft"), response_type: "code", response_mode: "query", scope: [...SCOPES, ...(teams ? ["ChannelMessage.Read.All"] : [])].join(" "), prompt: "select_account", state });
   return api(`${LOGIN}/authorize?${q}`);
 }
 
 type Token = { access_token: string; refresh_token?: string; expires_in?: number; id_token?: string };
-async function token(body: Record<string, string>) {
-  const res = await fetch(api(`${LOGIN}/token`), { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ client_id: process.env.MICROSOFT_CLIENT_ID!, client_secret: process.env.MICROSOFT_CLIENT_SECRET!, scope: SCOPES.join(" "), ...body }) });
+async function token(body: Record<string, string>, teams = false) {
+  const res = await fetch(api(`${LOGIN}/token`), { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ client_id: process.env.MICROSOFT_CLIENT_ID!, client_secret: process.env.MICROSOFT_CLIENT_SECRET!, scope: [...SCOPES, ...(teams ? ["ChannelMessage.Read.All"] : [])].join(" "), ...body }) });
   return json<Token>(res, "Microsoft");
 }
 
-export async function exchange(code: string) {
-  const t = await token({ code, grant_type: "authorization_code", redirect_uri: callback("microsoft") });
+export async function exchange(code: string, teams = false) {
+  const t = await token({ code, grant_type: "authorization_code", redirect_uri: callback("microsoft") }, teams);
   const me = await json<{ id?: string; mail?: string; userPrincipalName?: string; displayName?: string }>(await fetch(api(`${GRAPH}/me?$select=id,mail,userPrincipalName,displayName`), { headers: { Authorization: `Bearer ${t.access_token}` } }), "Microsoft");
   const claims = JSON.parse(Buffer.from((t.id_token ?? "..").split(".")[1] ?? "", "base64url").toString() || "{}") as { tid?: string; oid?: string };
   const upn = (me.userPrincipalName ?? "").toLowerCase();
@@ -43,7 +44,8 @@ export async function exchange(code: string) {
 
 async function access(c: Connection) {
   if (c.access_enc && c.expires_at && c.expires_at > Date.now() + 60_000) return open(c.access_enc);
-  const t = await token({ refresh_token: open(c.refresh_enc), grant_type: "refresh_token" });
+  // A connection that was granted the Teams channel permission keeps it on every refresh.
+  const t = await token({ refresh_token: open(c.refresh_enc), grant_type: "refresh_token" }, /ChannelMessage\.Read\.All/i.test(settingsOf(c).granted ?? ""));
   // Microsoft may rotate the refresh token; keep the newest one.
   db().prepare("UPDATE mailboxes SET access_enc = ?, expires_at = ?, refresh_enc = COALESCE(?, refresh_enc) WHERE id = ?").run(seal(t.access_token), Date.now() + (t.expires_in ?? 3000) * 1000, t.refresh_token ? seal(t.refresh_token) : null, c.id);
   return t.access_token;
@@ -70,7 +72,7 @@ export async function readMessage(c: Connection, id: string): Promise<Inbound> {
   if (m.hasAttachments) {
     const a = await call<{ value?: { "@odata.type": string; name: string; contentType: string; contentBytes?: string; size?: number; isInline?: boolean }[] }>(c, `/me/messages/${encodeURIComponent(id)}/attachments`, {}, "Outlook");
     for (const x of a.value ?? []) {
-      const ok = /pdf/i.test(x.contentType + x.name) || (/^image\/(jpeg|png|webp|heic|heif)$/i.test(x.contentType) && !x.isInline && (x.size ?? 0) > 60_000);
+      const ok = /pdf/i.test(x.contentType + x.name) || /\.docx$/i.test(x.name) || (/^image\/(jpeg|png|webp|heic|heif)$/i.test(x.contentType) && !x.isInline && (x.size ?? 0) > 60_000);
       if (x["@odata.type"] === "#microsoft.graph.fileAttachment" && ok && x.contentBytes && (x.size ?? 0) < 25 * 1024 * 1024) attachments.push({ name: x.name, type: x.contentType, data: Buffer.from(x.contentBytes, "base64") });
     }
   }
@@ -141,7 +143,8 @@ export async function channels(c: Connection) {
 }
 
 export async function post(c: Connection, teamId: string, channelId: string, html: string) {
-  await call(c, `/teams/${encodeURIComponent(teamId)}/channels/${encodeURIComponent(channelId)}/messages`, { method: "POST", body: JSON.stringify({ body: { contentType: "html", content: html } }) }, "Teams");
+  const r = await call<{ id?: string }>(c, `/teams/${encodeURIComponent(teamId)}/channels/${encodeURIComponent(channelId)}/messages`, { method: "POST", body: JSON.stringify({ body: { contentType: "html", content: html } }) }, "Teams");
+  return r?.id ?? "";
 }
 
 // Instant delivery: a Graph subscription calls Lincoln when mail lands in the inbox. Mail
@@ -190,4 +193,86 @@ export async function health(c: Connection): Promise<Health> {
   const s = settingsOf(c);
   out.push({ service: "Instant mail", ok: Boolean(s.subId && s.subUntil && s.subUntil > Date.now()), note: s.subId ? undefined : "Not set up yet; mail is checked every 5 minutes" });
   return out;
+}
+
+// Drafts in the lawyer's own Outlook, kept in step with Lincoln (see google.ts for the same on Gmail).
+
+const isMissing = (e: unknown) => /replied 404/.test(e instanceof Error ? e.message : "");
+const draftBody = (m: { to: string; subject: string; body: string }) => ({ subject: m.subject.replace(/[\r\n]+/g, " ").slice(0, 300), body: { contentType: "Text", content: m.body }, toRecipients: [{ emailAddress: { address: safeAddress(m.to) } }] });
+
+/** A new draft, or a reply in the thread when the email it answers is known. */
+export async function createDraft(c: Connection, m: { to: string; subject: string; body: string; replyTo?: string | null }) {
+  if (m.replyTo) {
+    try {
+      const r = await call<{ id: string }>(c, `/me/messages/${encodeURIComponent(m.replyTo)}/createReply`, { method: "POST", body: "{}" }, "Outlook");
+      await call(c, `/me/messages/${encodeURIComponent(r.id)}`, { method: "PATCH", body: JSON.stringify(draftBody(m)) }, "Outlook");
+      return r.id;
+    } catch { /* the original is gone: a new draft instead */ }
+  }
+  const r = await call<{ id: string }>(c, "/me/messages", { method: "POST", body: JSON.stringify(draftBody(m)) }, "Outlook");
+  return r.id;
+}
+export async function updateDraft(c: Connection, id: string, m: { to: string; subject: string; body: string }) {
+  await call(c, `/me/messages/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(draftBody(m)) }, "Outlook");
+}
+export async function sendDraft(c: Connection, id: string) {
+  await call(c, `/me/messages/${encodeURIComponent(id)}/send`, { method: "POST" }, "Outlook");
+}
+export async function deleteDraft(c: Connection, id: string) {
+  try { await call(c, `/me/messages/${encodeURIComponent(id)}`, { method: "DELETE" }, "Outlook"); } catch (e) { if (!isMissing(e)) throw e; }
+}
+export async function readDraft(c: Connection, id: string, m: { to: string; subject: string; since: string }): Promise<{ state: "open"; subject: string; body: string } | { state: "sent" | "gone" }> {
+  try {
+    const d = await call<{ isDraft?: boolean; subject?: string; body?: { content?: string } }>(c, `/me/messages/${encodeURIComponent(id)}?$select=isDraft,subject,body`, { headers: { Prefer: 'outlook.body-content-type="text"' } }, "Outlook");
+    if (d.isDraft !== false) return { state: "open", subject: d.subject ?? "", body: d.body?.content ?? "" };
+    return { state: "sent" };
+  } catch (e) {
+    if (!isMissing(e)) throw e;
+  }
+  // A sent draft moves to Sent Items under a new id.
+  const r = await call<{ value?: { subject?: string; toRecipients?: { emailAddress?: { address?: string } }[] }[] }>(c, `/me/mailFolders/sentitems/messages?$top=25&$select=subject,toRecipients&$filter=${encodeURIComponent(`sentDateTime ge ${new Date(m.since).toISOString()}`)}`, {}, "Outlook");
+  const to = m.to.toLowerCase();
+  return (r.value ?? []).some((x) => (x.toRecipients ?? []).some((t) => t.emailAddress?.address?.toLowerCase() === to)) ? { state: "sent" } : { state: "gone" };
+}
+
+/** Message ids from the lawyer's mail matching an Outlook search, newest first. */
+export async function searchMail(c: Connection, q: string, max = 20) {
+  const r = await call<{ value?: { id: string }[] }>(c, `/me/messages?$search=${encodeURIComponent(`"${q.replace(/"/g, "")}"`)}&$top=${max}&$select=id`, {}, "Outlook");
+  return (r.value ?? []).map((m) => m.id);
+}
+
+const seg = (s: string) => encodeURIComponent(s.replace(/[\\/:*?"<>|#%]/g, "").trim().slice(0, 120) || "File");
+
+/** Saves a file into OneDrive, Lincoln/<path...>, replacing an earlier version. Returns the file's and folder's links. */
+export async function saveFile(c: Connection, path: string[], name: string, mime: string, data: Buffer) {
+  const p = ["Lincoln", ...path, name].map(seg).join("/");
+  const r = await call<{ webUrl: string; parentReference?: { id?: string; driveId?: string } }>(c, `/me/drive/root:/${p}:/content?@microsoft.graph.conflictBehavior=replace`, { method: "PUT", headers: { "Content-Type": mime }, body: new Uint8Array(data) }, "OneDrive");
+  let folderUrl = r.webUrl.replace(/\/[^/]*$/, "");
+  try { if (r.parentReference?.id) folderUrl = (await call<{ webUrl: string }>(c, `/me/drive/items/${encodeURIComponent(r.parentReference.id)}?$select=webUrl`, {}, "OneDrive")).webUrl; } catch { /* the file link is enough */ }
+  return { link: r.webUrl, folder: folderUrl };
+}
+
+// Requests posted in the firm's Lincoln channel in Teams. Reading channel messages needs ChannelMessage.Read.All,
+// which a Microsoft 365 admin grants once; until then Lincoln only posts to the channel.
+
+export const TEAMS_READ = "ChannelMessage.Read.All";
+export type ChannelMessage = { id: string; at: string; fromId: string; fromName: string; text: string; files: { name: string; url: string }[] };
+export async function channelMessages(c: Connection, teamId: string, channelId: string): Promise<ChannelMessage[]> {
+  type M = { id: string; createdDateTime: string; messageType?: string; deletedDateTime?: string | null; from?: { user?: { id?: string; displayName?: string } }; body?: { content?: string }; attachments?: { contentType?: string; contentUrl?: string; name?: string }[] };
+  const r = await call<{ value?: M[] }>(c, `/teams/${encodeURIComponent(teamId)}/channels/${encodeURIComponent(channelId)}/messages?$top=20`, {}, "Teams");
+  return (r.value ?? []).filter((m) => (m.messageType ?? "message") === "message" && !m.deletedDateTime && m.from?.user).map((m) => ({
+    id: m.id, at: m.createdDateTime, fromId: m.from!.user!.id ?? "", fromName: m.from!.user!.displayName ?? "",
+    text: (m.body?.content ?? "").replace(/<at[^>]*>([^<]*)<\/at>/g, "$1").replace(/<br\s*\/?>|<\/p>/gi, "\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim(),
+    files: (m.attachments ?? []).filter((a) => a.contentType === "reference" && a.contentUrl).map((a) => ({ name: a.name ?? "file", url: a.contentUrl! })),
+  }));
+}
+export async function replyInChannel(c: Connection, teamId: string, channelId: string, messageId: string, html: string) {
+  const r = await call<{ id: string }>(c, `/teams/${encodeURIComponent(teamId)}/channels/${encodeURIComponent(channelId)}/messages/${encodeURIComponent(messageId)}/replies`, { method: "POST", body: JSON.stringify({ body: { contentType: "html", content: html } }) }, "Teams");
+  return r.id;
+}
+/** A file shared in Teams (it lives in SharePoint), by its link. */
+export async function downloadShared(c: Connection, url: string) {
+  const res = await fetch(api(`${GRAPH}/shares/u!${Buffer.from(url).toString("base64url")}/driveItem/content`), { headers: { Authorization: `Bearer ${await access(c)}` } });
+  if (!res.ok) throw new Error(`SharePoint replied ${res.status}`);
+  return Buffer.from(await res.arrayBuffer());
 }

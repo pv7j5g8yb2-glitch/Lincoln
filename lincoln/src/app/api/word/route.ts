@@ -87,5 +87,18 @@ export async function POST(req: Request) {
     const pages = llmConfigured() && c.pages > 0 ? await checkDocument(s.firm.id, c.id, paras).catch(() => null) : null;
     return NextResponse.json({ law, exhibits, pages: pages ? { checked: pages.checked, problems: pages.problems.map((p) => ({ text: p.text, problem: p.problem.replace(/^p\. /, "Page ").replace(/^pp\. /, "Pages ").replace(/^not shown on pp\. /, "Not shown on pages ").replace(/^not shown on p\. /, "Not shown on page ") })) } : null });
   }
+  if (body.op === "markup") {
+    // The attorney's edits to the open document, made in Word as tracked changes with a comment for each.
+    const c = caseById(s.firm.id, String(body.case ?? ""), viewer(s.user));
+    if (!c) return no("Not found", 404);
+    if (!llmConfigured()) return no("Not available", 503);
+    const paras = (Array.isArray(body.paras) ? body.paras : []).map(String).slice(0, 3000);
+    if (paras.join("").length > 120_000) return no("Document too long", 400);
+    if (limited(`word-markup:${s.user.id}`, 10, 60 * 60_000)) return no("Too many requests. Try again later.", 429);
+    const { proposeEdits } = await import("@/lib/redline");
+    const r = await proposeEdits(s.firm.id, c.id, String(body.title ?? "the document").slice(0, 200), paras);
+    db().prepare("INSERT INTO activity (id, firm_id, case_id, at, actor, kind, text, minutes) VALUES (?, ?, ?, ?, 'Lincoln', 'draft', ?, ?)").run(uid(), s.firm.id, c.id, new Date().toISOString(), `Marked up a document in Word for ${s.user.name}: ${r.edits.length} ${r.edits.length === 1 ? "change" : "changes"}.`, Math.min(30, 3 + r.edits.length));
+    return NextResponse.json(r);
+  }
   return no("Unknown request", 400);
 }

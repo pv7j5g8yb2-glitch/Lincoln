@@ -6,6 +6,24 @@ draft of the app is in `lincoln/` (Next.js, SQLite): Harvey style interface, a d
 cases, the full Halász O-1A case, approvals by decision, the support letter with facts linked to their
 pages, Word export, a scripted "demo world". See `lincoln/README.md` for what works and what is scripted.
 
+**Built 2026-11-16, after Legora's Microsoft 365 launch (all autonomous):**
+* Emails waiting for approval are also drafts in the sender's own Gmail or Outlook (replies sit in the client's
+  thread). Edits made in the mailbox come back into Lincoln and teach the firm's style; a draft sent from the
+  mailbox is recorded as sent and its approval closed; approving in Lincoln sends that same draft; returning an
+  email deletes the draft. Needs the new Gmail compose permission, so Google users reconnect once.
+* Approved letters, translations, filing packets and marked up documents are saved into Lincoln/Clients/<client>
+  in the attorney's Google Drive or OneDrive; the case Export menu links to the folder.
+* Word documents that arrive (by email, Teams or upload) are marked up with tracked changes and comments
+  against the case record and land in Review; the Word add-in has a Mark up button that does the same in the
+  open document.
+* Teams: once a channel is chosen, "Take requests from this channel" asks for the read permission (a Microsoft
+  365 admin approves it once). Requests posted there are taken like any instruction, answered in the thread
+  ("On it."), and answered again with a link when ready. Only people with a Lincoln account in the firm count.
+* The chat can search the person's own mail and files (only what they can already open) and read what it finds
+  into a case.
+* Tested against a stand-in Microsoft 365 (`lincoln/tests/eval/workspace-check.mts`, 17 checks pass). Not yet
+  tested: the Gmail draft path, the chat search tools, and anything against the real Google or Microsoft APIs.
+
 Second pass (2026-11-13, after Ismael's feedback): interface stripped back and rewritten with no
 second person; real sign up, sign in, sign out and password reset (scrypt hashes, hashed session and
 reset tokens, attempt limits); Privacy Policy and Terms of Service pages; upgraded to Next.js 16 (npm
@@ -204,7 +222,7 @@ from the repo the same day. History is in git up to commit `341cf65`.
 * Shape: a general immigration assistant on top of ready made workflows, with file output and tool
   connections. Employment based cases first (O-1, EB-1, H-1B, L-1, green cards), end to end from
   intake to packet.
-* Goal: $100k a month profit by age 20 (about November 2031). Profit, not revenue.
+* Goal (2026-11-16): venture scale, set by Ismael now that he is raising; the old goal of $100k a month profit by age 20 is dropped as too small. No new number yet.
 * If funded (Ismael, 2026-11-14): aim for at least a $100M valuation. Rough maths: at 20 to 40 times
   revenue (Harvey is about 39x) that needs about $2.5M to $5M a year, about 700 to 1,400 seats at $300.
   Plan: win immigration first (every case type), then the same engine in other rule bound, flat fee,

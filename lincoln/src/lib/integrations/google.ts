@@ -11,6 +11,7 @@ export const SCOPES = [
   "openid", "email",
   "https://www.googleapis.com/auth/gmail.readonly",
   "https://www.googleapis.com/auth/gmail.send",
+  "https://www.googleapis.com/auth/gmail.compose",
   "https://www.googleapis.com/auth/drive.readonly",
   "https://www.googleapis.com/auth/drive.file",
   "https://www.googleapis.com/auth/calendar.events",
@@ -71,7 +72,7 @@ export async function readMessage(c: Connection, id: string): Promise<Inbound> {
   const attachments: Inbound["attachments"] = [];
   const walk = async (p: Part) => {
     if (p.mimeType === "text/plain" && p.body?.data && !p.filename) text += Buffer.from(p.body.data, "base64url").toString("utf8");
-    const isPdf = /pdf$/i.test(p.mimeType + p.filename);
+    const isPdf = /pdf$/i.test(p.mimeType + p.filename) || /\.docx$/i.test(p.filename ?? "");
     const isPhoto = /^image\/(jpeg|png|webp|heic|heif)$/i.test(p.mimeType) && (p.body?.size ?? 0) > 60_000;
     if (p.filename && (isPdf || isPhoto) && p.body?.attachmentId && (p.body.size ?? 0) < 25 * 1024 * 1024) {
       const a = await call<{ data: string }>(c, `${GMAIL}/messages/${id}/attachments/${p.body.attachmentId}`, {}, "Gmail");
@@ -159,9 +160,82 @@ export async function health(c: Connection): Promise<Health> {
     await probe("Gmail", `${GMAIL}/profile`, "gmail.readonly"),
     granted ? { service: "Sending", ok: has(granted, "gmail.send"), note: has(granted, "gmail.send") ? undefined : "Permission not granted" } : { service: "Sending", ok: true },
     await probe("Drive", "https://www.googleapis.com/drive/v3/files?pageSize=1&fields=files(id)", "drive.readonly"),
+    granted ? { service: "Drafts", ok: has(granted, "gmail.compose"), note: has(granted, "gmail.compose") ? undefined : "Permission not granted" } : { service: "Drafts", ok: true },
     granted ? { service: "Docs, Sheets, Slides", ok: has(granted, "drive.file"), note: has(granted, "drive.file") ? undefined : "Permission not granted" } : { service: "Docs, Sheets, Slides", ok: true },
     await probe("Calendar", "https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=1", "calendar.events"),
   ];
   out.push(pushConfigured() ? { service: "Instant mail", ok: Boolean(settingsOf(c).watchUntil && settingsOf(c).watchUntil! > Date.now()), note: settingsOf(c).watchUntil ? undefined : "Not set up yet; mail is checked every 5 minutes" } : { service: "Instant mail", ok: false, note: "Off; mail is checked every 5 minutes" });
   return out;
+}
+
+// Drafts in the lawyer's own Gmail. Every email Lincoln prepares is also a Gmail draft, so it can be read, changed
+// and sent from Gmail itself; Lincoln keeps its copy in step and notices when it has been sent.
+
+const mimeOf = (c: Connection, m: { to: string; subject: string; body: string }) => Buffer.from([`From: ${c.email}`, `To: ${safeAddress(m.to)}`, `Subject: ${header(m.subject.replace(/[\r\n]+/g, " ").slice(0, 300))}`, "MIME-Version: 1.0", "Content-Type: text/plain; charset=UTF-8", "Content-Transfer-Encoding: base64", "", Buffer.from(m.body).toString("base64")].join("\r\n")).toString("base64url");
+const isMissing = (e: unknown) => /replied 404/.test(e instanceof Error ? e.message : "");
+
+export async function createDraft(c: Connection, m: { to: string; subject: string; body: string; threadId?: string | null }) {
+  const r = await call<{ id: string }>(c, `${GMAIL}/drafts`, { method: "POST", body: JSON.stringify({ message: { raw: mimeOf(c, m), ...(m.threadId ? { threadId: m.threadId } : {}) } }) }, "Gmail");
+  return r.id;
+}
+export async function updateDraft(c: Connection, id: string, m: { to: string; subject: string; body: string; threadId?: string | null }) {
+  await call(c, `${GMAIL}/drafts/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify({ id, message: { raw: mimeOf(c, m), ...(m.threadId ? { threadId: m.threadId } : {}) } }) }, "Gmail");
+}
+export async function sendDraft(c: Connection, id: string) {
+  await call(c, `${GMAIL}/drafts/send`, { method: "POST", body: JSON.stringify({ id }) }, "Gmail");
+}
+export async function deleteDraft(c: Connection, id: string) {
+  const res = await fetch(api(`${GMAIL}/drafts/${encodeURIComponent(id)}`), { method: "DELETE", headers: { Authorization: `Bearer ${await access(c)}` } });
+  if (!res.ok && res.status !== 404) throw new Error(`Gmail replied ${res.status}`);
+}
+/** Where a draft stands: still a draft (with its text as the lawyer left it), sent from Gmail, or deleted. */
+export async function readDraft(c: Connection, id: string, m: { to: string; subject: string; threadId?: string | null; since: string }): Promise<{ state: "open"; subject: string; body: string } | { state: "sent" | "gone" }> {
+  try {
+    const d = await call<{ message: { payload: Part } }>(c, `${GMAIL}/drafts/${encodeURIComponent(id)}?format=full`, {}, "Gmail");
+    const h = (n: string) => d.message.payload.headers?.find((x) => x.name.toLowerCase() === n)?.value ?? "";
+    let body = "";
+    const walk = (p: Part) => { if (p.mimeType === "text/plain" && p.body?.data && !p.filename) body += Buffer.from(p.body.data, "base64url").toString("utf8"); for (const x of p.parts ?? []) walk(x); };
+    walk(d.message.payload);
+    return { state: "open", subject: h("subject"), body };
+  } catch (e) {
+    if (!isMissing(e)) throw e;
+  }
+  const after = Math.floor(Date.parse(m.since) / 1000);
+  const q = `in:sent to:${safeAddress(m.to)} after:${after}`;
+  const r = await call<{ messages?: { id: string; threadId: string }[] }>(c, `${GMAIL}/messages?q=${encodeURIComponent(q)}&maxResults=10`, {}, "Gmail");
+  return (r.messages ?? []).some((x) => !m.threadId || x.threadId === m.threadId) ? { state: "sent" } : { state: "gone" };
+}
+
+/** Message ids from the lawyer's mail matching a Gmail search, newest first. */
+export async function searchMail(c: Connection, q: string, max = 20) {
+  const r = await call<{ messages?: { id: string }[] }>(c, `${GMAIL}/messages?q=${encodeURIComponent(q)}&maxResults=${max}`, {}, "Gmail");
+  return (r.messages ?? []).map((m) => m.id);
+}
+
+// The firm's folder: Lincoln/Clients/<client> in Drive, made by Lincoln, so drive.file covers it.
+
+async function childFolder(c: Connection, parent: string, name: string) {
+  const safe = name.replace(/['\\]/g, "").slice(0, 120);
+  const q = `name = '${safe}' and '${parent}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
+  const r = await call<{ files?: { id: string }[] }>(c, `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)&supportsAllDrives=true&includeItemsFromAllDrives=true`, {}, "Google Drive");
+  if (r.files?.[0]) return r.files[0].id;
+  const made = await call<{ id: string }>(c, "https://www.googleapis.com/drive/v3/files?fields=id&supportsAllDrives=true", { method: "POST", body: JSON.stringify({ name: safe, mimeType: "application/vnd.google-apps.folder", parents: [parent] }) }, "Google Drive");
+  return made.id;
+}
+
+/** Saves a file into Lincoln/<path...>, replacing an earlier version of the same name. Returns the file's and folder's links. */
+export async function saveFile(c: Connection, path: string[], name: string, mime: string, data: Buffer) {
+  let parent = await folder(c);
+  for (const p of path) parent = await childFolder(c, parent, p);
+  const safe = name.replace(/['\\]/g, "").slice(0, 150);
+  const found = await call<{ files?: { id: string }[] }>(c, `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`name = '${safe}' and '${parent}' in parents and trashed = false`)}&fields=files(id)&supportsAllDrives=true&includeItemsFromAllDrives=true`, {}, "Google Drive");
+  let r: { id: string; webViewLink?: string };
+  if (found.files?.[0]) {
+    r = await call(c, `https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(found.files[0].id)}?uploadType=media&fields=id,webViewLink&supportsAllDrives=true`, { method: "PATCH", headers: { "Content-Type": mime }, body: new Uint8Array(data) }, "Google Drive");
+  } else {
+    const boundary = `lincoln${Date.now()}`;
+    const body = Buffer.concat([Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name: safe, parents: [parent] })}\r\n--${boundary}\r\nContent-Type: ${mime}\r\n\r\n`), data, Buffer.from(`\r\n--${boundary}--`)]);
+    r = await call(c, "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink&supportsAllDrives=true", { method: "POST", headers: { "Content-Type": `multipart/related; boundary=${boundary}` }, body }, "Google Drive");
+  }
+  return { link: r.webViewLink ?? `https://drive.google.com/open?id=${r.id}`, folder: `https://drive.google.com/drive/folders/${parent}` };
 }

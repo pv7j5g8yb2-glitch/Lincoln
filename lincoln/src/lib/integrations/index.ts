@@ -7,6 +7,7 @@ import type { Connection, FileHit, Inbound, OfficeKind, Provider } from "./types
 
 export type { Connection, FileHit, Inbound, OfficeKind, Provider } from "./types";
 export { settingsOf } from "./types";
+import { settingsOf } from "./types";
 
 const P = { google, microsoft } as const;
 
@@ -15,7 +16,7 @@ export const PROVIDERS: { id: Provider; name: string; services: string[]; config
   { id: "microsoft", name: "Microsoft", services: ["Outlook", "Word", "Excel", "PowerPoint", "OneDrive", "SharePoint", "Teams"], configured: microsoft.configured },
 ];
 export const isProvider = (v: string): v is Provider => v === "google" || v === "microsoft";
-export const authUrl = (p: Provider, state: string, mode: "auth" | "connect" = "connect") => P[p].authUrl(state, mode);
+export const authUrl = (p: Provider, state: string, mode: "auth" | "connect" = "connect", teams = false) => (p === "microsoft" ? microsoft.authUrl(state, mode, teams) : google.authUrl(state, mode));
 
 export const connectionsOf = (firmId: string, userId?: string) =>
   (userId
@@ -26,8 +27,8 @@ export const connection = (firmId: string, userId: string, p: Provider) => db().
 export const firmMailbox = (firmId: string, userId?: string) => (userId ? connectionsOf(firmId, userId)[0] : undefined) ?? connectionsOf(firmId)[0];
 
 /** Completes a sign in. Mail already in the inbox is marked as seen, so only new mail is worked. */
-export async function connect(p: Provider, firmId: string, userId: string, code: string) {
-  const t = await P[p].exchange(code);
+export async function connect(p: Provider, firmId: string, userId: string, code: string, teams = false) {
+  const t = p === "microsoft" ? await microsoft.exchange(code, teams) : await google.exchange(code);
   if (!t.refresh) throw new Error("Offline access was not granted.");
   linkIdentity(p, t.subject, userId);
   return store(p, firmId, userId, t);
@@ -43,9 +44,12 @@ type Exchanged = Awaited<ReturnType<typeof google.exchange>>;
 
 async function store(p: Provider, firmId: string, userId: string, t: Exchanged) {
   const d = db();
+  // Reconnecting keeps the choices made before (the Teams channel, Lincoln's folder, where the channel was read up to).
+  const before = d.prepare("SELECT settings FROM mailboxes WHERE firm_id = ? AND user_id = ? AND provider = ?").get(firmId, userId, p) as { settings: string | null } | undefined;
+  const kept = (() => { try { const s = JSON.parse(before?.settings ?? "{}"); return { teams: s.teams, folderId: s.folderId, teamsSince: s.teamsSince }; } catch { return {}; } })();
   d.prepare("DELETE FROM mailboxes WHERE firm_id = ? AND user_id = ? AND provider = ?").run(firmId, userId, p);
   const id = uid();
-  d.prepare("INSERT INTO mailboxes (id, firm_id, user_id, provider, email, refresh_enc, access_enc, expires_at, created_at, settings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(id, firmId, userId, p, t.email, seal(t.refresh), seal(t.access), t.expires, new Date().toISOString(), JSON.stringify({ granted: t.granted }));
+  d.prepare("INSERT INTO mailboxes (id, firm_id, user_id, provider, email, refresh_enc, access_enc, expires_at, created_at, settings) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(id, firmId, userId, p, t.email, seal(t.refresh), seal(t.access), t.expires, new Date().toISOString(), JSON.stringify({ ...kept, granted: t.granted }));
   const c = d.prepare("SELECT * FROM mailboxes WHERE id = ?").get(id) as Connection;
   const seen = d.prepare("INSERT OR IGNORE INTO inbound_seen (mailbox_id, msg_id) VALUES (?, ?)");
   // A missing mail permission must not stop the sign in; the Integrations page shows what is missing.
@@ -129,3 +133,17 @@ export async function checkHealth(c: Connection, fresh = false) {
   healthCache.set(c.id, { at: Date.now(), value });
   return value;
 }
+
+/* Drafts, files, mail search and Teams requests, the same calls for either provider. */
+type Draft = { to: string; subject: string; body: string; threadId?: string | null; replyTo?: string | null };
+export const canDraft = (c: Connection) => c.provider === "microsoft" || /gmail\.compose/.test(settingsOf(c).granted ?? "") || !settingsOf(c).granted;
+export const createDraft = (c: Connection, m: Draft) => (c.provider === "google" ? google.createDraft(c, m) : microsoft.createDraft(c, m));
+export const updateDraft = (c: Connection, id: string, m: Draft) => (c.provider === "google" ? google.updateDraft(c, id, m) : microsoft.updateDraft(c, id, m));
+export const sendDraft = (c: Connection, id: string) => P[c.provider].sendDraft(c, id);
+export const deleteDraft = (c: Connection, id: string) => P[c.provider].deleteDraft(c, id);
+export const readDraft = (c: Connection, id: string, m: { to: string; subject: string; threadId?: string | null; since: string }) => (c.provider === "google" ? google.readDraft(c, id, m) : microsoft.readDraft(c, id, m));
+export const searchMail = (c: Connection, q: string, max?: number) => P[c.provider].searchMail(c, q, max);
+export const readMail = (c: Connection, id: string) => P[c.provider].readMessage(c, id);
+export const saveFile = (c: Connection, path: string[], name: string, mime: string, data: Buffer) => P[c.provider].saveFile(c, path, name, mime, data);
+export const canReadTeams = (c: Connection) => c.provider === "microsoft" && /ChannelMessage\.Read\.All/i.test(settingsOf(c).granted ?? "");
+export { channelMessages, replyInChannel, downloadShared } from "./microsoft";

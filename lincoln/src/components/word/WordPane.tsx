@@ -193,11 +193,44 @@ function CheckDoc({ api, caseId }: { api: (path: string, body?: unknown) => Prom
       await inWord(async (ctx) => { const r = ctx.document.body.search(text.slice(0, 240), { matchCase: false }); r.load("items"); await ctx.sync(); if (r.items.length) { r.items[0].select(); await ctx.sync(); } else notify("Not found"); });
     } catch { notify("Not found"); }
   };
+  const [marked, setMarked] = useState<number | null>(null);
+  // Lincoln's edits go into the open document as tracked changes, each with its reason as a comment.
+  const markup = async () => {
+    setBusy(true); setError(""); setMarked(null);
+    try {
+      const paras: string[] = await inWord(async (ctx) => { const p = ctx.document.body.paragraphs; p.load("items/text"); await ctx.sync(); return p.items.map((x: { text: string }) => x.text); });
+      const r = await api("", { op: "markup", case: caseId, paras }) as { edits: { p: number; find: string; replace: string; why: string }[] };
+      const made = await inWord(async (ctx) => {
+        ctx.document.changeTrackingMode = "TrackAll";
+        const p = ctx.document.body.paragraphs; p.load("items"); await ctx.sync();
+        let n = 0;
+        for (const e of r.edits) {
+          const para = p.items[e.p];
+          if (!para) continue;
+          const hits = para.search(e.find.slice(0, 240), { matchCase: true }); hits.load("items"); await ctx.sync();
+          const at = hits.items[0];
+          if (!at) continue;
+          const range = e.replace !== e.find ? at.insertText(e.replace, "Replace") : at;
+          if (e.why) range.insertComment(e.why);
+          n++;
+        }
+        await ctx.sync();
+        return n;
+      });
+      setMarked(made);
+      notify(made ? "Marked up" : "No changes");
+    } catch (e) { setError(e instanceof Error ? e.message : "Not marked up"); } finally { setBusy(false); }
+  };
   const groups: [string, Finding[]][] = result ? [["Facts", result.pages?.problems ?? []], ["Exhibits", result.exhibits], ["Law", result.law]] : [];
   const total = groups.reduce((n, [, g]) => n + g.length, 0);
   return (
     <div>
-      <button disabled={busy} onClick={() => void run()} className={`${btn.primary} w-full`}>{busy ? "Checking" : "Check document"}</button>
+      <div className="grid grid-cols-2 gap-2">
+        <button disabled={busy} onClick={() => void run()} className={btn.primary}>Check</button>
+        <button disabled={busy} onClick={() => void markup()} className={btn.secondary}>Mark up</button>
+      </div>
+      {busy && <p className="mt-3 text-center text-[12.5px] text-faint">Working</p>}
+      {marked !== null && !busy && <p className="mt-3 text-center text-[12.5px] text-muted">{marked ? `${marked} ${marked === 1 ? "change" : "changes"} tracked` : "No changes"}</p>}
       {error && <p className="mt-3 text-[12.5px] text-risk">{error}</p>}
       {result && total === 0 && <p className="mt-6 text-center text-[13px] text-muted">Nothing to correct{result.pages ? <span className="block text-[11.5px] text-faint">{result.pages.checked} cited {result.pages.checked === 1 ? "fact" : "facts"} checked</span> : null}</p>}
       {groups.filter(([, g]) => g.length).map(([name, g]) => (

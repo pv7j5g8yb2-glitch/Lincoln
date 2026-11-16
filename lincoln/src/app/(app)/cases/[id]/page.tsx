@@ -12,6 +12,7 @@ import { Empty, btn, field } from "@/components/ui";
 import { addFile, refillForms, requestDraft, resolveIssue } from "@/lib/actions";
 import FileDrop from "@/components/FileDrop";
 import ExportMenu from "@/components/ExportMenu";
+import { folderOf } from "@/lib/workspace";
 import { exportItems } from "@/lib/exports";
 import { connectionsOf } from "@/lib/integrations";
 import { requireUser } from "@/lib/session";
@@ -40,6 +41,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
   if (!c) notFound();
   await recordAccess(firm.id, user.id, "case_viewed", c.id, `Case of ${c.client}`);
   const docs = documents(firm.id, id);
+  const folder = folderOf(firm.id, id);
   const iss = issues(firm.id, id);
   const openAll = iss.filter((i) => i.status === "open");
   // Low severity items stay folded so the list holds what matters.
@@ -76,7 +78,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
         <div className="flex items-center gap-3">
           {!firm.demo && <AssignMenu caseId={id} attorney={c.attorney_id} paralegal={c.paralegal_id} people={people(firm.id).map((p) => ({ id: p.id, name: p.name, initials: p.initials, lawyer: isLawyerRole(p.role) }))} canEdit={Boolean(user.admin) || c.attorney_id === user.id} />}
           {!firm.demo && <CopyLink url={linkUrl(caseLink(firm.id, id))} />}
-          {docs.length > 0 && <ExportMenu label="Export" items={[...exportItems(firm.id, user.id, "case", id).map((i) => ({ ...i, label: i.label.replace(/^Open in (\w+.*)$/, "Exhibit index in $1").replace(/^Download \.xlsx$/, "Exhibit index .xlsx") })), ...exportItems(firm.id, user.id, "deck", id).map((i) => ({ ...i, label: i.label.replace(/^Open in (\w+.*)$/, "Summary deck in $1").replace(/^Download \.pptx$/, "Summary deck .pptx") })), ...(crit.length || asks.length ? exportItems(firm.id, user.id, "evidence", id).map((i) => ({ ...i, label: i.label.replace(/^Open in (\w+.*)$/, "Evidence grid in $1").replace(/^Download \.xlsx$/, "Evidence grid .xlsx") })) : [])]} />}
+          {docs.length > 0 && <ExportMenu label="Export" items={[...(folder ? [{ label: `Client folder in ${folder.where}`, href: folder.url }] : []), ...exportItems(firm.id, user.id, "case", id).map((i) => ({ ...i, label: i.label.replace(/^Open in (\w+.*)$/, "Exhibit index in $1").replace(/^Download \.xlsx$/, "Exhibit index .xlsx") })), ...exportItems(firm.id, user.id, "deck", id).map((i) => ({ ...i, label: i.label.replace(/^Open in (\w+.*)$/, "Summary deck in $1").replace(/^Download \.pptx$/, "Summary deck .pptx") })), ...(crit.length || asks.length ? exportItems(firm.id, user.id, "evidence", id).map((i) => ({ ...i, label: i.label.replace(/^Open in (\w+.*)$/, "Evidence grid in $1").replace(/^Download \.xlsx$/, "Evidence grid .xlsx") })) : [])]} />}
         </div>
       </div>
 

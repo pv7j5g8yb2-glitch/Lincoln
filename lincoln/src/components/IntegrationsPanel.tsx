@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { btn } from "./ui";
 import { disconnect, setTeamsChannel } from "@/lib/actions";
-import { PROVIDERS, checkHealth, connectionsOf, settingsOf, teamsChannels } from "@/lib/integrations";
+import { PROVIDERS, canReadTeams, checkHealth, connectionsOf, settingsOf, teamsChannels } from "@/lib/integrations";
 import { CircleAlert } from "lucide-react";
 import type { User, Firm } from "@/lib/session";
 import WordConnect from "./WordConnect";
@@ -90,6 +90,9 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
                     </select>
                     <button className={btn.secondary}>Save</button>
                   </form>
+                )}
+                {c && p.id === "microsoft" && settingsOf(c).teams && !canReadTeams(c) && (
+                  <a href="/api/connect/microsoft?teams=1" className="mt-2 inline-block text-[12.5px] text-muted underline-offset-2 transition hover:text-ink hover:underline">Take requests from this channel</a>
                 )}
               </div>
             );

@@ -339,6 +339,8 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
       d.prepare("UPDATE drafts SET status = 'approved', updated_at = ? WHERE firm_id = ? AND id = ?").run(now(), F, payload.draftId);
       log(F, a.case_id, user.name, "decide", `Approved: ${a.title}.`);
       if (firm.demo) d.prepare("UPDATE cases SET summary = 'Support letter approved. The consultation and the passport renewal are still open.', waiting_on = 'Peer group: advisory opinion' WHERE firm_id = ? AND id = ?").run(F, a.case_id);
+    } else if (a.kind === "redline" && decision === "approved") {
+      log(F, a.case_id, user.name, "decide", `Reviewed: ${a.title}.`);
     } else if (a.kind === "packet" && decision === "approved") {
       log(F, a.case_id, user.name, "decide", "Approved the filing packet.");
       d.prepare("UPDATE cases SET stage = 'Ready to file', waiting_on = ? WHERE firm_id = ? AND id = ?").run(`${user.name}: file the packet`, F, a.case_id);
@@ -350,6 +352,9 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
     d.prepare("UPDATE cases SET state = ? WHERE firm_id = ? AND id = ?").run(left.n > 0 ? "needs_you" : "moving", F, a.case_id);
   });
   tx();
+  // Approved work goes into the client's folder in the firm's Drive or OneDrive; a returned email's draft is removed.
+  if (decision === "approved" && !firm.demo && ["draft_review", "translation", "packet", "redline"].includes(a.kind)) void import("./workspace").then((w) => w.saveApproved(F, a.case_id, a.kind, payload)).catch(() => undefined);
+  if (decision === "rejected" && a.kind === "message" && payload.messageId && !firm.demo) void import("./maildrafts").then((m) => m.dropDraft(F, payload.messageId)).catch(() => undefined);
   const sent = a.kind === "message" && decision === "approved" && !firm.demo && payload.messageId ? await deliver(F, payload.messageId, { id: user.id, name: user.name }) : null;
   await toast(decision === "rejected" ? "Returned" : a.kind === "message" ? (sent === false ? "Approved, not sent" : "Sent") : "Approved");
   revalidatePath("/", "layout");
@@ -384,7 +389,7 @@ export async function startCase(form: FormData) {
   const names = form.getAll("file").filter((f): f is File => f instanceof File && f.size > 0).map((f) => f.name.slice(0, 120));
   if (firm.demo) redirect("/cases/new?error=sample");
   if (limited(`case:${user.id}`, 20)) redirect("/cases/new?error=limited");
-  const got = await uploads(form);
+  const got = await uploads(form, true);
   if (got === "size") redirect("/cases/new?error=size");
   if (got === "type") redirect("/cases/new?error=type");
   if (!text && !got.length) redirect("/cases/new");
@@ -569,13 +574,13 @@ export async function newInboundAddress() {
 }
 
 /** PDFs and photos from a form, checked by content. "size" over 25 MB in total, "type" for anything else. */
-async function uploads(form: FormData): Promise<Uint8Array[] | "size" | "type"> {
+async function uploads(form: FormData, words = false): Promise<Uint8Array[] | "size" | "type"> {
   const files = form.getAll("file").filter((f): f is File => f instanceof File && f.size > 0).slice(0, 40);
   if (files.reduce((s, f) => s + f.size, 0) > 25 * 1024 * 1024) return "size";
   const out: Uint8Array[] = [];
   for (const f of files) {
     const bytes = new Uint8Array(await f.arrayBuffer());
-    if (!fileKind(bytes)) return "type";
+    if (!fileKind(bytes) && !(words && /\.docx$/i.test(f.name) && bytes[0] === 0x50 && bytes[1] === 0x4b)) return "type";
     out.push(bytes);
   }
   return out;
@@ -725,7 +730,7 @@ export async function deleteFirm(form: FormData) {
   const caseIds = (d.prepare("SELECT id FROM cases WHERE firm_id = ?").all(firm.id) as { id: string }[]).map((c) => c.id);
   forgetFirmSessions(firm.id);
   d.transaction(() => {
-    for (const t of ["case_status", "memory_edits", "addin_codes", "addin_tokens", "invites", "intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "security_events", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "rfe_points", "criteria", "documents", "cases", "kv"]) d.prepare(`DELETE FROM ${t} WHERE firm_id = ?`).run(firm.id);
+    for (const t of ["redlines", "case_status", "memory_edits", "addin_codes", "addin_tokens", "invites", "intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "security_events", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "rfe_points", "criteria", "documents", "cases", "kv"]) d.prepare(`DELETE FROM ${t} WHERE firm_id = ?`).run(firm.id);
     d.prepare("DELETE FROM inbound_seen WHERE mailbox_id IN (SELECT id FROM mailboxes WHERE firm_id = ?)").run(firm.id);
     d.prepare("DELETE FROM mailboxes WHERE firm_id = ?").run(firm.id);
     d.prepare("DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE firm_id = ?)").run(firm.id);
@@ -807,6 +812,7 @@ export async function saveMessage(approvalId: string, subject: string, body: str
     recordEdit(firm.id, "email", split(was.body), split(body));
   }
   db().prepare("UPDATE messages SET subject = ?, body = ? WHERE firm_id = ? AND id = ? AND state = 'needs_approval'").run(subject.trim().slice(0, 200) || "(no subject)", body.trim().slice(0, 20000), firm.id, messageId);
+  void import("./maildrafts").then((m) => m.pushEdit(firm.id, messageId)).catch(() => undefined);
   await toast("Saved");
   revalidatePath("/", "layout");
 }

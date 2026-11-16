@@ -21,11 +21,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ provider
   const refused = url.searchParams.get("error");
   if (refused) {
     console.error("Provider refused", provider, refused, url.searchParams.get("error_description") ?? "");
-    return go(mode === "connect" ? `/integrations?error=connect&code=${encodeURIComponent(refused.slice(0, 40))}` : `/signin?error=provider&code=${encodeURIComponent(refused.slice(0, 40))}`);
+    return go(mode !== "auth" ? `/integrations?error=connect&code=${encodeURIComponent(refused.slice(0, 40))}` : `/signin?error=provider&code=${encodeURIComponent(refused.slice(0, 40))}`);
   }
   if (!isProvider(provider) || p !== provider || !code || !state || url.searchParams.get("state") !== state) {
     console.error("Sign in state mismatch", provider, { hasCookie: Boolean(expected), mode, cookieProvider: p, hasCode: Boolean(code) });
-    return go(mode === "connect" ? "/integrations?error=state" : "/signin?error=provider&code=expired_or_cookie");
+    return go(mode && mode !== "auth" ? "/integrations?error=state" : "/signin?error=provider&code=expired_or_cookie");
   }
 
   if (mode === "auth") {
@@ -50,7 +50,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ provider
   if (!s) return go("/signin");
   if (s.firm.demo) return go("/integrations?error=sample");
   try {
-    const email = await connect(provider, s.firm.id, s.user.id, code);
+    const email = await connect(provider, s.firm.id, s.user.id, code, mode === "teams");
     await securityEvent(s.firm.id, s.user.id, "connected", `${provider} ${email}`);
     return go(`/integrations?connected=${provider}`);
   } catch (e) {

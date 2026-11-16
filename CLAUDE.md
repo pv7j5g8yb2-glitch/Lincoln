@@ -152,8 +152,7 @@ build` before every push to the session branch; Render deploys from it. A grep f
 * **First workflows (draft, to be tested):** employment based cases (O-1, EB-1, H-1B, L-1 and
   green cards from them), end to end from client questionnaire and evidence to a finished filing
   packet. Family cases, forms, deadlines and billing come later.
-* **Goal (Ismael, 2026-11-09):** $100k a month profit by age 20, about November 2031. Roughly
-  445 seats at $300 if about 75 percent of revenue is profit (both figures are assumptions).
+* **Goal (Ismael, 2026-11-16): venture scale.** He dropped the $100k a month goal as too small now that he is raising money; VCs will not back a $100k MRR outcome. No new number given yet. Old goal (2026-11-09): $100k a month profit by age 20, about November 2031.
 * **Name (Ismael, 2026-11-09): Lincoln**, after Abraham Lincoln the lawyer. Domain: uselincoln.com
   (found free, to be bought by a parent or guardian, used only as the web address). lincoln.ai
   is for sale and is left for later when there is money and users, do not overpay early. Ruled
@@ -168,8 +167,7 @@ build` before every push to the session branch; Render deploys from it. A grep f
 
 ## Ismael's real requirements (2026-11-10)
 
-* The only goal: about $100k a month profit (about $1M a year) by age 20. Price, self serve and
-  seat counts are not rules in themselves.
+* The goal is now venture scale (2026-11-16, see Goal above). Price, self serve and seat counts are not rules in themselves.
 * Never suggest asking buyers or strangers about their problems, pain or how they work (posts,
   DMs, "20 minutes of your time"). Professionals mock it (r/Ask_Lawyers reply: "weed out
   questions from kids spamming forums for shitty business ideas"). Learn by reading what they
@@ -178,6 +176,7 @@ build` before every push to the session branch; Render deploys from it. A grep f
   company), but nothing about him, his face, his story or his life. No cold outreach of any kind, not even
   "just asking for feedback". Ideas must be ones where buyers can find the product through company
   content, search or a marketplace and sign up on their own.
+* Investor outreach (Ismael, 2026-11-16): messaging investors directly (LinkedIn DMs, email) is allowed; the no cold outreach rule does not cover investors. Do not treat his passing remarks as permanent rules.
 * Funding (Ismael, 2026-11-13): applying to VC firms and accelerators before revenue IS allowed. He
   has no income and needs cash now; the old rule (no VC before paying users) is overruled. Still no
   cold outreach: apply only through each firm's own application form, and always through the company

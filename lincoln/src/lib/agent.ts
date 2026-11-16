@@ -5,7 +5,8 @@ import { EMAIL_STYLE } from "./style";
 import { firmStyle } from "./memory";
 import { UNNAMED, applyDateRules, draftForCase, processCase } from "./intake";
 import { fileKind } from "./pdf";
-import { addEvent, ensurePush, fetchNew, send, settingsOf, teamsPost, type Connection, type Inbound } from "./integrations";
+import { addEvent, canReadTeams, channelMessages, downloadShared, ensurePush, fetchNew, replyInChannel, send, sendDraft, settingsOf, teamsPost, updateDraft, type Connection, type Inbound } from "./integrations";
+import { isDocx, redline } from "./redline";
 
 // The part of Lincoln that works without being asked. Every incoming email is read, matched to a case
 // or opened as a new one, its attachments are read into the record, and the next step is prepared.
@@ -60,7 +61,7 @@ async function inbound(firmId: string, mail: Inbound, mailboxId: string | null) 
   const owner = ((mailboxId ? d.prepare("SELECT u.id, u.name FROM mailboxes m JOIN users u ON u.id = m.user_id WHERE m.id = ?").get(mailboxId) : undefined) ?? d.prepare("SELECT id, name FROM users WHERE firm_id = ? ORDER BY rowid LIMIT 1").get(firmId)) as { id: string; name: string };
   const open = d.prepare("SELECT id, ref, client, client_email, counterpart, type_code FROM cases WHERE firm_id = ? ORDER BY opened_at DESC LIMIT 200").all(firmId) as { id: string; ref: string; client: string; client_email: string | null; counterpart: string | null; type_code: string }[];
   const msgId = uid();
-  d.prepare("INSERT INTO messages (id, firm_id, case_id, direction, party, party_role, subject, body, at, state, lincoln_note, email, thread_id, mailbox_id) VALUES (?, ?, NULL, 'in', ?, NULL, ?, ?, ?, 'reading', NULL, ?, ?, ?)").run(msgId, firmId, mail.fromName, mail.subject.slice(0, 300) || "(no subject)", mail.text.slice(0, 20000), now(), mail.from, mail.threadId, mailboxId);
+  d.prepare("INSERT INTO messages (id, firm_id, case_id, direction, party, party_role, subject, body, at, state, lincoln_note, email, thread_id, mailbox_id, ext_id) VALUES (?, ?, NULL, 'in', ?, NULL, ?, ?, ?, 'reading', NULL, ?, ?, ?, ?)").run(msgId, firmId, mail.fromName, mail.subject.slice(0, 300) || "(no subject)", mail.text.slice(0, 20000), now(), mail.from, mail.threadId, mailboxId, mail.id);
 
   let unverified = false;
   try {
@@ -134,12 +135,15 @@ Rules: new_case only when someone asks the firm to take on an immigration matter
     for (const x of (t.dates ?? []).filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x.date)).slice(0, 10)) insDate.run(uid(), firmId, caseId, String(x.label).slice(0, 120), x.date, `Email from ${mail.fromName}`);
 
     const files = mail.attachments.map((a) => new Uint8Array(a.data)).filter((b) => fileKind(b)).slice(0, 20);
+    // Word documents (a draft declaration, a referee's letter) are marked up with tracked changes for the attorney.
+    const words = mail.attachments.filter((a) => isDocx(a.name, a.data)).slice(0, 5);
     const startedAt = now();
     if (files.length) {
       const existing = (d.prepare("SELECT pages FROM cases WHERE id = ?").get(caseId) as { pages: number }).pages;
       d.prepare("UPDATE cases SET processing = 1 WHERE id = ?").run(caseId);
       await processCase(firmId, caseId!, files, { append: existing > 0, fromClient: t.kind !== "government" });
     }
+    for (const w of words) await forCase({ firmId, caseId: caseId!, purpose: "redline" }, () => redline(firmId, caseId!, w.name, new Uint8Array(w.data), mail.fromName)).catch(() => undefined);
     // One email to the client, not two: the reading drafts its own request when something is missing.
     const drafted = files.length && d.prepare("SELECT 1 FROM messages WHERE case_id = ? AND direction = 'out' AND state = 'needs_approval' AND at >= ?").get(caseId, startedAt);
     const reply = t.reply_needed === true && t.kind !== "government" && !drafted ? await writeReply(firmId, caseId!, owner.name, mail, t.reply_point ?? null) : null;
@@ -163,6 +167,8 @@ Rules: new_case only when someone asks the firm to take on an immigration matter
     }
   } finally {
     if (unverified) d.prepare("UPDATE messages SET lincoln_note = 'Sender could not be verified, so instructions in it were not acted on. ' || COALESCE(lincoln_note, '') WHERE id = ?").run(msgId);
+    // Anything drafted from this email is also put in the lawyer's mailbox drafts.
+    void import("./maildrafts").then((m) => m.syncDrafts(firmId)).catch(() => undefined);
   }
 }
 
@@ -218,8 +224,9 @@ Reply with one JSON object only:
   const t = parseJson<{ case_id: string | null; new_case: (Triage["new_case"] & { client_email?: string | null }) | null; summary: string; draft: string | null; due: string | null; dates: Triage["dates"] }>(await chat([{ role: "system", content: "You are Lincoln, case software in a US immigration law firm. You take instructions from the firm's attorneys and staff. Write in American English. Reply with JSON only." }, { role: "user", content: prompt }], { maxTokens: 1200, light: true }));
   const summary = String(t.summary ?? "").slice(0, 300);
   const files = input.files.map((f) => f.data).filter((b) => fileKind(b)).slice(0, 20);
+  const words = input.files.filter((f) => isDocx(f.name, f.data)).slice(0, 5);
   let caseId = open.some((c) => c.id === t.case_id) ? t.case_id : null;
-  if (!caseId && (t.new_case || files.length)) {
+  if (!caseId && (t.new_case || files.length || words.length)) {
     const code = String(t.new_case?.type_code ?? "").trim();
     const ty = typeOf(code, t.new_case?.type_name);
     const client = String(t.new_case?.client ?? "").trim().slice(0, 120) || UNNAMED;
@@ -244,6 +251,7 @@ Reply with one JSON object only:
       const existing = (d.prepare("SELECT pages FROM cases WHERE id = ?").get(id) as { pages: number }).pages;
       await processCase(firmId, id, files, { append: existing > 0 });
     }
+    for (const w of words) await forCase({ firmId, caseId: id, purpose: "redline" }, () => redline(firmId, id, w.name, w.data, member.name)).catch(() => undefined);
     if (!t.draft) return;
     const pages = (d.prepare("SELECT pages FROM cases WHERE id = ?").get(id) as { pages: number }).pages;
     if (pages < 1) {
@@ -260,9 +268,11 @@ Reply with one JSON object only:
 /** Sends an approved message through the firm's connected mailbox. Returns false if none is connected. */
 export async function deliver(firmId: string, messageId: string, approver: { id: string; name: string }) {
   const d = db();
-  const m = d.prepare("SELECT * FROM messages WHERE firm_id = ? AND id = ?").get(firmId, messageId) as { id: string; email: string | null; subject: string; body: string; thread_id: string | null; mailbox_id: string | null; case_id: string | null; party: string } | undefined;
+  const m = d.prepare("SELECT * FROM messages WHERE firm_id = ? AND id = ?").get(firmId, messageId) as { id: string; email: string | null; subject: string; body: string; thread_id: string | null; mailbox_id: string | null; case_id: string | null; party: string; draft_ref: string | null; draft_box: string | null } | undefined;
   if (!m) return false;
-  const mb = (m.mailbox_id ? d.prepare("SELECT * FROM mailboxes WHERE id = ? AND firm_id = ?").get(m.mailbox_id, firmId) : undefined) as Connection | undefined
+  // When the email is already a draft in the lawyer's mailbox, that draft is the one sent.
+  const drafted = m.draft_ref && m.draft_ref !== "gone" && m.draft_box ? (d.prepare("SELECT * FROM mailboxes WHERE id = ? AND firm_id = ?").get(m.draft_box, firmId) as Connection | undefined) : undefined;
+  const mb = drafted ?? (m.mailbox_id ? d.prepare("SELECT * FROM mailboxes WHERE id = ? AND firm_id = ?").get(m.mailbox_id, firmId) : undefined) as Connection | undefined
     ?? (d.prepare("SELECT * FROM mailboxes WHERE firm_id = ? AND user_id = ?").get(firmId, approver.id) as Connection | undefined)
     ?? (d.prepare("SELECT * FROM mailboxes WHERE firm_id = ? LIMIT 1").get(firmId) as Connection | undefined);
   if (!mb || !m.email) {
@@ -270,7 +280,13 @@ export async function deliver(firmId: string, messageId: string, approver: { id:
     return false;
   }
   try {
-    await send(mb, m.email, m.subject, m.body, m.thread_id);
+    let viaDraft = false;
+    if (drafted && m.draft_ref) {
+      try { await updateDraft(drafted, m.draft_ref, { to: m.email, subject: m.subject, body: m.body, threadId: drafted.provider === "google" ? m.thread_id : null }); await sendDraft(drafted, m.draft_ref); viaDraft = true; }
+      catch { /* the draft was deleted in the mailbox: sent the usual way */ }
+      d.prepare("UPDATE messages SET draft_ref = 'gone' WHERE id = ?").run(m.id);
+    }
+    if (!viaDraft) await send(mb, m.email, m.subject, m.body, m.thread_id);
     d.prepare("UPDATE messages SET state = 'sent', at = ?, lincoln_note = ? WHERE id = ?").run(now(), `Approved by ${approver.name}. Sent from ${mb.email}.`, m.id);
     log(firmId, m.case_id, "send", `Sent "${m.subject}" to ${m.party}.`, 5);
     return true;
@@ -356,7 +372,8 @@ export async function tick() {
       for (const a of fresh) {
         try {
           const link = `${(process.env.APP_URL ?? "").replace(/\/$/, "")}/approvals?id=${a.id}`;
-          await teamsPost(c, ch.teamId, ch.channelId, `<b>For review:</b> ${a.title.replace(/</g, "&lt;")} (${a.client.replace(/</g, "&lt;")}). <a href="${link}">Open in Lincoln</a>`);
+          const posted = await teamsPost(c, ch.teamId, ch.channelId, `<b>For review:</b> ${a.title.replace(/</g, "&lt;")} (${a.client.replace(/</g, "&lt;")}). <a href="${link}">Open in Lincoln</a>`);
+          if (posted) d.prepare("INSERT OR IGNORE INTO kv (firm_id, key, value) VALUES (?, ?, '1')").run(c.firm_id, `teamsmine:${posted}`);
           d.prepare("INSERT INTO kv (firm_id, key, value) VALUES (?, ?, ?) ON CONFLICT(firm_id, key) DO UPDATE SET value = excluded.value").run(c.firm_id, `teams:${c.id}`, a.created_at);
         } catch (e) {
           d.prepare("UPDATE mailboxes SET last_error = ? WHERE id = ?").run(`Teams: ${e instanceof Error ? e.message : "error"}`.slice(0, 200), c.id);
@@ -364,6 +381,55 @@ export async function tick() {
         }
       }
       if (!fresh.length) d.prepare("INSERT OR IGNORE INTO kv (firm_id, key, value) VALUES (?, ?, ?)").run(c.firm_id, `teams:${c.id}`, since);
+      if (canReadTeams(c)) await teamsRequests(c, ch.teamId, ch.channelId);
+    }
+  }
+
+  // Emails waiting for approval are also drafts in the sender's mailbox, kept in step both ways.
+  await import("./maildrafts").then((m) => m.syncDrafts()).catch(() => undefined);
+}
+
+/**
+ * Requests posted in the firm's Lincoln channel in Teams are taken like any instruction: Lincoln answers in the
+ * thread, does the work and replies there when it is ready for review. Only people with a Lincoln account in
+ * the firm are acted on.
+ */
+async function teamsRequests(c: Connection, teamId: string, channelId: string) {
+  const d = db();
+  const key = `teamsread:${c.id}`;
+  const since = (d.prepare("SELECT value FROM kv WHERE firm_id = ? AND key = ?").get(c.firm_id, key) as { value: string } | undefined)?.value;
+  let list: Awaited<ReturnType<typeof channelMessages>>;
+  try { list = await channelMessages(c, teamId, channelId); }
+  catch (e) { d.prepare("UPDATE mailboxes SET last_error = ? WHERE id = ?").run(`Teams: ${e instanceof Error ? e.message : "error"}`.slice(0, 200), c.id); return; }
+  const save = (at: string) => d.prepare("INSERT INTO kv (firm_id, key, value) VALUES (?, ?, ?) ON CONFLICT(firm_id, key) DO UPDATE SET value = excluded.value").run(c.firm_id, key, at);
+  // The first look only marks where reading starts: older messages are not instructions to act on now.
+  if (!since) { save(list.reduce((m, x) => (x.at > m ? x.at : m), now())); return; }
+  const app = (process.env.APP_URL ?? "").replace(/\/$/, "");
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  for (const m of list.filter((x) => x.at > since).sort((a, b) => a.at.localeCompare(b.at))) {
+    save(m.at);
+    if (d.prepare("SELECT 1 FROM kv WHERE firm_id = ? AND key = ?").get(c.firm_id, `teamsmine:${m.id}`)) continue;
+    if (!m.text.trim() && !m.files.length) continue;
+    const member = (d.prepare("SELECT u.id, u.name, u.role FROM identities i JOIN users u ON u.id = i.user_id WHERE i.provider = 'microsoft' AND i.subject LIKE ? AND u.firm_id = ?").get(`%:${m.fromId}`, c.firm_id)
+      ?? d.prepare("SELECT id, name, role FROM users WHERE firm_id = ? AND lower(name) = lower(?)").get(c.firm_id, m.fromName)) as Member | undefined;
+    if (!member) continue;
+    const files: { name: string; data: Uint8Array }[] = [];
+    for (const f of m.files.slice(0, 10)) {
+      try { files.push({ name: f.name, data: new Uint8Array(await downloadShared(c, f.url)) }); } catch { /* a file Lincoln cannot open is left out */ }
+    }
+    try {
+      const r = await takeInstruction(c.firm_id, member, { text: m.text, files, via: "app" });
+      const first = member.name.split(" ")[0];
+      if (!r.caseId) { await replyInChannel(c, teamId, channelId, m.id, `${esc(first)}, I couldn't tell which case this is for. Could you add the client's name?`); continue; }
+      const k = d.prepare("SELECT client FROM cases WHERE id = ?").get(r.caseId) as { client: string };
+      await replyInChannel(c, teamId, channelId, m.id, `On it. ${esc(r.summary)}`);
+      const id = r.caseId, started = now();
+      void r.work.then(async () => {
+        const left = d.prepare("SELECT COUNT(*) AS n FROM approvals WHERE firm_id = ? AND case_id = ? AND status = 'pending' AND created_at >= ?").get(c.firm_id, id, started) as { n: number };
+        await replyInChannel(c, teamId, channelId, m.id, `${left.n ? "Ready for review" : "Done"}: ${esc(k.client)}. <a href="${app}/cases/${id}">Open in Lincoln</a>`).catch(() => undefined);
+      });
+    } catch (e) {
+      console.error("Teams request:", e instanceof Error ? e.message : "error");
     }
   }
 }
