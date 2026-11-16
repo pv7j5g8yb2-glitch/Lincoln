@@ -64,11 +64,12 @@ LLM_MODEL=...
 
 ## Deploy on Render
 
-`../render.yaml` describes the service (name `lincoln`, so the address is `lincoln.onrender.com` if the
-name is free). Steps for the account holder (a parent or guardian):
+The service is set up by hand in the Render dashboard; `docs/RENDER.md` records its settings (build and start
+commands, disk at `/var/data`, environment variables). There is no `render.yaml` on purpose: a Blueprint reading it
+created a second copy of the service. Steps for the account holder (a parent or guardian):
 
-1. Create a Render account, then New, Blueprint, and connect the GitHub repository (branch
-   `claude/amazing-noether-92ry61`, or merge it to main first).
+1. Create a Render account, then New, Web Service, and connect the GitHub repository (branch
+   `claude/amazing-noether-92ry61`), with the settings in `docs/RENDER.md`.
 2. When asked for `LLM_API_KEY`, paste the model key there. It is never stored in git.
    For a personal login in the sample firm, also set `SEED_USER_EMAIL`, `SEED_USER_PASSWORD` (10
    characters or more) and `SEED_USER_NAME` in the Environment tab. They are read when the database

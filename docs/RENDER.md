@@ -1,3 +1,10 @@
+# Render settings (reference only)
+
+The live service is set up by hand in the Render dashboard. This file used to be `render.yaml` at the repository
+root, where a Render Blueprint read it and created a second copy of the service on its own. It was moved here on
+2026-11-16 so that can no longer happen. Nothing reads this file; it only records the settings.
+
+```yaml
 services:
   - type: web
     name: lincoln
@@ -52,3 +59,4 @@ services:
       name: lincoln-data
       mountPath: /var/data
       sizeGB: 1
+```
