@@ -337,6 +337,8 @@ from the repo the same day. History is in git up to commit `341cf65`.
   MPN ID. No paid email needed: hello@uselincoln.com on Zoho Mail's free plan, and the custom domain is added free
   in the existing Entra directory (do not buy Microsoft 365 for this; Claude wrongly suggested it once). Google shows the logo only after brand verification. Home page in both branding pages stays https://app.uselincoln.com
   (Ismael, 2026-11-15) until the landing page is live; then change it to https://uselincoln.com in Google and Microsoft.
+* Security requirements for selling to firms (bare minimum, mid market, BigLaw, and where Lincoln stands): saved in
+  docs/RESEARCH.md, 'Security requirements for law firms'. Next: a parent asks Anthropic sales for zero data retention.
 * Team (2026-11-16): no public sign up (/signup goes to /start; Google or Microsoft sign in only joins an open
   invite). Lincoln staff set up firms at app.uselincoln.com/ops (needs LINCOLN_OPS_EMAILS on Render) and get an admin
   invite link to send. Admins invite people from Settings, Firm (role, Admin switch; emailed if Resend is set up,

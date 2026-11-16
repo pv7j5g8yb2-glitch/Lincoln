@@ -1000,9 +1000,44 @@ Replies in the Tenet launch thread and the "make Harvey more engaging" thread. H
   is dominated by Fragomen; family and removal work by solos, small firms and nonprofits. Lincoln's buyers are small
   and mid firms. AILA gives its own size as 16,000+ (2026 media kit) or 18,000+ US lawyers (website); figures vary.
   445 seats (the goal) is roughly 3% of that, before counting paralegals.
-* Security for small firms (from a Google AI thread, checked where possible): the bare minimum is SOC 2 Type I, one
-  pentest, cyber and tech E&O insurance, a DPA, and a zero data retention agreement; quoted at about $20k to $35k in
-  year one (unverified). BigLaw extras (SOC 2 Type II, ISO 27001 and 42001, BYOK, SSO, vCISO) are not needed for
-  Lincoln's buyers yet. HIPAA does not normally apply to immigration firms.
+* Security for small firms: see "Security requirements for law firms" below.
 * Anthropic zero data retention is not self serve: Anthropic's sales team reviews and enables it per organisation
   (docs: platform.claude.com, API and data retention). Lincoln does not have it yet and must not claim it.
+
+## Security requirements for law firms (saved 2026-11-16, Ismael asked to keep them)
+Source: a Google AI thread Ismael pasted, checked by Claude where possible. Costs are the thread's, not verified.
+Claude agrees with the tiers; the corrections are marked.
+
+**Bare minimum, for solo and small firms (Lincoln's buyers).** About $20k to $35k in year one, 4 to 8 weeks.
+* SOC 2 Type I: a snapshot audit, about 4 to 6 weeks, often sold as a bundle with compliance software
+  (Vanta, Drata, Secureframe) for about $12k to $18k. Type II needs a 3 to 12 month observation window, so start
+  its window as soon as Type I is done.
+* One independent penetration test of the app and API: about $4k to $6k, then yearly. Firms ask for the summary.
+* Cyber liability and tech E&O insurance, $1M to $2M cover: about $3.5k to $6k a year.
+* A security and privacy page that only states what is true, a data processing agreement, and terms reviewed by a
+  lawyer (about $5k to $10k for the legal drafting).
+* Zero data retention with the model provider, in writing. Correction: not free or automatic. Anthropic's sales team
+  reviews each organisation and turns it on (claude.com/contact-sales); no published price or minimum. Batch
+  processing is not covered (29 day retention), so it stays off; Sonnet and Haiku are covered, Fable and Mythos
+  models need 30 day retention. The request must come from the company (a parent), not from Ismael.
+* Technical basics: encryption at rest (AES-256) and in transit (TLS 1.2 or 1.3), each firm's data kept apart,
+  two step sign in, roles, an access log, export and delete.
+
+**Mid market.** SOC 2 Type II, single sign on (Okta, Microsoft Entra), a yearly pentest, larger insurance. Correction:
+the thread calls SOC 2 Type II non-negotiable; that holds for big firms, not for solos and small firms.
+
+**Maximum, for BigLaw and corporate legal departments.** About $150k to $300k+ in year one, 9 to 18 months:
+SOC 2 Type II, ISO 27001, ISO 42001 (AI governance), single tenant hosting, firms' own encryption keys (BYOK), SSO
+with automatic user provisioning (SCIM), IP allowlists, red team tests and bug bounty, $5M to $10M insurance, and a
+virtual CISO for 300 question vendor reviews. Not needed for immigration firms, which are not BigLaw clients.
+
+**Not for Lincoln.** HIPAA does not normally apply to immigration firms. FedRAMP is for government work. ISO 27001,
+GDPR and the EU AI Act matter only if Lincoln sells outside the US.
+
+**Where Lincoln stands (2026-11-16).**
+* Built: the database (SQLCipher) and every file encrypted, with a key per firm; TLS on Render; two step sign in,
+  which a firm can require; admins and roles; an access log; full firm export and delete; no training on client
+  data under Anthropic's commercial terms; rate limits and an AI spend cap.
+* Missing: zero data retention agreement, pentest, SOC 2 Type I, insurance, lawyer reviewed DPA and terms, single
+  sign on. Order: ask for zero data retention now (free to ask); the paid items once the first firms pay or a grant
+  comes in.
