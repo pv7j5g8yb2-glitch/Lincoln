@@ -16,6 +16,12 @@ pages, Word export, a scripted "demo world". See `lincoln/README.md` for what wo
 * Integrations: Google services in two rows of three; Word add-in is Download first, then Code and a short guide;
   "Planned" is now "Others", each with Connect, which records the firm's request ("Requested") for the Lincoln team.
 * Library search says "Search"; New case sits in the middle of the screen.
+* Outlook add-in (`/outlook`, manifest at `/outlook/manifest.xml`): beside the open email, the case it belongs to
+  (by conversation, else the sender's address), the reply waiting for approval with Approve and Edit then Save, and
+  what Lincoln last did; an email with no case can be opened as one. Same code as the Word add-in, one connection
+  each. Tested with a stand-in Outlook in the browser; not yet in real Outlook.
+* The Microsoft and Google cards always look the same: no warnings for services a personal account lacks; the Teams
+  channel box shows only when the account has Teams.
 
 **Landing video (Ismael, 2026-11-16): on hold until the interface is locked.** It replaces the "All your cases in one
 place" section and goes right after the hero, before the grey sentence that lights up. It shows Lincoln's whole value

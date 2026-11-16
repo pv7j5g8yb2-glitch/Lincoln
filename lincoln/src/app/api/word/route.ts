@@ -50,7 +50,7 @@ export async function POST(req: Request) {
   }
   const s = wordUser(req);
   if (!s) return no("Not connected", 401);
-  if (body.op === "disconnect") { endWord(s.user.id); return NextResponse.json({ ok: true }); }
+  if (body.op === "disconnect") { endWord(s.user.id, "word"); return NextResponse.json({ ok: true }); }
   if (body.op === "saveDraft") {
     // The document as edited in Word becomes the draft's next version; headings start new sections.
     const dr = draftById(s.firm.id, String(body.draft ?? ""));

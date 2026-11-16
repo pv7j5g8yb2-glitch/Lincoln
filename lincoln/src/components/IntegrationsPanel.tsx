@@ -2,8 +2,7 @@ import clsx from "clsx";
 import { btn } from "./ui";
 import { disconnect, requestIntegration, setChatSpace, setTeamsChannel } from "@/lib/actions";
 import { kv } from "@/lib/queries";
-import { PROVIDERS, canReadChat, canReadTeams, chatSpaces, checkHealth, connectionsOf, settingsOf, teamsChannels } from "@/lib/integrations";
-import { CircleAlert } from "lucide-react";
+import { PROVIDERS, canReadChat, canReadTeams, chatSpaces, connectionsOf, settingsOf, teamsChannels } from "@/lib/integrations";
 import type { User, Firm } from "@/lib/session";
 import WordConnect from "./WordConnect";
 import { ConfirmButton } from "./Confirm";
@@ -39,7 +38,6 @@ const PLANNED: [string, [string, string][]][] = [
 
 export default async function IntegrationsPanel({ user, firm, connected, error, inbound, recheck }: { user: User; firm: Firm; connected?: string; error?: string; inbound?: string; recheck?: boolean }) {
   const conns = connectionsOf(firm.id, user.id);
-  const health = Object.fromEntries(await Promise.all(conns.map(async (c) => [c.provider, await checkHealth(c, recheck || Boolean(connected))] as const)));
   const ms = conns.find((c) => c.provider === "microsoft");
   let channels: { teamId: string; channelId: string; name: string }[] = [];
   if (ms) { try { channels = await teamsChannels(ms); } catch { channels = []; } }
@@ -70,23 +68,15 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
                     <span className="text-[12px] text-faint">Not configured</span>
                   )}
                 </div>
-                {c && health[p.id]?.some((h) => !h.ok) && (
-                  <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-line pt-3 text-[12.5px]">
-                    <CircleAlert size={14} className="shrink-0 text-risk" />
-                    <span className="min-w-0 flex-1 text-muted">{health[p.id].filter((h) => !h.ok).map((h) => h.service).join(", ")}</span>
-                    <a href={`/api/connect/${p.id}`} className="font-medium text-ink underline underline-offset-4">Reconnect</a>
-                  </div>
-                )}
-                {!c && <div className={clsx("mt-4 gap-2", p.services.length === 6 ? "grid w-fit grid-cols-3" : "flex flex-wrap")}>
+                <div className={clsx("mt-4 gap-2", p.services.length === 6 ? "grid w-fit grid-cols-3" : "flex flex-wrap")}>
                   {p.services.map((s) => (
                     <span key={s} className={clsx("flex items-center gap-1.5 rounded-full border px-2 py-1 text-[12px]", c ? "border-line text-ink" : "border-line text-muted")}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={`/logos/${LOGO_FILE[s]}`} alt="" width={14} height={14} className="h-[14px] w-[14px] object-contain" />{s}
                     </span>
                   ))}
-                </div>}
-                {c?.last_error && <p className="mt-3 text-[12px] text-risk">{c.last_error}</p>}
-                {c && p.id === "microsoft" && (
+                </div>
+                {c && p.id === "microsoft" && channels.length > 0 && (
                   <form action={setTeamsChannel} className="mt-4 flex items-center gap-2">
                     <select name="channel" defaultValue={settingsOf(c).teams ? `${settingsOf(c).teams!.teamId}|${settingsOf(c).teams!.channelId}|${settingsOf(c).teams!.name}` : ""} className="h-8 min-w-0 flex-1 rounded-lg border border-line bg-card px-2 text-[12.5px] outline-none focus:border-ink">
                       <option value="">Teams off</option>
@@ -106,7 +96,7 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
                 ) : (
                   <a href="/api/connect/google?chat=1" className="mt-3 inline-block text-[12.5px] text-muted underline-offset-2 transition hover:text-ink hover:underline">Add Google Chat</a>
                 ))}
-                {c && p.id === "microsoft" && settingsOf(c).teams && !canReadTeams(c) && (
+                {c && p.id === "microsoft" && channels.length > 0 && settingsOf(c).teams && !canReadTeams(c) && (
                   <a href="/api/connect/microsoft?teams=1" className="mt-2 inline-block text-[12.5px] text-muted underline-offset-2 transition hover:text-ink hover:underline">Take requests from this channel</a>
                 )}
               </div>
@@ -115,6 +105,10 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
           <div className="rounded-2xl border border-line bg-card p-5">
             <div className="mb-4 flex items-center gap-3"><Logo name="Word" size={26} /><span className="text-[14px] font-medium">Word add-in</span></div>
             <WordConnect connected={Boolean(wordConnected(user.id))} />
+          </div>
+          <div className="rounded-2xl border border-line bg-card p-5">
+            <div className="mb-4 flex items-center gap-3"><Logo name="Outlook" size={26} /><span className="text-[14px] font-medium">Outlook add-in</span></div>
+            <WordConnect app="outlook" connected={Boolean(wordConnected(user.id, "outlook"))} />
           </div>
         </div>
         {problem && <p className="mt-3 text-[13px] text-risk">{problem}</p>}

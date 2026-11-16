@@ -168,10 +168,10 @@ export async function newWordCodeAction(password?: string) {
   return { code: newWordCode(firm.id, user.id) };
 }
 
-export async function disconnectWordAction() {
+export async function disconnectWordAction(app: "word" | "outlook" = "word") {
   const { user } = await requireUser();
   const { endWord } = await import("./word");
-  endWord(user.id);
+  endWord(user.id, app === "outlook" ? "outlook" : "word");
 }
 
 export async function updateLawAction() {

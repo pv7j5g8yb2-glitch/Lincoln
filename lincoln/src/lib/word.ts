@@ -24,7 +24,8 @@ export function newWordCode(firmId: string, userId: string) {
 }
 
 /** Trades a code for the add-in's token. */
-export function redeemWordCode(code: string) {
+export type AddIn = "word" | "outlook";
+export function redeemWordCode(code: string, app: AddIn = "word") {
   const d = db();
   const raw = code.toUpperCase().replace(/[^A-Z0-9]/g, "");
   const row = d.prepare("SELECT firm_id, user_id, expires_at FROM addin_codes WHERE hash = ?").get(sha(raw)) as { firm_id: string; user_id: string; expires_at: string } | undefined;
@@ -32,8 +33,9 @@ export function redeemWordCode(code: string) {
   d.prepare("DELETE FROM addin_codes WHERE hash = ?").run(sha(raw));
   if (row.expires_at < new Date().toISOString()) return null;
   const token = crypto.randomBytes(32).toString("base64url");
-  d.prepare("DELETE FROM addin_tokens WHERE user_id = ?").run(row.user_id);
-  d.prepare("INSERT INTO addin_tokens (hash, firm_id, user_id, created_at, expires_at) VALUES (?, ?, ?, ?, ?)").run(sha(token), row.firm_id, row.user_id, new Date().toISOString(), new Date(Date.now() + TOKEN_DAYS * 86400_000).toISOString());
+  // One connection per add-in: connecting Outlook leaves Word connected, and the other way round.
+  d.prepare("DELETE FROM addin_tokens WHERE user_id = ? AND COALESCE(app, 'word') = ?").run(row.user_id, app);
+  d.prepare("INSERT INTO addin_tokens (hash, firm_id, user_id, created_at, expires_at, app) VALUES (?, ?, ?, ?, ?, ?)").run(sha(token), row.firm_id, row.user_id, new Date().toISOString(), new Date(Date.now() + TOKEN_DAYS * 86400_000).toISOString(), app);
   return token;
 }
 
@@ -51,13 +53,14 @@ export function wordUser(req: Request): { user: User; firm: Firm } | null {
   return { user, firm };
 }
 
-export function endWord(userId: string) {
+export function endWord(userId: string, app?: AddIn) {
+  if (app) { db().prepare("DELETE FROM addin_tokens WHERE user_id = ? AND COALESCE(app, 'word') = ?").run(userId, app); return; }
   db().prepare("DELETE FROM addin_tokens WHERE user_id = ?").run(userId);
   db().prepare("DELETE FROM addin_codes WHERE user_id = ?").run(userId);
 }
 
-export function wordConnected(userId: string) {
-  return db().prepare("SELECT last_used_at, created_at FROM addin_tokens WHERE user_id = ? AND expires_at > ?").get(userId, new Date().toISOString()) as { last_used_at: string | null; created_at: string } | undefined;
+export function wordConnected(userId: string, app: AddIn = "word") {
+  return db().prepare("SELECT last_used_at, created_at FROM addin_tokens WHERE user_id = ? AND COALESCE(app, 'word') = ? AND expires_at > ?").get(userId, app, new Date().toISOString()) as { last_used_at: string | null; created_at: string } | undefined;
 }
 
 /** A draft as Word blocks, cited the same way as the .docx export: "(Passport, client file p. 3)". */
