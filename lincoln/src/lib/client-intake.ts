@@ -7,6 +7,8 @@ import { decrypt, encrypt } from "./storage";
 import { UNNAMED, processCase } from "./intake";
 import { typeOf } from "./library";
 import { ABOUT, matterById, matterForCode, type Matter } from "./intake-matters";
+import { isLawyerRole } from "./roles";
+import { isAdmin } from "./session";
 
 // The client intake link. A firm has one link for its website, every member has their own (cases from it are
 // theirs), and a case can have its own link, tied to that client and case type. The client answers the questions and sends documents; on Send the answers
@@ -153,11 +155,13 @@ export async function submit(link: Link, sessionId: string, matterId: string, ra
   if (caseId) {
     d.prepare("UPDATE cases SET client = CASE WHEN client = ? THEN ? ELSE client END, client_email = COALESCE(client_email, ?) WHERE id = ? AND firm_id = ?").run(UNNAMED, answers.name, email, caseId, link.firm_id);
   } else {
-    // A member's link makes the case theirs (a paralegal's goes to the firm's attorney, with the paralegal on it).
-    // The firm's link goes to the firm's first attorney, or its first member.
-    const lead = d.prepare("SELECT id FROM users WHERE firm_id = ? ORDER BY CASE WHEN role LIKE '%ttorney%' THEN 0 ELSE 1 END, created_at LIMIT 1").get(link.firm_id) as { id: string } | undefined;
-    const member = link.user_id ? d.prepare("SELECT id, role FROM users WHERE id = ? AND firm_id = ?").get(link.user_id, link.firm_id) as { id: string; role: string } | undefined : undefined;
-    const attorney = member && !/paralegal|assistant/i.test(member.role) ? member.id : lead?.id ?? null;
+    // The firm's link (the website) goes to the firm's admin. A member's link makes the case theirs; when that
+    // member is not a lawyer (a paralegal, a case manager), a lawyer at the firm is responsible, with them on it.
+    const people = d.prepare("SELECT id, role FROM users WHERE firm_id = ? ORDER BY created_at").all(link.firm_id) as { id: string; role: string }[];
+    const admin = people.find((p) => isAdmin(p.role)) ?? people[0];
+    const member = link.user_id ? people.find((p) => p.id === link.user_id) : undefined;
+    const lawyer = people.find((p) => isLawyerRole(p.role) && !isAdmin(p.role)) ?? admin;
+    const attorney = member ? (isLawyerRole(member.role) ? member.id : lawyer?.id ?? member.id) : admin?.id ?? null;
     const paralegal = member?.id ?? attorney;
     const ty = typeOf(matter.code, matter.code ? null : "Client intake");
     caseId = "c_" + uid();

@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { forgetFirmSessions } from "./client-intake";
+import { ADMIN_ROLES, STAFF_ROLES } from "./roles";
 import { hashPassword, initialsOf, limited, newToken, sha, validEmail, validPassword, verifyPassword } from "./auth";
 import { mailConfigured as systemMailConfigured, sendSystemMail } from "./mailer";
 import { redirect } from "next/navigation";
@@ -340,9 +341,9 @@ export async function updateProfile(form: FormData) {
   notInSample(firm, "/settings?tab=profile");
   const name = String(form.get("name") ?? "").trim().slice(0, 100);
   const typed = String(form.get("role") ?? "").trim().slice(0, 60);
-  // The title is free text, but admin rights follow it, so a title that would grant or remove admin
-  // rights is not taken from here: nobody makes themselves an administrator, or loses it, by typing.
-  const role = typed && isAdmin(typed) === isAdmin(user.role) ? typed : user.role;
+  // Roles come from a fixed list. Admin rights follow the role, so a choice that would grant or remove them is
+  // not taken from here: nobody makes themselves an administrator, or loses it, from their own profile.
+  const role = [...ADMIN_ROLES, ...STAFF_ROLES].includes(typed) && isAdmin(typed) === isAdmin(user.role) ? typed : user.role;
   const avatar = String(form.get("avatar") ?? "");
   if (!name) redirect("/settings?tab=profile&error=name");
   const d = db();

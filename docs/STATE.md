@@ -337,8 +337,10 @@ from the repo the same day. History is in git up to commit `341cf65`.
   MPN ID. No paid email needed: hello@uselincoln.com on Zoho Mail's free plan, and the custom domain is added free
   in the existing Entra directory (do not buy Microsoft 365 for this; Claude wrongly suggested it once). Google shows the logo only after brand verification. Home page in both branding pages stays https://app.uselincoln.com
   (Ismael, 2026-11-15) until the landing page is live; then change it to https://uselincoln.com in Google and Microsoft.
+* Roles (2026-11-16): Role in Profile is a dropdown (lib/roles.ts). Admin rights follow the role, so admins choose
+  between Administrator and Managing partner, everyone else among the staff roles (Partner, Attorney, Paralegal...).
 * Intake link (built 2026-11-16, tested with a stand-in model): the firm has one link (Settings, Firm), every member
-  their own (Settings, Profile; cases from it are assigned to them) and every case its own (Client link on the case
+  their own (Settings, Profile; cases from it are assigned to them; firm link cases go to the admin, Ismael 2026-11-16) and every case its own (Client link on the case
   page). The client picks a topic, then the matter in plain words (65 matters in 12 topics covering every case type
   in lib/library.ts, in lib/intake-matters.ts), answers About you and matter questions, adds documents per checklist item (small or blurry
   photos flagged on the phone), then Send. Answers become a questionnaire page; with the documents it goes into the

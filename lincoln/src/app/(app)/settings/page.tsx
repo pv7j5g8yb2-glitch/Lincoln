@@ -16,6 +16,7 @@ import { deviceName } from "@/lib/device";
 import { accessRecord } from "@/lib/access";
 import CopyLink from "@/components/CopyLink";
 import { firmLink, linkUrl, memberLink } from "@/lib/client-intake";
+import { ADMIN_ROLES, STAFF_ROLES } from "@/lib/roles";
 
 const TABS: [string, string][] = [["profile", "Profile"], ["security", "Security"], ["firm", "Firm"], ["automation", "Automation"]];
 
@@ -79,7 +80,11 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             <form action={updateProfile} className="flex flex-col gap-5">
               <AvatarField initials={user.initials} current={user.avatar} />
               <label className="block"><span className={label}>Name</span><input name="name" required maxLength={100} defaultValue={user.name} className={field} /></label>
-              <label className="block"><span className={label}>Role</span><input name="role" maxLength={60} defaultValue={user.role} className={field} /></label>
+              <label className="block"><span className={label}>Role</span>
+                <select name="role" defaultValue={user.role} className={field}>
+                  {[...new Set([...(admin ? ADMIN_ROLES : STAFF_ROLES), user.role])].map((r) => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </label>
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="block"><span className={label}>Bar number</span><input name="bar_number" maxLength={40} defaultValue={bar.bar_number ?? ""} className={field} /></label>
                 <label className="block"><span className={label}>Licensing state</span><input name="bar_state" maxLength={40} defaultValue={bar.bar_state ?? ""} className={field} /></label>
