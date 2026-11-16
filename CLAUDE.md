@@ -90,6 +90,10 @@ Edit opens the text, then Save.
 left the app: work that lands in Review (batched) and chat replies finished in the background, like Claude. Chat replies
 always run to the end on the server, even when the app is closed. Every notification has a short title and one line.
 
+**Landing page (Ismael, 2026-11-16).** It must be creative with a real wow factor, more expressive than the minimal app,
+and must not look like the typical AI built site (animated product demo hero, gradients, glass cards, bento grids); he
+rejected "Lincoln working a case live" as a hero for that reason.
+
 **Lincoln on phones and manual work (Ismael, 2026-11-14).** On phones Lincoln uses the Hopkins Liquid Glass
 tab bar (Home, Cases, +, Review, More), with a lens that glides, stretches and follows a finger, and the More
 menu as a glass sheet; no top bar or slide out menu. The app follows the device's light or dark setting.
