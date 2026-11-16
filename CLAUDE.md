@@ -165,6 +165,9 @@ build` before every push to the session branch; Render deploys from it. A grep f
   has no income and needs cash now; the old rule (no VC before paying users) is overruled. Still no
   cold outreach: apply only through each firm's own application form, and always through the company
   owned by a parent or guardian.
+* How firms buy (Ismael, 2026-11-16): not self serve and not demo calls for now. Every Get started button on
+  uselincoln.com opens a form (/start) with the questions needed for a quote; a person replies by email with the quote
+  and instructions. Demo calls only later, once there are experienced sales reps. Sign in stays for active users.
 * No video or phone calls with buyers. Selling and talking to customers in writing is fine (email,
   DMs, LinkedIn), as long as it is a normal human conversation, not template pitching.
 

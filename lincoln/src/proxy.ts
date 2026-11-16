@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // the same path on the app.
 const APP = "https://app.uselincoln.com";
 const MAIN = "uselincoln.com";
-const PUBLIC = new Set(["/terms", "/privacy"]);
+const PUBLIC = new Set(["/terms", "/privacy", "/start"]);
 
 export function proxy(req: NextRequest) {
   const host = (req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "").split(",")[0].split(":")[0].trim().toLowerCase();

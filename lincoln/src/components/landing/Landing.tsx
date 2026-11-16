@@ -94,6 +94,7 @@ function Photo({ src, pos = "50% 50%", dim = 1, className = "", children }: { sr
 
 /* The work, laid on the photographs. */
 const card = "relative w-[86%] rounded-2xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_40px_80px_-24px_rgba(0,0,0,0.5)] md:w-[80%]";
+const eyebrow = "text-[12.5px] font-medium uppercase tracking-[0.16em] text-[#8a867f] md:text-[13px]";
 const label = "text-[12px] font-medium uppercase tracking-[0.12em] text-[#a09d96]";
 const rise = (on: boolean, d: number) => ({ className: `transition-all duration-700 ease-out motion-reduce:transition-none ${on ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`, style: { transitionDelay: `${d}ms` } });
 
@@ -161,10 +162,10 @@ function ApproveCard({ on }: { on: boolean }) {
 }
 
 const STEPS: { title: string; line: string; photo: string; pos?: string; dim?: number; Card: (p: { on: boolean }) => ReactNode }[] = [
-  { title: "Reads the mail.", line: "A client writes in. The case is open before anyone sees the email.", photo: "/landing/concrete.jpg", Card: MailCard },
-  { title: "Reads the file.", line: "Conflicts, gaps and bars, each with the page it came from.", photo: "/landing/marble.jpg", Card: ReadCard },
-  { title: "Drafts the letters.", line: "Support letters and RFE responses, cited to the evidence.", photo: "/landing/letters.jpg", dim: 0.55, Card: LetterCard },
-  { title: "Asks you.", line: "Nothing is filed or sent without an attorney's approval.", photo: "/landing/court.jpg", pos: "85% 30%", dim: 0.7, Card: ApproveCard },
+  { title: "Reads your mail.", line: "A client writes in. The case is open before anyone sees the email.", photo: "/landing/concrete.jpg", Card: MailCard },
+  { title: "Reads your files.", line: "Conflicts, gaps and bars, each with the page it came from.", photo: "/landing/marble.jpg", Card: ReadCard },
+  { title: "Drafts your letters.", line: "Support letters and RFE responses, cited to the evidence.", photo: "/landing/letters.jpg", dim: 0.55, Card: LetterCard },
+  { title: "Asks for approval.", line: "Nothing is filed or sent without an attorney's approval.", photo: "/landing/court.jpg", pos: "85% 30%", dim: 0.7, Card: ApproveCard },
 ];
 
 /* The 3D piece: the case papers lie spread across a desk, then fold into one filing packet as the page scrolls. */
@@ -187,13 +188,12 @@ function Packet() {
   const [narrow, setNarrow] = useState(false);
   useEffect(() => { const on = () => setNarrow(window.innerWidth < 768); on(); window.addEventListener("resize", on); return () => window.removeEventListener("resize", on); }, []);
   const W = 200, H = 260, gx = narrow ? 150 : 250, gy = narrow ? 200 : 300;
-  const done = ease((p - 0.78) / 0.12);
   return (
     <div ref={ref} className="relative h-[300vh]">
       <div className="sticky top-0 flex h-dvh flex-col justify-center overflow-hidden">
         <div className="mx-auto grid w-full max-w-[1200px] items-center gap-4 px-4 md:grid-cols-[minmax(0,420px)_1fr] md:gap-10 md:px-8">
           <div className="relative z-10 pt-6 md:pt-0">
-            <h2 className="font-serif text-[34px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[56px]">The filing packet, assembled.</h2>
+            <h2 className="font-serif text-[34px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[56px]">All your cases in one place.</h2>
             <p className="mt-4 max-w-[30ch] text-[16.5px] leading-[1.6] text-[#6b6862] md:text-[18px]">Forms, letters and exhibits in filing order, ready for review.</p>
           </div>
           <div className="relative flex h-[56vh] items-center justify-center [perspective:2000px] md:h-[78vh]">
@@ -211,9 +211,6 @@ function Packet() {
                   </div>
                 );
               })}
-            </div>
-            <div className="pointer-events-none absolute bottom-[6%] left-1/2 whitespace-nowrap rounded-full bg-[#161614] px-4 py-2 text-[13.5px] font-medium text-white shadow-[0_20px_40px_-16px_rgba(0,0,0,0.5)] transition-none" style={{ opacity: done, transform: `translate(-50%, ${(1 - done) * 12}px)` }}>
-              Awaiting approval · Sofia Reyes
             </div>
           </div>
         </div>
@@ -238,9 +235,40 @@ function Close() {
       <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent to-60%" />
       <div className="absolute bottom-7 left-6 text-white md:bottom-14 md:left-14">
         <In><h2 className="font-serif text-[48px] font-semibold leading-[1] tracking-[-0.035em] md:text-[88px]">Start your<br />first case.</h2></In>
-        <In delay={150}><Link href="/signup" className="mt-7 inline-block rounded-full bg-white px-6 py-3.5 text-[15.5px] font-medium text-[#161614] transition hover:bg-white/85 md:mt-8">Get started</Link></In>
+        <In delay={150}><Link href="/start" className="mt-7 inline-block rounded-full bg-white px-6 py-3.5 text-[15.5px] font-medium text-[#161614] transition hover:bg-white/85 md:mt-8">Get started</Link></In>
       </div>
     </div>
+  );
+}
+
+function Footer() {
+  const icon = "flex h-10 w-10 items-center justify-center rounded-full ring-1 ring-[#e2dfd8] text-[#161614] transition hover:bg-[#f0eee9]";
+  return (
+    <footer className="mt-20 border-t border-[#ebe9e4] md:mt-28">
+      <div className="mx-auto max-w-[1200px] px-4 pb-10 pt-14 md:px-8 md:pb-12 md:pt-20">
+        <div className="flex flex-col gap-10 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="font-serif text-[44px] font-semibold leading-none tracking-[-0.035em] md:text-[72px]">Lincoln</p>
+            <p className={`mt-4 ${eyebrow}`}>For immigration law firms</p>
+          </div>
+          <div className="flex gap-3">
+            <a href="https://instagram.com/lincoln.app" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={icon}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" /></svg>
+            </a>
+            <a href="mailto:hello@uselincoln.com" aria-label="Email" className={icon}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m4 7 8 6 8-6" /></svg>
+            </a>
+          </div>
+        </div>
+        <div className="mt-12 flex flex-col gap-3 border-t border-[#ebe9e4] pt-6 text-[13px] text-[#8a867f] md:mt-16 md:flex-row md:items-center md:justify-between">
+          <span>© 2026 Lincoln. All rights reserved.</span>
+          <div className="flex gap-5 text-[12.5px]">
+            <Link href="/terms" className="transition hover:text-[#161614]">Terms</Link>
+            <Link href="/privacy" className="transition hover:text-[#161614]">Privacy</Link>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 }
 
@@ -255,14 +283,10 @@ export default function Landing() {
     <div className="min-h-dvh overflow-x-clip bg-[#faf9f6] font-sans text-[#161614] antialiased selection:bg-[#efe6d6]">
       <header className={`sticky top-0 z-50 bg-[#faf9f6]/85 backdrop-blur-md transition-[border-color] duration-300 ${scrolled ? "border-b border-[#ebe9e4]" : "border-b border-transparent"}`}>
         <nav className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 md:px-8">
-          <Link href="/" className="flex items-center gap-2.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/mark.png" alt="" width={26} height={26} className="rounded-[7px]" />
-            <span className="font-serif text-[19px] font-semibold tracking-[-0.01em]">Lincoln</span>
-          </Link>
+          <Link href="/" className="font-serif text-[26px] font-semibold tracking-[-0.02em] md:text-[28px]">Lincoln</Link>
           <div className="flex items-center gap-1">
             <Link href="/signin" className="rounded-full px-3 py-2 text-[14.5px] text-[#6b6862] transition hover:text-[#161614] md:px-4">Sign in</Link>
-            <Link href="/signup" className="rounded-full bg-[#161614] px-4 py-2 text-[14.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
+            <Link href="/start" className="rounded-full bg-[#161614] px-4 py-2 text-[14.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
           </div>
         </nav>
       </header>
@@ -270,13 +294,13 @@ export default function Landing() {
       {/* Hero: the words, and the courthouse rising into its frame. */}
       <section className="mx-auto grid max-w-[1200px] items-end gap-9 px-4 pb-20 pt-11 md:grid-cols-[1fr_500px] md:gap-[72px] md:px-8 md:pb-28 md:pt-14">
         <div>
-          <p className="hero-in text-[14px] text-[#6b6862] md:text-[15px]">For immigration law firms</p>
-          <h1 className="hero-in mt-5 font-serif text-[50px] font-semibold leading-[1] tracking-[-0.035em] [animation-delay:120ms] md:text-[92px]">The work, done before you ask.</h1>
+          <p className={`hero-in ${eyebrow}`}>For immigration law firms</p>
+          <h1 className="hero-in mt-4 font-serif text-[50px] font-semibold leading-[1] tracking-[-0.035em] [animation-delay:120ms] md:text-[92px]">Your work done before you even ask.</h1>
           <p className="hero-in mt-7 max-w-[32ch] text-[17.5px] leading-[1.6] text-[#6b6862] [animation-delay:240ms] md:text-[20px]">
-            Lincoln reads the firm&apos;s mail, opens each case, fills the forms and drafts the letters. You approve.
+            Lincoln works autonomously for you, no need for prompts. Once it&apos;s done you review and approve.
           </p>
           <div className="hero-in mt-9 flex items-center gap-2 [animation-delay:360ms] md:mb-3">
-            <Link href="/signup" className="rounded-full bg-[#161614] px-6 py-3.5 text-[15.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
+            <Link href="/start" className="rounded-full bg-[#161614] px-6 py-3.5 text-[15.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
             <a href="#work" className="rounded-full px-5 py-3.5 text-[15.5px] font-medium transition hover:bg-[#f0eee9]">How it works</a>
           </div>
         </div>
@@ -299,8 +323,8 @@ export default function Landing() {
           {STEPS.map((s, i) => (
             <div key={s.title} className="grid items-center gap-7 py-10 md:grid-cols-2 md:gap-20 md:py-[70px]">
               <In className={i % 2 ? "md:order-2" : ""}>
-                <p className="font-mono text-[13px] text-[#a09d96]">0{i + 1}</p>
-                <h3 className="mt-2 font-serif text-[34px] font-semibold leading-[1.05] tracking-[-0.025em] md:text-[52px]">{s.title}</h3>
+                <p className={eyebrow}>0{i + 1}</p>
+                <h3 className="mt-3 font-serif text-[34px] font-semibold leading-[1.05] tracking-[-0.025em] md:text-[52px]">{s.title}</h3>
                 <p className="mt-3 max-w-[30ch] text-[16.5px] leading-[1.6] text-[#6b6862] md:mt-4 md:text-[18px]">{s.line}</p>
               </In>
               <Photo src={s.photo} pos={s.pos} dim={s.dim} className="flex h-[480px] items-center justify-center md:h-[620px]">
@@ -316,7 +340,7 @@ export default function Landing() {
       {/* Client files. */}
       <section className="border-t border-[#ebe9e4]">
         <div className="mx-auto grid max-w-[1200px] gap-7 px-4 py-24 md:grid-cols-2 md:gap-20 md:px-8 md:py-36">
-          <In><h2 className="font-serif text-[36px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[56px]">Built for client files.</h2></In>
+          <In><h2 className="font-serif text-[36px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[56px]">Built for privacy.</h2></In>
           <div className="flex flex-col">
             {TRUST.map(([a, b], i) => (
               <In key={a} delay={i * 90}>
@@ -329,15 +353,8 @@ export default function Landing() {
 
       <section className="mx-auto max-w-[1200px] px-4 md:px-8">
         <Close />
-        <footer className="flex flex-col gap-4 py-8 text-[13px] text-[#a09d96] md:flex-row md:items-center md:justify-between md:pb-10">
-          <span>© 2026 Lincoln. Not a law firm. Every draft is for attorney review.</span>
-          <div className="flex gap-6">
-            <Link href="/terms" className="hover:text-[#161614]">Terms</Link>
-            <Link href="/privacy" className="hover:text-[#161614]">Privacy</Link>
-            <a href="mailto:hello@uselincoln.com" className="hover:text-[#161614]">hello@uselincoln.com</a>
-          </div>
-        </footer>
       </section>
+      <Footer />
     </div>
   );
 }

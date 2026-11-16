@@ -344,6 +344,8 @@ from the repo the same day. History is in git up to commit `341cf65`.
   Done 2026-11-16: GoDaddy records set, uselincoln.com verified in Render with a certificate. The duplicate Render
   service (made by a Blueprint from render.yaml) and an old market-research service were deleted; render.yaml was
   moved to docs/RENDER.md so no Blueprint can recreate the copy.
+  Get started form (2026-11-16): /start on uselincoln.com; answers saved in the enquiries table and emailed to
+  hello@uselincoln.com (reply goes straight to the firm) only if RESEND_API_KEY and MAIL_FROM are set on Render.
   Editorial direction: warm white, Literata, Ismael's own photographs (courthouse, concrete, marble, old letters,
   boardroom; in lincoln/public/landing, 1080px wide, originals would be sharper), the work laid on the photos, the
   word by word statement, and one 3D piece (case papers spread on a desk fold into a filing packet). Plan: home page
