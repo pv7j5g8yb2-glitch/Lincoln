@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { forgetFirmSessions } from "./client-intake";
 import { hashPassword, initialsOf, limited, newToken, sha, validEmail, validPassword, verifyPassword } from "./auth";
 import { mailConfigured as systemMailConfigured, sendSystemMail } from "./mailer";
 import { redirect } from "next/navigation";
@@ -585,8 +586,9 @@ export async function deleteFirm(form: FormData) {
   const conns = d.prepare("SELECT provider, refresh_enc FROM mailboxes WHERE firm_id = ?").all(firm.id) as { provider: string; refresh_enc: string }[];
   for (const c of conns) await revokeAccess(c.provider, c.refresh_enc);
   const caseIds = (d.prepare("SELECT id FROM cases WHERE firm_id = ?").all(firm.id) as { id: string }[]).map((c) => c.id);
+  forgetFirmSessions(firm.id);
   d.transaction(() => {
-    for (const t of ["push_subs", "chat_threads", "forms", "security_events", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "criteria", "documents", "cases", "kv"]) d.prepare(`DELETE FROM ${t} WHERE firm_id = ?`).run(firm.id);
+    for (const t of ["intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "security_events", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "criteria", "documents", "cases", "kv"]) d.prepare(`DELETE FROM ${t} WHERE firm_id = ?`).run(firm.id);
     d.prepare("DELETE FROM inbound_seen WHERE mailbox_id IN (SELECT id FROM mailboxes WHERE firm_id = ?)").run(firm.id);
     d.prepare("DELETE FROM mailboxes WHERE firm_id = ?").run(firm.id);
     d.prepare("DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE firm_id = ?)").run(firm.id);

@@ -24,4 +24,7 @@ export async function register() {
   const { scanReview } = await import("./lib/push");
   scanReview();
   setInterval(() => { try { scanReview(); } catch { /* next round */ } }, 20_000);
+  // Intake files a client never sent are removed after 30 days.
+  const { sweepSessions } = await import("./lib/client-intake");
+  setInterval(() => { try { sweepSessions(); } catch { /* next round */ } }, 6 * 3600_000);
 }

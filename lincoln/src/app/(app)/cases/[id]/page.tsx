@@ -20,6 +20,8 @@ import { ago, inDays, longDate } from "@/lib/format";
 import { llmConfigured, modelName } from "@/lib/llm";
 import type { LetterContent } from "@/lib/letter";
 import { recordAccess } from "@/lib/access";
+import CopyLink from "@/components/CopyLink";
+import { caseLink, linkUrl } from "@/lib/client-intake";
 
 const DOC_STATUS: Record<string, string> = { ok: "Usable", weak: "Low weight", excluded: "Excluded", draft: "Unsigned draft", duplicate: "Duplicate", superseded: "Superseded", needs_translation: "Translation required" };
 const GRADES = ["Excluded", "In the file", "Relevant", "Supports the fact", "Meets the standard", "Approved by attorney"];
@@ -66,6 +68,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {!firm.demo && <CopyLink url={linkUrl(caseLink(firm.id, id))} />}
           {docs.length > 0 && <ExportMenu label="Export" items={[...exportItems(firm.id, user.id, "case", id).map((i) => ({ ...i, label: i.label.replace(/^Open in (\w+.*)$/, "Exhibit index in $1").replace(/^Download \.xlsx$/, "Exhibit index .xlsx") })), ...exportItems(firm.id, user.id, "deck", id).map((i) => ({ ...i, label: i.label.replace(/^Open in (\w+.*)$/, "Summary deck in $1").replace(/^Download \.pptx$/, "Summary deck .pptx") }))]} />}
         </div>
       </div>

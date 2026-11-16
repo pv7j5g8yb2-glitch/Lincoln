@@ -66,7 +66,7 @@ CREATE INDEX IF NOT EXISTS i_appr_firm ON approvals(firm_id, status);
 CREATE INDEX IF NOT EXISTS i_msg_firm ON messages(firm_id, at);
 `;
 
-const TABLES = ["push_subs", "chat_threads", "forms", "usage", "access_log", "security_events", "mailboxes", "sessions", "kv", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "criteria", "documents", "cases", "users", "firms"];
+const TABLES = ["intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "usage", "access_log", "security_events", "mailboxes", "sessions", "kv", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "criteria", "documents", "cases", "users", "firms"];
 
 /** Where the database lives. On Render this is the persistent disk (DATA_DIR=/var/data). */
 export const dataDir = () => process.env.DATA_DIR || path.join(process.cwd(), "data");
@@ -97,6 +97,8 @@ export function db(): Database.Database {
   d.exec("CREATE TABLE IF NOT EXISTS forms (id TEXT PRIMARY KEY, firm_id TEXT NOT NULL, case_id TEXT NOT NULL, code TEXT NOT NULL, title TEXT NOT NULL, status TEXT NOT NULL, fields INTEGER NOT NULL DEFAULT 0, layout TEXT NOT NULL DEFAULT '[]', answers TEXT NOT NULL DEFAULT '[]', updated_at TEXT NOT NULL)");
   d.exec("CREATE TABLE IF NOT EXISTS usage (id TEXT PRIMARY KEY, firm_id TEXT NOT NULL, case_id TEXT, at TEXT NOT NULL, purpose TEXT NOT NULL, model TEXT NOT NULL, input_tokens INTEGER NOT NULL, output_tokens INTEGER NOT NULL, cost REAL NOT NULL)");
   d.exec("CREATE INDEX IF NOT EXISTS i_usage_firm ON usage(firm_id, at)");
+  d.exec("CREATE TABLE IF NOT EXISTS intake_links (token TEXT PRIMARY KEY, firm_id TEXT NOT NULL, case_id TEXT, created_at TEXT NOT NULL)");
+  d.exec("CREATE TABLE IF NOT EXISTS intake_sessions (id TEXT PRIMARY KEY, token TEXT NOT NULL, firm_id TEXT NOT NULL, case_id TEXT, files TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)");
   d.exec("CREATE TABLE IF NOT EXISTS enquiries (id TEXT PRIMARY KEY, at TEXT NOT NULL, name TEXT NOT NULL, email TEXT NOT NULL, firm TEXT NOT NULL, answers TEXT NOT NULL, ip TEXT)");
   d.exec("CREATE TABLE IF NOT EXISTS known_devices (user_id TEXT NOT NULL, device TEXT NOT NULL, first_seen TEXT NOT NULL, PRIMARY KEY (user_id, device))");
   for (const [table, col, type] of [["users", "avatar", "TEXT"], ["cases", "processing", "INTEGER NOT NULL DEFAULT 0"], ["cases", "note", "TEXT"], ["chat", "case_id", "TEXT"], ["cases", "client_email", "TEXT"], ["messages", "email", "TEXT"], ["messages", "thread_id", "TEXT"], ["messages", "mailbox_id", "TEXT"], ["mailboxes", "settings", "TEXT"], ["users", "totp_enc", "TEXT"], ["users", "totp_pending_enc", "TEXT"], ["users", "totp_last_step", "INTEGER"], ["users", "recovery", "TEXT"], ["sessions", "ip", "TEXT"], ["sessions", "agent", "TEXT"], ["sessions", "last_seen", "TEXT"], ["firms", "key_enc", "TEXT"], ["firms", "require_2fa", "INTEGER NOT NULL DEFAULT 0"], ["issues", "rule", "TEXT"], ["firms", "address", "TEXT"], ["firms", "phone", "TEXT"], ["firms", "email", "TEXT"], ["users", "bar_number", "TEXT"], ["users", "bar_state", "TEXT"], ["cases", "receipt", "TEXT"], ["forms", "batch", "TEXT"], ["usage", "user_id", "TEXT"], ["chat", "thread_id", "TEXT"]]) {

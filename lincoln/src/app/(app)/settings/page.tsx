@@ -14,6 +14,8 @@ import { people } from "@/lib/queries";
 import { ago } from "@/lib/format";
 import { deviceName } from "@/lib/device";
 import { accessRecord } from "@/lib/access";
+import CopyLink from "@/components/CopyLink";
+import { firmLink, linkUrl } from "@/lib/client-intake";
 
 const TABS: [string, string][] = [["profile", "Profile"], ["security", "Security"], ["firm", "Firm"], ["automation", "Automation"]];
 
@@ -187,6 +189,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 </div>
                 {admin && <div><button className={btn.primary}>Save</button></div>}
               </form>
+              {!firm.demo && (
+                <>
+                  <h2 className="mb-2 mt-10 text-[14px] font-medium">Intake link</h2>
+                  <CopyLink inline url={linkUrl(firmLink(firm.id))} />
+                </>
+              )}
               <h2 className="mb-1 mt-10 text-[14px] font-medium">Members</h2>
               <div className="border-t border-line">
                 {people(firm.id).map((p) => (
