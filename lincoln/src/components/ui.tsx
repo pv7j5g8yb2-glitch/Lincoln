@@ -51,7 +51,7 @@ export function SectionTitle({ children, right }: { children: ReactNode; right?:
 
 export function Empty({ children, page }: { children: ReactNode; page?: boolean }) {
   // A whole page with nothing on it: the words alone, in the middle of the screen.
-  if (page) return <div className="flex min-h-[calc(100dvh-18rem)] items-center justify-center text-center text-[13.5px] text-faint md:min-h-[calc(100dvh-15rem)]">{children}</div>;
+  if (page) return <div className="flex min-h-[calc(100dvh-20rem)] items-center justify-center border-t border-line text-center text-[13.5px] text-faint md:min-h-[calc(100dvh-17rem)]">{children}</div>;
   return <div className="border-y border-line py-10 text-center text-[13px] text-faint">{children}</div>;
 }
 

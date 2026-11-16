@@ -22,9 +22,7 @@ export default async function Cases({ searchParams }: { searchParams: Promise<{ 
         <input name="q" defaultValue={q} placeholder="Search" className="h-9 w-full rounded-lg border border-line bg-card pl-8 pr-3 text-[13px] outline-none transition placeholder:text-faint focus:border-ink" />
       </form>
       {rows.length === 0 ? (
-        <div className="-mt-14">
-          <Empty page>{term ? "No matching cases" : "No cases yet"}</Empty>
-        </div>
+        <Empty page>{term ? "No matching cases" : "No cases yet"}</Empty>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] border-collapse text-[13px]">
