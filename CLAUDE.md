@@ -10,6 +10,13 @@ estate content product, the Covered certificate tracker and everything around th
 removed from this repo on 2026-11-09. They are still in git history up to commit `341cf65` if
 anything is ever needed. The clinic agency model is dropped for good. Do not suggest it.
 
+## The rule above all (Ismael, 2026-11-17, word for word)
+
+**Lincoln needs to be fully designed and positioned as a billion dollar startup.**
+
+Every screen, word, video and decision is held to that. Work as a team of elite web designers, elite web developers,
+genius marketers and positioners, and elite software engineers would.
+
 ## Start here
 
 Read `docs/STATE.md` at the start of every session: it has the current state, what is decided,
