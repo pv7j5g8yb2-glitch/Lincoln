@@ -16,7 +16,7 @@ html,body{margin:0;width:__W__px;height:__H__px;overflow:hidden;background:#000;
 .logo{border-radius:26px;background:#fff;display:flex;align-items:center;justify-content:center}
 #mark{left:0;right:0;text-align:center;font-family:Lit;font-weight:600;color:#fff;letter-spacing:-0.02em}
 </style></head><body>
-<div id="intro" class="abs" style="inset:0;display:flex;align-items:center;justify-content:center"><div id="iword" class="line" style="position:static;font-size:__INTRO__px;letter-spacing:-0.035em"></div></div>
+<div id="intro" class="abs" style="inset:0;display:flex;align-items:center;justify-content:center"><div id="iword" class="line" style="position:static;font-size:__INTRO__px;letter-spacing:-0.035em">Lincoln</div></div>
 <div id="cap" class="abs line"></div>
 <div id="mont" class="abs" style="inset:0;display:flex;align-items:center;justify-content:center"><div id="mline" class="line" style="position:static;font-size:__MONT__px;max-width:88%"></div></div>
 
@@ -24,7 +24,7 @@ html,body{margin:0;width:__W__px;height:__H__px;overflow:hidden;background:#000;
   <div style="display:flex;align-items:center;gap:16px"><div style="width:50px;height:50px;border-radius:50%;background:#efe9df;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;color:#6b5a3e">RH</div>
   <div><div style="font-size:20px;font-weight:600">Dr. Réka Halász</div><div style="font-size:15.5px;color:#8a877f">to Maria Alvarez</div></div><div style="margin-left:auto;font-size:15.5px;color:#8a877f">9:41 AM</div></div>
   <div style="font-size:25px;font-weight:600;margin-top:24px;letter-spacing:-0.01em">Documents for my O-1</div>
-  <div style="font-family:Lit;font-size:19px;line-height:1.62;color:#4a4842;margin-top:10px">Dear Maria, as promised, here is everything I could find, in one PDF, plus the salary survey HR sent me.</div>
+  <div style="font-family:Lit;font-size:19px;line-height:1.62;color:#4a4842;margin-top:10px">Hi Maria. Here is everything I could find in one PDF plus the salary survey from HR.</div>
   <div style="display:inline-flex;align-items:center;gap:12px;margin-top:22px;padding:11px 17px;border-radius:12px;background:#f4f2ed;font-size:16.5px"><span style="color:#b4432c;font-weight:700;font-size:11px">PDF</span><span style="font-weight:500">Halasz documents.pdf</span><span style="color:#8a877f">52 pages</span></div>
 </div>
 <div id="work" class="abs card" style="padding:24px 28px 12px;box-sizing:border-box">
@@ -43,16 +43,14 @@ html,body{margin:0;width:__W__px;height:__H__px;overflow:hidden;background:#000;
   <div style="display:flex;align-items:center;gap:14px"><div style="width:44px;height:44px;border-radius:50%;background:#e4ebe6;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px;color:#3e5a4a">MH</div>
   <div><div style="font-size:18.5px;font-weight:600">Mariam Haddad</div><div style="font-size:14.5px;color:#8a877f">to Maria Alvarez</div></div><div style="margin-left:auto;font-size:14.5px;color:#8a877f">Yesterday</div></div>
   <div style="font-size:22px;font-weight:600;margin-top:20px">Documents for my N-400</div>
-  <div style="font-family:Lit;font-size:17.5px;line-height:1.65;color:#4a4842;margin-top:9px">Hi Maria, attached are my green card, both passports and my tax returns for the last three years. Let me know if anything else is needed.</div>
+  <div style="font-family:Lit;font-size:17.5px;line-height:1.65;color:#4a4842;margin-top:9px">Hi Maria. Attached are my green card and passports plus my tax returns for the last three years. Let me know if anything else is needed.</div>
   <div style="margin-top:16px;display:flex;gap:9px;flex-wrap:wrap">__ATT__</div>
 </div>
 <div id="opane" class="abs" style="overflow:hidden;border-radius:16px;background:#fff"><img id="oimg" style="position:absolute;left:0;top:0;width:380px;height:760px;transform-origin:0 0"><svg id="ocursor" class="cur" viewBox="0 0 17 21"><path d="M1.2 1.2v15.6l4-3.7 2.7 6.2 2.8-1.2-2.7-6.1 5.5-.3z" fill="#fff" stroke="#111" stroke-width="1.1" stroke-linejoin="round"/></svg></div>
 
 <div id="logos" class="abs" style="left:0;right:0;display:flex;justify-content:center;flex-wrap:wrap">__LOGOS__</div>
 <div id="outro" class="abs" style="inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-  <div class="line" style="position:static;font-size:__OUTRO__px;letter-spacing:-0.035em">Lincoln</div>
-  <div id="oline" style="font-family:Lit;font-size:__OLINE__px;color:#fff;margin-top:18px;letter-spacing:-0.01em">Your work done before you even ask.</div>
-  <div id="ourl" style="font-size:20px;color:#fff;opacity:.6;margin-top:42px;letter-spacing:0.02em">uselincoln.com</div>
+  <div class="line" style="position:static;font-size:__INTRO__px;letter-spacing:-0.035em">Lincoln</div>
 </div>
 <div id="mark" class="abs">Lincoln</div>
 <script>
@@ -73,8 +71,7 @@ set($("logos"),{top:L.logoY+"px",gap:L.gap+"px",padding:TALL?"0 70px":"0"});
 [...$("logos").children].forEach(x=>{x.style.width=x.style.height=L.logo+"px";x.firstChild.style.width=x.firstChild.style.height=(L.logo*.46)+"px";});
 set($("ask"),{width:L.ask+"px",left:(W-L.ask)/2+"px",top:(H/2-60)+"px"});
 const words=(s)=>s.split(" ").map(w=>'<span class="w"><i'+(/^\d+$/.test(w)?' data-n="'+w+'"':"")+'>'+w+' </i></span>').join("");
-$("iword").innerHTML=[..."Lincoln"].map(c=>'<span class="w"><i>'+c+'</i></span>').join("");
-const STEPS=["Read all 52 pages","Opened the case: Dr. Réka Halász, O-1A","Found 11 open issues","Mapped the evidence to 8 criteria","Drafted the reply to Réka","Drafted a request to the ISCSB"];
+const STEPS=["Read all 52 pages","Opened the case for Dr. Réka Halász","Found 11 open issues","Mapped the evidence to 8 criteria","Drafted the reply to Réka","Drafted a request to the ISCSB"];
 $("steps").innerHTML=STEPS.map(s=>'<div class="row"><div class="ic"><div class="spin"></div><div class="tick"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 6.2l2.3 2.3 4.7-4.9" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div><span>'+s+'</span></div>').join("");
 
 // The app section: the real frames play from A, one per film frame.
@@ -84,17 +81,17 @@ const CAPS=[[3.4,6.7,"Your client just sent 52 pages."],[6.9,10.4,"Lincoln has a
  [A+0.3,at("review")-0.15,"Your morning starts with the work already done."],
  [at("review")+0.1,at("review_click")+0.25,"Lincoln writes the reply. You approve it."],
  [at("review_click")+0.4,at("side_click")+0.1,"Sent from your own inbox."],
- [at("overview")+0.1,at("docs_click")+0.1,"Lincoln flags every risk, with the page it came from."],
- [at("docs")+0.05,at("ev_click")+0.1,"Every document, read, sorted and checked."],
- [at("ev")+0.05,at("drafts_click")+0.1,"Your evidence, matched to each criterion."],
+ [at("overview")+0.1,at("docs_click")+0.1,"Lincoln flags every risk with the page it came from."],
+ [at("docs")+0.05,at("ev_click")+0.1,"Every document read and checked."],
+ [at("ev")+0.05,at("drafts_click")+0.1,"Your evidence matched to each criterion."],
  [at("drafts")+0.05,AEND-0.2,"Every fact in your letter links back to its source."]];
 const M0=AEND+0.5;
-const MONT=["Forms filled in.","Translations prepared.","RFE responses drafted.","Filing packets assembled.","Deadlines on your calendar.","Requests from Teams, handled."].map((s,k)=>[M0+k*1.15,s]);
+const MONT=["Forms filled in.","Translations prepared.","RFE responses drafted.","Filing packets assembled.","Deadlines on your calendar.","Teams requests handled."].map((s,k)=>[M0+k*1.15,s]);
 const MEND=M0+MONT.length*1.15;
 const ASK0=MEND+0.2, ASKQ="Which cases have a deadline this month?";
 const O0=ASK0+3.6, OEND=O0+0.9+OSEQ.length/FPS+0.4;
-const T0=OEND+0.3, U0=T0+4.6, END=U0+6;
-CAPS.push([ASK0,ASK0+3.3,"And when you need something, just ask."],[O0,OEND,"Lincoln is right there in Outlook, too."],[T0,T0+4.4,"Lincoln works with the tools you already use."]);
+const T0=OEND+0.3, U0=T0+4.6, END=U0+4;
+CAPS.push([ASK0,ASK0+3.3,"Need something? Just ask."],[O0,OEND,"Lincoln is right there in Outlook too."],[T0,T0+4.4,"Lincoln works with the tools you already use."]);
 window.END=END;
 
 // Camera over the real frames: [frame, centre x, centre y, zoom]; it moves only while the cursor is still.
@@ -114,7 +111,7 @@ async function render(t){
   // Lines
   const ci=CAPS.findIndex(([a,b])=>t>=a&&t<b);if(ci!==capNow){capNow=ci;$("cap").innerHTML=ci<0?"":words(CAPS[ci][2]);}
   if(ci>=0)rise($("cap"),t,CAPS[ci][0],CAPS[ci][1],0.055);
-  rise($("iword"),t,0.35,3.3,0.07);
+  set($("intro"),{opacity:e4(seg(t,0.3,1.5))*(1-eio(seg(t,2.8,3.3)))});
   set($("mark"),{opacity:seg(t,3.5,4.3)*(1-seg(t,U0-0.6,U0))});
   // The client's file, and Lincoln working it
   const mi=e4(seg(t,3.6,4.6)),mo=eio(seg(t,9.8,10.5)),wi=e4(seg(t,6.9,7.8));
@@ -150,8 +147,7 @@ async function render(t){
   // The tools
   [...$("logos").children].forEach((x,k)=>{const i=e4(seg(t,T0+0.4+k*0.06,T0+1.1+k*0.06)),o=eio(seg(t,T0+4,T0+4.5));x.style.opacity=i*(1-o);x.style.transform="translateY("+((1-i)*30)+"px)";});
   // The close
-  const ui=e4(seg(t,U0,U0+1.2)),ul=e4(seg(t,U0+1,U0+2)),uu=eo(seg(t,U0+1.8,U0+2.6));
-  set($("outro"),{opacity:ui});set($("oline"),{opacity:ul,transform:"translateY("+((1-ul)*12)+"px)"});set($("ourl"),{opacity:0.6*uu});
+  set($("outro"),{opacity:e4(seg(t,U0,U0+1.2))});
 }
 window.render=render;
 </script></body></html>
