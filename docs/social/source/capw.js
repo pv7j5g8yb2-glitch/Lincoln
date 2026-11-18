@@ -11,7 +11,7 @@ const fs = require("fs");
   const cdp = await o.newCDPSession(q); await cdp.send("Animation.enable"); await cdp.send("Animation.setPlaybackRate", { playbackRate: 0.1 });
   fs.rmSync("wframes", { recursive: true, force: true }); fs.mkdirSync("wframes");
   let i = 0, last = null, m = [300, 650]; const seq = [];
-  const snap = async () => { const f = `${String(i++).padStart(5, "0")}.jpg`; await q.screenshot({ path: `wframes/${f}`, type: "jpeg", quality: 90 }); last = f; seq.push([f, m[0], m[1]]); };
+  const snap = async () => { const f = `${String(i++).padStart(5, "0")}.jpg`; await q.screenshot({ path: `wframes/${f}`, type: "jpeg", quality: 96 }); last = f; seq.push([f, m[0], m[1]]); };
   const ease = (x) => -(Math.cos(Math.PI * x) - 1) / 2;
   await q.mouse.move(m[0], m[1]); await snap(); for (let k = 0; k < 60; k++) seq.push([last, m[0], m[1]]);
   const btn = q.getByRole("button", { name: /Insert/ }).first(); const bb = await btn.boundingBox();

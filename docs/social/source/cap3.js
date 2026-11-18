@@ -15,7 +15,7 @@ const B = "http://localhost:3105";
   await cdp.send("Animation.enable");
   let idx = 0, last = null, mouse = [1150, 720];
   const seq = [], marks = {};
-  const snap = async () => { const f = `${String(idx++).padStart(5, "0")}.jpg`; await p.screenshot({ path: `frames/${f}`, type: "jpeg", quality: 88 }); last = f; seq.push([f, Math.round(mouse[0] * 10) / 10, Math.round(mouse[1] * 10) / 10]); };
+  const snap = async () => { const f = `${String(idx++).padStart(5, "0")}.jpg`; await p.screenshot({ path: `frames/${f}`, type: "jpeg", quality: 96 }); last = f; seq.push([f, Math.round(mouse[0] * 10) / 10, Math.round(mouse[1] * 10) / 10]); };
   const hold = (n) => { for (let i = 0; i < n; i++) seq.push([last, mouse[0], mouse[1]]); };
   const ease = (x) => -(Math.cos(Math.PI * x) - 1) / 2;
   const move = async (to, n) => {
@@ -37,8 +37,15 @@ const B = "http://localhost:3105";
   await p.route("**/approvals**", async (route) => { if (route.request().method() === "POST") await new Promise((r) => setTimeout(r, 7000)); await route.continue(); });
   mark("review_click"); await p.mouse.down(); for (let i = 0; i < 6; i++) await snap(); await p.mouse.up();
   for (let i = 0; i < 90; i++) { await snap(); if (await p.getByText("Sent!").count()) break; }
-  await snap(); hold(70);
-  for (let i = 0; i < 40; i++) await snap();
+  mark("sent_on"); await snap(); hold(64);
+  // Then the sent item leaves, its row folds away and the next item comes in; record until that has settled.
+  const first = await p.locator("[data-item] h2").first().textContent();
+  for (let i = 0; i < 240; i++) {
+    await snap();
+    const done = await p.evaluate((t) => { const e = document.querySelector("[data-item]"); const h = e && e.querySelector("h2"); return !!h && h.textContent !== t && !e.classList.contains("item-out") && e.getAnimations({ subtree: true }).filter((a) => a.playState === "running" && !(a.effect && a.effect.target && a.effect.target.className && String(a.effect.target.className).includes("animate-spin"))).length === 0; }, first);
+    if (done) break;
+  }
+  for (let i = 0; i < 4; i++) await snap();
   await p.unroute("**/approvals**");
   mark("sent"); hold(64);
   mark("side_move"); await move([92, 351], 70); hold(12);
@@ -71,7 +78,7 @@ const B = "http://localhost:3105";
   const ocdp = await o.newCDPSession(q); await ocdp.send("Animation.enable"); await ocdp.send("Animation.setPlaybackRate", { playbackRate: 0.1 });
   fs.rmSync("oframes", { recursive: true, force: true }); fs.mkdirSync("oframes");
   let oi = 0, ol = null, om = [330, 700]; const oseq = [];
-  const osnap = async () => { const f = `${String(oi++).padStart(5, "0")}.jpg`; await q.screenshot({ path: `oframes/${f}`, type: "jpeg", quality: 90 }); ol = f; oseq.push([f, om[0], om[1]]); };
+  const osnap = async () => { const f = `${String(oi++).padStart(5, "0")}.jpg`; await q.screenshot({ path: `oframes/${f}`, type: "jpeg", quality: 96 }); ol = f; oseq.push([f, om[0], om[1]]); };
   await q.mouse.move(om[0], om[1]); await osnap(); for (let i = 0; i < 70; i++) oseq.push([ol, om[0], om[1]]);
   const ob = await q.getByRole("button", { name: "Approve" }).boundingBox();
   const to = [ob.x + ob.width * 0.45, ob.y + ob.height / 2], from = [...om];
