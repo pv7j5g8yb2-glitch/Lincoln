@@ -165,24 +165,22 @@ function ApproveCard({ on }: { on: boolean }) {
   );
 }
 
-const STEPS: { title: string; line: string; photo: string; pos?: string; dim?: number; Card: (p: { on: boolean }) => ReactNode }[] = [
+const STEPS: { title: string; line: string; photo?: string; pos?: string; dim?: number; Card: (p: { on: boolean }) => ReactNode }[] = [
   { title: "Reads your mail.", line: "A client writes in. The case is open before anyone sees the email.", photo: "/landing/concrete.jpg", Card: MailCard },
   { title: "Reads your files.", line: "Conflicts, gaps and bars, each with the page it came from.", photo: "/landing/marble.jpg", Card: ReadCard },
   { title: "Drafts your letters.", line: "Support letters and RFE responses, cited to the evidence.", photo: "/landing/letters.jpg", dim: 0.55, Card: LetterCard },
-  { title: "Asks for approval.", line: "Nothing is filed or sent without an attorney's approval.", photo: "/landing/columns.jpg", pos: "50% 50%", Card: ApproveCard },
+  { title: "Asks for approval.", line: "Nothing is filed or sent without an attorney's approval.", Card: ApproveCard },
 ];
 
 /** The film plays when it comes into view and pauses when it leaves. No sound, no controls. */
+/** The film plays all the time, silent and looping; a click or tap anywhere on it pauses it and plays it again. */
 function Film() {
   const ref = useRef<HTMLVideoElement>(null);
-  useEffect(() => {
-    const v = ref.current; if (!v) return;
-    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) void v.play().catch(() => undefined); else v.pause(); }, { threshold: 0.35 });
-    io.observe(v); return () => io.disconnect();
-  }, []);
+  useEffect(() => { const v = ref.current; if (v) { v.muted = true; void v.play().catch(() => undefined); } }, []);
+  const toggle = () => { const v = ref.current; if (!v) return; if (v.paused) void v.play().catch(() => undefined); else v.pause(); };
   return (
     <In>
-      <video ref={ref} poster="/landing/lincoln-film.jpg" muted loop playsInline preload="metadata" aria-label="Lincoln, from a client's email to the approved reply" className="aspect-video w-full rounded-[20px] bg-[#151513] object-cover shadow-[0_40px_100px_-40px_rgba(22,22,20,0.55)]">
+      <video ref={ref} onClick={toggle} poster="/landing/lincoln-film.jpg" autoPlay muted loop playsInline disablePictureInPicture disableRemotePlayback preload="auto" aria-label="Lincoln, from a client's email to the approved reply" className="aspect-video w-full cursor-pointer rounded-[20px] bg-[#151513] object-cover shadow-[0_40px_100px_-40px_rgba(22,22,20,0.55)]">
         <source src="/landing/lincoln-film.webm" type="video/webm" />
         <source src="/landing/lincoln-film.mp4" type="video/mp4" />
       </video>
@@ -314,7 +312,7 @@ function Steps() {
           </div>
           {/* The frame: photographs crossfade, the work on them changes with the step. */}
           <div className="relative h-[min(56vh,520px)] overflow-hidden rounded-[20px] bg-[#e4e1db] md:h-[min(74vh,640px)]">
-            {STEPS.map((s, i) => (
+            {STEPS.map((s, i) => s.photo && (
               // eslint-disable-next-line @next/next/no-img-element
               <img key={s.photo} src={s.photo} alt="" className="absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-[900ms] ease-out" style={{ objectPosition: s.pos ?? "50% 50%", filter: s.dim ? `brightness(${s.dim})` : undefined, opacity: i === at ? 1 : 0, transform: `scale(${i === at ? 1.02 + p * 0.04 : 1.1})` }} />
             ))}
@@ -417,7 +415,7 @@ export default function Landing() {
         </div>
         <div ref={hero} className="hero-photo relative h-[440px] overflow-hidden rounded-[20px] bg-[#e4e1db] md:h-[560px] lg:h-[620px]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/landing/court.jpg" alt="" fetchPriority="high" className="hero-photo-img absolute inset-x-0 -top-[6%] h-[112%] w-full object-cover" style={{ objectPosition: "30% 50%", translate: `0 ${(0.5 - hp) * 8}%` }} />
+          <img src="/landing/columns.jpg" alt="" fetchPriority="high" className="hero-photo-img absolute inset-x-0 -top-[6%] h-[112%] w-full object-cover" style={{ objectPosition: "30% 50%", translate: `0 ${(0.5 - hp) * 8}%` }} />
         </div>
       </section>
 
