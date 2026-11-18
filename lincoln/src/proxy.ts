@@ -19,6 +19,6 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // Pages only: scripts, styles, images, fonts and the API pass straight through.
-  matcher: ["/((?!_next/|api/|.*\\.(?:png|jpg|jpeg|svg|ico|webp|gif|js|css|txt|xml|webmanifest|woff2?|json)$).*)"],
+  // Pages only: scripts, styles, images, fonts, video, sound and the API pass straight through.
+  matcher: ["/((?!_next/|api/|.*\\.(?:png|jpg|jpeg|svg|ico|webp|gif|js|css|txt|xml|webmanifest|woff2?|json|mp4|webm|mp3|m4a)$).*)"],
 };

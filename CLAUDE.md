@@ -152,6 +152,8 @@ Stand in model tests cost nothing and need no approval.
 smallest real model check first (Haiku, a short file, a few cents, a few minutes) to catch what breaks. If a test
 breaks or runs past about 30 minutes, stop and tell him, rather than fixing and rerunning in silence.
 
+**Test the public site as uselincoln.com (2026-11-18).** `src/proxy.ts` sends every path on uselincoln.com that is not a page or a listed file type to app.uselincoln.com. A new kind of file on the landing page (video, sound) must be added to its matcher, and checks of the landing page run with the header `x-forwarded-host: uselincoln.com`, or they miss this: the film failed on the live site for this reason while every local test passed.
+
 **Never push a failing build (2026-11-13).** Check the real exit status of the type check and `npm run
 build` before every push to the session branch; Render deploys from it. A grep for "Compiled" is not a check.
 
