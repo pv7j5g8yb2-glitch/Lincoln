@@ -7,16 +7,16 @@ by frame; `docs/social/source/` has the capture and the film, to remake it when 
 
 ## LinkedIn (company page)
 
-Your client sends 52 pages. Before you open the email Lincoln has read every one and opened the case. Lincoln flags the
-risks with the page each came from and matches the evidence to each criterion. Then Lincoln writes the reply.
+Lincoln connects to the tools your firm already uses. A new client writes in and Lincoln opens the case. Nobody had to
+ask.
 
-You approve it. It goes out from your own inbox.
+By morning the reply is drafted and the evidence is mapped. Every fact in the letter cites its page. You make the call.
 
 Lincoln for US immigration firms.
 uselincoln.com
 
 ## Instagram
 
-Your work done before you even ask.
+By morning the work is waiting for you.
 
 Lincoln for US immigration firms. uselincoln.com
