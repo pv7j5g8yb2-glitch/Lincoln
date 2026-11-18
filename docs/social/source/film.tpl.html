@@ -16,6 +16,7 @@ html,body{margin:0;width:__W__px;height:__H__px;overflow:hidden;background:#000;
 .logo{border-radius:26px;background:#fff;display:flex;align-items:center;justify-content:center}
 #mark{left:0;right:0;text-align:center;font-family:Lit;font-weight:600;color:#fff;letter-spacing:-0.02em}
 </style></head><body>
+<div id="intro0" class="abs" style="inset:0;display:flex;align-items:center;justify-content:center;opacity:0"><div class="line" style="position:static;font-size:__INTRO__px;letter-spacing:-0.035em">Introducing</div></div>
 <div id="intro" class="abs" style="inset:0;display:flex;align-items:center;justify-content:center"><div id="iword" class="line" style="position:static;font-size:__INTRO__px;letter-spacing:-0.035em">Lincoln</div></div>
 <div id="cap" class="abs line"></div>
 <div id="mont" class="abs" style="inset:0;display:flex;align-items:center;justify-content:center"><div id="mline" class="line" style="position:static;font-size:__MONT__px;max-width:88%"></div></div>
@@ -114,14 +115,16 @@ const MONT=["Forms filled.","Translations prepared.","RFE responses drafted.","F
 const MEND=M0+MONT.length*1.15;
 const ASK0=-100, ASKQ="";
 const T0=3.5, U0=MEND+0.3, END=U0+4;
-CAPS.push([O0,WEND,"Word and Outlook add-ins to save time."]);
-window.END=END;
+CAPS.push([O0,WEND,"Outlook and Word add-ins."]);
+// "Introducing" plays first on its own, then the whole film runs exactly as before, OFF seconds later.
+const OFF=3.0;
+window.END=END+OFF;
 
 // Camera over the real frames: [frame, centre x, centre y, zoom]; it moves only while the cursor is still.
 const f=(k,d=0)=>MK[k]+d;
 const CAM=[[0,720,450,1],[f("home",60),720,450,1],[f("home",92),860,500,1.12],
  [f("review",14),860,500,1.12],[f("review",64),990,420,1.42],[f("review",120),990,420,1.42],[f("review",176),990,610,1.42],[f("review",178),990,610,1.42],[f("review_move",-4),820,590,1.12],
- [f("review_click",20),820,590,1.12],[f("sent",-14),720,450,1],[f("overview",10),720,450,1],[f("overview",70),620,480,1.24],
+ [f("review_click",4),820,590,1.12],[f("review_click",44),740,700,1.55],[f("review_click",128),740,700,1.55],[f("sent",12),720,450,1],[f("overview",10),720,450,1],[f("overview",70),620,480,1.24],
  [f("docs",4),620,480,1.24],[f("docs",50),760,540,1.24],[f("ev",4),760,540,1.24],[f("drafts",6),760,540,1.24],[f("drafts",40),740,460,1.12],
  [f("fact_move",-2),740,460,1.12],[f("hover",-40),740,470,1.34],[f("end"),720,500,1.48]];
 function cam(fr){let i=0;while(i<CAM.length-1&&CAM[i+1][0]<=fr)i++;const a=CAM[i],b=CAM[Math.min(i+1,CAM.length-1)];const k=b[0]>a[0]?eio((fr-a[0])/(b[0]-a[0])):0;
@@ -130,6 +133,10 @@ function cam(fr){let i=0;while(i<CAM.length-1&&CAM[i+1][0]<=fr)i++;const a=CAM[i
 function rise(el,t,a,b,step){[...el.children].forEach((s,k)=>{const n=e4(seg(t,a+k*step,a+k*step+0.8)),o=eio(seg(t,b-0.4,b));const i=s.firstChild;i.style.transform="translateY("+((1-n)*108-o*108)+"%)";if(i.dataset.n)i.textContent=Math.round(Number(i.dataset.n)*eo(seg(t,a+k*step,a+k*step+1.2)))+" ";});}
 let capNow=-1,montNow=-1,lastSrc="",lastO="",lastW="";
 async function render(t){
+  set($("intro0"),{opacity:e4(seg(t,0.3,1.5))*(1-eio(seg(t,2.3,2.8)))});
+  await render0(Math.max(0,t-OFF));
+}
+async function render0(t){
   const fr=Math.round((t-A)*FPS);
   // Lines
   const ci=CAPS.findIndex(([a,b])=>t>=a&&t<b);if(ci!==capNow){capNow=ci;$("cap").innerHTML=ci<0?"":words(CAPS[ci][2]);}

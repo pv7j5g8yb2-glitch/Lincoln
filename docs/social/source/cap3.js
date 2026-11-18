@@ -32,8 +32,14 @@ const B = "http://localhost:3105";
   mark("home_move"); await move([622, 342], 62); await snap(); hold(16);
   mark("home_click"); await click(44);
   mark("review"); hold(190);
-  mark("review_move"); await move([712, 832], 64); hold(14);
-  mark("review_click"); await click(56);
+  mark("review_move"); await move([682, 832], 64); hold(14);
+  // The send takes a moment, so the turning circle in the button is seen; then "Sent!", then the next item.
+  await p.route("**/approvals**", async (route) => { if (route.request().method() === "POST") await new Promise((r) => setTimeout(r, 7000)); await route.continue(); });
+  mark("review_click"); await p.mouse.down(); for (let i = 0; i < 6; i++) await snap(); await p.mouse.up();
+  for (let i = 0; i < 90; i++) { await snap(); if (await p.getByText("Sent!").count()) break; }
+  await snap(); hold(70);
+  for (let i = 0; i < 40; i++) await snap();
+  await p.unroute("**/approvals**");
   mark("sent"); hold(64);
   mark("side_move"); await move([92, 351], 70); hold(12);
   mark("side_click"); await click(44);
