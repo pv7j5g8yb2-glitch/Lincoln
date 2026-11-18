@@ -1,23 +1,22 @@
 # Lincoln launch film: posts
 
 Files: `docs/social/lincoln-film-16x9.mp4` (LinkedIn; the site uses a lighter copy) and `docs/social/lincoln-film-4x5.mp4`
-(4:5, Instagram feed and LinkedIn feed). No sound: add a quiet track from Instagram's own music library when posting.
-Every name, firm and case in the film is made up (the sample workspace).
+(Instagram feed and LinkedIn feed). 60 fps, no sound: add a quiet track from Instagram's own music library when posting.
+Every name, firm and case in the film is made up (the sample workspace). The app scenes are the real app, driven frame
+by frame; `docs/social/source/` has the capture and the film, to remake it when the interface changes.
 
 ## LinkedIn (company page)
 
-Lincoln reads every client email the moment it lands, opens the case, reads every page and drafts the work: the
-reply, the letters, the evidence map. Every fact is cited to the page it came from.
+Your client sends 52 pages. By the time you open the email, Lincoln has read every one, opened the case, flagged the
+risks with the page each came from, matched the evidence to each criterion and written the reply.
 
-The attorney makes one decision.
+You approve it. It goes out from your own inbox.
 
-Lincoln, the AI platform for US immigration firms.
+Lincoln, for US immigration firms.
 uselincoln.com
 
 ## Instagram
 
 Your work done before you even ask.
 
-Lincoln, the AI platform for US immigration firms. uselincoln.com
-
-#immigrationlaw #legaltech #lawfirm
+Lincoln, for US immigration firms. uselincoln.com
