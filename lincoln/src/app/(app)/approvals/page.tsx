@@ -5,7 +5,7 @@ import ApprovalPanel from "@/components/ApprovalPanel";
 import { Empty, PageHead } from "@/components/ui";
 import { requireUser } from "@/lib/session";
 import { FILING_APPROVALS, isLawyerRole } from "@/lib/roles";
-import { approvalById, decidedApprovals, messageById, pendingApprovals } from "@/lib/queries";
+import { approvalById, messageById, pendingApprovals } from "@/lib/queries";
 import { ago, inDays } from "@/lib/format";
 import { packetPlan } from "@/lib/packet";
 
@@ -13,7 +13,6 @@ export default async function Review({ searchParams }: { searchParams: Promise<{
   const { user, firm, viewer } = await requireUser();
   const { id } = await searchParams;
   const pending = pendingApprovals(firm.id, viewer);
-  const decided = decidedApprovals(firm.id, viewer);
   const picked = id ? approvalById(firm.id, id, viewer) : undefined;
   const sel = picked && picked.status === "pending" ? picked : pending[0];
   const payload = sel ? (sel.kind === "packet" ? packetPlan(firm.id, sel.case_id) : JSON.parse(sel.payload)) : null;
@@ -56,21 +55,7 @@ export default async function Review({ searchParams }: { searchParams: Promise<{
           )}
         </div>
       )}
-      {decided.length > 0 && (
-        <details className="mt-12">
-          <summary className="cursor-pointer text-[13px] text-muted transition hover:text-ink">Decided · {decided.length}</summary>
-          <ul className="mt-2 border-t border-line">
-            {decided.map((a) => (
-              <li key={a.id} className="flex items-center gap-4 border-b border-line py-2.5 text-[13px]">
-                <span className="w-[72px] shrink-0 text-muted">{a.status === "approved" ? "Approved" : "Returned"}</span>
-                <span className="min-w-0 flex-1 truncate">{a.title}</span>
-                <span className="hidden truncate text-muted sm:block">{a.client}</span>
-                <span className="shrink-0 text-[12px] text-faint">{a.decided_at ? ago(a.decided_at) : ""}</span>
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
+
     </div>
   );
 }

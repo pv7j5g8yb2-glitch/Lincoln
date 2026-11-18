@@ -283,7 +283,7 @@ export async function acceptAllRecommended(approvalId: string) {
   revalidatePath("/", "layout");
 }
 
-export async function decideApproval(approvalId: string, decision: "approved" | "rejected") {
+export async function decideApproval(approvalId: string, decision: "approved" | "rejected", quiet = false) {
   const { user, firm, viewer } = await requireUser();
   const d = db();
   const a = approvalById(firm.id, approvalId, viewer);
@@ -356,6 +356,8 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
   if (decision === "approved" && !firm.demo && ["draft_review", "translation", "packet", "redline"].includes(a.kind)) void import("./workspace").then((w) => w.saveApproved(F, a.case_id, a.kind, payload)).catch(() => undefined);
   if (decision === "rejected" && a.kind === "message" && payload.messageId && !firm.demo) void import("./maildrafts").then((m) => m.dropDraft(F, payload.messageId)).catch(() => undefined);
   const sent = a.kind === "message" && decision === "approved" && !firm.demo && payload.messageId ? await deliver(F, payload.messageId, { id: user.id, name: user.name }) : null;
+  // An approved email says "Sent!" on its own button, so the page refreshes once that has been seen.
+  if (quiet) return { ok: true as const, sent: sent !== false };
   await toast(decision === "rejected" ? "Returned" : a.kind === "message" ? (sent === false ? "Approved, not sent" : "Sent") : "Approved");
   revalidatePath("/", "layout");
 }

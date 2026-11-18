@@ -90,7 +90,7 @@ No status chatter or helper text (Ismael, 2026-11-14: "a serious software platfo
 like this"): no "checked just now", no confirmations like "Connected. New mail is read...", no subtitles
 under names, no checklists of what works, no descriptions under rows or buttons. Errors are a few words.
 Notices after an action (Ismael, 2026-11-14) drop from the top as a soft rectangle, one or two words ("Saved",
-"Sent", "Deleted"), can be pushed up, and leave by themselves after 5 seconds. Drafted emails show Approve and Edit;
+"Sent", "Deleted"), can be pushed up, and leave by themselves after 5 seconds. Approve and send is the exception (Ismael, 2026-11-18): the button itself turns (a white circle in the black button), then reads "Sent!", then the next item comes up. Drafted emails show Approve and Edit;
 Edit opens the text, then Save.
 
 **Notifications (Ismael, 2026-11-15).** Lincoln asks with the system's own permission box only, never a box of its own first (it comes up on the first tap, as phones require), works on iPhone, Android and computers, and sends them only when the person has
