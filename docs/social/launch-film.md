@@ -1,7 +1,7 @@
 # Lincoln launch film: posts
 
 Files: `docs/social/lincoln-film-16x9.mp4` (LinkedIn; the site uses a lighter copy) and `docs/social/lincoln-film-4x5.mp4`
-(Instagram feed and LinkedIn feed). 60 fps, no sound: add a quiet track from Instagram's own music library when posting.
+(Instagram feed and LinkedIn feed). 60 fps, with an original orchestral track made for it on ElevenLabs (`source/music.mp3`). The site plays it silently.
 Every name, firm and case in the film is made up (the sample workspace). The app scenes are the real app, driven frame
 by frame; `docs/social/source/` has the capture and the film, to remake it when the interface changes.
 
