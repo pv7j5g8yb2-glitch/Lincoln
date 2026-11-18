@@ -15,6 +15,6 @@
   .hero-line { font-size: min(calc((100vw - 64px) / 25), 19px); }
 }
 @media (min-width: 1024px) {
-  .hero-title { font-size: calc((min(100vw, 1200px) - 588px) / 9.6); }
-  .hero-line { font-size: min(calc((min(100vw, 1200px) - 588px) / 25), 20px); }
+  .hero-title { font-size: min(calc((min(100vw, 1200px) - 64px) / 9.6), 76px); }
+  .hero-line { font-size: min(calc((min(100vw, 1200px) - 64px) / 25), 20px); }
 }

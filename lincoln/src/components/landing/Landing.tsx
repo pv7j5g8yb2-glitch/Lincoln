@@ -169,23 +169,40 @@ const STEPS: { title: string; line: string; photo?: string; pos?: string; dim?: 
   { title: "Reads your mail.", line: "A client writes in. The case is open before anyone sees the email.", photo: "/landing/concrete.jpg", Card: MailCard },
   { title: "Reads your files.", line: "Conflicts, gaps and bars, each with the page it came from.", photo: "/landing/marble.jpg", Card: ReadCard },
   { title: "Drafts your letters.", line: "Support letters and RFE responses, cited to the evidence.", photo: "/landing/letters.jpg", dim: 0.55, Card: LetterCard },
-  { title: "Asks for approval.", line: "Nothing is filed or sent without an attorney's approval.", Card: ApproveCard },
+  { title: "Asks for approval.", line: "Nothing is filed or sent without an attorney's approval.", photo: "/landing/court.jpg", pos: "30% 50%", Card: ApproveCard },
 ];
 
 /** The film plays when it comes into view and pauses when it leaves. No sound, no controls. */
-/** The film plays all the time, silent and looping; a click or tap anywhere on it pauses it and plays it again. */
+/** The film plays from the moment the page opens, silent and looping, and keeps playing. Only a click or tap on it
+ *  pauses it, and the next one plays it again. The tag is written straight into the page so phones see muted,
+ *  autoplay and playsinline before any script runs (iPhones only autoplay a video marked muted in the page itself);
+ *  if a phone still holds it back (Low Power Mode, some in app browsers), the first touch anywhere starts it. */
+const FILM = `<video autoplay muted loop playsinline webkit-playsinline preload="auto" poster="/landing/lincoln-film.jpg" disablepictureinpicture disableremoteplayback aria-label="Lincoln, from a client's email to the approved reply" class="block aspect-video w-full cursor-pointer bg-[#151513] object-cover"><source src="/landing/lincoln-film.mp4" type="video/mp4"><source src="/landing/lincoln-film.webm" type="video/webm"></video>`;
 function Film() {
-  const ref = useRef<HTMLVideoElement>(null);
-  useEffect(() => { const v = ref.current; if (v) { v.muted = true; void v.play().catch(() => undefined); } }, []);
-  const toggle = () => { const v = ref.current; if (!v) return; if (v.paused) void v.play().catch(() => undefined); else v.pause(); };
-  return (
-    <In>
-      <video ref={ref} onClick={toggle} poster="/landing/lincoln-film.jpg" autoPlay muted loop playsInline disablePictureInPicture disableRemotePlayback preload="auto" aria-label="Lincoln, from a client's email to the approved reply" className="aspect-video w-full cursor-pointer rounded-[20px] bg-[#151513] object-cover shadow-[0_40px_100px_-40px_rgba(22,22,20,0.55)]">
-        <source src="/landing/lincoln-film.webm" type="video/webm" />
-        <source src="/landing/lincoln-film.mp4" type="video/mp4" />
-      </video>
-    </In>
-  );
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const v = box.current?.querySelector("video");
+    if (!v) return;
+    let held = false;
+    const go = () => { if (!held && v.paused) { v.muted = true; void v.play().catch(() => undefined); } };
+    const toggle = () => { if (v.paused) { held = false; v.muted = true; void v.play().catch(() => undefined); } else { held = true; v.pause(); } };
+    const touch = (e: Event) => { if (e.target !== v) go(); };
+    const gestures = ["touchend", "click", "keydown", "scroll"] as const;
+    v.addEventListener("click", toggle);
+    v.addEventListener("canplay", go);
+    document.addEventListener("visibilitychange", go);
+    window.addEventListener("pageshow", go);
+    gestures.forEach((g) => window.addEventListener(g, touch, { passive: true, capture: true }));
+    const watch = window.setInterval(go, 1500);
+    go();
+    return () => {
+      v.removeEventListener("click", toggle); v.removeEventListener("canplay", go);
+      document.removeEventListener("visibilitychange", go); window.removeEventListener("pageshow", go);
+      gestures.forEach((g) => window.removeEventListener(g, touch, { capture: true }));
+      window.clearInterval(watch);
+    };
+  }, []);
+  return <div ref={box} className="hero-photo overflow-hidden rounded-[20px] bg-[#151513] shadow-[0_40px_100px_-40px_rgba(22,22,20,0.55)]" dangerouslySetInnerHTML={{ __html: FILM }} />;
 }
 
 /** The four steps as one scene: the page holds still while the scroll moves through them. On the left the steps
@@ -383,7 +400,6 @@ function Footer() {
 
 export default function Landing() {
   const [scrolled, setScrolled] = useState(false);
-  const [hero, hp] = useProgress<HTMLDivElement>();
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 8);
     on(); window.addEventListener("scroll", on, { passive: true }); return () => window.removeEventListener("scroll", on);
@@ -400,27 +416,21 @@ export default function Landing() {
         </nav>
       </header>
 
-      {/* Hero: the words, and the courthouse rising into its frame. */}
-      <section className="mx-auto grid max-w-[1200px] items-center gap-9 px-4 pb-20 pt-11 md:px-8 md:pb-28 md:pt-14 lg:grid-cols-[1fr_460px] lg:gap-16">
-        <div>
+      {/* Hero: the words, and the film rising into its frame beneath them. */}
+      <section className="mx-auto max-w-[1200px] px-4 pb-20 pt-11 md:px-8 md:pb-28 md:pt-16">
+        <div className="mx-auto max-w-[880px] text-center">
           <p className={`hero-in ${eyebrow}`}>For immigration law firms</p>
-          <h1 className="hero-in hero-title mt-4 font-serif font-semibold leading-[1.04] tracking-[-0.035em] [animation-delay:120ms]">Your work done before you even ask.</h1>
-          <p className="hero-in hero-line mt-6 leading-[1.6] text-[#6b6862] [animation-delay:240ms]">
+          <h1 className="hero-in hero-title mx-auto mt-4 font-serif font-semibold leading-[1.04] tracking-[-0.035em] [animation-delay:120ms]">Your work done before you even ask.</h1>
+          <p className="hero-in hero-line mx-auto mt-6 max-w-[34em] leading-[1.6] text-[#6b6862] [animation-delay:240ms]">
             Lincoln works autonomously for you, no need for prompts. Once it&apos;s done you review and approve.
           </p>
-          <div className="hero-in mt-9 flex items-center gap-2 [animation-delay:360ms]">
+          <div className="hero-in mt-9 flex items-center justify-center gap-2 [animation-delay:360ms]">
             <Link href="/start" className="rounded-[10px] bg-[#161614] px-6 py-3.5 font-sans text-[15.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
             <a href="#work" className="rounded-[10px] px-5 py-3.5 font-sans text-[15.5px] font-medium transition hover:bg-[#f0eee9]">How it works</a>
           </div>
         </div>
-        <div ref={hero} className="hero-photo relative h-[440px] overflow-hidden rounded-[20px] bg-[#e4e1db] md:h-[560px] lg:h-[620px]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/landing/columns.jpg" alt="" fetchPriority="high" className="hero-photo-img absolute inset-x-0 -top-[6%] h-[112%] w-full object-cover" style={{ objectPosition: "30% 50%", translate: `0 ${(0.5 - hp) * 8}%` }} />
-        </div>
+        <div className="mt-12 md:mt-16"><Film /></div>
       </section>
-
-      {/* The film: Lincoln, from the client's email to the approved reply, in one minute. */}
-      <section className="mx-auto max-w-[1200px] px-4 pb-20 md:px-8 md:pb-28"><Film /></section>
 
       {/* The statement, lit word by word. */}
       <section className="border-t border-[#ebe9e4]">
