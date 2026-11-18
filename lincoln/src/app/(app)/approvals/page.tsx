@@ -27,7 +27,7 @@ export default async function Review({ searchParams }: { searchParams: Promise<{
         <div className="grid gap-10 lg:grid-cols-[260px_1fr]">
           <ul className={clsx("flex-col border-t border-line", id ? "hidden lg:flex" : "flex")}>
             {pending.map((a) => (
-              <li key={a.id} className="border-b border-line">
+              <li key={a.id} data-row={a.id} className="border-b border-line">
                 <Link href={`/approvals?id=${a.id}`} scroll={false} className={clsx("relative block py-3 pl-3 pr-2 transition hover:bg-side", sel?.id === a.id && "bg-side")}>
                   {sel?.id === a.id && <span className="absolute inset-y-2 left-0 w-[2px] rounded-full bg-ink" />}
                   <div className="text-[13.5px] font-medium leading-snug">{a.title}</div>
@@ -37,7 +37,7 @@ export default async function Review({ searchParams }: { searchParams: Promise<{
             ))}
           </ul>
           {sel && (
-            <div className={clsx("min-w-0 max-w-[760px]", !id && "hidden lg:block")}>
+            <div key={sel.id} data-item className={clsx("item-in min-w-0 max-w-[760px]", !id && "hidden lg:block")}>
               <Link href="/approvals" className="mb-4 inline-flex items-center gap-1 text-[12.5px] text-muted lg:hidden"><ChevronLeft size={14} /> Review</Link>
               <p className="mb-1 text-[12.5px] text-muted"><Link href={`/cases/${sel.case_id}`} className="hover:text-ink hover:underline">{sel.client}</Link> · {sel.type_code} · {ago(sel.created_at)}</p>
               <h2 className="serif mb-2 text-[22px] font-medium leading-snug">{sel.title}</h2>

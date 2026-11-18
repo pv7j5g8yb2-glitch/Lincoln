@@ -24,7 +24,8 @@ http.createServer((req, res) => {
       if (req.method === "GET") return d ? send(200, d) : send(404, { error: { message: "not found" } });
     }
     if (p === `${G}/me/mailFolders/sentitems/messages`) return send(200, { value: st.sent });
-    if (p === `${G}/me/sendMail`) { st.sendMail++; return send(202, {}); }
+    if (p === "/__failsend") { st.failSend = u.searchParams.get("on") === "1"; return send(200, {}); }
+    if (p === `${G}/me/sendMail`) { if (st.failSend) return send(503, { error: { code: "ServiceUnavailable", message: "busy" } }); st.sendMail++; st.mails = (st.mails || []).concat([j()]); return send(202, {}); }
     if (p.startsWith(`${G}/me/drive/root:/Lincoln/`)) { st.files.push(decodeURIComponent(p.split("/Lincoln/")[1].split(":")[0])); return send(201, { webUrl: "https://firm-my.sharepoint.com/Lincoln/file", parentReference: { id: "fold1" } }); }
     if (p === `${G}/me/drive/items/fold1`) return send(200, { webUrl: "https://firm-my.sharepoint.com/Lincoln/Clients/folder" });
     if (p === `${G}/teams/team1/channels/chan1/messages` && req.method === "GET") return send(200, { value: st.teamsMsgs });

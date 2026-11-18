@@ -23,7 +23,7 @@ import { draftForCase, processCase } from "./intake";
 import { fileKind } from "./pdf";
 import { breached } from "./pwned";
 import { llmConfigured } from "./llm";
-import { deliver, takeInstruction } from "./agent";
+import { approveAndSend, takeInstruction } from "./agent";
 import { randomBytes } from "node:crypto";
 import { newSecret as newTotpSecret } from "./totp";
 import { seal as sealSecret } from "./secret";
@@ -293,6 +293,14 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
   const F = firm.id;
   const payload = JSON.parse(a.payload);
 
+  // A real email is approved only once it has actually gone out; if not, it stays in Review with the reason.
+  if (a.kind === "message" && decision === "approved" && !firm.demo) {
+    const r = await approveAndSend(F, approvalId, { id: user.id, name: user.name });
+    if (!quiet) await toast(r.sent ? "Sent" : "Not sent");
+    revalidatePath("/", "layout");
+    return r.sent ? { ok: true as const, sent: true } : { error: `Not sent. ${r.reason}.` };
+  }
+
   const tx = d.transaction(() => {
     // A returned email is never sent.
     if (a.kind === "message" && payload.messageId) {
@@ -355,10 +363,9 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
   // Approved work goes into the client's folder in the firm's Drive or OneDrive; a returned email's draft is removed.
   if (decision === "approved" && !firm.demo && ["draft_review", "translation", "packet", "redline"].includes(a.kind)) void import("./workspace").then((w) => w.saveApproved(F, a.case_id, a.kind, payload)).catch(() => undefined);
   if (decision === "rejected" && a.kind === "message" && payload.messageId && !firm.demo) void import("./maildrafts").then((m) => m.dropDraft(F, payload.messageId)).catch(() => undefined);
-  const sent = a.kind === "message" && decision === "approved" && !firm.demo && payload.messageId ? await deliver(F, payload.messageId, { id: user.id, name: user.name }) : null;
   // An approved email says "Sent!" on its own button, so the page refreshes once that has been seen.
-  if (quiet) return { ok: true as const, sent: sent !== false };
-  await toast(decision === "rejected" ? "Returned" : a.kind === "message" ? (sent === false ? "Approved, not sent" : "Sent") : "Approved");
+  if (quiet) return { ok: true as const, sent: true };
+  await toast(decision === "rejected" ? "Returned" : a.kind === "message" ? "Sent" : "Approved");
   revalidatePath("/", "layout");
 }
 

@@ -12,7 +12,7 @@ const MOCK = process.env.INTEGRATIONS_MOCK_URL!;
 const { db } = await import("../../src/lib/db.ts");
 const { seal } = await import("../../src/lib/secret.ts");
 const { syncDrafts, dropDraft } = await import("../../src/lib/maildrafts.ts");
-const { deliver, tick } = await import("../../src/lib/agent.ts");
+const { deliver, tick, approveAndSend } = await import("../../src/lib/agent.ts");
 const { saveToFolder, folderOf } = await import("../../src/lib/workspace.ts");
 
 const d = db();
@@ -88,6 +88,32 @@ ok((d.prepare("SELECT COUNT(*) AS n FROM activity WHERE case_id = ? AND text LIK
 await tick();
 ok((await state()).replies.filter((r: any) => /^On it\./.test(r.html)).length === 1, "a request is acted on once");
 ok(!s.replies.some((r: any) => r.to.startsWith("post")), "Lincoln's own posts are never taken as requests");
+
+// 5. Approve and send: the item closes only once the email has really gone, and never goes twice.
+const fresh = (id: string, email: string | null) => {
+  d.prepare("INSERT INTO messages (id, firm_id, case_id, direction, party, party_role, subject, body, at, state, email, mailbox_id) VALUES (?, ?, ?, 'out', 'Lucia Okafor-Reyes', 'Client', 'Next steps', 'Dear Lucia,\n\nThe petition is ready.\n\nKind regards,\nMaya', ?, 'needs_approval', ?, ?)").run(id, F, C, now(), email, MB);
+  d.prepare("INSERT INTO approvals (id, firm_id, case_id, kind, title, brief, payload, status, assignee_id, created_at) VALUES (?, ?, ?, 'message', 'Email to Lucia', 'x', ?, 'pending', ?, ?)").run(`a_${id}`, F, C, JSON.stringify({ messageId: id }), U, now());
+};
+const apr = (id: string) => (d.prepare("SELECT status FROM approvals WHERE id = ?").get(`a_${id}`) as { status: string }).status;
+const before = (await state()).sendMail;
+fresh("m6", "lucia@example.com");
+const r6 = await approveAndSend(F, "a_m6", { id: U, name: "Maya Okafor" });
+s = await state();
+ok(r6.sent && s.sendMail === before + 1 && JSON.stringify(s.mails.at(-1)).includes("lucia@example.com"), "Approve and send sends the email to the client from the firm's mailbox");
+ok(apr("m6") === "approved" && row("m6").state === "sent", "and only then is it approved and marked sent");
+fresh("m7", "lucia@example.com");
+const [x1, x2] = await Promise.all([approveAndSend(F, "a_m7", { id: U, name: "Maya Okafor" }), approveAndSend(F, "a_m7", { id: U, name: "Maya Okafor" })]);
+ok([x1, x2].filter((r) => r.sent).length === 1 && (await state()).sendMail === before + 2, "two clicks at once send it once");
+await hit("/__failsend?on=1");
+fresh("m8", "lucia@example.com");
+const r8 = await approveAndSend(F, "a_m8", { id: U, name: "Maya Okafor" });
+ok(!r8.sent && apr("m8") === "pending" && row("m8").state === "needs_approval", "if the mailbox refuses it, it stays in Review, unsent");
+await hit("/__failsend?on=0");
+const r8b = await approveAndSend(F, "a_m8", { id: U, name: "Maya Okafor" });
+ok(r8b.sent && apr("m8") === "approved" && (await state()).sendMail === before + 3, "and sends when approved again");
+fresh("m9", null);
+const r9 = await approveAndSend(F, "a_m9", { id: U, name: "Maya Okafor" });
+ok(!r9.sent && r9.reason === "No recipient address" && apr("m9") === "pending", "an email with no address is not marked sent and says why");
 
 fs.rmSync(process.env.DATA_DIR!, { recursive: true, force: true });
 console.log(fails ? `\n${fails} failed` : "\nAll passed");

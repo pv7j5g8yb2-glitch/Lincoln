@@ -154,7 +154,7 @@ function Reply({ api, draft, onDone }: { api: (b: Record<string, unknown>) => Pr
     setBusy(true);
     try {
       const r = await api({ op, messageId: draft.id, subject: draft.subject, body: text });
-      if (op === "save") { setEditing(false); notify("Saved"); } else { notify(r.sent === false ? "Approved, not sent" : "Sent"); onDone(); }
+      if (op === "save") { setEditing(false); notify("Saved"); } else if (r.sent === false) notify(r.error ?? "Not sent"); else { notify("Sent"); onDone(); }
     } catch (e) { notify(e instanceof Error ? e.message : "Failed"); } finally { setBusy(false); }
   };
   return (

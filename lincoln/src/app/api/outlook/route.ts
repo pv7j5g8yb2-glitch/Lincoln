@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { db, uid } from "@/lib/db";
+import { db } from "@/lib/db";
 import { limited } from "@/lib/auth";
 import { clientIp } from "@/lib/audit";
-import { deliver, takeInstruction } from "@/lib/agent";
+import { approveAndSend, takeInstruction } from "@/lib/agent";
 import { caseById } from "@/lib/queries";
 import { viewer } from "@/lib/session";
 import { endWord, redeemWordCode, wordUser } from "@/lib/word";
@@ -60,12 +60,8 @@ export async function POST(req: Request) {
     }
     if (body.op === "save") return NextResponse.json({ ok: true });
     if (s.firm.demo) return no("Not available in the sample workspace", 400);
-    d.prepare("UPDATE approvals SET status = 'approved', decided_at = ?, decided_by = ? WHERE id = ?").run(now(), s.user.id, a.id);
-    d.prepare("INSERT INTO activity (id, firm_id, case_id, at, actor, kind, text, minutes) VALUES (?, ?, ?, ?, ?, 'decide', ?, 0)").run(uid(), F, m.case_id, now(), s.user.name, `Approved in Outlook: ${a.title}.`);
-    const left = d.prepare("SELECT COUNT(*) AS n FROM approvals WHERE firm_id = ? AND case_id = ? AND status = 'pending'").get(F, m.case_id) as { n: number };
-    d.prepare("UPDATE cases SET state = ? WHERE firm_id = ? AND id = ?").run(left.n ? "needs_you" : "moving", F, m.case_id);
-    const sent = await deliver(F, m.id, { id: s.user.id, name: s.user.name });
-    return NextResponse.json({ sent });
+    const r = await approveAndSend(F, a.id, { id: s.user.id, name: s.user.name }, "Outlook");
+    return r.sent ? NextResponse.json({ sent: true }) : NextResponse.json({ sent: false, error: `Not sent. ${r.reason}.` });
   }
 
   // An email that belongs to no case yet: Lincoln takes it like any instruction and opens or finds the case.

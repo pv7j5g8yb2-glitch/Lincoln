@@ -302,6 +302,36 @@ export async function deliver(firmId: string, messageId: string, approver: { id:
   }
 }
 
+/** Approve and send. The item is claimed first, so a double click or a second device never sends it twice; the email
+ *  goes out from the firm's mailbox, and only then is the item approved. If sending fails it stays in Review, unsent,
+ *  with the reason, and can be sent again. */
+export async function approveAndSend(firmId: string, approvalId: string, approver: { id: string; name: string }, via = ""): Promise<{ sent: true } | { sent: false; reason: string }> {
+  const d = db();
+  const a = d.prepare("SELECT id, case_id, title, kind, status, payload FROM approvals WHERE firm_id = ? AND id = ?").get(firmId, approvalId) as { id: string; case_id: string; title: string; kind: string; status: string; payload: string } | undefined;
+  if (!a || a.kind !== "message") return { sent: false, reason: "Not found" };
+  const claim = d.prepare("UPDATE approvals SET status = 'sending', decided_at = ? WHERE firm_id = ? AND id = ? AND status = 'pending'").run(now(), firmId, approvalId);
+  if (!claim.changes) return { sent: false, reason: a.status === "sending" ? "Already sending" : "Already sent" };
+  const messageId = (JSON.parse(a.payload) as { messageId?: string }).messageId ?? "";
+  let ok = false;
+  try { ok = await deliver(firmId, messageId, approver); } catch { ok = false; }
+  if (!ok) {
+    const m = d.prepare("SELECT email, lincoln_note FROM messages WHERE firm_id = ? AND id = ?").get(firmId, messageId) as { email: string | null; lincoln_note: string | null } | undefined;
+    const reason = !m ? "Email not found" : !m.email ? "No recipient address" : /no mailbox connected/.test(m.lincoln_note ?? "") ? "No mailbox connected" : "The mailbox did not accept it";
+    d.transaction(() => {
+      d.prepare("UPDATE messages SET state = 'needs_approval', lincoln_note = ? WHERE firm_id = ? AND id = ? AND state = 'approved'").run(`Not sent: ${reason.toLowerCase()}.`, firmId, messageId);
+      d.prepare("UPDATE approvals SET status = 'pending', decided_at = NULL WHERE id = ?").run(approvalId);
+    })();
+    return { sent: false, reason };
+  }
+  d.transaction(() => {
+    d.prepare("UPDATE approvals SET status = 'approved', decided_at = ?, decided_by = ? WHERE id = ?").run(now(), approver.id, approvalId);
+    d.prepare("INSERT INTO activity (id, firm_id, case_id, at, actor, kind, text, minutes) VALUES (?, ?, ?, ?, ?, 'decide', ?, 0)").run(uid(), firmId, a.case_id, now(), approver.name, `Approved${via ? ` in ${via}` : ""}: ${a.title}.`);
+    const left = d.prepare("SELECT COUNT(*) AS n FROM approvals WHERE firm_id = ? AND case_id = ? AND status = 'pending'").get(firmId, a.case_id) as { n: number };
+    d.prepare("UPDATE cases SET state = ? WHERE firm_id = ? AND id = ?").run(left.n > 0 ? "needs_you" : "moving", firmId, a.case_id);
+  })();
+  return { sent: true };
+}
+
 /** Routine work on a timer: new mail, reminders for missing documents, approaching deadlines. */
 export async function tick() {
   const d = db();
@@ -309,6 +339,14 @@ export async function tick() {
   for (const c of d.prepare("SELECT * FROM mailboxes").all() as Connection[]) {
     try { await ensurePush(c); } catch (e) { d.prepare("UPDATE mailboxes SET last_error = ? WHERE id = ?").run(`Instant delivery: ${e instanceof Error ? e.message : "error"}`.slice(0, 200), c.id); }
     await checkMailbox(c);
+  }
+
+  // A send cut off by a restart: the item goes back to Review, or is closed if the email did go out.
+  for (const x of d.prepare("SELECT id, payload FROM approvals WHERE status = 'sending' AND decided_at < ?").all(new Date(Date.now() - 10 * 60_000).toISOString()) as { id: string; payload: string }[]) {
+    const mid = (JSON.parse(x.payload) as { messageId?: string }).messageId ?? "";
+    const went = d.prepare("SELECT 1 FROM messages WHERE id = ? AND state = 'sent'").get(mid);
+    d.prepare("UPDATE approvals SET status = ? WHERE id = ?").run(went ? "approved" : "pending", x.id);
+    if (!went) d.prepare("UPDATE messages SET state = 'needs_approval' WHERE id = ? AND state = 'approved'").run(mid);
   }
 
   // Housekeeping: expired sign ins, challenges and reset links are removed.

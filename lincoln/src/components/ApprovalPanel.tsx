@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { Check, FileText } from "lucide-react";
@@ -29,6 +29,7 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message, canA
   const [editing, setEditing] = useState(false);
   const [sending, setSending] = useState<"" | "busy" | "sent">("");
   const router = useRouter();
+  const btn = useRef<HTMLButtonElement>(null);
   const save = () =>
     start(async () => {
       setError(null);
@@ -65,7 +66,13 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message, canA
       if (r && "error" in r) { setError(r.error ?? "Not sent."); setSending(""); return; }
       if (r && "sent" in r && !r.sent) { setError("Approved, not sent."); setSending(""); return; }
       setSending("sent");
-      await new Promise((ok) => setTimeout(ok, 1400));
+      await new Promise((ok) => setTimeout(ok, 1100));
+      // The sent item leaves (its row folds away in the list), then the next one comes in.
+      const item = btn.current?.closest<HTMLElement>("[data-item]");
+      const row = document.querySelector<HTMLElement>(`[data-row="${id}"]`);
+      if (row) { row.style.height = `${row.offsetHeight}px`; row.style.overflow = "hidden"; void row.offsetHeight; row.classList.add("row-out"); }
+      item?.classList.add("item-out");
+      await Promise.all([item, row].flatMap((el) => (el ? el.getAnimations().map((a) => a.finished.catch(() => {})) : [])));
       start(() => router.refresh());
     } catch (e) {
       setError(e instanceof Error ? e.message : "The action failed. Nothing was changed.");
@@ -150,7 +157,7 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message, canA
             </>
           ) : (
             <>
-              <button disabled={pending || sending !== ""} onClick={send} className="relative flex h-9 items-center justify-center gap-1.5 rounded-lg bg-ink px-4 text-[13px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98]">
+              <button ref={btn} disabled={pending || sending !== ""} onClick={send} className="relative flex h-9 items-center justify-center gap-1.5 rounded-lg bg-ink px-4 text-[13px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98]">
                 <span className={clsx("flex items-center gap-1.5", sending && "invisible")}><Check size={14} /> Approve and send</span>
                 {sending && <span className="absolute inset-0 flex items-center justify-center">{sending === "busy" ? <span aria-label="Sending" className="h-4 w-4 animate-spin rounded-full border-2 border-canvas/25 border-t-canvas" /> : "Sent!"}</span>}
               </button>

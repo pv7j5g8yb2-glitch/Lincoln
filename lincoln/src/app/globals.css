@@ -139,6 +139,11 @@ select:focus-visible {
 .drawer-in { animation: drawer-in 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 .fade-in { animation: fade-in 0.2s ease-out; }
+/* Review: a sent item leaves and the next one comes in. */
+@keyframes item-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.item-in { animation: item-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.item-out { opacity: 0; transform: translateY(-6px); transition: opacity 0.32s ease, transform 0.32s ease; }
+.row-out { height: 0 !important; opacity: 0; border-color: transparent; transition: height 0.36s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease; }
 @keyframes msg-in {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
