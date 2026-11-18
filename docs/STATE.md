@@ -23,7 +23,11 @@ pages, Word export, a scripted "demo world". See `lincoln/README.md` for what wo
 * The Microsoft and Google cards always look the same: no warnings for services a personal account lacks; the Teams
   channel box shows only when the account has Teams.
 
-**Landing video (Ismael, 2026-11-16): on hold until the interface is locked.** It replaces the "All your cases in one
+**Landing film (made 2026-11-18, Ismael asked for it now).** 64 seconds, no sound, on the landing page right after the
+hero (WebM with an MP4 fallback for Safari), plus a 16:9 and a 4:5 copy with post captions in `docs/social/`.
+Real Lincoln screens from the sample firm, captured by clicking the real buttons in a browser, so every click in the
+film lands on the button it presses. If the interface changes, rerun `docs/social/source/` (capture, then render).
+Earlier note: **Landing video (Ismael, 2026-11-16): on hold until the interface is locked.** It replaces the "All your cases in one
 place" section and goes right after the hero, before the grey sentence that lights up. It shows Lincoln's whole value
 with real screens, is calm and easy to follow (not long, not rushed), and uses a realistic made up firm with real
 looking names, cases and profile photos (never "Test"). Captions follow the marketing words rule in CLAUDE.md.

@@ -49,7 +49,6 @@ function usePinned<T extends HTMLElement>() {
 
 const clamp = (x: number) => Math.min(1, Math.max(0, x));
 const ease = (x: number) => 1 - Math.pow(1 - clamp(x), 3);
-const easeInOut = (x: number) => { const t = clamp(x); return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
 
 /** A sentence in grey that turns to ink word by word as it is scrolled past. */
 function Reveal({ text, className = "" }: { text: string; className?: string }) {
@@ -173,54 +172,21 @@ const STEPS: { title: string; line: string; photo: string; pos?: string; dim?: n
   { title: "Asks for approval.", line: "Nothing is filed or sent without an attorney's approval.", photo: "/landing/columns.jpg", pos: "50% 50%", Card: ApproveCard },
 ];
 
-/* The 3D piece: the case papers lie spread across a desk, then fold into one filing packet as the page scrolls. */
-const SHEETS = ["Cover letter", "Form G-1145", "Form I-130", "Form I-130A", "Form I-864", "Form I-485", "Form I-765", "14 exhibits"];
-
-function Sheet({ title, i }: { title: string; i: number }) {
+/** The film plays when it comes into view and pauses when it leaves. No sound, no controls. */
+function Film() {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const v = ref.current; if (!v) return;
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) void v.play().catch(() => undefined); else v.pause(); }, { threshold: 0.35 });
+    io.observe(v); return () => io.disconnect();
+  }, []);
   return (
-    <div className="relative h-full w-full rounded-[6px] bg-white p-4 font-sans shadow-[0_1px_0_rgba(0,0,0,0.04),0_18px_30px_-18px_rgba(0,0,0,0.45)] ring-1 ring-black/[0.06]">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#161614]">{title}</p>
-      <div className="mt-3 flex flex-col gap-[7px]">
-        {Array.from({ length: 11 }, (_, k) => <div key={k} className="h-[5px] rounded-full bg-[#ece9e3]" style={{ width: `${55 + ((k * 37 + i * 19) % 40)}%` }} />)}
-      </div>
-      {i === 0 && <p className="absolute bottom-4 left-4 font-serif text-[11px] italic text-[#6b6862]">Sofia Reyes</p>}
-    </div>
-  );
-}
-
-function Packet() {
-  const [ref, p] = usePinned<HTMLDivElement>();
-  const [narrow, setNarrow] = useState(false);
-  useEffect(() => { const on = () => setNarrow(window.innerWidth < 768); on(); window.addEventListener("resize", on); return () => window.removeEventListener("resize", on); }, []);
-  const W = 200, H = 260, gx = narrow ? 150 : 250, gy = narrow ? 200 : 300;
-  return (
-    <div ref={ref} className="relative h-[300vh]">
-      <div className="sticky top-0 flex h-dvh flex-col justify-center overflow-hidden">
-        <div className="mx-auto grid w-full max-w-[1200px] items-center gap-4 px-4 md:grid-cols-[minmax(0,420px)_1fr] md:gap-10 md:px-8">
-          <div className="relative z-10 pt-6 md:pt-0">
-            <h2 className="font-serif text-[34px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[56px]">All your cases in one place.</h2>
-            <p className="mt-4 max-w-[30ch] text-[17.5px] leading-[1.6] text-[#6b6862] md:text-[19px]">Forms, letters and exhibits in filing order, ready for review.</p>
-          </div>
-          <div className="relative flex h-[56vh] items-center justify-center [perspective:2000px] md:h-[78vh]">
-            <div className="relative [transform-style:preserve-3d]" style={{ width: W, height: H, transform: `scale(${narrow ? 0.8 : 1.15}) rotateX(${54 - 6 * easeInOut(p)}deg) rotateZ(${-34 + 6 * easeInOut(p)}deg)` }}>
-              {SHEETS.map((t, i) => {
-                // Spread on the desk in a loose grid, each sheet gathered in turn into one neat stack.
-                const k = easeInOut((p - 0.05 - i * 0.06) / 0.34);
-                const col = i % 4, row = Math.floor(i / 4);
-                const x = (col - 1.5) * gx * (1 - k), y = (row - 0.5) * gy * (1 - k);
-                const z = k * (SHEETS.length - i) * 7 + Math.sin(k * Math.PI) * 120;
-                const rot = (1 - k) * (((i * 53) % 13) - 6);
-                return (
-                  <div key={t} className="absolute inset-0 [transform-style:preserve-3d] motion-reduce:!transform-none" style={{ transform: `translate3d(${x}px,${y}px,${z}px) rotateZ(${rot}deg)` }}>
-                    <Sheet title={t} i={i} />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <In>
+      <video ref={ref} poster="/landing/lincoln-film.jpg" muted loop playsInline preload="metadata" aria-label="Lincoln, from a client's email to the approved reply" className="aspect-video w-full rounded-[20px] bg-[#151513] object-cover shadow-[0_40px_100px_-40px_rgba(22,22,20,0.55)]">
+        <source src="/landing/lincoln-film.webm" type="video/webm" />
+        <source src="/landing/lincoln-film.mp4" type="video/mp4" />
+      </video>
+    </In>
   );
 }
 
@@ -455,6 +421,9 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* The film: Lincoln, from the client's email to the approved reply, in one minute. */}
+      <section className="mx-auto max-w-[1200px] px-4 pb-20 md:px-8 md:pb-28"><Film /></section>
+
       {/* The statement, lit word by word. */}
       <section className="border-t border-[#ebe9e4]">
         <div className="mx-auto max-w-[1200px] px-4 py-24 md:px-8 md:py-44">
@@ -464,8 +433,6 @@ export default function Landing() {
 
       {/* The work: one pinned scene that moves through the four steps as the page scrolls. */}
       <section id="work" className="border-t border-[#ebe9e4]"><Steps /></section>
-
-      <section className="border-t border-[#ebe9e4]"><Packet /></section>
 
       {/* Client files. */}
       <section className="border-t border-[#ebe9e4]">
