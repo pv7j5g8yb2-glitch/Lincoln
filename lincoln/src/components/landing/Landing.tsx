@@ -361,7 +361,7 @@ function Close() {
       <div className="absolute inset-0 bg-black/25" />
       <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-white">
         <In><h2 className="font-serif text-[48px] font-semibold leading-[1] tracking-[-0.035em] md:text-[88px]">Start your<br />first case.</h2></In>
-        <In delay={150}><Link href="/start" className="mt-7 inline-block rounded-[10px] bg-white px-6 py-3.5 font-sans text-[15.5px] font-medium text-[#161614] transition hover:bg-white/85 md:mt-8">Get started</Link></In>
+        <In delay={150}><Link href="/start" className="mt-7 inline-block rounded-[10px] bg-white px-6 py-3.5 font-sans text-[15.5px] font-medium text-[#161614] transition hover:bg-white/85 md:mt-8">Get In Touch</Link></In>
       </div>
     </div>
   );
@@ -410,8 +410,7 @@ export default function Landing() {
         <nav className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 md:px-8">
           <Link href="/" className="font-serif text-[26px] font-semibold tracking-[-0.02em] md:text-[28px]">Lincoln</Link>
           <div className="flex items-center gap-1">
-            <Link href="/signin" className="rounded-[9px] px-3 py-2 font-sans text-[14.5px] text-[#6b6862] transition hover:text-[#161614] md:px-4">Sign in</Link>
-            <Link href="/start" className="rounded-[9px] bg-[#161614] px-4 py-2 font-sans text-[14.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
+            <Link href="/start" className="rounded-[9px] bg-[#161614] px-4 py-2 font-sans text-[14.5px] font-medium text-white transition hover:opacity-85">Get In Touch</Link>
           </div>
         </nav>
       </header>
@@ -425,7 +424,7 @@ export default function Landing() {
             Lincoln works autonomously for you, no need for prompts. Once it&apos;s done you review and approve.
           </p>
           <div className="hero-in mt-9 flex items-center justify-center gap-2 [animation-delay:360ms]">
-            <Link href="/start" className="rounded-[10px] bg-[#161614] px-6 py-3.5 font-sans text-[15.5px] font-medium text-white transition hover:opacity-85">Get started</Link>
+            <Link href="/start" className="rounded-[10px] bg-[#161614] px-6 py-3.5 font-sans text-[15.5px] font-medium text-white transition hover:opacity-85">Get In Touch</Link>
             <a href="#work" className="rounded-[10px] px-5 py-3.5 font-sans text-[15.5px] font-medium transition hover:bg-[#f0eee9]">How it works</a>
           </div>
         </div>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { QUESTIONS } from "@/lib/enquiry";
 
-// The Get started page: a few questions about the firm. A person replies by email with a quote and next steps.
+// The Get In Touch page: a few questions about the firm. A person replies by email with a quote and next steps.
 // Same look as the landing page; American English.
 
 const field = "w-full rounded-xl bg-white px-4 py-3.5 text-[16px] ring-1 ring-[#e2dfd8] outline-none transition placeholder:text-[#b1ada5] focus:ring-2 focus:ring-[#161614]";
@@ -61,7 +61,7 @@ export default function StartForm() {
           </div>
         ) : (
           <>
-            <h1 className="hero-in font-serif text-[44px] font-semibold leading-[1.02] tracking-[-0.035em] md:text-[64px]">Get started</h1>
+            <h1 className="hero-in font-serif text-[44px] font-semibold leading-[1.02] tracking-[-0.035em] md:text-[64px]">Get In Touch</h1>
             <p className="hero-in mt-4 max-w-[38ch] font-serif text-[17.5px] leading-[1.6] text-[#6b6862] [animation-delay:100ms] md:text-[19px]">A few questions about your firm. We reply by email with a quote.</p>
 
             <form onSubmit={submit} className="hero-in mt-10 flex flex-col gap-8 [animation-delay:200ms]" noValidate>
