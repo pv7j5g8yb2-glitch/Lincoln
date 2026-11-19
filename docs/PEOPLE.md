@@ -74,3 +74,10 @@ Nobody can be hired until there is funding, and any contract goes through the co
 
 ## Customer success
 - Not a hire yet: Jim Melo's profile covers AE and customer success. Names seen: Joel Trinidad (NYC, legal tech customer success and adoption), Conrad A. (Chicago, customer success and renewals in legal tech).
+
+## Hiring plan if Lincoln raises about $1M (estimate, 2026-11-19)
+- Two hires, keep 18 months of runway. Cash figures are estimates, not quotes.
+- First seller: Jim Melo, remote, about $100k to $130k base plus commission and 0.5 to 1 percent equity (he is on 100 percent commission now, so a base is a real draw).
+- First engineer: someone who wants an early company, not a senior person at a well funded one. Realistic: Artyom Gulgulyan (open to work, Yerevan, far below US pay), Arnab Tarwani (Dublin), or Austin H. once there is traction. About $150k to $190k plus 1 to 2 percent in the US, less abroad.
+- Kenny Williams is for a bigger round with paying firms: he joined Eve only after its Series A.
+- What makes people say yes to a solo founder: paying firms, a known investor or YC (and YC's Work at a Startup board), a product they can try, meaningful equity, and choosing people already looking for an early role.
