@@ -11,8 +11,8 @@ Lines marked **YOU** need your own words: only you know them.
 - Where are you based? Dublin, Ireland
 - School or work: In secondary school in Dublin, building Lincoln outside school.
 
-## Project and why (498 of 500)
-Lincoln is an AI platform that proactively works US immigration cases. It acts only when a new task lands in the firm's email, ignoring the rest of the inbox, or when a client completes Lincoln's intake link. Then it reads every document, works the case to the end, and drafts the reply, USCIS forms, evidence map and support letter. The attorney only reviews and approves. Why: immigration firms lose most of their hours to paperwork that follows rules, and legal AI tools still wait for a prompt.
+## Project and why (503 of 500, Ismael's wording)
+Lincoln is an AI platform that proactively works US immigration cases. It acts when a new task lands in the user's email or when a client completes the user's intake link. It then reads every document attached, works on the case, drafts the reply, evidence map and support letter, and fills in the USCIS forms. The attorney only has to review and approve. Why? Immigration firms lose many of their hours on paperwork, while most legal AI tools need users to prompt, explain, and attach client documents.
 
 ## What problem are you solving? (354 of 500)
 An immigration case is weeks of paperwork: reading dozens of documents, chasing clients for missing ones, filling USCIS forms, mapping evidence to criteria, drafting letters and RFE responses. Paralegals do it by hand, so firms turn work away. The work arrives by email at all hours, and today's legal AI only helps when someone sits down and asks it to.
