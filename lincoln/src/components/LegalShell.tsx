@@ -8,11 +8,10 @@ export default function LegalShell({ title, intro, clauses }: { title: string; i
   return (
     <main className="min-h-dvh bg-canvas px-5 pb-20">
       <header className="mx-auto flex max-w-[720px] items-center justify-between py-6">
-        <Link href="/signin" className="wordmark text-[22px] leading-none">Lincoln</Link>
+        <Link href="/" className="wordmark text-[22px] leading-none">Lincoln</Link>
         <nav className="flex gap-5 text-[13px] text-muted">
           <Link href="/privacy" className="hover:text-ink">Privacy</Link>
           <Link href="/terms" className="hover:text-ink">Terms</Link>
-          <Link href="/signin" className="hover:text-ink">Sign in</Link>
         </nav>
       </header>
       <article className="mx-auto max-w-[720px] pt-8">
