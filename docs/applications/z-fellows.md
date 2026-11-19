@@ -20,8 +20,8 @@ An immigration case is weeks of paperwork: reading dozens of documents, chasing 
 ## What expertise do you have? (433 of 500)
 I built all of Lincoln myself in about a week, using Claude Code: Microsoft 365 and Google Workspace connections, Outlook and Word add-ins, an encrypted database, a USCIS form filler and the engine that works a case end to end. Before that I built Hopkins, an AI marketing app for real estate agents. Before building Lincoln I read what immigration lawyers say about legal AI in their own words, so it does what they actually want.
 
-## Competitors, and what you understand that they don't (438 of 500)
-Harvey and Legora are general legal AI: powerful, but they wait for prompts and uploads. Clio and Docketwise store the case but do none of the work. Eve does this for plaintiff firms; I found no one doing it for immigration firms. What I understand: a firm doesn't want another tool to operate. Its work arrives by email, so the product has to live in the inbox, work the whole case and come to the lawyer only for decisions.
+## Competitors, and what you understand that they don't (484 of 500)
+Harvey and Legora are general legal AI. In the 30 public threads I read, lawyers repeatedly call them wrappers that still wait for prompts and uploads. Clio and Docketwise store cases but do none of the work. Eve offers autonomous AI, but for plaintiff firms. No one I've found does it for immigration firms, and these competitors prove the demand is there. What I understood is that firms don't want another hot new AI tool to learn. That's why Lincoln does the boring work for them.
 
 ## What have you worked on in the past? (350 of 500)
 Hopkins: an AI app for real estate agents that read listing photos, wrote ads and posts, made carousels and reels, and connected to Meta and CRMs. Covered: a tracker for subcontractors' insurance certificates, which I dropped within days to focus on Lincoln. Then Lincoln. Each taught me the same thing: people don't want another tool to remember to use, they want the work done.
