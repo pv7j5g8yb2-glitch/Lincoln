@@ -59,7 +59,12 @@ Nobody can be hired until there is funding, and any contract goes through the co
 - Rafayel Arakelyan and Artyom Gulgulyan (Yerevan): both built production legal RAG on Lincoln's stack (TypeScript, Node, React, Postgres, Claude API). Artyom is open to work and can start in 1 to 2 weeks. Remote, lower cost.
 - Market rate seen: NYC founding product engineer at a seeded legal or compliance AI startup, $230k to $300k plus equity.
 
-- Eve colleagues seen beside his profile (headlines only, not reviewed): Wentao Feng (Member of Technical Staff, ex Meta), Jack Burns (engineering), Austin H. (Member of Technical Staff), Sriya M. (Lead Product Manager, acquired YC founder, ex LinkedIn and Stripe; a PM, not an early hire). Allen Deng (frontier AI systems, unrelated to Eve).
+- Eve colleagues (full profiles read 2026-11-19), in order of fit:
+  - Austin H. (Bay Area, linkedin.com/in/austinhwang): second choice. Harvard CS cum laude 2021. Commure Ambient AI 2024 to 2026: scaled AI clinical documentation to a $50M+ business at 60+ health systems (regulated, document heavy, accuracy critical, close to legal drafting). SAP 3 years (Node, Python, multi tenant services), co founded Congregate (Harvard Innovation Labs, 30,000 users). Eve since Feb 2026. Younger, so cheaper than Kenny.
+  - Allen Deng (Bay Area, linkedin.com/in/xuxind): Eve since Jun 2025 (voice AI quality, posts about PlaintiffBench and Eve's coding agent), Plaid 3.5 years, Facebook 2.75 years, CMU masters. Solid engineer, not a lead. His About is out of date (fintech).
+  - Wentao Feng (Mountain View, linkedin.com/in/whentao): Meta 5 years (React, React Native, GraphQL, Python), founding engineer at Potrero Labs (Jams, AI video) 2 years, Gather 11 months, Eve since Jan 2026. Strong full stack builder; no legal or eval depth shown.
+  - Jack Burns (SF, linkedin.com/in/jackdburns): Eve since Aug 2024, UpSmith 1.5 years, Opendoor and Open Listings 5 years (real estate tech). Stable, but the profile says nothing about what he built. Pass for now.
+  - Sriya M. (linkedin.com/in/sriyam): not an engineer. Co founder and CEO of Persana AI (YC W23, 15K+ users, acquired by Rox in 2026), ex LinkedIn PM, Lead PM AI at Eve since Jul 2026 building EveOS. Best use: adviser on YC, product and selling to firms, or head of product much later. Lists a contact email on her profile.
 
 ## Legal engineer (none found with immigration and AI together)
 - Luz Valdovinos (NYC): attorney; legal AI evaluation, playbooks and training; Harvey legal engineering certified.

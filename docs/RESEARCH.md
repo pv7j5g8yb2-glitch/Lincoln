@@ -1048,3 +1048,23 @@ Legora benchmarks 21 models on real legal tasks inside Legora (analyse and answe
 * Long tasks (closest to Lincoln working a whole case): Muse Wonder +16%, Fable 5.1 +12%, GPT-6.2 Astra +9%, Grok 4.7 +8%, Opus 5.5 +7%, Fable 5.2 +6%, Sonnet 5.5 +6%; GPT-6.1 Terra -24%, GPT-6 Luna -16%.
 * Cost per case: Opus 5.5 sits in the best value zone (about 20% below average cost, about +4% quality), cheaper per case than Sonnet 5.5 (about 60% above average cost, about +3%). Fable 5.1 and 5.2 cost about 300 to 400% above average.
 * What it means for Lincoln (uses Sonnet 5.5 for legal work, Haiku 5.5 for light work): Opus 5.5 may give slightly better quality at lower cost per case. Not proven for immigration work: Legora's tasks are general legal work in its own app. To be tested on Lincoln's own graded case suite before switching (costs credits, needs Ismael's approval).
+
+## Eve (plaintiff legal AI): the closest model for Lincoln in another practice area (from its staff's LinkedIn posts, 2026-11-19)
+All figures are Eve's own claims, read in posts by its staff; not checked elsewhere.
+* Positioning: "Eve 2.0: the first proactive AI workforce for plaintiff firms" (launched early 2026): Agents
+  (proactive case execution: reviewing records, drafting demands, engaging clients 24/7, "your team stays in
+  control at every key decision point"), Auditor (reviews every case every day, like a senior partner), Analyst
+  (firm wide questions). Later EveOS, "the AI first operating layer for the firm", with Atlas keeping every case
+  record current. This is Lincoln's thesis (autonomy, approval only at decisions) proven in plaintiff law.
+* Scale claims (CEO Jayanth Madheswaran, about Oct 2026): 350,000 people helped, more than $3.5B recovered by
+  firms using Eve. Earlier note above: $1B valuation, about 2,000 firms (Sept 2025).
+* Intake product (from engineer Kenny Williams): AI phone agent that answers the firm's line, qualifies callers,
+  hands off and signs the retainer on the call; live call coaching; integrations with RingCentral, Zoom,
+  Dialpad, 8x8, Clio Grow. Grew from zero to a multi million dollar line in under two years.
+* How they build: own benchmark "PlaintiffBench" (about 420 test suites) decides which model does what (they use
+  Claude Opus for hard long context work and Sonnet for lighter extraction, per a claude.com case study); an eval
+  platform for voice quality (calls reaching their goal rose from 81% to 90%); an always on internal coding
+  agent ("Wall-E"). Lesson for Lincoln: a graded benchmark of its own immigration cases, as already planned.
+* What it means: investors already know "Eve for plaintiff firms", so "Lincoln does for immigration firms what
+  Eve does for plaintiff firms" is an easy line to understand. Eve does no immigration work today; it is not a
+  competitor under the 80 percent rule, but could move in, so speed and immigration depth matter.
