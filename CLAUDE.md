@@ -154,6 +154,8 @@ breaks or runs past about 30 minutes, stop and tell him, rather than fixing and 
 
 **Test the public site as uselincoln.com (2026-11-18).** `src/proxy.ts` sends every path on uselincoln.com that is not a page or a listed file type to app.uselincoln.com. A new kind of file on the landing page (video, sound) must be added to its matcher, and checks of the landing page run with the header `x-forwarded-host: uselincoln.com`, or they miss this: the film failed on the live site for this reason while every local test passed.
 
+**No model bias (Ismael, 2026-11-19).** When choosing or comparing AI models for Lincoln, always weigh every provider (OpenAI, Google, Muse, Mistral, xAI, DeepSeek and others), never favour Anthropic because Claude is doing the work. Judge on quality for the task, cost per case, and data terms a law firm can accept (no training, zero retention, where data is processed). Decide by testing on Lincoln's own graded cases, not by public charts alone.
+
 **Never push a failing build (2026-11-13).** Check the real exit status of the type check and `npm run
 build` before every push to the session branch; Render deploys from it. A grep for "Compiled" is not a check.
 
