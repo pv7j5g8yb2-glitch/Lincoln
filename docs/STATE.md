@@ -387,6 +387,15 @@ from the repo the same day. History is in git up to commit `341cf65`.
   seats. For $100k profit at 75 percent margin, about 445 seats. Assumptions, not data.
 * Honest odds of the goal: low single digits to about ten percent. A guess.
 
+## Funding plan (Ismael, 2026-11-19)
+1. Apply to accelerators and fellowships now: Z Fellows (draft in docs/applications/z-fellows.md), Vercel X
+   (deadline 29 November), YC W27 (late application), Thiel Fellowship, PearX, and similar.
+2. Take their money for equity (usually $10k to $500k). Keep total dilution before the seed low.
+3. Spend it on what gets the first paying firms: the security minimum for real client files, the company and
+   contracts, model costs, and possibly Jim Melo.
+4. Get a handful of paying firms. This is the step everything else depends on.
+5. Raise a seed of $2M to $5M+, hire two top people (see docs/PEOPLE.md), then scale.
+
 ## Next
 * Sign in screens (2026-11-15): app.uselincoln.com callback addresses must be added in Google and Microsoft (done by
   Ismael or pending). Microsoft: the app is unverified (publisher domain is the onmicrosoft.com default), so people
