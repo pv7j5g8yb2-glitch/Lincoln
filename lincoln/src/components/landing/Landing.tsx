@@ -177,7 +177,7 @@ const STEPS: { title: string; line: string; photo?: string; pos?: string; dim?: 
  *  pauses it, and the next one plays it again. The tag is written straight into the page so phones see muted,
  *  autoplay and playsinline before any script runs (iPhones only autoplay a video marked muted in the page itself);
  *  if a phone still holds it back (Low Power Mode, some in app browsers), the first touch anywhere starts it. */
-const FILM = `<video autoplay muted loop playsinline webkit-playsinline preload="auto" poster="/landing/lincoln-film.jpg?v=3" disablepictureinpicture disableremoteplayback aria-label="Lincoln, from a client's email to the approved reply" class="block aspect-video w-full cursor-pointer bg-[#151513] object-cover"><source src="/landing/lincoln-film.mp4?v=3" type="video/mp4"><source src="/landing/lincoln-film.webm?v=3" type="video/webm"></video>`;
+const FILM = `<video autoplay muted loop playsinline webkit-playsinline preload="auto" poster="/landing/lincoln-film.jpg?v=4" disablepictureinpicture disableremoteplayback aria-label="Lincoln, from a client's email to the approved reply" class="block aspect-video w-full cursor-pointer bg-[#151513] object-cover"><source src="/landing/lincoln-film.mp4?v=4" type="video/mp4"><source src="/landing/lincoln-film.webm?v=4" type="video/webm"></video>`;
 function Film() {
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
