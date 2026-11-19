@@ -1041,3 +1041,10 @@ GDPR and the EU AI Act matter only if Lincoln sells outside the US.
 * Missing: zero data retention agreement, pentest, SOC 2 Type I, insurance, lawyer reviewed DPA and terms, single
   sign on. Order: ask for zero data retention now (free to ask); the paid items once the first firms pay or a grant
   comes in.
+
+## Legora BAR results, November 2026 (legora.com/bar/nov26, read from Legora's own LinkedIn post and video, 2026-11-19)
+Legora benchmarks 21 models on real legal tasks inside Legora (analyse and answer, extract, compare, draft, edit, review, summarise), scored against the 21 model average, with cost per case at list prices.
+* Overall: Muse Wonder first; GPT-6.2 Astra leads compare and review (+4% quality, cost 20% below average); GPT-6.2 Sol above average quality at 78% below average cost.
+* Long tasks (closest to Lincoln working a whole case): Muse Wonder +16%, Fable 5.1 +12%, GPT-6.2 Astra +9%, Grok 4.7 +8%, Opus 5.5 +7%, Fable 5.2 +6%, Sonnet 5.5 +6%; GPT-6.1 Terra -24%, GPT-6 Luna -16%.
+* Cost per case: Opus 5.5 sits in the best value zone (about 20% below average cost, about +4% quality), cheaper per case than Sonnet 5.5 (about 60% above average cost, about +3%). Fable 5.1 and 5.2 cost about 300 to 400% above average.
+* What it means for Lincoln (uses Sonnet 5.5 for legal work, Haiku 5.5 for light work): Opus 5.5 may give slightly better quality at lower cost per case. Not proven for immigration work: Legora's tasks are general legal work in its own app. To be tested on Lincoln's own graded case suite before switching (costs credits, needs Ismael's approval).
