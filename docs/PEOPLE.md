@@ -44,3 +44,21 @@ Nobody can be hired until there is funding, and any contract goes through the co
 - Feiran Chen: engineer, engineering manager and product manager at Instagram, Hudson River Trading, Kleiner Perkins
   fellow. First senior engineer candidate after a seed round (about $200k to $250k plus 1 to 2 percent equity).
 - Salary benchmarks seen: Alma mid market AE $180k to $220k; Ivo enterprise AE $250k to $300k (both with commission).
+
+## Founding engineer shortlist (from LinkedIn headlines only, 2026-11-19; open full profiles before judging)
+- Kenny Williams (San Mateo): product engineer at Eve (legal AI); founding engineer and tech lead on its AI intake product, which he says is now a multi million dollar line; agents and evals; 3x co founder. Closest to Lincoln's work.
+- Vikas Kumar (SF): founding engineer; says he built a legal AI from 0 to 6K users.
+- Alain A. (NYC): New York attorney and full stack engineer (TypeScript, SQL), legal AI and agentic systems. Lawyer and engineer in one.
+- Arnab Tarwani (Dublin): senior AI engineer and founding engineer, Stamp 4 (can work in Ireland). Local to Ismael.
+- Divyansh Sharma (Gurugram, India, 2nd degree): lead AI engineer at LITT; says he built a legal AI platform to 2,000+ lawyers. Remote, lower cost.
+- Rafayel Arakelyan and Artyom Gulgulyan (Yerevan): both built production legal RAG on Lincoln's stack (TypeScript, Node, React, Postgres, Claude API). Artyom is open to work and can start in 1 to 2 weeks. Remote, lower cost.
+- Market rate seen: NYC founding product engineer at a seeded legal or compliance AI startup, $230k to $300k plus equity.
+
+## Legal engineer (none found with immigration and AI together)
+- Luz Valdovinos (NYC): attorney; legal AI evaluation, playbooks and training; Harvey legal engineering certified.
+- Legal engineers at competitors: Max Moio (Harvey), Ricel Funa (Legora), Johnston Chen (director of forward deployed legal engineering, ex M&A). Not immigration.
+- Divya Thakur (NYC): Regional Immigration Lead, Americas. Immigration side only; check her profile.
+- Note: Jim Melo (immigration attorney who evaluates legal AI models) could cover much of this role early.
+
+## Customer success
+- Not a hire yet: Jim Melo's profile covers AE and customer success. Names seen: Joel Trinidad (NYC, legal tech customer success and adoption), Conrad A. (Chicago, customer success and renewals in legal tech).
