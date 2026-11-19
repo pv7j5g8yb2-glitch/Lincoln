@@ -14,8 +14,8 @@ Lines marked **YOU** need your own words: only you know them.
 ## Project and why (499 of 500, Ismael's final wording)
 Lincoln is an AI platform that proactively works US immigration cases. It acts when a new task lands in the user's email or when clients complete the user's intake link. It then reads every document attached, works on the case, and drafts the reply, evidence map, support letter, and fills in the USCIS form. The attorney only has to review and approve. Why? Immigration firms lose many of their hours on paperwork while most legal AI tools need users to prompt, explain and attach client documents.
 
-## What problem are you solving? (426 of 500)
-An immigration case is weeks of paperwork: reading dozens of documents, chasing clients for missing ones, filling USCIS forms, mapping evidence to criteria, drafting letters and RFE responses. Paralegals do it by hand, so firms turn work away. Today's legal AI only helps when someone sits down and asks it. Immigration is the start: the same problem exists in every practice where work arrives by email and follows set rules.
+## What problem are you solving? (481 of 500)
+An immigration case is weeks of paperwork: reading dozens of documents, chasing clients for missing ones, filling USCIS forms, mapping evidence to criteria, drafting letters and RFE responses. Paralegals do it by hand or with ChatGPT, and firms still turn work away. Today's legal AI only helps when someone sits down and asks it. Immigration is just the start. The same problem exists in every practice area, and the goal is to become the leading platform for autonomous legal AI.
 
 ## What expertise do you have? (433 of 500)
 I built all of Lincoln myself in about a week, using Claude Code: Microsoft 365 and Google Workspace connections, Outlook and Word add-ins, an encrypted database, a USCIS form filler and the engine that works a case end to end. Before that I built Hopkins, an AI marketing app for real estate agents. Before building Lincoln I read what immigration lawyers say about legal AI in their own words, so it does what they actually want.
