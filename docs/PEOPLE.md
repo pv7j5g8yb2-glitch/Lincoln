@@ -46,13 +46,20 @@ Nobody can be hired until there is funding, and any contract goes through the co
 - Salary benchmarks seen: Alma mid market AE $180k to $220k; Ivo enterprise AE $250k to $300k (both with commission).
 
 ## Founding engineer shortlist (from LinkedIn headlines only, 2026-11-19; open full profiles before judging)
-- Kenny Williams (San Mateo): product engineer at Eve (legal AI); founding engineer and tech lead on its AI intake product, which he says is now a multi million dollar line; agents and evals; 3x co founder. Closest to Lincoln's work.
+- Kenny Williams (San Mateo, linkedin.com/in/kenny-williams, kwill.dev, github.com/kennyjwilli): first choice for founding engineer after a seed round. Full profile read 2026-11-19.
+  - Eve (legal AI for plaintiff firms), Feb 2025 to now: joined after the Series A when intake did not exist; founding engineer then tech and product lead on Intake (AI phone agent, leads platform, live call coaching), which he says grew to a multi million dollar annual line. Leads a pod of 5 engineers and a designer.
+  - What matters for Lincoln: hundreds of calls and visits with law firms; built the first voice agent eval platform (calls reaching their goal rose from 81% to 90% after the team took it over); cut intake LLM costs 73%; Clio Grow, RingCentral, Zoom, Dialpad and 8x8 integrations; in call retainer signing; a classifier that auto closes about 93% of non lead calls; live call coaching from prototype in 2 days to GA in about 6 weeks; cuts scope on purpose; hiring and mentoring.
+  - Before: Deep Origin principal engineer 2 years (TypeScript, Node, GraphQL, Postgres, Python, built an AI analysis agent); co founder and lead engineer at Compute Software 6 years (team 0 to 10); co founder of Respond Software (acquired by FireEye in 2020). Left college to start companies.
+  - Stable tenures (2 to 6 years), unlike most profiles seen. Practice area differs (plaintiff, not immigration), but intake and firm workflow carry over.
+  - Against: senior Bay Area pay, settled at a well funded company; his About asks for teams with paying customers, so approach only after a seed round and the first paying firms.
 - Vikas Kumar (SF): founding engineer; says he built a legal AI from 0 to 6K users.
 - Alain A. (NYC): New York attorney and full stack engineer (TypeScript, SQL), legal AI and agentic systems. Lawyer and engineer in one.
 - Arnab Tarwani (Dublin): senior AI engineer and founding engineer, Stamp 4 (can work in Ireland). Local to Ismael.
 - Divyansh Sharma (Gurugram, India, 2nd degree): lead AI engineer at LITT; says he built a legal AI platform to 2,000+ lawyers. Remote, lower cost.
 - Rafayel Arakelyan and Artyom Gulgulyan (Yerevan): both built production legal RAG on Lincoln's stack (TypeScript, Node, React, Postgres, Claude API). Artyom is open to work and can start in 1 to 2 weeks. Remote, lower cost.
 - Market rate seen: NYC founding product engineer at a seeded legal or compliance AI startup, $230k to $300k plus equity.
+
+- Eve colleagues seen beside his profile (headlines only, not reviewed): Wentao Feng (Member of Technical Staff, ex Meta), Jack Burns (engineering), Austin H. (Member of Technical Staff), Sriya M. (Lead Product Manager, acquired YC founder, ex LinkedIn and Stripe; a PM, not an early hire). Allen Deng (frontier AI systems, unrelated to Eve).
 
 ## Legal engineer (none found with immigration and AI together)
 - Luz Valdovinos (NYC): attorney; legal AI evaluation, playbooks and training; Harvey legal engineering certified.
