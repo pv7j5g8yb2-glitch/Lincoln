@@ -21,12 +21,12 @@ An immigration case is weeks of paperwork: reading dozens of documents, chasing 
 I built all of Lincoln myself in about a week, using Claude Code: Microsoft 365 and Google Workspace connections, Outlook and Word add-ins, an encrypted database, a USCIS form filler and the engine that works a case end to end. Before that I built Hopkins, an AI marketing app for real estate agents. Before building Lincoln I read what immigration lawyers say about legal AI in their own words, so it does what they actually want.
 
 ## Competitors, and what you understand that they don't (438 of 500)
-Harvey and Legora are general legal AI: powerful, but they wait for prompts and uploads. Clio and Docketwise store the case but do none of the work. What I understand: a firm doesn't want another tool to operate. Its work arrives by email, so the product has to live in the inbox, work the whole case by itself and come to the lawyer only for decisions, the way a great paralegal does. Lincoln is built around that, not around a chat box.
+Harvey and Legora are general legal AI: powerful, but they wait for prompts and uploads. Clio and Docketwise store the case but do none of the work. Eve does this for plaintiff firms; I found no one doing it for immigration firms. What I understand: a firm doesn't want another tool to operate. Its work arrives by email, so the product has to live in the inbox, work the whole case and come to the lawyer only for decisions.
 
 ## What have you worked on in the past? (350 of 500)
-Hopkins: an AI app for real estate agents that read listing photos, wrote ads and posts, made carousels and reels, and connected to Meta and CRMs. Covered: a certificate tracker. Then Lincoln. Each one taught me the same thing: people don't want another tool to remember to use, they want the work done. That is why Lincoln works without being asked.
+Hopkins: an AI app for real estate agents that read listing photos, wrote ads and posts, made carousels and reels, and connected to Meta and CRMs. Covered: a tracker for subcontractors' insurance certificates, which I dropped within days to focus on Lincoln. Then Lincoln. Each taught me the same thing: people don't want another tool to remember to use, they want the work done.
 
-**YOU:** check the lesson in the last two sentences is honestly yours, and add one line on what Covered did.
+**YOU:** check the lesson is honestly yours.
 
 ## Nerdiest thing about you (250)
 **YOU.** Something specific and a bit odd beats something impressive.
@@ -38,7 +38,7 @@ Hopkins: an AI app for real estate agents that read listing photos, wrote ads an
 **YOU.** Concrete things you did, with ages.
 
 ## A risk you took or a challenge you faced (389 of 500)
-The first version of Lincoln was a prompt method for lawyers. I tested it blind against plain Claude and it lost. Instead of hiding the result, I threw it out and the next day started again from zero as a platform that does the work itself. A week later it reads mail, opens cases and drafts filings. It says I would rather lose a fair test early than build on something I only hope works.
+The first version of Lincoln was a prompt method for lawyers. I tested it blind against plain Claude and it lost. I didn't hide the result: I threw it out and the next day started again from zero as a platform that does the work itself. A week later it reads mail, opens cases and drafts filings. I would rather lose a fair test early than build on something I only hope works.
 
 ## Links
 uselincoln.com, your LinkedIn, and the film (put lincoln-film-16x9.mp4 on YouTube as unlisted).
@@ -60,4 +60,4 @@ Phone, one take, no slides, no product demo (the form says so). Rough script:
 **YOU.** For example, Google search or LinkedIn.
 
 ## One thing you need help with (205 of 500)
-Getting the first immigration firms to trust a product built by a 15 year old with real client files, and setting up the company, contracts and data agreements properly with my parents as the legal owners.
+Getting the first immigration firms to trust a product built by a 15 year old with real client files, and introductions to immigration attorneys and legal tech investors.
