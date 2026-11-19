@@ -37,8 +37,8 @@ Hopkins: an AI app for real estate agents that read listing photos, wrote ads an
 ## Non-traditional things you did growing up
 **YOU.** Concrete things you did, with ages.
 
-## A risk you took or a challenge you faced (389 of 500)
-The first version of Lincoln was a prompt method for lawyers. I tested it blind against plain Claude and it lost. I didn't hide the result: I threw it out and the next day started again from zero as a platform that does the work itself. A week later it reads mail, opens cases and drafts filings. I would rather lose a fair test early than build on something I only hope works.
+## A risk you took or a challenge you faced (490 of 500)
+This month I dropped Hopkins, my AI app for realtors, and the realtor audience I'd built on Instagram, to start over in a field I knew nothing about: US immigration law. I'm 15, in Ireland, building for lawyers, who don't trust easily, and I'm too young to sign my own company's contracts. Too early to call: Lincoln is built and no firm pays yet. When my first version lost a blind test, I rebuilt it from zero the next day. I walk away from what's comfortable when I see a bigger problem.
 
 ## Links
 uselincoln.com, your LinkedIn, and the film (put lincoln-film-16x9.mp4 on YouTube as unlisted).
