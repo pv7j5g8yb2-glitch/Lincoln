@@ -30,7 +30,7 @@ d.prepare("INSERT INTO users (id, firm_id, name, email, role, initials, admin) V
 d.prepare("INSERT INTO identities (provider, subject, user_id, created_at) VALUES ('google', 'sub-ana', ?, ?)").run(U, now());
 d.prepare("INSERT INTO cases (id, firm_id, ref, client, type_code, type_name, family, stage, state, summary, attorney_id, paralegal_id, opened_at) VALUES (?, ?, '2026-1002', 'Lucia Okafor-Reyes', 'I-130', 'Relative petition', 'Family', 'Evidence', 'moving', 'Spouse petition.', ?, ?, ?)").run(C, F, U, U, now());
 d.prepare("INSERT INTO mailboxes (id, firm_id, user_id, provider, email, refresh_enc, access_enc, expires_at, created_at, settings) VALUES (?, ?, ?, 'google', 'ana@reyes-law.example', ?, ?, ?, ?, ?)")
-  .run(MB, F, U, seal("refresh"), seal("access"), Date.now() + 3600_000, now(), JSON.stringify({ granted: "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/chat.spaces.readonly https://www.googleapis.com/auth/chat.messages.readonly https://www.googleapis.com/auth/chat.messages.create", gchat: { space: "spaces/S1", name: "Lincoln" } }));
+  .run(MB, F, U, seal("refresh"), seal("access"), Date.now() + 3600_000, now(), JSON.stringify({ granted: "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/chat.spaces.readonly https://www.googleapis.com/auth/chat.messages.readonly https://www.googleapis.com/auth/chat.messages.create", gchat: { space: "spaces/S1", name: "Lincoln" } }));
 const msg = (id: string) => {
   d.prepare("INSERT INTO messages (id, firm_id, case_id, direction, party, party_role, subject, body, at, state, email, thread_id, mailbox_id) VALUES (?, ?, ?, 'out', 'Lucia Okafor-Reyes', 'Client', 'Re: Documents for the petition', ?, ?, 'needs_approval', 'lucia@example.com', 'gthread1', ?)").run(id, F, C, "Dear Lucia,\n\nThank you for the marriage certificate.\n\nKind regards,\nAna", now(), MB);
   d.prepare("INSERT INTO approvals (id, firm_id, case_id, kind, title, brief, payload, status, assignee_id, created_at) VALUES (?, ?, ?, 'message', 'Email to Lucia', 'x', ?, 'pending', ?, ?)").run(`a_${id}`, F, C, JSON.stringify({ messageId: id }), U, new Date(Date.now() - 3 * 3600_000).toISOString());
@@ -77,6 +77,14 @@ ok((await state()).gposts.some((p: any) => /^\*For review:\* Marked up: Declarat
 await tick();
 ok((await state()).gposts.filter((p: any) => /^On it\./.test(p.text)).length === 1, "a request is acted on once, and Lincoln's own posts are never taken as requests");
 ok(googleDocIds("see https://docs.google.com/document/d/1AbCdEfGhIjKlMnOpQrStUvWxYz/edit please").join() === "1AbCdEfGhIjKlMnOpQrStUvWxYz", "a Google Doc link in any request is recognised");
+
+// The firm's own client folder in Drive: found by the client's name and written into, with the full Drive permission.
+const { saveToFolder } = await import("../../src/lib/workspace.ts");
+d.prepare("INSERT INTO cases (id, firm_id, ref, client, type_code, type_name, family, stage, state, summary, attorney_id, paralegal_id, opened_at) VALUES ('c_gm', ?, 'gm', 'Sofia Marquez', 'H-1B', 'x', 'Business', 'Evidence', 'moving', 'x', ?, ?, ?)").run(F, U, U, now());
+await hit(`/__gfolders?set=${encodeURIComponent(JSON.stringify([{ id: "gf1", name: "Marquez, Sofia", parents: ["groot"] }]))}`);
+await saveToFolder(F, "c_gm", "Support letter", "docx", Buffer.from("PK"));
+ok((await state()).gfiles.some((f: any) => f.name === "Support letter.docx" && f.parents?.includes("gf1")), "in Google Drive too, work goes into the firm's own folder for that client");
+await hit("/__gfolders?set=[]");
 
 fs.rmSync(process.env.DATA_DIR!, { recursive: true, force: true });
 console.log(fails ? `\n${fails} failed` : "\nAll passed");

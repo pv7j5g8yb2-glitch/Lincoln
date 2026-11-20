@@ -49,9 +49,11 @@ canvas, 44 seconds) was stopped before rendering.
   client folders, named their way ("Ortiz, Daniel (O-1A)"), once Lincoln has seen one; otherwise
   Lincoln/Clients/<client>. Two or more possible folders: one question in Review ("Client folder: <client>", Use or
   Lincoln folder), asked once; the answer resaves the case's approved work there. Saving again makes a new version of
-  the same file, so the drive's version history shows every change. Tested on the OneDrive stand-in only. Google: with
-  drive.file, Google may refuse writing into folders Lincoln did not make; Lincoln then falls back to its own folder
-  for that case. Not yet tried against real Google or Microsoft. The case Export menu links to the folder.
+  the same file, so the drive's version history shows every change. Google now asks for full Drive
+  (auth/drive, replacing drive.readonly and drive.file) so Lincoln can write into the firm's own folders; it is a
+  restricted scope like gmail.readonly, so it rides on the same CASA assessment. In Lincoln's Google Cloud project,
+  add the drive scope to the OAuth consent screen and verification request; Google users reconnect once. Tested on
+  the OneDrive and Drive stand-ins; not yet against real Google or Microsoft. The case Export menu links to the folder.
 * Word documents that arrive (by email, Teams or upload) are marked up with tracked changes and comments
   against the case record and land in Review; the Word add-in has a Mark up button that does the same in the
   open document.

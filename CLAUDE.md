@@ -72,6 +72,10 @@ with the work saved, not with case software. Never assume most firms use Docketw
 unknown). Never present a co-founder as an easy fix: it costs equity, a minor cannot hire, and the role
 is unclear.
 
+**Immigration is the start, not the limit (Ismael, 2026-11-20).** Immigration is Lincoln's focus for roughly the next
+6 to 12 months; after that Lincoln expands across several practice areas and keeps growing. Never describe Lincoln as an
+immigration only company or immigration as its permanent niche; build so new practice areas can be added.
+
 **Lincoln's edge is autonomy (Ismael, 2026-11-13).** Lincoln works without being prompted: it reads the firm's
 mail, opens and works cases, chases and prepares the next step, and asks only for decisions. Never present an
 upload or chat feature as the product; that is what Harvey and Legora already do. New accounts always start

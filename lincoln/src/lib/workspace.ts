@@ -17,7 +17,7 @@ const MIME = { docx: "application/vnd.openxmlformats-officedocument.wordprocessi
 export function driveFor(firmId: string, caseId: string): Connection | undefined {
   const d = db();
   const c = d.prepare("SELECT attorney_id FROM cases WHERE firm_id = ? AND id = ?").get(firmId, caseId) as { attorney_id: string } | undefined;
-  const all = connectionsOf(firmId).filter((x) => x.provider === "microsoft" || /drive\.file/.test(settingsOf(x).granted ?? "") || !settingsOf(x).granted);
+  const all = connectionsOf(firmId).filter((x) => x.provider === "microsoft" || /auth\/drive(\.file)?( |$)/.test(settingsOf(x).granted ?? "") || !settingsOf(x).granted);
   const admins = new Set((d.prepare("SELECT id FROM users WHERE firm_id = ? AND admin = 1").all(firmId) as { id: string }[]).map((x) => x.id));
   return all.find((x) => x.user_id === c?.attorney_id) ?? all.find((x) => admins.has(x.user_id)) ?? all[0];
 }

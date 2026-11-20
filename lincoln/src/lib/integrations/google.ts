@@ -12,8 +12,9 @@ export const SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
   "https://www.googleapis.com/auth/gmail.send",
   "https://www.googleapis.com/auth/gmail.compose",
-  "https://www.googleapis.com/auth/drive.readonly",
-  "https://www.googleapis.com/auth/drive.file",
+  // Full Drive: read the firm's files and save into its own client folders, not only folders Lincoln made. Like
+  // gmail.readonly it is a restricted scope, covered by the same CASA assessment.
+  "https://www.googleapis.com/auth/drive",
   "https://www.googleapis.com/auth/calendar.events",
 ];
 export const configured = () => Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.APP_URL);
@@ -161,9 +162,9 @@ export async function health(c: Connection): Promise<Health> {
   const out: Health = [
     await probe("Gmail", `${GMAIL}/profile`, "gmail.readonly"),
     granted ? { service: "Sending", ok: has(granted, "gmail.send"), note: has(granted, "gmail.send") ? undefined : "Permission not granted" } : { service: "Sending", ok: true },
-    await probe("Drive", "https://www.googleapis.com/drive/v3/files?pageSize=1&fields=files(id)", "drive.readonly"),
+    await probe("Drive", "https://www.googleapis.com/drive/v3/files?pageSize=1&fields=files(id)", "drive"),
     granted ? { service: "Drafts", ok: has(granted, "gmail.compose"), note: has(granted, "gmail.compose") ? undefined : "Permission not granted" } : { service: "Drafts", ok: true },
-    granted ? { service: "Docs, Sheets, Slides", ok: has(granted, "drive.file"), note: has(granted, "drive.file") ? undefined : "Permission not granted" } : { service: "Docs, Sheets, Slides", ok: true },
+    granted ? { service: "Docs, Sheets, Slides", ok: has(granted, "drive"), note: has(granted, "drive") ? undefined : "Permission not granted" } : { service: "Docs, Sheets, Slides", ok: true },
     await probe("Calendar", "https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=1", "calendar.events"),
   ];
   out.push(pushConfigured() ? { service: "Instant mail", ok: Boolean(settingsOf(c).watchUntil && settingsOf(c).watchUntil! > Date.now()), note: settingsOf(c).watchUntil ? undefined : "Not set up yet; mail is checked every 5 minutes" } : { service: "Instant mail", ok: false, note: "Off; mail is checked every 5 minutes" });
@@ -214,7 +215,7 @@ export async function searchMail(c: Connection, q: string, max = 20) {
   return (r.messages ?? []).map((m) => m.id);
 }
 
-// The firm's folder: Lincoln/Clients/<client> in Drive, made by Lincoln, so drive.file covers it.
+// Lincoln's own folder, Lincoln/Clients/<client>, used when the firm keeps no client folders Lincoln can find.
 
 async function childFolder(c: Connection, parent: string, name: string) {
   const safe = name.replace(/['\\]/g, "").slice(0, 120);
