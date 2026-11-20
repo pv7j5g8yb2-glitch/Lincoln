@@ -1068,3 +1068,10 @@ All figures are Eve's own claims, read in posts by its staff; not checked elsewh
 * What it means: investors already know "Eve for plaintiff firms", so "Lincoln does for immigration firms what
   Eve does for plaintiff firms" is an easy line to understand. Eve does no immigration work today; it is not a
   competitor under the 80 percent rule, but could move in, so speed and immigration depth matter.
+
+## YC partners most relevant to Lincoln (from ycombinator.com/partners, 2026-11-20)
+Partners are assigned by YC, not chosen; this is for preparing interviews. Best fits: Grey Baker (Pincites, legal AI for
+contracts, acquired by Filevine, a law firm case platform; ex GoCardless), Harshita Arora (moved from India to SF on an
+O-1 at 16: young founder and immigration user), Tom Blomfield (Monzo, GoCardless; UK founder), Tyler Bosmeny (Clever,
+sold to cautious institutions), Pete Koomen (Optimizely; has written publicly about AI that drafts email, worth reading
+before an interview), Jon Xu (platform sold to financial institutions). Weakest fits: consumer and ads partners.
