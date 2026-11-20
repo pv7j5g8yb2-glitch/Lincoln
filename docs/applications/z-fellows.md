@@ -1,50 +1,51 @@
-# Z Fellows application (draft, 2026-11-19)
+# Application answers (Ismael's own wording, as entered on the Z Fellows form, 2026-11-20)
 
-Form: https://docs.google.com/forms/d/1z5HG9Pj0hIxS2oZL_wcJS5QqDZlcVbkhYGHp5Kp_IGM/viewform (linked from zfellows.com).
-Every answer below is true as of today. Do not add customers, revenue or pilots that have not happened.
-Lines marked **YOU** need your own words: only you know them.
+Reuse these for other applications (YC, Vercel X, Thiel, PearX and others). They are Ismael's final wording:
+do not rewrite them unless he asks. Contact details, birthday and phone are on the form, not stored here.
 
 ## Basics
-- Company or project name: Lincoln
-- Are you technical? Yes
-- Previously applied? No
-- Where are you based? Dublin, Ireland
-- School or work: In secondary school in Dublin, building Lincoln outside school.
+- Name: Ismael Kirmi. Company: Lincoln. Technical: Yes. Previously applied to Z Fellows: No.
+- Based: Ireland.
+- School or work: High School (the rest of this answer was cut off in the screenshot; it mentions the transition year).
+- How he heard about Z Fellows: Google search.
+- Links: uselincoln.com
+- Video: left empty on the form. Film for other uses: https://youtu.be/YlyrsqE3Z9Q
 
-## Project and why (499 of 500, Ismael's final wording)
+## What is the project and why (500 max)
 Lincoln is an AI platform that proactively works US immigration cases. It acts when a new task lands in the user's email or when clients complete the user's intake link. It then reads every document attached, works on the case, and drafts the reply, evidence map, support letter, and fills in the USCIS form. The attorney only has to review and approve. Why? Immigration firms lose many of their hours on paperwork while most legal AI tools need users to prompt, explain and attach client documents.
 
-## What problem are you solving? (499 of 500, Ismael's final wording)
-An immigration case is weeks of paperwork. Reading dozens of documents, chasing clients for the missing ones, filling USCIS forms, mapping evidence to criteria, drafting letters and RFE responses. Paralegals either do it by hand or with ChatGPT but firms still turn work away. Today’s legal AI only helps when someone sits down and explains. Immigration is just the start for Lincoln. The same problem exists in every practice area, the goal is to become the leading platform of autonomous legal AI.
+## What problem are you solving (500 max)
+An immigration case is weeks of paperwork. Reading dozens of documents, chasing clients for the missing ones, filling USCIS forms, mapping evidence to criteria, drafting letters and RFE responses. Paralegals either do it by hand or with ChatGPT but firms still turn work away. Today's legal AI only helps when someone sits down and explains. Immigration is just the start for Lincoln. The same problem exists in every practice area, the goal is to become the leading platform of autonomous legal AI.
 
-## What expertise do you have? (433 of 500)
-I built all of Lincoln myself in about a week, using Claude Code: Microsoft 365 and Google Workspace connections, Outlook and Word add-ins, an encrypted database, a USCIS form filler and the engine that works a case end to end. Before that I built Hopkins, an AI marketing app for real estate agents. Before building Lincoln I read what immigration lawyers say about legal AI in their own words, so it does what they actually want.
+## What expertise do you have (500 max)
+I built and designed all of Lincoln. Added Microsoft 365 and Google Workspace connections, Outlook and Word add-ins, an encrypted database, a USCIS form filler and the AI engine that works on cases end to end. But before any of that I read what hundreds of lawyers already think of the current general AI tools in their own words. Lincoln does exactly what they say they wish competitors did. Before Lincoln I built Hopkins, an AI content creator app for realtors in the UK/Ireland.
 
-## Competitors, and what you understand that they don't (484 of 500)
-Harvey and Legora are general legal AI. In the 30 public threads I read, lawyers repeatedly call them wrappers that still wait for prompts and uploads. Clio and Docketwise store cases but do none of the work. Eve offers autonomous AI, but for plaintiff firms. No one I've found does it for immigration firms, and these competitors prove the demand is there. What I understood is that firms don't want another hot new AI tool to learn. That's why Lincoln does the boring work for them.
+## Competitors and what you understand that they don't (500 max)
+Harvey and Legora are general legal AI. In the 30+ public forums I've read, lawyers repeatedly call them wrappers that still require users to prompt and explain tasks. Clio and Docketwise store cases but do none of the work. Eve offers autonomous AI but for plaintiff firms. No one I've found does it for immigration firms, and these competitors prove the demand is there. What I understood is that firms don't want another hot new AI tool to learn. That's why Lincoln does the boring work for them.
 
-## What have you worked on in the past? (350 of 500)
-Hopkins: an AI app for real estate agents that read listing photos, wrote ads and posts, made carousels and reels, and connected to Meta and CRMs. Covered: a tracker for subcontractors' insurance certificates, which I dropped within days to focus on Lincoln. Then Lincoln. Each taught me the same thing: people don't want another tool to remember to use, they want the work done.
+## What have you worked on in the past (500 max)
+Hopkins was an AI app for realtors that planned their weekly content, made carousels and reels, and connected to their Meta account. I've tried out many different kinds of bootstrapped apps but Lincoln is the first with serious upside, and it needs VC funding. Each taught me the same 2 things. Buyers don't prioritise a nice-to-have app and another new tool to constantly use. They want the work done by a personal assistant.
 
-**YOU:** check the lesson is honestly yours.
+## Nerdiest thing about you (250 max)
+I rewatched "Suits" when working on Lincoln to look carefully for all the types of bottlenecks and/or problems Harvey Spectre and Mike Ross constantly faced with clients and their day to day work.
 
-## Nerdiest thing about you (250)
-**YOU.** Something specific and a bit odd beats something impressive.
+## What drives you (250 max)
+Proving to myself that I can build something big at a young age.
 
-## What drives you? (250)
-**YOU.** One honest sentence. Draft to react to: "Building things that do a whole job for people instead of giving them another tool to manage. I want to see how far one person with today's AI can take a real company."
+## Non-traditional things growing up
+At 13 I built a multiplayer mobile game to play with friends and it spread across the entire school until everyone I knew played it constantly. Then a year later after AI became even more accessible I built Hopkins, an AI content creation app for real estate agents and ran organic marketing through Instagram and growing an audience of realtors. Now at 15, soon to be 16, I'm building Lincoln. The autonomous AI built to meet the standards of the United States' leading law firms.
 
-## Non-traditional things you did growing up
-**YOU.** Concrete things you did, with ages.
-
-## A risk you took or a challenge you faced (490 of 500)
-This month I dropped Hopkins, my AI app for realtors, and the realtor audience I'd built on Instagram, to start over in a field I knew nothing about: US immigration law. I'm 15, in Ireland, building for lawyers, who don't trust easily, and I'm too young to sign my own company's contracts. Too early to call: Lincoln is built and no firm pays yet. When my first version lost a blind test, I rebuilt it from zero the next day. I walk away from what's comfortable when I see a bigger problem.
-
-## Links
-uselincoln.com, your LinkedIn, and the film (put lincoln-film-16x9.mp4 on YouTube as unlisted).
+## A risk taken or a challenge faced (500 max)
+A few months ago I dropped Hopkins and the meaningful audience I had already built on Instagram to start over in a field that is known for being conservative with AI adoption compared to real estate. Law firms. It took me about 3-4 pivots to finally build Lincoln as it is today. I think this reflects how I always try my best to find an even better approach when there's that gut feeling telling me this isn't the right direction to pursue.
 
 ## Achievements and prizes
-**YOU.** Real ones only. If there are none yet, write what you shipped: "Built and launched Lincoln (uselincoln.com) and Hopkins alone, at 15."
+Built a multiplayer mobile app that nearly all of the students at my school started playing daily back when I was about 13-14. It just started by me playing it with my friends to pass time and then grew along as more and more people started playing it with us and enjoyed it.
+
+## Who you would co-found with
+Probably my dad since he is a PhD business professor so he'd have a lot of experience on the operations side of the company rather than the law side.
+
+## One thing you need help with (500 max)
+Primarily getting introduced to firms willing to try Lincoln, but also meeting ambitious founders with similar traits as me and potentially a future co-founder who knows.
 
 ## One minute video (optional, but do it)
 Phone, one take, no slides, no product demo (the form says so). Rough script:
@@ -53,11 +54,3 @@ Phone, one take, no slides, no product demo (the form says so). Rough script:
 3. Why: "Immigration firms drown in paperwork, and every AI tool they have still waits to be prompted. I wanted one that does the work." (15 seconds)
 4. The honest part: "My first version lost a blind test against plain Claude. I scrapped it the same day and rebuilt it. I'd love Z Fellows' help getting the first firms to trust it." (20 seconds)
 
-## Someone from your network you'd co-found with
-**YOU.** A real name only.
-
-## How did you hear about Z Fellows?
-**YOU.** For example, Google search or LinkedIn.
-
-## One thing you need help with (205 of 500)
-Getting the first immigration firms to trust a product built by a 15 year old with real client files, and introductions to immigration attorneys and legal tech investors.
