@@ -1075,3 +1075,29 @@ contracts, acquired by Filevine, a law firm case platform; ex GoCardless), Harsh
 O-1 at 16: young founder and immigration user), Tom Blomfield (Monzo, GoCardless; UK founder), Tyler Bosmeny (Clever,
 sold to cautious institutions), Pete Koomen (Optimizely; has written publicly about AI that drafts email, worth reading
 before an interview), Jon Xu (platform sold to financial institutions). Weakest fits: consumer and ads partners.
+
+## Legora: Max Junestrand with Gustaf Alströmer (YC interview video, about 13 months after W24; read 2026-11-20)
+Company claims, from the founder; Legora valued $675M then, $80M Series B (Iconic, General Catalyst, Benchmark, YC).
+* Founders had no legal background (Max was 23). His YC interview failed the first time because they did not know
+  law; the second time they showed they could. "Hobby lawyer" now; many lawyers hired into product teams.
+* How he learned: interviewed about 100 lawyers over lunch via LinkedIn (offered to pay their rate; none accepted).
+  Ismael has ruled this out for himself; Lincoln learns from what lawyers wrote and from an attorney hire (Jim Melo).
+* First product was compliance before features: EU hosting, no training, zero retention, exemption from human
+  review on Azure. Aha moment: a sceptical managing partner typed his own research query in the first meeting and it
+  answered right. Law firms bought after one demo.
+* Product: web chat that became an agent with tools (MCP); tabular review (documents as rows, questions as columns,
+  every cell cited; the hard part is running 100k queries reliably, with definitions and cross references kept);
+  Word add-in ("Cursor for lawyers": edit and redline in the side panel); playbooks (rules with fallback language,
+  press play, the contract is marked up). Still prompt driven: the user says "write a memo".
+* Selling: "we win if you win"; legal work is low differentiation, so clients switch to firms that move first; firms
+  sign one or two year contracts and judge the vendor's rate of change. Big firms buy through innovation teams;
+  mid size firms through partners, hard to get all partners, so start with one partner and team, make them stars,
+  expand. Never bottom up: procurement, IT and security checks.
+* After raising they stopped selling for four to five months to fix reliability: "the first experience of a legal
+  professional logging in is the one chance you have".
+* Models: Azure first because customers were on it; now Claude, Gemini, GPT, Mistral, hot swappable, with a router
+  (simple query, cheap model) to protect margins. Matches Lincoln's no model bias rule.
+* Hiring: former founders first; hiring tests (sales candidates pitch Legora; engineers build a proof of concept
+  with AI written code and must explain it). Stayed in Stockholm to win small markets first (15 entries) before the US.
+* Moat advice: do not compete with the AI labs; pick a narrow category the models will not reach and make output
+  read like a lawyer wrote it. Future lawyer: reviews and directs agents' work (Lincoln's thesis).
