@@ -1,6 +1,6 @@
 // Stateful stand-in for Outlook drafts, Sent Items, OneDrive and a Teams channel, plus a stand-in model.
 const http = require("http");
-const st = { drafts: {}, sent: [], files: [], teamsMsgs: [], replies: [], sendMail: 0, posts: 0, deleted: [], n: 0, gdrafts: {}, gsent: [], gdeleted: [], gfiles: [], gchat: [], gposts: [] };
+const st = { drafts: {}, sent: [], files: [], teamsMsgs: [], replies: [], sendMail: 0, posts: 0, deleted: [], n: 0, gdrafts: {}, gsent: [], gdeleted: [], gfiles: [], gchat: [], gposts: [], mfolders: [], made: [] };
 const jwt = (c) => ["e30", Buffer.from(JSON.stringify(c)).toString("base64url"), "sig"].join(".");
 http.createServer((req, res) => {
   const ch = []; req.on("data", (c) => ch.push(c)); req.on("end", () => {
@@ -28,6 +28,14 @@ http.createServer((req, res) => {
     if (p === `${G}/me/sendMail`) { if (st.failSend) return send(503, { error: { code: "ServiceUnavailable", message: "busy" } }); st.sendMail++; st.mails = (st.mails || []).concat([j()]); return send(202, {}); }
     if (p.startsWith(`${G}/me/drive/root:/Lincoln/`)) { st.files.push(decodeURIComponent(p.split("/Lincoln/")[1].split(":")[0])); return send(201, { webUrl: "https://firm-my.sharepoint.com/Lincoln/file", parentReference: { id: "fold1" } }); }
     if (p === `${G}/me/drive/items/fold1`) return send(200, { webUrl: "https://firm-my.sharepoint.com/Lincoln/Clients/folder" });
+    if (p === "/__folders") { st.mfolders = JSON.parse(u.searchParams.get("set") || "[]"); return send(200, {}); }
+    if (p.startsWith(`${G}/me/drive/root/search(`)) { const w = decodeURIComponent(p).match(/q='([^']*)'/)[1].toLowerCase(); return send(200, { value: st.mfolders.filter((f) => f.name.toLowerCase().includes(w)) }); }
+    m = p.match(/^\/graph\.microsoft\.com\/v1\.0\/me\/drive\/items\/([^/:]+):\/(.+):\/content$/);
+    if (m && req.method === "PUT") { st.files.push(`items/${m[1]}/${decodeURIComponent(m[2])}`); return send(201, { webUrl: `https://firm-my.sharepoint.com/folder/${m[1]}/file` }); }
+    m = p.match(/^\/graph\.microsoft\.com\/v1\.0\/me\/drive\/items\/([^/:]+)\/children$/);
+    if (m && req.method === "POST") { const id = `new${++st.n}`; const name = j().name; st.made.push({ id, name, parent: m[1] }); st.mfolders.push({ id, name, folder: {}, webUrl: `https://firm-my.sharepoint.com/folder/${id}`, parentReference: { id: m[1], path: "/drive/root:/Clients" } }); return send(201, { id, webUrl: `https://firm-my.sharepoint.com/folder/${id}` }); }
+    m = p.match(/^\/graph\.microsoft\.com\/v1\.0\/me\/drive\/items\/([^/:]+)$/);
+    if (m && m[1] !== "fold1") return send(200, { id: m[1], webUrl: `https://firm-my.sharepoint.com/folder/${m[1]}` });
     if (p === `${G}/teams/team1/channels/chan1/messages` && req.method === "GET") return send(200, { value: st.teamsMsgs });
     if (p === `${G}/teams/team1/channels/chan1/messages` && req.method === "POST") { st.posts++; return send(201, { id: `post${st.posts}` }); }
     m = p.match(/channels\/chan1\/messages\/([^/]+)\/replies$/);

@@ -273,6 +273,26 @@ export async function answerQuestion(approvalId: string, qid: string, answer: "y
   revalidatePath("/", "layout");
 }
 
+/** Which folder is the client's: one of those found (by index), or Lincoln's own (-1). */
+export async function chooseFolder(approvalId: string, pick: number) {
+  const { user, firm, viewer } = await requireUser();
+  const a = approvalById(firm.id, approvalId, viewer);
+  if (!a || a.status !== "pending" || a.kind !== "folder") return;
+  const p = JSON.parse(a.payload) as { conn: string; options: { id: string; name: string; url: string }[] };
+  const o = pick >= 0 ? p.options[pick] : null;
+  if (pick >= 0 && !o) return;
+  const w = await import("./workspace");
+  w.setClientFolder(firm.id, a.case_id, p.conn, o ? { id: o.id, url: o.url } : null);
+  const d = db();
+  d.prepare("UPDATE approvals SET status = 'approved', decided_at = ?, decided_by = ? WHERE firm_id = ? AND id = ?").run(new Date().toISOString(), user.id, firm.id, approvalId);
+  d.prepare("INSERT INTO activity (id, firm_id, case_id, at, actor, kind, text, minutes) VALUES (?, ?, ?, ?, ?, 'decide', ?, 0)").run(uid(), firm.id, a.case_id, new Date().toISOString(), user.name, o ? `Chose the client's folder: ${o.name}.` : "Kept the client's files in Lincoln's folder.");
+  const left = d.prepare("SELECT COUNT(*) AS n FROM approvals WHERE firm_id = ? AND case_id = ? AND status = 'pending'").get(firm.id, a.case_id) as { n: number };
+  d.prepare("UPDATE cases SET state = ? WHERE firm_id = ? AND id = ?").run(left.n > 0 ? "needs_you" : "moving", firm.id, a.case_id);
+  if (o) void w.resaveApproved(firm.id, a.case_id).catch(() => undefined);
+  await toast("Saved");
+  revalidatePath("/", "layout");
+}
+
 export async function acceptAllRecommended(approvalId: string) {
   const { firm, viewer } = await requireUser();
   const a = approvalById(firm.id, approvalId, viewer);

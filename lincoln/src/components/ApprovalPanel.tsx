@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { Check, FileText } from "lucide-react";
-import { acceptAllRecommended, answerQuestion, decideApproval, saveMessage } from "@/lib/actions";
+import { Check, FileText, Folder } from "lucide-react";
+import { acceptAllRecommended, answerQuestion, chooseFolder, decideApproval, saveMessage } from "@/lib/actions";
 import type { Question } from "@/lib/halasz";
 
 type Props = {
@@ -91,6 +91,28 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message, canA
       {error && <span className="text-[12.5px] text-risk">{error}</span>}
     </div>
   );
+
+  if (kind === "folder") {
+    const opts = (payload.options ?? []) as { id: string; name: string; url: string }[];
+    const pickOne = (i: number) => start(async () => { setError(null); try { await chooseFolder(id, i); } catch { setError("Not saved."); } });
+    return (
+      <div>
+        <ul className={clsx(box, "divide-y divide-line overflow-hidden")}>
+          {opts.map((o, i) => (
+            <li key={o.id} className="flex items-center gap-3 px-4 py-3">
+              <Folder size={16} className="shrink-0 text-muted" />
+              <a href={o.url} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate text-[14px] font-medium underline decoration-line underline-offset-4 hover:decoration-ink">{o.name}</a>
+              <button disabled={pending} onClick={() => pickOne(i)} className="h-8 shrink-0 rounded-lg bg-ink px-3.5 text-[12.5px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98] disabled:opacity-35">Use</button>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-4 flex items-center gap-3">
+          <button disabled={pending} onClick={() => pickOne(-1)} className="h-9 rounded-lg border border-line bg-card px-3.5 text-[13px] font-medium transition hover:bg-panel disabled:opacity-40">Lincoln folder</button>
+          {error && <span className="text-[12.5px] text-risk">{error}</span>}
+        </div>
+      </div>
+    );
+  }
 
   if (kind === "decisions") {
     const qs = payload.questions as Question[];

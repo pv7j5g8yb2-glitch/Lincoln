@@ -28,3 +28,5 @@ export function safeAddress(to: string) {
   if (!/^[a-z0-9._%+'-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(a) || a.length > 254) throw new Error("The recipient address is not valid.");
   return a;
 }
+
+export type FolderHit = { id: string; name: string; parent: string | null; url: string };

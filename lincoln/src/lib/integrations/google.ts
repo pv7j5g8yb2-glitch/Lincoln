@@ -1,7 +1,7 @@
 import { db } from "../db";
 import { open, seal } from "../secret";
 import { api, callback, json } from "./http";
-import type { Connection, FileHit, Inbound, OfficeKind } from "./types";
+import type { Connection, FileHit, FolderHit, Inbound, OfficeKind } from "./types";
 import { OFFICE_MIME, safeAddress, settingsOf } from "./types";
 
 // One Google sign in covers Gmail, Drive, Docs, Sheets, Slides and Calendar. Docs, Sheets and Slides
@@ -229,6 +229,11 @@ async function childFolder(c: Connection, parent: string, name: string) {
 export async function saveFile(c: Connection, path: string[], name: string, mime: string, data: Buffer, as?: string) {
   let parent = await folder(c);
   for (const p of path) parent = await childFolder(c, parent, p);
+  return saveInto(c, parent, name, mime, data, as);
+}
+
+/** Saves a file into a given folder; a file of the same name there gets a new version, so Drive keeps its history. */
+export async function saveInto(c: Connection, parent: string, name: string, mime: string, data: Buffer, as?: string) {
   const safe = name.replace(/['\\]/g, "").slice(0, 150);
   const found = await call<{ files?: { id: string }[] }>(c, `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`name = '${safe}' and '${parent}' in parents and trashed = false`)}&fields=files(id)&supportsAllDrives=true&includeItemsFromAllDrives=true`, {}, "Google Drive");
   let r: { id: string; webViewLink?: string };
@@ -240,6 +245,25 @@ export async function saveFile(c: Connection, path: string[], name: string, mime
     r = await call(c, "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink&supportsAllDrives=true", { method: "POST", headers: { "Content-Type": `multipart/related; boundary=${boundary}` }, body }, "Google Drive");
   }
   return { link: r.webViewLink ?? `https://drive.google.com/open?id=${r.id}`, folder: `https://drive.google.com/drive/folders/${parent}` };
+}
+
+/** Folders in the firm's Drive whose name contains a word, leaving out the ones Lincoln made for itself. */
+export async function findFolders(c: Connection, word: string): Promise<FolderHit[]> {
+  const q = `mimeType = 'application/vnd.google-apps.folder' and name contains '${word.replace(/['\\]/g, "")}' and trashed = false`;
+  const r = await call<{ files?: { id: string; name: string; parents?: string[] }[] }>(c, `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&pageSize=50&fields=files(id,name,parents)&supportsAllDrives=true&includeItemsFromAllDrives=true`, {}, "Google Drive");
+  const s = settingsOf(c);
+  let own: string | null = null;
+  if (s.folderId) {
+    const cl = await call<{ files?: { id: string }[] }>(c, `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`name = 'Clients' and '${s.folderId}' in parents and trashed = false`)}&fields=files(id)`, {}, "Google Drive");
+    own = cl.files?.[0]?.id ?? null;
+  }
+  return (r.files ?? []).filter((f) => !f.parents?.some((p) => p === own || p === s.folderId)).map((f) => ({ id: f.id, name: f.name, parent: f.parents?.[0] ?? null, url: `https://drive.google.com/drive/folders/${f.id}` }));
+}
+
+/** A folder of this name inside a parent, made if it is not there. */
+export async function makeFolder(c: Connection, parent: string, name: string) {
+  const id = await childFolder(c, parent, name);
+  return { id, url: `https://drive.google.com/drive/folders/${id}` };
 }
 
 /** A Google Doc as a Word file (tracked changes made to it come back as suggestions when it is saved as a Doc again). */

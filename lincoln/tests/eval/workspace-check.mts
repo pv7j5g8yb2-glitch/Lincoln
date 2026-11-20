@@ -13,7 +13,7 @@ const { db } = await import("../../src/lib/db.ts");
 const { seal } = await import("../../src/lib/secret.ts");
 const { syncDrafts, dropDraft } = await import("../../src/lib/maildrafts.ts");
 const { deliver, tick, approveAndSend } = await import("../../src/lib/agent.ts");
-const { saveToFolder, folderOf } = await import("../../src/lib/workspace.ts");
+const { saveToFolder, folderOf, isClientFolder, setClientFolder } = await import("../../src/lib/workspace.ts");
 
 const d = db();
 const now = () => new Date().toISOString();
@@ -75,6 +75,32 @@ await saveToFolder(F, C, "Cover letter", "docx", Buffer.from("PK test"));
 s = await state();
 ok(s.files.some((f: string) => f.includes("Clients/Lucia Okafor-Reyes (I-130)/Cover letter.docx")), "approved work is saved in Lincoln/Clients/<client> in OneDrive");
 ok(folderOf(F, C)?.url.includes("Clients/folder"), "the case knows its folder link");
+
+// 6b. The firm's own client folders: found, followed, asked about when unclear.
+const addCase = (id: string, client: string, type: string) => d.prepare("INSERT INTO cases (id, firm_id, ref, client, type_code, type_name, family, stage, state, summary, attorney_id, paralegal_id, opened_at) VALUES (?, ?, ?, ?, ?, 'x', 'Business', 'Evidence', 'moving', 'x', ?, ?, ?)").run(id, F, id, client, type, U, U, now());
+const fold = (id: string, name: string, path = "/drive/root:/Clients", parent = "root1") => ({ id, name, folder: {}, webUrl: `https://firm-my.sharepoint.com/folder/${id}`, parentReference: { id: parent, path } });
+ok(isClientFolder("Okafor-Reyes, Lucia (I-130)", "Lucia Okafor-Reyes") && isClientFolder("SOFIA MARQUEZ", "Sofía Márquez") && !isClientFolder("Martinez, Lucia", "Lucia Okafor-Reyes"), "a client's folder is recognised in any order, case or accents, and not confused with another client");
+await hit(`/__folders?set=${encodeURIComponent(JSON.stringify([fold("fm1", "Marquez, Sofia (H-1B)"), fold("fx1", "Marquez Holdings LLC")]))}`);
+addCase("c_m", "Sofia Marquez", "H-1B");
+await saveToFolder(F, "c_m", "Support letter", "docx", Buffer.from("PK"));
+ok((await state()).files.includes("items/fm1/Support letter.docx") && folderOf(F, "c_m")?.url.includes("fm1"), "work goes into the firm's own folder for that client, not a new one");
+await saveToFolder(F, "c_m", "Support letter", "docx", Buffer.from("PK2"));
+ok((await state()).files.filter((f: string) => f === "items/fm1/Support letter.docx").length === 2 && (await state()).made.length === 0, "saving again replaces the same file (a new version), with no new folder");
+addCase("c_o", "Daniel Ortiz", "O-1A");
+await saveToFolder(F, "c_o", "Cover letter", "docx", Buffer.from("PK"));
+s = await state();
+ok(s.made.some((x: any) => x.name === "Ortiz, Daniel (O-1A)" && x.parent === "root1") && s.files.some((f: string) => /^items\/new\d+\/Cover letter\.docx$/.test(f)), "a client with no folder gets one next to the firm's others, named the firm's way");
+await hit(`/__folders?set=${encodeURIComponent(JSON.stringify([fold("fl1", "Lima, Ana"), fold("fl2", "Ana Lima (2019 case)"), fold("own", "Ana Lima (I-130)", "/drive/root:/Lincoln/Clients", "lc")]))}`);
+addCase("c_l", "Ana Lima", "I-130");
+await saveToFolder(F, "c_l", "Cover letter", "docx", Buffer.from("PK"));
+const q = d.prepare("SELECT payload FROM approvals WHERE firm_id = ? AND case_id = 'c_l' AND kind = 'folder' AND status = 'pending'").all(F) as { payload: string }[];
+ok(q.length === 1 && JSON.parse(q[0].payload).options.length === 2 && (await state()).files.some((f: string) => f.includes("Clients/Ana Lima (I-130)/Cover letter.docx")), "two possible folders: one question in Review (Lincoln's own folder left out), and the file waits safely in Lincoln's folder");
+await saveToFolder(F, "c_l", "Second letter", "docx", Buffer.from("PK"));
+ok((d.prepare("SELECT COUNT(*) AS n FROM approvals WHERE firm_id = ? AND case_id = 'c_l' AND kind = 'folder'").get(F) as { n: number }).n === 1, "the question is asked once, not on every save");
+setClientFolder(F, "c_l", MB, { id: "fl1", url: "https://firm-my.sharepoint.com/folder/fl1" });
+await saveToFolder(F, "c_l", "Third letter", "docx", Buffer.from("PK"));
+ok((await state()).files.includes("items/fl1/Third letter.docx"), "after the answer, work goes into the chosen folder");
+await hit("/__folders?set=[]");
 
 // 7. Teams: a request in the channel is taken and answered in its thread.
 await tick();

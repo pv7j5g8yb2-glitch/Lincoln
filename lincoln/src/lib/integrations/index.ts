@@ -5,7 +5,7 @@ import * as google from "./google";
 import * as microsoft from "./microsoft";
 import type { Connection, FileHit, Inbound, OfficeKind, Provider } from "./types";
 
-export type { Connection, FileHit, Inbound, OfficeKind, Provider } from "./types";
+export type { Connection, FileHit, FolderHit, Inbound, OfficeKind, Provider } from "./types";
 export { settingsOf } from "./types";
 import { settingsOf } from "./types";
 
@@ -146,6 +146,9 @@ export const readDraft = (c: Connection, id: string, m: { to: string; subject: s
 export const searchMail = (c: Connection, q: string, max?: number) => P[c.provider].searchMail(c, q, max);
 export const readMail = (c: Connection, id: string) => P[c.provider].readMessage(c, id);
 export const saveFile = (c: Connection, path: string[], name: string, mime: string, data: Buffer, as?: string) => (c.provider === "google" ? google.saveFile(c, path, name, mime, data, as) : microsoft.saveFile(c, path, name, mime, data));
+export const saveInto = (c: Connection, folderId: string, name: string, mime: string, data: Buffer, as?: string) => (c.provider === "google" ? google.saveInto(c, folderId, name, mime, data, as) : microsoft.saveInto(c, folderId, name, mime, data));
+export const findFolders = (c: Connection, word: string) => P[c.provider].findFolders(c, word);
+export const makeFolder = (c: Connection, parent: string, name: string) => P[c.provider].makeFolder(c, parent, name);
 export const canReadTeams = (c: Connection) => c.provider === "microsoft" && /ChannelMessage\.Read\.All/i.test(settingsOf(c).granted ?? "");
 export { channelMessages, replyInChannel, downloadShared } from "./microsoft";
 

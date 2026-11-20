@@ -43,8 +43,15 @@ canvas, 44 seconds) was stopped before rendering.
   thread). Edits made in the mailbox come back into Lincoln and teach the firm's style; a draft sent from the
   mailbox is recorded as sent and its approval closed; approving in Lincoln sends that same draft; returning an
   email deletes the draft. Needs the new Gmail compose permission, so Google users reconnect once.
-* Approved letters, translations, filing packets and marked up documents are saved into Lincoln/Clients/<client>
-  in the attorney's Google Drive or OneDrive; the case Export menu links to the folder.
+* Approved letters, translations, filing packets and marked up documents are saved into the client's folder in the
+  attorney's Google Drive or OneDrive (2026-11-20, after Harvey's iManage two way sync): the firm's own folder for
+  that client when exactly one matches the name (any order, case or accents); a new folder next to the firm's other
+  client folders, named their way ("Ortiz, Daniel (O-1A)"), once Lincoln has seen one; otherwise
+  Lincoln/Clients/<client>. Two or more possible folders: one question in Review ("Client folder: <client>", Use or
+  Lincoln folder), asked once; the answer resaves the case's approved work there. Saving again makes a new version of
+  the same file, so the drive's version history shows every change. Tested on the OneDrive stand-in only. Google: with
+  drive.file, Google may refuse writing into folders Lincoln did not make; Lincoln then falls back to its own folder
+  for that case. Not yet tried against real Google or Microsoft. The case Export menu links to the folder.
 * Word documents that arrive (by email, Teams or upload) are marked up with tracked changes and comments
   against the case record and land in Review; the Word add-in has a Mark up button that does the same in the
   open document.

@@ -1,7 +1,7 @@
 import { db } from "../db";
 import { open, seal } from "../secret";
 import { api, callback, json } from "./http";
-import type { Connection, FileHit, Inbound, OfficeKind } from "./types";
+import type { FolderHit, Connection, FileHit, Inbound, OfficeKind } from "./types";
 import { OFFICE_EXT, OFFICE_MIME, safeAddress, settingsOf } from "./types";
 import { sign } from "../secret";
 import { appUrl } from "./http";
@@ -250,6 +250,31 @@ export async function saveFile(c: Connection, path: string[], name: string, mime
   let folderUrl = r.webUrl.replace(/\/[^/]*$/, "");
   try { if (r.parentReference?.id) folderUrl = (await call<{ webUrl: string }>(c, `/me/drive/items/${encodeURIComponent(r.parentReference.id)}?$select=webUrl`, {}, "OneDrive")).webUrl; } catch { /* the file link is enough */ }
   return { link: r.webUrl, folder: folderUrl };
+}
+
+/** Saves a file into a given OneDrive folder; a file of the same name gets a new version, so OneDrive keeps its history. */
+export async function saveInto(c: Connection, folderId: string, name: string, mime: string, data: Buffer) {
+  const r = await call<{ webUrl: string }>(c, `/me/drive/items/${encodeURIComponent(folderId)}:/${seg(name)}:/content?@microsoft.graph.conflictBehavior=replace`, { method: "PUT", headers: { "Content-Type": mime }, body: new Uint8Array(data) }, "OneDrive");
+  let folderUrl = r.webUrl.replace(/\/[^/]*$/, "");
+  try { folderUrl = (await call<{ webUrl: string }>(c, `/me/drive/items/${encodeURIComponent(folderId)}?$select=webUrl`, {}, "OneDrive")).webUrl; } catch { /* the file link is enough */ }
+  return { link: r.webUrl, folder: folderUrl };
+}
+
+/** Folders in the firm's OneDrive whose name contains a word, leaving out the ones Lincoln made for itself. */
+export async function findFolders(c: Connection, word: string): Promise<FolderHit[]> {
+  const r = await call<{ value?: { id: string; name: string; webUrl: string; folder?: object; parentReference?: { id?: string; path?: string } }[] }>(c, `/me/drive/root/search(q='${encodeURIComponent(word.replace(/'/g, ""))}')?$select=id,name,webUrl,folder,parentReference&$top=50`, {}, "OneDrive");
+  return (r.value ?? []).filter((x) => x.folder && !/\/root:\/Lincoln(\/|$)/i.test(x.parentReference?.path ?? "")).map((x) => ({ id: x.id, name: x.name, parent: x.parentReference?.id ?? null, url: x.webUrl }));
+}
+
+/** A folder of this name inside a parent, made if it is not there. */
+export async function makeFolder(c: Connection, parent: string, name: string) {
+  try {
+    const r = await call<{ id: string; webUrl: string }>(c, `/me/drive/items/${encodeURIComponent(parent)}/children`, { method: "POST", body: JSON.stringify({ name: decodeURIComponent(seg(name)), folder: {}, "@microsoft.graph.conflictBehavior": "fail" }) }, "OneDrive");
+    return { id: r.id, url: r.webUrl };
+  } catch {
+    const r = await call<{ id: string; webUrl: string }>(c, `/me/drive/items/${encodeURIComponent(parent)}:/${seg(name)}`, {}, "OneDrive");
+    return { id: r.id, url: r.webUrl };
+  }
 }
 
 // Requests posted in the firm's Lincoln channel in Teams. Reading channel messages needs ChannelMessage.Read.All,
