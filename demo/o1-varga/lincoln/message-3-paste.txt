@@ -1,0 +1,13 @@
+Pass 3: draft the documents, using only facts from the pass 1 table and the conclusions of pass 2.
+
+1. The petition support letter from the petitioner to USCIS. Argue only the criteria marked
+   "claim". Every sentence that states a fact must end with its citation, for example (Ex. C, p. 1).
+   Where documents conflict, use the later or more authoritative figure and do not repeat the
+   superseded one. Attribute each number to its source rather than merging different figures. Do
+   not use promotional statements as facts. End with a final merits section that argues sustained
+   acclaim from the evidence as a whole.
+2. The criteria map from pass 2, as a table.
+3. The exhibit index in filing order: forms and required documents first, then evidence grouped by
+   criterion, then supporting material. Leave out exhibits that should not be filed, and say why.
+4. Gaps and risks: every missing required element, every weak criterion, every conflict, and the
+   action the attorney should take for each.

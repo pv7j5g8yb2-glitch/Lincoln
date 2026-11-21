@@ -1,0 +1,40 @@
+Pass 2: assess eligibility using only the facts table from pass 1.
+
+The legal frame is 8 CFR 214.2(o)(3)(iii): a one time major internationally recognised award, or at
+least three of the eight criteria below, followed by a final merits review of all the evidence
+together (USCIS Policy Manual, Volume 2, Part M), asking whether the beneficiary has sustained
+national or international acclaim and is among the small percentage at the very top of the field,
+on a preponderance of the evidence.
+
+For each criterion, apply its own standard strictly:
+1. Prizes or awards: must be nationally or internationally recognised, for excellence in the field.
+   Internal company, school or local awards do not qualify. Note the selection process and number
+   of nominees if shown.
+2. Membership: the association must require outstanding achievements of its members, judged by
+   recognised national or international experts. Open membership, degree or experience thresholds,
+   or paying dues do not qualify.
+3. Published material: must be about the beneficiary and her work, in professional or major trade
+   publications or major media, with title, date and author. Articles mainly about a company, or
+   passing mentions, are weak. Blogs without editorial control do not qualify. Circulation or
+   readership evidence matters.
+4. Judging: judging the work of others in the same or an allied field, alone or on a panel. Peer
+   review for a selective conference or journal is strong. Local or informal events are weak.
+5. Original contributions of major significance: needs evidence of impact beyond the beneficiary's
+   own employer: adoption by others, citations, independent expert letters with specifics, measured
+   results. Pending patents alone do not show significance.
+6. Scholarly articles: authorship in professional journals or major media. Peer review and the
+   journal's standing matter.
+7. Critical or essential role for organisations with a distinguished reputation: needs both the
+   role and evidence of the organisation's distinguished reputation. Size alone does not show it.
+8. High salary: needs the pay and reliable comparison data for the field and location. Pay figures
+   without comparison data do not meet it.
+
+For each criterion output: claim, do not claim, or claim only with more evidence. List the
+supporting rows from the facts table, the main weakness, and a strength rating (strong, moderate,
+weak). Weigh letters by independence: independent experts first, customers next, employer and
+co-founders last.
+
+Then check the required filing elements under 8 CFR 214.2(o)(2)(ii) and (o)(5): written advisory
+opinion (consultation) from a peer group or labour organisation, copy of the contract or a summary
+of the terms, explanation of the events or activities (itinerary), Form I-129 with the O and P
+supplement, and identity documents. Mark each as present, missing or unclear.
