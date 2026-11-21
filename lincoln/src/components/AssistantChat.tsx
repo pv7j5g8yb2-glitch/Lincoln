@@ -337,11 +337,14 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
     return (
       <div className="mx-auto max-w-[720px]">
         {(scope || threads.length > 0) ? head : <Link href="/" aria-label="Back" className="-ml-1.5 inline-flex rounded-lg p-1.5 text-muted md:hidden"><ChevronLeft size={18} /></Link>}
+        {/* Phones keep the box at the bottom, as in the Claude and ChatGPT apps; larger screens centre it under the name. */}
         <div className="flex min-h-[62dvh] flex-col justify-center">
           <h1 className="wordmark mb-8 text-center text-[40px] leading-none md:text-[46px]">Lincoln</h1>
-          {box}
-          {!connected && <p className="mt-3 text-center text-[13px] text-muted">No model connected.</p>}
-          {error && <p className="mt-3 text-[13px] text-risk">{error}</p>}
+          <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-t from-canvas from-70% to-transparent px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-8 md:static md:bg-none md:p-0">
+            {box}
+            {!connected && <p className="mt-3 text-center text-[13px] text-muted">No model connected.</p>}
+            {error && <p className="mt-3 text-[13px] text-risk">{error}</p>}
+          </div>
         </div>
       </div>
     );

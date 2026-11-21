@@ -12,7 +12,7 @@ import { wordConnected } from "@/lib/word";
 export function Logo({ name, size = 28 }: { name: string; size?: number }) {
   const file = LOGO_FILE[name];
   return (
-    <span className="flex shrink-0 items-center justify-center rounded-[9px] border border-line bg-card" style={{ width: size + 8, height: size + 8 }}>
+    <span className="flex shrink-0 items-center justify-center rounded-[9px] border border-line bg-card dark:bg-white" style={{ width: size + 8, height: size + 8 }}>
       {file
         ? // eslint-disable-next-line @next/next/no-img-element
           <img src={`/logos/${file}`} alt="" width={Math.round(size * 0.8)} height={Math.round(size * 0.8)} className="object-contain" style={{ width: Math.round(size * 0.8), height: Math.round(size * 0.8) }} />
@@ -123,7 +123,7 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
               <span className="flex-1 text-[13px]">{name}</span>
               {kv(firm.id, `wants:${name}`)
                 ? <span className="px-3 text-[12px] text-faint">Requested</span>
-                : <form action={requestIntegration}><input type="hidden" name="name" value={name} /><button className={btn.secondary}>Connect</button></form>}
+                : <form action={requestIntegration}><input type="hidden" name="name" value={name} /><button className={btn.secondary}>Request</button></form>}
             </div>
           ))}
         </div>

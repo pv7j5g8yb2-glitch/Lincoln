@@ -14,7 +14,7 @@ pages, Word export, a scripted "demo world". See `lincoln/README.md` for what wo
   with its last action and "For review" where something waits. The chat box left Home (New case and + remain).
 * Chat boxes are soft cornered rectangles with the controls below the text on larger screens; phones keep the pill.
 * Integrations: Google services in two rows of three; Word add-in is Download first, then Code and a short guide;
-  "Planned" is now "Others", each with Connect, which records the firm's request ("Requested") for the Lincoln team.
+  "Planned" is now "Others", each with Request (renamed from Connect 2026-11-21), which records the firm's request ("Requested") for the Lincoln team.
 * Library search says "Search"; New case sits in the middle of the screen.
 * Outlook add-in (`/outlook`, manifest at `/outlook/manifest.xml`): beside the open email, the case it belongs to
   (by conversation, else the sender's address), the reply waiting for approval with Approve and Edit then Save, and
@@ -404,6 +404,19 @@ from the repo the same day. History is in git up to commit `341cf65`.
    contracts, model costs, and possibly Jim Melo.
 4. Get a handful of paying firms. This is the step everything else depends on.
 5. Raise a seed of $2M to $5M+, hire two top people (see docs/PEOPLE.md), then scale.
+
+## Health check (2026-11-21)
+* Walked as the sample firm and a blank firm: 297 page loads (desktop and phone, light and dark), no console errors, no
+  failed requests, no sideways overflow; median load about 0.6 s. Main buttons pressed (search, tabs, Export menus,
+  Review edit and save, Approve and send, strategy decisions, chat with copy and rename, Library, Settings, phone tab
+  bar and More): all work. Every export downloads a valid file; the filing packet is a 72 page PDF.
+* Fixed: Others on Integrations said "Connect" but only record a request, now "Request"; Help was one paragraph, now
+  seven short answers on how Lincoln works; logos stay visible in dark mode; on phones the empty chat keeps its box at the
+  bottom; the summary deck was plain bullets with raw labels ("claim", "more"), now Lincoln's look with tables,
+  readable labels, dates written out and four issues per slide.
+* Free stand-in model for walking the app without credits: `lincoln/tests/eval/model-standin.cjs` (port 4547).
+* Still open from the check: one old failure in workspace-google-check ("replies again with a link when the work is
+  ready"); Library shows "Not loaded yet" when the law sync is off (it is on in production).
 
 ## Next
 * Sign in screens (2026-11-15): app.uselincoln.com callback addresses must be added in Google and Microsoft (done by

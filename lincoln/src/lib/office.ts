@@ -2,6 +2,7 @@ import { Document, HeadingLevel, Packer, Paragraph, TextRun } from "docx";
 import ExcelJS from "exceljs";
 import PptxGenJS from "pptxgenjs";
 import type { LetterContent } from "./letter";
+import { longDate } from "./format";
 import { caseById, caseDates, cases, criteria, documents, issues, rfePoints } from "./queries";
 
 // The files Lincoln hands to Word, Excel and PowerPoint, or to Docs, Sheets and Slides.
@@ -80,36 +81,66 @@ export async function evidenceXlsx(firmId: string, caseId: string) {
   return Buffer.from(await wb.xlsx.writeBuffer());
 }
 
-/** A short deck on one case for a team meeting or a client call. */
+/** A short deck on one case for a team meeting or a client call, in Lincoln's own look. */
 export async function caseDeck(firmId: string, caseId: string) {
   const c = caseById(firmId, caseId)!;
   const pptx = new PptxGenJS();
   pptx.layout = "LAYOUT_WIDE";
   pptx.author = "Lincoln";
-  const ink = "161614", muted = "6B6862";
-  const title = (s: PptxGenJS.Slide, t: string) => s.addText(t, { x: 0.6, y: 0.4, w: 12, h: 0.7, fontFace: "Georgia", fontSize: 26, color: ink });
-  const bullets = (s: PptxGenJS.Slide, items: string[]) => s.addText(items.length ? items.map((t) => ({ text: t, options: { bullet: true, breakLine: true } })) : [{ text: "None recorded.", options: {} }], { x: 0.6, y: 1.3, w: 12, h: 5.6, fontFace: "Arial", fontSize: 15, color: ink, valign: "top", paraSpaceAfter: 8 });
+  pptx.title = `${c.client}: case summary`;
+  const ink = "161614", muted = "6B6862", faint = "A8A49C", line = "E4E1DA", paper = "F7F6F3";
+  const serif = "Georgia", sans = "Arial";
+  let page = 0;
+  // Every slide: paper background, the case in the footer, a page number.
+  const slide = (heading?: string) => {
+    const s = pptx.addSlide();
+    s.background = { color: paper };
+    page++;
+    if (heading) {
+      s.addText(heading, { x: 0.7, y: 0.5, w: 11.9, h: 0.7, fontFace: serif, fontSize: 28, color: ink });
+      s.addShape(pptx.ShapeType.line, { x: 0.7, y: 1.3, w: 11.9, h: 0, line: { color: line, width: 1 } });
+    }
+    s.addText(`${c.client} · ${c.type_code}`, { x: 0.7, y: 7.0, w: 9, h: 0.3, fontFace: sans, fontSize: 9, color: faint });
+    s.addText(String(page), { x: 11.6, y: 7.0, w: 1, h: 0.3, fontFace: sans, fontSize: 9, color: faint, align: "right" });
+    return s;
+  };
+  type Row = PptxGenJS.TableRow;
+  const rule: [PptxGenJS.BorderProps, PptxGenJS.BorderProps, PptxGenJS.BorderProps, PptxGenJS.BorderProps] = [{ type: "none" }, { type: "none" }, { pt: 0.75, color: line }, { type: "none" }];
+  const cell = (text: string, o: PptxGenJS.TableCellProps = {}): PptxGenJS.TableCell => ({ text, options: { fontFace: sans, fontSize: 16, color: ink, valign: "top", margin: [6, 0, 6, 0], border: rule, ...o } });
+  const table = (s: PptxGenJS.Slide, rows: Row[], colW: number[], y = 1.6) => s.addTable(rows, { x: 0.7, y, w: 11.9, colW, autoPage: false });
+  const label = (t: string) => cell(t, { color: muted, fontSize: 14 });
 
-  const s1 = pptx.addSlide();
-  s1.addText(c.client, { x: 0.6, y: 2.4, w: 12, h: 1, fontFace: "Georgia", fontSize: 40, color: ink });
-  s1.addText(`${c.type_code} ${c.type_name}${c.counterpart ? ` · ${c.counterpart}` : ""} · ${c.ref}`, { x: 0.6, y: 3.4, w: 12, h: 0.5, fontFace: "Arial", fontSize: 16, color: muted });
-  s1.addText("Prepared by Lincoln for attorney review. Not legal advice.", { x: 0.6, y: 6.6, w: 12, h: 0.4, fontFace: "Arial", fontSize: 11, color: muted });
+  const s1 = slide();
+  s1.addText(c.client, { x: 0.7, y: 2.5, w: 11.9, h: 1, fontFace: serif, fontSize: 44, color: ink });
+  s1.addText(`${c.type_code} · ${c.type_name}${c.counterpart ? ` · ${c.counterpart}` : ""}`, { x: 0.7, y: 3.55, w: 11.9, h: 0.5, fontFace: sans, fontSize: 18, color: muted });
+  s1.addText(`Case ${c.ref} · ${longDate(new Date().toISOString().slice(0, 10))}`, { x: 0.7, y: 4.1, w: 11.9, h: 0.4, fontFace: sans, fontSize: 13, color: faint });
+  s1.addText("Prepared by Lincoln for attorney review. Not legal advice.", { x: 0.7, y: 6.55, w: 11.9, h: 0.3, fontFace: sans, fontSize: 10, color: faint });
 
-  const s2 = pptx.addSlide();
-  title(s2, "Status");
-  bullets(s2, [`Stage: ${c.stage}`, c.summary, c.waiting_on ? `Awaiting: ${c.waiting_on}` : ""].filter(Boolean));
+  const s2 = slide("Status");
+  table(s2, [[label("Stage"), cell(c.stage)], [label("Summary"), cell(c.summary || "None recorded.")], ...(c.waiting_on ? [[label("Awaiting"), cell(c.waiting_on)]] : [])], [2.4, 9.5]);
 
   const crit = criteria(firmId, caseId);
   if (crit.length) {
-    const s3 = pptx.addSlide();
-    title(s3, "Requirements and evidence");
-    bullets(s3, crit.slice(0, 10).map((k) => `${k.name}: ${k.recommendation}`));
+    const word: Record<string, string> = { claim: "Claim", more: "Needs more evidence", no: "Not claimed" };
+    const s3 = slide("Criteria");
+    table(s3, [[label("Criterion"), label("Recommendation")], ...crit.slice(0, 10).map((k) => [cell(k.name), cell(word[k.recommendation] ?? k.recommendation, { color: k.recommendation === "claim" ? ink : muted })])], [7.9, 4.0]);
   }
-  const s4 = pptx.addSlide();
-  title(s4, "Open issues");
-  bullets(s4, issues(firmId, caseId).filter((i) => i.status === "open").slice(0, 9).map((i) => `${i.title}. ${i.detail}`));
-  const s5 = pptx.addSlide();
-  title(s5, "Dates");
-  bullets(s5, caseDates(firmId, caseId).filter((t) => t.date >= new Date().toISOString().slice(0, 10)).slice(0, 10).map((t) => `${t.date}: ${t.label}`));
+
+  // Open issues, four to a slide so each one stays readable.
+  const open = issues(firmId, caseId).filter((i) => i.status === "open").slice(0, 12);
+  for (let i = 0; i < open.length; i += 4) {
+    const s = slide(open.length > 4 ? `Open issues (${Math.floor(i / 4) + 1} of ${Math.ceil(open.length / 4)})` : "Open issues");
+    s.addText(open.slice(i, i + 4).flatMap((x, k) => [
+      { text: x.title, options: { fontFace: sans, fontSize: 17, bold: true, color: ink, breakLine: true, paraSpaceBefore: k ? 16 : 0 } },
+      { text: x.detail, options: { fontFace: sans, fontSize: 14, color: muted, breakLine: true } },
+    ]), { x: 0.7, y: 1.6, w: 11.9, h: 5.2, valign: "top" });
+  }
+  if (!open.length) slide("Open issues").addText("None open.", { x: 0.7, y: 1.6, w: 11.9, h: 0.5, fontFace: sans, fontSize: 15, color: muted });
+
+  const dates = caseDates(firmId, caseId).filter((t) => t.date >= new Date().toISOString().slice(0, 10)).slice(0, 10);
+  if (dates.length) {
+    const s5 = slide("Dates");
+    table(s5, dates.map((t) => [cell(longDate(t.date), { color: muted }), cell(t.label)]), [3.4, 8.5]);
+  }
   return Buffer.from((await pptx.write({ outputType: "nodebuffer" })) as ArrayBuffer);
 }
