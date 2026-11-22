@@ -12,11 +12,12 @@ because approvals are rarely appealed. Running Lincoln on these spends credits a
 | Folder | Case type | Decision | Outcome |
 |---|---|---|---|
 | 01-eb1a-producer | EB-1A extraordinary ability | AAO 21 Oct 2026 | dismissed |
+| 02-o1a-export-director | O-1A extraordinary ability | AAO 23 Sep 2026 | dismissed |
 | 03-niw-ai-researcher | EB-2 national interest waiver | AAO 12 Dec 2024 | dismissed |
 | 04-h1b-nursing-assistant | H-1B specialty occupation | AAO 25 Sep 2026 | dismissed |
 | 05-eb1c-wallcoverings | EB-1C multinational manager | AAO 23 Apr 2024 | dismissed |
 | 06-waiver-fraud-bahamas | I-601, 212(i) | AAO 14 Oct 2026 | remanded, hardship met |
 | 07-waiver-criminal-ghana | I-601, 212(h) and 212(i) | AAO 6 Oct 2026 | dismissed |
-| 08-u-visa-robbery | U visa, substantial abuse | AAO 13 Feb 2017 | dismissed |
+| 08-u-visa-restaurant-robbery | U visa, substantial abuse | AAO 19 Oct 2026 | dismissed |
 | 09-vawa-marriage-status | VAWA I-360 | AAO 13 Feb 2025 | remanded, marriage shown |
 | 10-t-visa-hotel-worker | T visa, physical presence | AAO 16 Dec 2022 | remanded, presence shown |
