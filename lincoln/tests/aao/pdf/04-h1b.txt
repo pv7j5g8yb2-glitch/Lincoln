@@ -1,0 +1,166 @@
+             U.S. Citizenship                                   Non-Precedent Decision of the
+             and Immigration                                    Administrative Appeals Office
+             Services
+
+In Re: 41635971                                                 Date: SEPT. 25, 2026
+
+Appeal of U.S. Citizenship and Immigration Services (USCIS) Decision
+
+Form I-129, Petition for a Nonimmigrant Worker (H-lB)
+
+
+
+The Petitioner seeks to temporarily employ the Beneficiary under the H-lB nonimmigrant classification
+for specialty occupations. See Immigration and Nationality Act (the Act) section 101(a)(15)(H)(i)(b),
+8 U.S.C. § 1101(a)(15)(H)(i)(b). The H-lB program allows a U.S. employer to file a petition to
+temporarily employ a qualified foreign worker in an occupation that requires both: (a) the theoretical
+and practical application of a body of highly specialized knowledge; and (b) the attainment of a
+bachelor's or higher degree in the specific specialty (or its equivalent) as a minimum prerequisite for
+entry into the occupation.
+
+Through its Service Center Operations (SCOPS), USCIS denied the Form I-129, Petition for a
+Nonimmigrant Worker (petition), concluding the record did not establish that the filing was exempt
+from the H-lB numerical limitations cap, nor did it demonstrate that the position was a specialty
+occupation. The matter is now before us on appeal under 8 C.F.R. § 103.3. The Petitioner bears the
+burden ofproof to demonstrate eligibility by a preponderance of the evidence. Section 291 of the Act;
+Matter of Chawathe, 25 I&N Dec. 369, 375 (AAO 2010). We review the questions in this matter de
+novo. Matter of Christo 's Inc., 26 I&N Dec. 537, 537 n.2 (AAO 2015). Upon de novo review, we
+will dismiss the appeal.
+
+We adopt and affirm SCOPS' decision. See Matter ofS-K-E-, 30 I&N Dec. 27, 29 (BIA 2026) (citing
+Matter ofBurbano, 20 I&N Dec. 872, 874 (BIA 1994); see also see also Garland v. Ming Dai, 593
+U.S. 357, 370-71 (2021) (noting an administrative appellate body's act of adopting and affirming the
+below decision is legitimate, incorporating the lower decision's analysis and reasoning on the issues
+into the appellate determination).
+
+We note that the Petitioner indicated on the Form I-290B, Notice of Appeal or Motion, that it would
+provide a brief and/or additional evidence within 30 days of filing the appeal. However, we have not
+received a follow-on brief within the allotted timeframe or thereafter.
+
+The petition filing itself and the arguments offered in the appeal reveal the petitioning organization either
+does not possess the requisite familiarity with H-lB requirements or it received inaccurate advice, even
+though they have not been represented by an immigration attorney throughout these proceedings.
+The Petitioner filed this petition for the position of a nursing assistant. First, we note that USCIS policy
+states that "[r]egistered nurses generally do not qualify for H-lB classification. This is because most
+[registered nurse] positions do not normally require a U.S. bachelor's or higher degree in nursing (or its
+equivalent) as the minimum for entry into these particular positions and thus are unable to qualify as
+specialty occupations." See generally USCIS Policy Memorandum PM-602-0104, Adjudication ofH-JB
+Petitions for Nursing Occupations 2 (Feb. 18, 2015), http://www.uscis.gov/legal-resources/policy­
+memoranda. This policy memorandum recognizes that "having a degree is not, by itself, sufficient for
+the position to qualify for H-lB classification. A critical factor remains whether a baccalaureate or higher
+degree in a specific specialty (or its equivalent) is normally required for these particular positions." Id. at
+5.
+
+That same memorandum contains a caveat for some nursing occupations that might qualify based on
+increased requirements:
+
+        Advanced practice registered nurse defines a level of nursing practice that utilizes
+        extended and expanded skills, experience and knowledge in assessment, planning,
+        implementation, diagnosis and evaluation of the care required. Positions that require
+        nurses who are certified [advanced practice registered nurses] will generally be specialty
+        occupations due to the advanced level of education and training required for certification.
+
+Id. at 4-5. That same policy memorandum offers a non-exhaustive list of advanced practice registered
+nursing occupations that may satisfy the specialty occupation requirements to include: certified
+nurse-midwife; certified clinical nurse specialist; certified nurse practitioner; and certified registered
+nurse anesthetist. Id. at 5. Notably, each of those occupations are included in DOL's Occupational
+Outlook Handbook or corresponding Occupational Information Network (O*NET) entries as typically
+requiring a master's degree in an advanced practice nursing field. Bureau of Labor Statistics, U.S. Dep't
+ofLabor, Occupational Outlook Handbook, Nurse Anesthetists, Nurse Midwives, and Nurse Practitioners
+(Aug. 28, 2025), https://www.bls.gov/ooh/healthcare/nurse-anesthetists-nurse-midwives-and-nurse­
+practitioners.htrn#tab-4.
+
+But the position in this petition is not within the categories of some nursing occupations listed in that
+policy memorandum that "may qualify as specialty occupations." See generally USCIS Policy
+Memorandum PM-602-0104, supra at 4. As a final note about this memorandum, it provides that each
+individual state's requirements to obtain a nursing license also factor into whether a position satisfies the
+specialty occupation definition. Id. at 5.
+
+Beyond that, the Petitioner offered no correspondence in the initial filing to inform USCIS of the specific
+work the Beneficiary would perform or what the organization mandates as the minimum education
+requirements for the position. It wasn't until SCOPS issued a notice informing the Petitioner that the
+failure to provide a wide array of documents and information would result in the petition's denial that the
+organization provided a letter indicating the position's minimum requirements consisted of "anAssistant
+Nursing degree and demonstrated professional experience in the specialty area." That is far short of this
+nonimmigrant classification's requirements of a theoretical and practical application of a body of highly
+specialized knowledge, and attainment of a bachelor's or higher degree in the specific specialty (or its
+equivalent) as a minimum for entry into the occupation in the United States. Section 214(i)(l) of the Act,
+
+
+
+                                                      2
+8 U.S.C. § 1184(i)( 1). On that basis alone, this petition cannot be approved, nor may it prevail in an
+appeal.
+
+Additionally, the arguments attached to the Form I-290B continue to reflect a lack of familiarity, or
+erroneous guidance from an outside source. Below we note some ofthe incorrect information in the short
+statement attached to the appeal:
+
+        Specialty Occupation - 8 CFR 214.2(h)(4)(ii) identifies "medicine and health" as a field
+        of specialized knowledge, of which nursing falls under, and the physician is in need of
+        such specialized knowledge to provide the appropriate care to patients, as such, further
+        information will be provided in the supporting brief.
+
+While the actual text of "medicine and health" may be included in the regulatory definition of a specialty
+occupation, not every occupation operating in medicine and health is included as a qualifying one.
+Emergency medical technicians and paramedics also operate in the medicine and health field, but are
+similarly not qualifying for the H-1 B program.
+
+        Qualifying Criteria I - The degree is normally the m1mmum requirement for the
+        occupation as there is no educational difference between an Associate's and a Bachelor's
+        degree in the country of Syria, thus this degree is the minimum requirement in that
+        country, and as such, further information will be provided in the supporting brief.
+
+        Qualifying Criteria II - The degree is normally the minimum requirement for the
+        occupation as there is no educational difference between an Associate's and a Bachelor's
+        degree in the country of Syria required to perform the job duties in parallel positions
+        among similar organizations in the United States, as such, further information will be
+        provided in the supporting brief.
+
+The statement that "there is no educational difference between an Associate's and a Bachelor's degree in
+the country of Syria" is false. According to the American Association of Collegiate Registrars and
+Admissions Officers Electronic Database for Global Education (EDGE), 1 in Syria the relevant
+education levels for this case are:
+
+     1. One of two technical Baccalaureates; either a Al-Shahada Al Thanawiyya-Al'Amma or a
+        Shahada Al Thanawiyya Al-Fanniyya). Both are awarded upon completion of 12 years of
+        primary, intermediate, and secondary education and represents attainment of a level of
+        education comparable to completion of a vocational or other specialized high school
+        curriculum in the United States.
+     2. The above baccalaureates have a path to a Wathiqat-Musaddiqat Takarruj (associate degree)
+        or a Certificate of Licensed Assistant requiring two years of study.
+
+1
+  We consider EDGE to be a reliable source ofinfonnation about foreign credential equivalencies. See Confluence Intern.,
+Inc. v. Holder, Civil No. 08-2665 (DSD-JJG), 2009 WL 825793 (D. Minn. Mar. 27, 2009); Tisco Group, Inc. v. Napolitano,
+No. 09-cv-10072, 2010 WL 3464314 (E.D. Mich. Aug. 30, 2010); Sunshine Rehab Servs., Inc. v. USCIS, No. 09-13605,
+2010 WL 3325442, at *9 (E.D. Mich. Aug. 20, 2010). See also Viraj, LLC v. Holder, No. 2:12-CV-00127-RWS, 2013
+WL 1943431 (N.D. Ga. May 18, 2013); Rizvi v. DHS, 37 F. Supp. 3d 870,877 (S.D. Tex. 2014), aff'd sub nom. Rizvi v.
+DHS ex rel. Johnson, 627 F. App'x 292 (5th Cir. 2015).
+
+
+                                                           3
+    3. Licence (Bachelor of Arts or Bachelor of Science) awarded upon completion of a 4- or 5-year
+       postsecondary program and represents attainment of a level of education comparable to a
+       bachelor's degree in the United States.
+
+So, an associate degree only requires two years of study after the equivalent of high school in the
+United States, but a bachelor's degree requires at least four years. This demonstrates the statement
+accompanying the Form T-290B is not accurate. We encourage the Petitioner to consult authorized legal
+counsel or refer exclusively to official users resources to ensure regulatory compliance with this
+program in any future filings with users.
+
+ORDER:         The appeal is dismissed.
+
+NOTICE: This constitutes the final decision in this matter. The filing of a motion will not postpone the
+effect of the decision. 8 C.F.R. § 103.S(a)(l)(iv). Aliens who are not lawfully present, or who are
+otherwise inadmissible or deportable, may be subject to the commencement of removal proceedings
+under section 240 ofthe Act through the issuance of a Form T-862, Notice to Appear. Those proceedings
+may result in their removal from the United States and possible ineligibility for future visas or other
+immigration benefits.
+
+
+
+
+                                                   4
+
