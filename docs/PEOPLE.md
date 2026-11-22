@@ -81,3 +81,15 @@ Nobody can be hired until there is funding, and any contract goes through the co
 - First engineer: someone who wants an early company, not a senior person at a well funded one. Realistic: Artyom Gulgulyan (open to work, Yerevan, far below US pay), Arnab Tarwani (Dublin), or Austin H. once there is traction. About $150k to $190k plus 1 to 2 percent in the US, less abroad.
 - Kenny Williams is for a bigger round with paying firms: he joined Eve only after its Series A.
 - What makes people say yes to a solo founder: paying firms, a known investor or YC (and YC's Work at a Startup board), a product they can try, meaningful equity, and choosing people already looking for an early role.
+
+## Investors seen (2026-11-22; check sizes from a LinkedIn post, confirm before pitching)
+- The LegalTech Fund (legaltech.com): legal tech only, fund II $110M, law firms and Clio among its investors. Best fit.
+- Shruti Gandhi, Array Ventures: pre seed and seed, $250k to $2M, enterprise AI.
+- Gary Benerofe, mu ventures (NYC): pre seed and seed, $200k to $500k, vertical software.
+- Chris Habachy, Charge Ventures: pre seed and seed, $250k to $500k, AI and SaaS.
+- Masha Bucher, Day One Ventures (SF): pre seed and seed, $500k to $5M, AI and SaaS.
+- Adam Draper, Boost VC (San Mateo): pre seed and seed, about $500k, AI among others.
+- Gloria Baeuerlein, Puzzle Ventures (Berlin): pre seed and seed, €100k to €500k, B2B software. Closest to Dublin.
+- Ben Zises, SuperAngel.Fund (NYC): $10k to $1M, SaaS and AI.
+- Not a fit: Canonical (crypto infrastructure). Tim Draper's Draper Associates writes larger cheques, later.
+- Already talking to: Austin Murphy, Teamworthy Ventures (Nashville).

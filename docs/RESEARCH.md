@@ -1101,3 +1101,19 @@ Company claims, from the founder; Legora valued $675M then, $80M Series B (Iconi
   with AI written code and must explain it). Stayed in Stockholm to win small markets first (15 entries) before the US.
 * Moat advice: do not compete with the AI labs; pick a narrow category the models will not reach and make output
   read like a lawyer wrote it. Future lawyer: reviews and directs agents' work (Lincoln's thesis).
+
+## LinkedIn posts seen 2026-11-22 (claims as posted, not checked)
+* CaseHive (Kevin Lobo, 15 years in legal tech, launched about 19 Nov 2026): "AI native legal work platform for Microsoft
+  365": matters, documents, email filing, full text search, AI summaries and drafting, time and billing, documents kept
+  in the firm's own Microsoft 365 tenant; Am Law firms and in house teams; looking for design partners with founding
+  pricing and 15 minute demos. Still user driven (open a matter, draft with AI), general practice, not immigration, not
+  autonomous: not a competitor under the 80 percent rule. Takeaway: "your documents stay in your own Microsoft 365" is a
+  selling point firms respond to; Lincoln now saves into the firm's own folders too.
+* The LegalTech Fund closed fund II at $110M (McDermott Will & Schulte put in $10M; Orrick, Clio, Docusign, Burford,
+  Thomson Reuters Ventures also in). Fenwick invested directly in Norm (AI law firm, outcome pricing; post says $120M at
+  $1.2B in July). Post's point: hourly billing conflicts with tools that shorten work. Immigration firms mostly charge a
+  flat fee per case, so for them Lincoln's time saved is pure margin, with no billing conflict.
+* A legal AI trainer ran a prompt framework workshop (Role, Task, Format, Constraints) for 800 lawyers. Comments: an ex
+  Biglaw partner says prompt formulas put lawyers off experimenting; another wants "agentic workflows ... mini employees
+  that deliver on schedule". Evidence for Lincoln's thesis: lawyers are still being taught to prompt; Lincoln removes
+  the prompt.
