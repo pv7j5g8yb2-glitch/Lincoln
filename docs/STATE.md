@@ -435,6 +435,14 @@ from the repo the same day. History is in git up to commit `341cf65`.
   and drafts get every rulebook the facts raise (a waiver, a prior removal, an arrest, an RFE, ageing out), with the
   official text, up to a size limit. 679 citations checked, none missing.
 
+* Rulebook engine, same day: every one of the 236 rulebooks now has the same four parts (law, tests in order, evidence
+  that proves them, traps that sink cases; evidence and traps in `lincoln/src/lib/rulebook-evidence.ts`), and the
+  thinnest 24 with real legal tests were rewritten as numbered tests. `npm test` fails if any case type or official
+  code lacks a part (`lincoln/tests/rulebooks.test.mjs`). Rulebooks now reach every place Lincoln does legal work:
+  reading (including long files), the second check, drafts, the RFE and NOID evidence grid, redlining, and the chat
+  (a case's own rulebooks in a case chat, and a rulebook lookup for any type or code). Not used in client emails on
+  purpose (no legal answers to clients) or in form filling. 694 citations checked, none missing.
+
 ## Real case test set (2026-11-22)
 * `lincoln/tests/aao/`: ten real USCIS AAO appeal decisions (EB-1A, O-1A, NIW, H-1B, EB-1C, 212(i) waiver, 212(h)
   waiver, U, VAWA, T), each turned into a case file and an answer key from USCIS's own findings. Tests legal judgement,
