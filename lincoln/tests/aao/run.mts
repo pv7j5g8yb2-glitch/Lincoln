@@ -75,9 +75,14 @@ const draftText = (content: string) => {
 
 const names = fs.readdirSync(path.join(HERE, "cases")).filter((n) => !only || only.includes(n)).sort();
 let total = 0;
+// Which firm holds which case, so redraft.mts can redo only the drafting step on this run's database.
+const firms: Record<string, string> = {};
+console.log(`data ${process.env.DATA_DIR}`);
 for (const name of names) {
   const t0 = Date.now();
   const firm = "f_" + uid(), user = "u_" + uid();
+  firms[name] = firm;
+  fs.writeFileSync(path.join(process.env.DATA_DIR!, "cases.json"), JSON.stringify(firms));
   d.prepare("INSERT INTO firms (id, name) VALUES (?, 'Rivera Immigration Law')").run(firm);
   d.prepare("INSERT INTO users (id, firm_id, name, email, role, initials, admin) VALUES (?, ?, 'Alex Rivera', ?, 'Managing partner', 'AR', 1)").run(user, firm, `alex.${firm}@eval.example`);
   const caseText = fs.readFileSync(path.join(HERE, "cases", name, "case.md"), "utf8");

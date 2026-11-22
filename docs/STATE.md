@@ -408,8 +408,22 @@ from the repo the same day. History is in git up to commit `341cf65`.
 ## Real case test set (2026-11-22)
 * `lincoln/tests/aao/`: ten real USCIS AAO appeal decisions (EB-1A, O-1A, NIW, H-1B, EB-1C, 212(i) waiver, 212(h)
   waiver, U, VAWA, T), each turned into a case file and an answer key from USCIS's own findings. Tests legal judgement,
-  not document reading. uscis.gov blocks this server (bot shield), so Ismael downloads decisions by hand. Not run yet:
-  estimated $1 to $2 of credits, needs his approval.
+  not document reading. uscis.gov blocks this server (bot shield), so Ismael downloads decisions by hand.
+* First run (2026-11-22, approved up to $2.50, spent $1.39): Sonnet 5.5 scored 34.5 of 45 (77%), with none of the keys'
+  bad failures in any case. Grades and every mistake: `lincoln/tests/aao/results/GRADES.md`. Pattern: never calls a
+  losing case approvable, but would not commit on the strong cases USCIS remanded (06, 09, 10) because it treated a
+  summary of the evidence as no evidence; and the citation check stamped correct analysis "not shown" or "says
+  otherwise" (six false notes in case 07).
+* Fixed in `src/lib/intake.ts`: page references only on facts; the citation check no longer flags analysis or "not in
+  the file" sentences; assessment requests get reasoning rules (preponderance under Matter of Chawathe, findings per
+  requirement, what is not reached once a requirement fails, other people's approvals never count, hardship beyond the
+  usual consequences with both scenarios and discretion as a separate weighing, the specific regulatory test).
+  Rechecked on cases 07 and 09 only: 3.5 to 5 of 5 and 1.5 to 3 of 3, false citation notes to zero. Same cases the
+  fixes came from, so not independent proof. Next: rerun all ten (about $1.25, needs approval), then add new cases.
+* `tests/aao/redraft.mts` redoes only the drafting step on a saved run (about $0.06 a case); `run.mts` now prints its
+  data folder and saves which firm holds which case.
+* Left as is: every case opened as "Consultation" rather than its case type (the test email comes from a prospective
+  client); drafts sometimes put "(p. 1)" after the full stop.
 
 ## Health check (2026-11-21)
 * Walked as the sample firm and a blank firm: 297 page loads (desktop and phone, light and dark), no console errors, no
