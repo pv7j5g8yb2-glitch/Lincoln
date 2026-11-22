@@ -1,6 +1,6 @@
 # Real case test set (USCIS AAO appeal decisions)
 
-Ten real, public, redacted decisions of the USCIS Administrative Appeals Office (PDFs and text in `pdf/`). Each case
+Real, public, redacted decisions of the USCIS Administrative Appeals Office (PDFs and text in `pdf/`). Each case
 folder in `cases/` has `case.md` (the facts and evidence as described in the decision, written as a firm would receive
 them, with no outcome or reasoning) and `key.md` (what USCIS actually found, as required findings and bad failures).
 
@@ -12,7 +12,6 @@ because approvals are rarely appealed. Running Lincoln on these spends credits a
 | Folder | Case type | Decision | Outcome |
 |---|---|---|---|
 | 01-eb1a-producer | EB-1A extraordinary ability | AAO 21 Oct 2026 | dismissed |
-| 02-eb1a-jiujitsu | EB-1A, final merits | AAO 15 Apr 2024 | dismissed |
 | 03-niw-ai-researcher | EB-2 national interest waiver | AAO 12 Dec 2024 | dismissed |
 | 04-h1b-nursing-assistant | H-1B specialty occupation | AAO 25 Sep 2026 | dismissed |
 | 05-eb1c-wallcoverings | EB-1C multinational manager | AAO 23 Apr 2024 | dismissed |

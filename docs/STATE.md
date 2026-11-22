@@ -406,7 +406,7 @@ from the repo the same day. History is in git up to commit `341cf65`.
 5. Raise a seed of $2M to $5M+, hire two top people (see docs/PEOPLE.md), then scale.
 
 ## Real case test set (2026-11-22)
-* `lincoln/tests/aao/`: ten real USCIS AAO appeal decisions (EB-1A twice, NIW, H-1B, EB-1C, 212(i) waiver, 212(h)
+* `lincoln/tests/aao/`: nine real USCIS AAO appeal decisions (EB-1A, NIW, H-1B, EB-1C, 212(i) waiver, 212(h)
   waiver, U, VAWA, T), each turned into a case file and an answer key from USCIS's own findings. Tests legal judgement,
   not document reading. uscis.gov blocks this server (bot shield), so Ismael downloads decisions by hand. Not run yet:
   estimated $1 to $2 of credits, needs his approval.
