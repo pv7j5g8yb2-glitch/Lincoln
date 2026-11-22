@@ -16,7 +16,8 @@ const USC_BASE = "https://uscode.house.gov/download/";
 const ECFR = "https://www.ecfr.gov/api/versioner/v1";
 export const CFR_PARTS: { title: number; part?: number }[] = [{ title: 8 }, { title: 20, part: 655 }, { title: 20, part: 656 }, { title: 22, part: 40 }, { title: 22, part: 41 }, { title: 22, part: 42 }];
 
-const SCHEMA = "2";
+// 3 (2026-11-22): CFR labels read italics and colons, so 214.2(h), 204.11 and 1208.18 are labelled right.
+const SCHEMA = "3";
 let handle: Database.Database | null = null;
 function law() {
   if (handle) return handle;
@@ -133,12 +134,14 @@ function level(label: string, path: Lv[]): number {
     // A roman list starts again under each new number; an "(i)" after "(ii)" is the letter after "(h)".
     if (label === "i" && depth >= 2 && !at(3)) return 3;
     if (at(1) && nextLetter(at(1)!) === label) return 1;
+    // Letters never skip, and double letters come only after (z), so a roman label that is not the next letter is a roman item.
+    if (at(1) && at(1)!.length === 1) return 3;
     return depth >= 2 ? 3 : 1;
   }
   return 1;
 }
 
-/** The labels a paragraph opens with, including ones after a short heading: "(o) Aliens of extraordinary ability—(1) Classifications—(i) General." */
+/** The labels a paragraph opens with, including ones after a short heading: "(o) Aliens of extraordinary ability—(1) Classifications—(i) General." A heading may hold a citation or plural, "order(s)" or "1208.16(c)", but never a label after a space. */
 function openingLabels(text: string) {
   const labels: string[] = [];
   let rest = text;
@@ -146,7 +149,7 @@ function openingLabels(text: string) {
   while (m) {
     labels.push(m[1]);
     rest = rest.slice(m[0].length);
-    m = /^\(([a-zA-Z0-9]{1,5})\)\s*/.exec(rest) ?? /^[^()]{1,140}?(?:—|\.\s)\s*\(([a-zA-Z0-9]{1,5})\)\s*/.exec(rest);
+    m = /^\(([a-zA-Z0-9]{1,5})\)\s*/.exec(rest) ?? /^(?:[^()]|(?<=[^\s(—])\([a-zA-Z0-9]{1,5}\)){1,140}?(?:—|\.\s)\s*\(([a-zA-Z0-9]{1,5})\)\s*/.exec(rest);
   }
   return labels;
 }
@@ -163,12 +166,17 @@ export function parseCfr(xml: string, title: number, version: string): Row[] {
     for (const p of m[2].matchAll(/<(P|FP)\b[^>]*>([\s\S]*?)<\/\1>/g)) {
       const text = plain(p[2]);
       if (!text) continue;
+      const prev = parts[parts.length - 1]?.text ?? "";
       const labels = openingLabels(text);
+      // The eCFR sets the two deepest levels in italics, "(<I>1</I>)" and "(<I>i</I>)", so an italic label is never a letter.
+      const italic = /^\s*\(<I>([a-z0-9]+)<\/I>\)/.exec(p[2])?.[1];
       let first = 0;
       labels.forEach((l, k) => {
-        let lv = level(l, path);
+        let lv = k === 0 && italic === l ? (/^\d+$/.test(l) ? 5 : 6) : level(l, path);
         // Under a roman item come capitals, never numbers: "(i) Outstanding professors. (1)" is the letter after (h).
-        if ((lv === 3 || lv === 6) && /^\d+$/.test(labels[k + 1] ?? "")) lv = 1;
+        if (!(k === 0 && italic === l) && (lv === 3 || lv === 6) && /^\d+$/.test(labels[k + 1] ?? "")) lv = 1;
+        // After a line ending in a colon comes a list, never the next lettered paragraph: "...must show that: (i) Is admissible;".
+        else if (k === 0 && lv === 1 && l === "i" && /[:\u2014]\s*$/.test(prev)) lv = path.length && path[path.length - 1].lv >= 4 ? 6 : 3;
         if (k === 0) first = lv;
         path = [...path.filter((x) => x.lv < lv), { lv, label: l }];
       });
@@ -315,6 +323,26 @@ export function citationMatches(text: string) {
 }
 
 /** The official text of each provision cited, for a draft to quote and cite exactly. Empty when the library is not loaded. */
+/** Where the cited provision starts in its passage, so "INA 212(a)(9)(B)" opens at (9)(B), not at the (8)(B) before it. */
+function startOf(hit: Hit, cite: string) {
+  const sub = /((?:\([a-zA-Z0-9]+\))*)$/.exec(cite.replace(/\s+/g, ""))?.[1] ?? "";
+  if (!sub || !hit.labels.split(" ").includes(sub)) return 0;
+  // The passage may begin below the top of the citation, so take the longest tail of it whose labels all appear in order.
+  const segs = sub.match(/\([^()]+\)/g) ?? [];
+  for (let from = 0; from < segs.length; from++) {
+    let pos = 0, found = true;
+    for (const seg of segs.slice(from)) {
+      const re = new RegExp(`(?:^|\\n|—\\s*|\\.\\s)${seg.replace(/[()]/g, "\\$&")}`, "g");
+      re.lastIndex = pos;
+      const m = re.exec(hit.text);
+      if (!m) { found = false; break; }
+      pos = m.index + m[0].indexOf("(");
+    }
+    if (found) return pos;
+  }
+  return 0;
+}
+
 export function lawText(cites: string[], max = 16000) {
   const seen = new Set<string>();
   const parts: string[] = [];
@@ -326,7 +354,7 @@ export function lawText(cites: string[], max = 16000) {
     const key = `${hit.url}#${hit.labels.split(" ")[0]}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    const block = `${hit.cite}${hit.alias ? ` (${hit.alias})` : ""}, ${hit.heading} [${hit.version}]\n${hit.text}`;
+    const block = `${hit.cite}${hit.alias ? ` (${hit.alias})` : ""}, ${hit.heading} [${hit.version}]\n${hit.text.slice(startOf(hit, c))}`;
     if (size + block.length > max) break;
     parts.push(block); size += block.length;
   }
