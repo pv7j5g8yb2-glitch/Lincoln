@@ -405,6 +405,15 @@ from the repo the same day. History is in git up to commit `341cf65`.
 4. Get a handful of paying firms. This is the step everything else depends on.
 5. Raise a seed of $2M to $5M+, hire two top people (see docs/PEOPLE.md), then scale.
 
+## Accuracy plan (2026-11-22, after the first real case test)
+* Goal: mistakes measured, caught before they reach a client, and falling with every change; "never wrong" is not a
+  promise anyone can make (in 3 of the 10 appeals USCIS's own officers were overturned).
+* 1. Grow the real case set to 100+ across every case type Lincoln handles (Ismael downloads AAO decisions in batches;
+  the site blocks this server). 2. Rerun the set after every prompt or model change and never ship a change that lowers
+  the score. 3. Case type rulebooks: the exact legal tests per case type from the regulations and Policy Manual, given to
+  Lincoln when it works that type (most misses were a specific test not applied). 4. Compare models on the set (no
+  model bias). 5. Every attorney correction becomes a new test case. Attorney approval stays on everything.
+
 ## Real case test set (2026-11-22)
 * `lincoln/tests/aao/`: ten real USCIS AAO appeal decisions (EB-1A, O-1A, NIW, H-1B, EB-1C, 212(i) waiver, 212(h)
   waiver, U, VAWA, T), each turned into a case file and an answer key from USCIS's own findings. Tests legal judgement,
