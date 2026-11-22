@@ -274,7 +274,8 @@ async function readCase(firmId: string, caseId: string, files: Uint8Array[], opt
     if (r.notice) await actOnNotice(firmId, caseId, r.notice).catch(() => undefined);
     // With the file read, the forms the case needs are filled from it, and every document not in English is
     // translated, in the background.
-    void import("./fill").then((m) => m.prepareForms(firmId, caseId)).catch(() => undefined);
+    // LINCOLN_AUTO_FORMS=off is for judgement tests only (tests/aao), where filling forms would spend credits for nothing.
+    if (process.env.LINCOLN_AUTO_FORMS !== "off") void import("./fill").then((m) => m.prepareForms(firmId, caseId)).catch(() => undefined);
     void import("./translate").then((m) => m.translateCase(firmId, caseId)).catch(() => undefined);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
