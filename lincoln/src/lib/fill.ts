@@ -2,7 +2,7 @@ import fs from "node:fs";
 import { db, uid } from "./db";
 import { batchAvailable, batchResults, cancelBatch, chat, forCase, parseJson, submitBatch, type BatchItem } from "./llm";
 import { caseRecord } from "./intake";
-import { fieldsOf, formsFor, hasTemplate, instructionsOf, normalise, templatePath, titleOf, yes, type Answer, type Field } from "./forms";
+import { answersFor, dropContradictions, withCopies, fieldsOf, formsFor, hasTemplate, instructionsOf, keyOf, templatePath, titleOf, unplaceable, type Answer, type Field, type RawAnswer } from "./forms";
 
 // Lincoln fills each form a case needs from the case file and the firm's details. It answers only what
 // the record supports, with the source of every answer; anything else is left blank for the attorney.
@@ -80,7 +80,7 @@ async function run(firmId: string, caseId: string, opts: { refill?: boolean; onl
       // A reply that cannot be read is asked for once more before the form is marked failed.
       const ask = async (part: Field[]) => toAnswers(await chat([{ role: "system", content: system }, { role: "user", content: askFor(code, details, part) }], { maxTokens: 16000, effort: "medium", timeoutMs: 300_000, cache: true }), part);
       for (const part of chunks) answers.push(...(await ask(part).catch(() => ask(part))));
-      d.prepare("UPDATE forms SET status = 'ready', answers = ?, updated_at = ? WHERE id = ?").run(JSON.stringify(dropContradictions(answers)), new Date().toISOString(), id);
+      d.prepare("UPDATE forms SET status = 'ready', answers = ?, updated_at = ? WHERE id = ?").run(JSON.stringify(await placeable(code, dropContradictions(answers))), new Date().toISOString(), id);
       done.push(`${code} (${answers.length} of ${fields.length} fields)`);
     } catch {
       d.prepare("UPDATE forms SET status = 'failed', updated_at = ? WHERE id = ?").run(new Date().toISOString(), id);
@@ -142,7 +142,7 @@ async function collect() {
         });
         // A chunk that failed is not hidden as blanks: the form is marked failed and can be filled again.
         if (ok) {
-          d.prepare("UPDATE forms SET status = 'ready', answers = ?, batch = NULL, updated_at = ? WHERE id = ?").run(JSON.stringify(dropContradictions(answers)), new Date().toISOString(), f.id);
+          d.prepare("UPDATE forms SET status = 'ready', answers = ?, batch = NULL, updated_at = ? WHERE id = ?").run(JSON.stringify(await placeable(f.code, dropContradictions(answers))), new Date().toISOString(), f.id);
           done.push(`${f.code} (${answers.length} of ${f.fields} fields)`);
         } else {
           d.prepare("UPDATE forms SET batch = NULL, updated_at = ? WHERE id = ?").run(new Date().toISOString(), f.id);
@@ -227,8 +227,8 @@ function askFor(code: string, details: string, fields: Field[]) {
   return `Form ${code}: ${titleOf(code)}.
 ${details}
 
-Fields of the form (index | kind | label | options):
-${fields.map((f, i) => `${i} | ${f.kind} | ${f.label}${f.options?.length ? ` | ${f.options.join(" / ")}` : ""}`).join("\n")}
+Fields of the form (index | key | kind | label | options):
+${fields.map((f, i) => `${i} | ${keyOf(f.name)} | ${f.kind} | ${f.label}${f.options?.length ? ` | ${f.options.join(" / ")}` : ""}`).join("\n")}
 
 Answer only the fields the record or the details above clearly support, and leave every other field out. A blank is filled by the attorney in seconds; a wrong answer can sink the case.
 - check fields: value "yes" to tick the box, only for the box that applies. A check field is one box of a question and its label says which ("Check Yes.", "Check No.", "Check B."): tick it only when that box is the right answer.
@@ -238,34 +238,22 @@ Answer only the fields the record or the details above clearly support, and leav
 - N/A or None only where the instructions call for it and the record shows the item does not apply (no middle name on the passport, no prior marriage stated in the file). Never because something is merely missing from the file.
 - The preparer and attorney parts take the firm and attorney details above; the client never signs as preparer.
 - source: "p. N" for a page of the client file, "firm" or "attorney" for the details above, "case" for the case line, "instructions" for an answer the instructions dictate.
-Reply with one JSON object and nothing else: {"answers": [{"i": 0, "value": "", "source": ""}]}`;
+- key: the field's key exactly as listed on its line, so the answer can be checked against the box it was meant for; an answer whose key does not match its index is discarded. The label is what the box is on the current edition: its part and item numbers are the ones printed on the form. Keys often keep numbers from older editions (a key may say Pt1Line11 for a box in Part 2, item 25), so never take a part or item number from a key.
+Reply with one JSON object and nothing else: {"answers": [{"i": 0, "key": "", "value": "", "source": ""}]}`;
 }
 
-/** One question's Yes and No boxes both ticked is a contradiction: neither is kept, the attorney decides. */
-function dropContradictions(answers: Answer[]): Answer[] {
-  const question = (a: Answer) => a.label.replace(/\s*Check (Yes|No)\b.*$/i, "").trim();
-  const ticked = new Map<string, Set<string>>();
-  for (const a of answers) {
-    const m = /Check (Yes|No)\b/i.exec(a.label);
-    if (m && a.value === "yes") ticked.set(question(a), new Set([...(ticked.get(question(a)) ?? []), m[1].toLowerCase()]));
-  }
-  const bad = new Set([...ticked].filter(([, v]) => v.size > 1).map(([k]) => k));
-  return answers.filter((a) => !(/Check (Yes|No)\b/i.test(a.label) && bad.has(question(a))));
+/** Answers that cannot be written into the form as given (longer than their box at a readable size, or not one of
+ *  the field's options) are taken out, so the attorney sees those boxes blank rather than cut or wrong. */
+async function placeable(code: string, answers: Answer[]): Promise<Answer[]> {
+  const bytes = new Uint8Array(fs.readFileSync(templatePath(code)));
+  // Header and repeated boxes take the value of the box they copy, as the form itself would in Adobe.
+  const all = withCopies(answers, await fieldsOf(bytes));
+  const left = await unplaceable(bytes, all);
+  return all.filter((a) => !left.has(a.name));
 }
 
-/** The model's answers, checked against the fields they claim to fill. */
+
+/** The model's answers, checked against the fields they claim to fill (see answersFor in forms.ts). */
 function toAnswers(reply: string, fields: Field[]): Answer[] {
-  const r = parseJson<{ answers?: { i: number; value: unknown; source?: unknown }[] }>(reply);
-  const out: Answer[] = [];
-  for (const a of r.answers ?? []) {
-    const f = fields[Number(a.i)];
-    const value = typeof a.value === "string" ? a.value : typeof a.value === "number" ? String(a.value) : "";
-    if (!f || !value.trim()) continue;
-    if (f.kind === "choice" && !f.options?.some((o) => o.toLowerCase() === value.trim().toLowerCase())) continue;
-    if (f.kind === "check" && !yes(value)) continue;
-    const v = f.kind === "check" ? "yes" : normalise(f, value);
-    if (!v) continue;
-    out.push({ name: f.name, label: f.label, value: v, source: String(a.source ?? "").slice(0, 40) });
-  }
-  return out;
+  return answersFor(parseJson<{ answers?: RawAnswer[] }>(reply).answers ?? [], fields);
 }

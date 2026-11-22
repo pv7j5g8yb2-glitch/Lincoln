@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { PDFCheckBox, PDFDict, PDFDocument, PDFDropdown, PDFHexString, PDFName, PDFOptionList, PDFRadioGroup, PDFString, PDFTextField, StandardFonts } from "@cantoo/pdf-lib";
+import { PDFCheckBox, PDFDict, PDFDocument, PDFDropdown, PDFHexString, PDFName, PDFOptionList, PDFRadioGroup, PDFString, PDFTextField, StandardFonts, type PDFFont } from "@cantoo/pdf-lib";
 
 // Official forms are filled in their own fillable PDF: every field is read with its label, answered
 // from the case and written back, so the attorney gets the real form, editable, not a copy of it.
@@ -116,6 +116,10 @@ export type Answer = { name: string; label: string; value: string; source: strin
 
 const text = (v: unknown) => (v instanceof PDFString || v instanceof PDFHexString ? v.decodeText() : "");
 
+/** A field's own name, short ("Pt2Line12_StreetNumberName"). USCIS names every box by its part, item and purpose, so
+ *  the model must give it back with each answer: an answer whose key does not match its box is never written. */
+export const keyOf = (name: string) => name.replace(/^form\d*\[0\]\./, "").replace(/#?subform\[\d+\]\./gi, "").replace(/\[0\]$/, "");
+
 /** Every field of a fillable PDF, with the label the form gives it (its tooltip), in page order. */
 export async function fieldsOf(bytes: Uint8Array): Promise<Field[]> {
   const pdf = await openForm(bytes);
@@ -126,8 +130,10 @@ export async function fieldsOf(bytes: Uint8Array): Promise<Field[]> {
     const name = f.getName();
     // The 2D barcode boxes on each page are written by Adobe from the answers, never by hand.
     if (/BarCode|PDF417/i.test(name)) continue;
-    const tip = text(f.acroField.dict.get(PDFName.of("TU")));
-    const label = (tip || name.replace(/^form\d*\[0\]\./, "").replace(/\[\d+\]/g, "").replace(/[#._]+/g, " ")).replace(/\s+/g, " ").trim().slice(0, 300);
+    const tip = text(f.acroField.dict.get(PDFName.of("TU"))).replace(/\s+/g, " ").trim();
+    // A long label opens with the section's instructions and ends with the box itself ("12. A. Enter Street Number
+    // and Name"), so a long one keeps its start and its end; cutting the end would hide which box it is.
+    const label = !tip ? keyOf(name).replace(/[#._]+/g, " ") : tip.length <= 300 ? tip : `${tip.slice(0, 90).replace(/\s+\S*$/, "")} … ${tip.slice(-200).replace(/^\S*\s+/, "")}`;
     const widget = f.acroField.getWidgets()[0];
     const pageRef = widget?.P();
     const page = pageRef ? pages.findIndex((r) => r === pageRef) + 1 || undefined : undefined;
@@ -139,6 +145,14 @@ export async function fieldsOf(bytes: Uint8Array): Promise<Field[]> {
   return out.sort((a, b) => (a.page ?? 0) - (b.page ?? 0));
 }
 
+// USPS Publication 28 street suffix and direction abbreviations.
+const USPS: Record<string, string> = {
+  avenue: "Ave", boulevard: "Blvd", street: "St", road: "Rd", drive: "Dr", lane: "Ln", court: "Ct", place: "Pl", circle: "Cir",
+  highway: "Hwy", parkway: "Pkwy", terrace: "Ter", square: "Sq", trail: "Trl", expressway: "Expy", freeway: "Fwy", mountain: "Mtn",
+  heights: "Hts", center: "Ctr", crossing: "Xing", junction: "Jct", point: "Pt", north: "N", south: "S", east: "E", west: "W",
+  northeast: "NE", northwest: "NW", southeast: "SE", southwest: "SW", apartment: "Apt", suite: "Ste", floor: "Fl",
+};
+
 /** USCIS forms take dates as MM/DD/YYYY. */
 export function normalise(field: Field, value: string) {
   let v = value.trim();
@@ -146,6 +160,12 @@ export function normalise(field: Field, value: string) {
   if (iso && /date|birth|expir|arriv|issued|from|to\b/i.test(field.label)) v = `${iso[2]}/${iso[3]}/${iso[1]}`;
   // A value too long for its box is never cut: a cut number is a wrong number. Numbers lose their
   // prefix and separators where that makes them fit (A-numbers, receipts); otherwise the field stays blank.
+  // A street too long for its box takes the USPS standard abbreviations, as a paralegal would write it, only when the
+  // full form does not fit.
+  if (field.max && v.length > field.max && /street/i.test(field.label)) {
+    const short = v.split(" ").map((w) => USPS[w.toLowerCase().replace(/[.,]$/, "")] ?? w).join(" ");
+    if (short.length <= field.max) return short;
+  }
   if (field.max && v.length > field.max) {
     const numberish = /number|no\.|receipt|ssn|ein|telephone|phone|mobile|fax/i.test(field.label);
     const compact = v.replace(/[\s\-().]/g, "").replace(/^\+/, "");
@@ -178,35 +198,176 @@ function plainText(fields: ReturnType<ReturnType<PDFDocument["getForm"]>["getFie
 
 export const yes = (v: string) => /^(yes|true|x|checked|on|1)$/i.test(v.trim());
 
-/** The blank form with the answers written into its own fields. The fields stay editable. */
-export async function fillPdf(bytes: Uint8Array, answers: { name: string; value: string }[]): Promise<Uint8Array> {
-  const pdf = await openForm(bytes);
+// The smallest type an answer may shrink to so it fits its box. Below this it is hard to read, so the box stays blank.
+const MIN_SIZE = 7;
+
+/** The type size at which a value fits inside its box without being cut, or null when it cannot fit at a readable
+ *  size. Single line boxes must hold it on one line; multiline boxes must hold every wrapped line. */
+function fitSize(f: PDFTextField, value: string, font: PDFFont): number | null {
+  const rect = f.acroField.getWidgets()[0]?.getRectangle();
+  if (!rect) return null;
+  const da = Number(/([\d.]+)\s+Tf/.exec(f.acroField.getDefaultAppearance() ?? "")?.[1] ?? 10) || 10;
+  if (f.isCombed()) return value.length <= (f.getMaxLength() ?? value.length) ? da : null;
+  const width = rect.width - 4;
+  const lines = (size: number) => {
+    let n = 0;
+    for (const para of value.split("\n")) {
+      let line = "";
+      n++;
+      for (const w of para.split(" ")) {
+        const next = line ? `${line} ${w}` : w;
+        if (font.widthOfTextAtSize(next, size) <= width) { line = next; continue; }
+        if (!line || font.widthOfTextAtSize(w, size) > width) return Infinity;
+        n++; line = w;
+      }
+    }
+    return n;
+  };
+  for (let size = da; size >= MIN_SIZE; size -= 0.5) {
+    if (f.isMultiline() ? lines(size) * size * 1.15 <= rect.height - 2 : font.widthOfTextAtSize(value, size) <= width) return size;
+  }
+  return null;
+}
+
+/** Writes the answers into the form's own fields, and returns the names of those that could not be written as given:
+ *  a value that will not fit its box, an option the field does not offer. Nothing is ever cut or guessed. */
+async function place(pdf: PDFDocument, answers: { name: string; value: string }[], font: PDFFont) {
   const form = pdf.getForm();
   plainText(form.getFields());
   const byName = new Map(form.getFields().map((f) => [f.getName(), f]));
+  const left: string[] = [];
   for (const a of answers) {
     const f = byName.get(a.name);
     if (!f || !a.value.trim()) continue;
     try {
       if (f instanceof PDFTextField) {
         const max = f.getMaxLength();
-        if (max && a.value.length > max) continue;
+        const size = max && a.value.length > max ? null : fitSize(f, a.value, font);
+        if (size === null) { left.push(a.name); continue; }
         f.setText(a.value);
+        // A value a little too wide is set slightly smaller rather than spilling past the box's edge.
+        const da = Number(/([\d.]+)\s+Tf/.exec(f.acroField.getDefaultAppearance() ?? "")?.[1] ?? 10) || 10;
+        if (size < da) f.setFontSize(size);
       } else if (f instanceof PDFCheckBox) {
         if (yes(a.value)) f.check(); else f.uncheck();
       } else if (f instanceof PDFRadioGroup) {
         const opt = f.getOptions().find((o) => o.toLowerCase() === a.value.trim().toLowerCase());
-        if (opt) f.select(opt);
+        if (opt) f.select(opt); else left.push(a.name);
       } else if (f instanceof PDFDropdown || f instanceof PDFOptionList) {
         const opt = f.getOptions().find((o) => o.toLowerCase() === a.value.trim().toLowerCase());
-        if (opt) f.select(opt);
+        if (opt) f.select(opt); else left.push(a.name);
       }
     } catch {
       // A field the PDF will not take is left blank rather than written wrongly.
+      left.push(a.name);
     }
   }
+  return left;
+}
+
+/** The answers that cannot be written into this form as given (too long for their box, or not an option), so they
+ *  are taken out before review and the attorney sees those boxes as blank, not as filled. */
+export async function unplaceable(bytes: Uint8Array, answers: { name: string; value: string }[]) {
+  const pdf = await openForm(bytes);
+  return new Set(await place(pdf, answers, await pdf.embedFont(StandardFonts.Helvetica)));
+}
+
+/** The blank form with the answers written into its own fields. The fields stay editable. */
+export async function fillPdf(bytes: Uint8Array, answers: { name: string; value: string }[]): Promise<Uint8Array> {
+  const pdf = await openForm(bytes);
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  await place(pdf, answers, font);
+  const form = pdf.getForm();
   // Official forms also carry an XFA layer that some viewers prefer; it would hide the answers.
   try { form.deleteXFA(); } catch { /* no XFA */ }
-  form.updateFieldAppearances(await pdf.embedFont(StandardFonts.Helvetica));
+  form.updateFieldAppearances(font);
   return pdf.save();
+}
+
+export type RawAnswer = { i: number; key?: unknown; value: unknown; source?: unknown };
+
+/** Whether a value has the shape its box asks for, judged from the box's key and label. A value of the wrong shape (a
+ *  state in a street box, letters in an A-Number) is never written: it is a sign the answer is in the wrong place. */
+export function plausible(f: Field, v: string): boolean {
+  // The box's own words: the last sentences of its label ("13. A. Enter Date From. Enter as 2 digit month..."). Not the
+  // section's instructions at the start of a long label, and never the key: USCIS keys can name the wrong thing (the
+  // G-28 box keyed Line6_EMail is the mobile telephone box).
+  const k = (f.label.includes(" … ") ? f.label.split(" … ").pop()! : f.label).split(/(?<=\.)\s+/).slice(-3).join(" ");
+  const has = (re: RegExp) => re.test(k);
+  if (f.kind !== "text") return true;
+  if (/^(n\/?a|none)$/i.test(v)) return !has(/date|zip|number|ssn|telephone|phone/i) || has(/middle|other names|unit|apt/i);
+  if (has(/SSN|Social Security/i)) return /^\d{9}$/.test(v.replace(/-/g, ""));
+  if (has(/ANumber|AlienNumber|A-Number|Alien Registration Number/i)) return /^\d{7,9}$/.test(v.replace(/^A-?/i, ""));
+  if (has(/Receipt/i)) return /^[A-Z]{3}\d{10}$/.test(v.replace(/[\s-]/g, ""));
+  if (has(/ZipCode|Zip Code/i)) return /^\d{5}(-?\d{4})?$/.test(v);
+  if (has(/E-?mail/i)) return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
+  if (has(/Area Code/i)) return /^\d{3}$/.test(v);
+  if (has(/Extension/i) && !has(/Telephone Number[^.]*\.$/i)) return /^\d{1,6}$/.test(v);
+  if (has(/7-digit Telephone/i)) return /^\d{3}-?\d{4}$/.test(v);
+  if (has(/Telephone|Phone|Mobile|Fax/i)) return /^\+?[\d\s().-]{7,20}$/.test(v) && v.replace(/\D/g, "").length >= 7;
+  if (has(/Date(?! of Birth.*place)|DOB|\bmm\/dd\/yyyy/i) && !has(/place|city|country|reason|explain|describe|additional/i)) {
+    const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v);
+    if (!m) return false;
+    const [mm, dd, yy] = [Number(m[1]), Number(m[2]), Number(m[3])];
+    const t = new Date(Date.UTC(yy, mm - 1, dd));
+    return t.getUTCMonth() === mm - 1 && t.getUTCDate() === dd && yy >= 1900 && yy <= 2100;
+  }
+  if (has(/FamilyName|GivenName|MiddleName|LastName|FirstName|Family Name|Given Name|Middle Name/i) && !has(/organization|company|business|employer/i)) return !/[\d@]/.test(v);
+  if (has(/Country|Province|CityOrTown|City or Town/i) && !has(/street|address line|in care of/i)) return !/\d/.test(v);
+  if (has(/StreetNumberName|Street Number and Name/i)) return /[A-Za-z]/.test(v) && !/^[A-Z]{2}$/.test(v);
+  if (has(/_State\b|\bState\b/) && f.max && f.max <= 2) return /^[A-Z]{2}$/.test(v);
+  if (has(/HowMany|How many|Number of|NumberOf/i) && !has(/street|telephone|phone|receipt|passport|document|ssn|account/i)) return /^\d{1,4}$/.test(v);
+  return true;
+}
+
+/** Two boxes ticked for a question that takes one (Yes and No, Male and Female, Single and Married, Apt. and Ste.) is a
+ *  contradiction: none of them is kept, and the attorney decides. USCIS names the boxes of one question alike
+ *  (Pt2Line9_Male, Pt2Line9_Female; Pt2Line12_Unit[0], [1], [2]); questions that say "all that apply" take several. */
+export function dropContradictions(answers: Answer[]): Answer[] {
+  const group = (a: Answer) => {
+    const k = keyOf(a.name).replace(/\[\d+\]$/, "");
+    const line = /^(Pt\d+Line\d+[a-z]?\d*)_/i.exec(k)?.[1];
+    return line ?? k;
+  };
+  const yesNo = (a: Answer) => a.label.replace(/\s*Check (Yes|No)\b.*$/i, "").trim();
+  const ticked = new Map<string, number>();
+  const keyFor = (a: Answer) => (/Check (Yes|No)\b/i.test(a.label) ? `yn:${yesNo(a)}` : `g:${group(a)}`);
+  const several = (a: Answer) => /all that apply|select all|check all|one or more/i.test(a.label);
+  for (const a of answers) if (a.value === "yes" && !several(a)) ticked.set(keyFor(a), (ticked.get(keyFor(a)) ?? 0) + 1);
+  return answers.filter((a) => a.value !== "yes" || several(a) || (ticked.get(keyFor(a)) ?? 0) < 2);
+}
+
+/** The model's answers, checked against the fields they claim to fill: the key given back must be the box's own, a
+ *  choice must be one of the box's options, and every value must have the shape its box asks for. */
+export function answersFor(list: RawAnswer[], fields: Field[]): Answer[] {
+  const out: Answer[] = [];
+  for (const a of list) {
+    const f = fields[Number(a.i)];
+    const value = typeof a.value === "string" ? a.value : typeof a.value === "number" ? String(a.value) : "";
+    if (!f || !value.trim()) continue;
+    // The key given back must be this box's own: an answer meant for a neighbouring box is never written here.
+    if (String(a.key ?? "").trim() !== keyOf(f.name)) continue;
+    if (f.kind === "choice" && !f.options?.some((o) => o.toLowerCase() === value.trim().toLowerCase())) continue;
+    if (f.kind === "check" && !yes(value)) continue;
+    const v = f.kind === "check" ? "yes" : normalise(f, value);
+    if (!v || !plausible(f, v)) continue;
+    out.push({ name: f.name, label: f.label, value: v, source: String(a.source ?? "").slice(0, 40) });
+  }
+  return out;
+}
+
+/** Boxes the form fills from another ("This is a read only field. This field pre-populates from page 1"): the A-Number
+ *  at the top of each page, names repeated in Additional Information. Adobe copies them with a script that is removed
+ *  when the form is filled, so the copy is made here, from the answer to the box of the same name. */
+export function withCopies(answers: Answer[], fields: Field[]): Answer[] {
+  const base = (name: string) => keyOf(name).replace(/\[\d+\]$/, "").replace(/^#?area\[\d+\]\./i, "");
+  const given = new Map(answers.map((a) => [base(a.name), a]));
+  const have = new Set(answers.map((a) => a.name));
+  const copies: Answer[] = [];
+  for (const f of fields) {
+    if (have.has(f.name) || !/pre-?populates?|read only field/i.test(f.label)) continue;
+    const from = given.get(base(f.name));
+    if (from && from.name !== f.name) copies.push({ name: f.name, label: f.label, value: from.value, source: from.source });
+  }
+  return [...answers, ...copies];
 }

@@ -443,6 +443,21 @@ from the repo the same day. History is in git up to commit `341cf65`.
   (a case's own rulebooks in a case chat, and a rulebook lookup for any type or code). Not used in client emails on
   purpose (no legal answers to clients) or in form filling. 694 citations checked, none missing.
 
+## Form filling accuracy (2026-11-22)
+* Lincoln writes answers into the official PDFs' own fillable boxes, so position comes from the form: rendered I-130,
+  I-485, I-765, I-129 and N-400 pages show text left aligned and centred in each box, digit grids one per cell.
+  Typed answers are what USCIS asks for ("type or print in black ink"); signatures stay for the person, by hand.
+* Found and fixed: 19% of box labels (1,905 of 10,051) were cut at 300 characters before the words naming the box;
+  USCIS internal box names are often left over from older editions (G-28 box keyed Line6_EMail is the mobile phone box;
+  I-129F Pt1Line11 is in Part 2), so the label decides, never the name; header A-Number boxes printed blank because the
+  Adobe copy script is removed when filling.
+* Guards now: the model must give back each box's key (an answer aimed at the box next door is dropped); every value
+  must have its box's shape (dates real, ZIP, state, A-Number, SSN, receipt, email, phone, area code, names without
+  digits); two ticks on a single choice question are both dropped; a value too wide shrinks to no less than 7 point,
+  else the box stays blank (never cut); long streets take USPS abbreviations; copy boxes are filled from their source.
+  `lincoln/tests/forms-guard.test.mjs` runs these on the real forms in npm test. Swept all 37 forms (10,047 boxes):
+  every wrong-shaped answer the test produced was stopped. Not yet measured: a live fill with the real model.
+
 ## Real case test set (2026-11-22)
 * `lincoln/tests/aao/`: ten real USCIS AAO appeal decisions (EB-1A, O-1A, NIW, H-1B, EB-1C, 212(i) waiver, 212(h)
   waiver, U, VAWA, T), each turned into a case file and an answer key from USCIS's own findings. Tests legal judgement,
