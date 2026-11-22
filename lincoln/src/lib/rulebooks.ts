@@ -7,6 +7,8 @@
 // (tests/aao) showed Lincoln missing type specific tests. To be reviewed by an immigration attorney. Policies that change
 // often (fees, DACA litigation, TPS designations, parole programs, H-1B selection) say "check current" on purpose.
 
+import { OFFICIAL_CODES } from "./codes";
+
 export type Rulebook = { cites: string[]; rules: string };
 
 const GENERAL = "Burden on the filer, preponderance of the evidence (Matter of Chawathe, 25 I&N Dec. 369). Eligibility must exist at filing and through adjudication (8 CFR 103.2(b)(1)); evidence of later events cannot cure a petition. Assertions need corroboration; statements in a brief are not evidence. Non precedent decisions and other people's approvals do not bind USCIS.";
@@ -67,7 +69,7 @@ const R: Record<string, Rulebook> = {
   "I-526": { cites: ["8 CFR 204.6"], rules: "Standalone investor petition: as EB-5, with direct job creation only, a comprehensive business plan (Matter of Ho, 22 I&N Dec. 206), and lawful source of every dollar." },
   "I-526E": { cites: ["8 CFR 204.6", "INA 203(b)(5)(E)"], rules: "Regional center investor petition (EB-5 Reform and Integrity Act of 2022): investment in an approved project of a designated regional center, lawful source and path of funds, at risk, job creation (indirect allowed), compliance with the Act's integrity provisions. Check the project's I-956F status." },
   "I-829": { cites: ["8 CFR 216.6", "INA 216A"], rules: "Remove conditions on an investor's residence: filed in the 90 days before the second anniversary; investment sustained, the enterprise established and the required jobs created or expected within a reasonable time; no material change that defeats eligibility; source of funds may be revisited." },
-  "I-956": { cites: ["INA 203(b)(5)(E)"], rules: "Regional center designation and project filings under the EB-5 Reform and Integrity Act: geographic area, economic analysis, compliance and integrity requirements, annual filings. Check current USCIS guidance; specialist area." },
+  "I-956": { cites: ["INA 203(b)(5)(E)"], rules: "Regional center designation and project filings under the EB-5 Reform and Integrity Act: geographic area, economic analysis, compliance and integrity requirements, annual filings. Related filings: I-956F project applications, I-956G annual statements, I-956H bona fides of people involved, I-956K promoter registration. Check current USCIS guidance; specialist area." },
   "I-485 Supplement J": { cites: ["INA 204(j)", "8 CFR 245.25"], rules: "Confirms the bona fide job offer for an employment based adjustment; for portability under INA 204(j), the I-485 pending 180 days or more and the new job in the same or a similar occupational classification as the I-140 job (compare duties, skills, education, wages)." },
 
   // Labor certification
@@ -88,7 +90,7 @@ const R: Record<string, Rulebook> = {
   "I-751": { cites: ["8 CFR 216.4", "8 CFR 216.5", "INA 216"], rules: "Joint petition in the 90 days before the second anniversary of conditional residence, showing the marriage was entered in good faith (not that it continues happily); late filing needs good cause. Waivers (8 CFR 216.5): good faith marriage ended by divorce or annulment (or death), battery or extreme cruelty by the spouse, or extreme hardship from removal arising in the conditional period. Interview possible; failure to file ends status. Traps: filing jointly after separation, using the waiver before the divorce is final (it can be filed and then updated)." },
   "I-360 widow": { cites: ["8 CFR 204.2(b)", "INA 201(b)(2)(A)(i)"], rules: "Widow or widower of a US citizen: married at the time of death (legally, not divorced or separated by decree), petition within two years of the death, not remarried; bona fide marriage. Children included." },
   "I-730": { cites: ["8 CFR 207.7", "8 CFR 208.21"], rules: "Refugee or asylee follow to join for spouse and unmarried children under 21: relationship existed when the principal was admitted or granted asylum (child in utero counts); filed within two years of admission or grant (extendable for humanitarian reasons); principal still a refugee or asylee or became LPR on that basis. Persecutors barred." },
-  "I-864": { cites: ["8 CFR 213a.2", "INA 213A"], rules: "Required for family immigrants and some employment cases; sponsor income at least 125 percent of the federal poverty guidelines for the household size (100 percent for active military sponsoring spouse or child), using the most recent tax year; assets at three times the shortfall (five times generally; once for a spouse or child of a citizen); joint sponsor if needed; I-864A for household members. Household size counts the sponsor, dependents, the immigrants and prior sponsored immigrants still under obligation. Check current guidelines." },
+  "I-864": { cites: ["8 CFR 213a.2", "INA 213A"], rules: "Required for family immigrants and some employment cases; sponsor income at least 125 percent of the federal poverty guidelines for the household size (100 percent for active military sponsoring spouse or child), using the most recent tax year; assets at three times the shortfall (five times generally; once for a spouse or child of a citizen); joint sponsor if needed; I-864A for household members. Household size counts the sponsor, dependents, the immigrants and prior sponsored immigrants still under obligation. Check current guidelines. Variants: I-864EZ (one sponsor using only salary), I-864A (household member), and the exemption for those who need none (40 quarters of work, a child who will become a citizen on entry); the sponsor reports address changes on I-865." },
   "I-134": { cites: ["8 CFR 214.1"], rules: "Declaration of financial support for nonimmigrants or parole programs; shows the supporter's income and assets and relationship; not legally binding like the I-864. Check the program it is used for." },
   "I-600": { cites: ["8 CFR 204.3"], rules: "Orphan from a non Hague country: child under 16 at filing (18 for siblings), meets the orphan definition (death or disappearance, abandonment, separation or loss of both parents, or a sole or surviving parent unable to care and who irrevocably releases), adopted abroad or to be adopted in the US, approved home study, prospective parents eligible (US citizen, married or unmarried at least 25)." },
   "I-600A": { cites: ["8 CFR 204.3"], rules: "Advance processing of the parents' suitability before identifying a child; home study, fingerprints, approval valid for a limited period; then I-600." },
@@ -127,7 +129,7 @@ const R: Record<string, Rulebook> = {
 2. Physically present in the US (or American Samoa, the CNMI or a port of entry) on account of the trafficking (8 CFR 214.207(a)): currently trafficked; liberated by law enforcement or escaped before filing; trafficked in the past with present presence directly related to it, whatever the time since; or allowed entry to take part in an investigation or prosecution. If the person departed or was removed after the trafficking, also 8 CFR 214.207(b): reentry from continued victimization, a new trafficking incident, reentry for or presence on account of participation in investigative or judicial processes, or return and treatment or services for the victimization not available abroad. Delay since escape is not fatal by itself; analyze the person's statement, trauma and services (214.207(c)).
 3. Complied with any reasonable request for assistance from law enforcement (8 CFR 214.208); at a minimum a report to an agency with jurisdiction, a single contact may suffice; reasonableness judged on the listed factors; exempt if under 18 at the time of an act of trafficking, excepted if unable because of physical or psychological trauma (credible evidence required). An LEA declaration helps but is not required.
 4. Extreme hardship involving unusual and severe harm on removal (8 CFR 214.209), using traditional extreme hardship factors and trafficking specific ones (care not available, consequences of victimization, loss of access to US courts, penalties or stigma at home, re victimization, trafficker reach, conflict, economic harm); hardship to others counts only through its effect on the applicant.
-5. Not barred as a trafficker (214.202(e)); inadmissibility waivable by I-192 under INA 212(d)(13). Annual cap of 5,000 T-1 (8 CFR 214.210).` },
+5. Not barred as a trafficker (214.202(e)); inadmissibility waivable by I-192 under INA 212(d)(13). Annual cap of 5,000 T-1 (8 CFR 214.210). Family members (T-2 to T-6: spouse, children, and for victims under 21 parents and unmarried siblings under 18, or any family facing present danger of retaliation) through I-914 Supplement A.` },
   "I-918": { cites: ["8 CFR 214.14", "INA 101(a)(15)(U)", "INA 214(p)"], rules: `1. Victim of qualifying criminal activity (listed crimes or similar activity, attempt, conspiracy, solicitation) that occurred in the US or violated US law.
 2. Substantial physical or mental abuse as a result (8 CFR 214.14(b)(1)): nature of the injury, severity of the conduct and harm, duration, permanent or serious harm, aggravation of pre existing conditions; a series of acts may add up. Diagnoses alone are not enough when the details show lesser harm; inconsistencies between the police report, certification and later accounts weigh heavily.
 3. Possesses information and has been, is, or is likely to be helpful: I-918 Supplement B signed by a certifying official (agency head or a supervisor specifically designated; 8 CFR 214.14(a)(3)) within six months before filing.
@@ -142,7 +144,7 @@ const R: Record<string, Rulebook> = {
   "I-881": { cites: ["8 CFR 240.60"], rules: "NACARA suspension or special rule cancellation: Guatemalan, Salvadoran (ABC class) or certain former Soviet bloc nationals with the required registration or asylum filing dates, seven years of continuous physical presence, good moral character, extreme hardship to self or qualifying relatives. Historic, specialist." },
   "I-602": { cites: ["8 CFR 207.3"], rules: "Waiver of inadmissibility for a refugee: humanitarian purposes, family unity or public interest; some grounds cannot be waived (controlled substance trafficking, security, persecutor)." },
   "I-590": { cites: ["8 CFR 207.1", "INA 207"], rules: "Refugee status abroad: refugee definition, of special humanitarian concern, not firmly resettled, admissible or waived; access through UNHCR referral or priority programs." },
-  "I-360 Amerasian": { cites: ["8 CFR 204.4"], rules: "Amerasian: born in Korea, Vietnam, Laos, Cambodia or Thailand after December 31, 1950 and before October 22, 1982, fathered by a US citizen; sponsor in the US. Rare." },
+  "I-360 Amerasian": { cites: ["8 CFR 204.4"], rules: "Amerasian: born in Korea, Vietnam, Laos, Cambodia or Thailand after December 31, 1950 and before October 22, 1982, fathered by a US citizen; sponsor in the US. Separately, the Vietnam Amerasian Homecoming Act (visa symbols AM1 to AM3) covered children born in Vietnam between January 1, 1962 and January 1, 1976 to US citizen fathers, with their spouses, children and mothers. Both are rare now." },
   "I-854": { cites: ["8 CFR 214.2(t)"], rules: "S visa: requested by a law enforcement agency for a witness or informant with critical reliable information; not filed by the person. Rare and confidential." },
 
   // Visitors, students, exchange
@@ -151,10 +153,10 @@ const R: Record<string, Rulebook> = {
   "F-1": { cites: ["8 CFR 214.2(f)"], rules: "Admitted to a SEVP school, full course of study, funds, intent to return; maintain status (full load, authorized employment only, SEVIS record). Reinstatement (8 CFR 214.2(f)(16)) within five months of falling out of status for reasons beyond control. Change of status from B requires care." },
   "M-1": { cites: ["8 CFR 214.2(m)"], rules: "Vocational study at an SEVP school; fixed time limits; no change to F-1; limited practical training after study." },
   "OPT": { cites: ["8 CFR 214.2(f)(10)", "8 CFR 214.2(f)(11)", "8 CFR 214.2(f)(12)"], rules: "Post completion OPT up to 12 months related to the field, filed up to 90 days before and 60 days after program end with DSO recommendation; unemployment limits; STEM OPT 24 month extension with an E-Verify employer, I-983 training plan and a qualifying STEM degree; cap gap for H-1B." },
-  "J-1": { cites: ["22 CFR 62", "INA 212(e)"], rules: "Exchange visitor through a designated sponsor (DS-2019); two year home residency requirement (INA 212(e)) if government funded, on the skills list, or graduate medical training; maintain the program. Waivers: see I-612." },
+  "J-1": { cites: ["22 CFR 62", "INA 212(e)"], rules: "Exchange visitor through a designated sponsor (DS-2019), SEVIS I-901 fee paid; two year home residency requirement (INA 212(e)) if government funded, on the skills list, or graduate medical training; maintain the program. Waivers: see I-612." },
   "I-539": { cites: ["8 CFR 214.1(c)(4)"], rules: "Extension or change of status: filed before the current status expires, status maintained, admissible, the new or extended stay for a legitimate temporary purpose; some classes cannot change (J subject to 212(e), K, C, D, S, visa waiver entrants)." },
   "I-102": { cites: ["8 CFR 264.6"], rules: "Replace or correct an I-94: USCIS corrects its own errors; CBP errors go to CBP deferred inspection." },
-  "I-612": { cites: ["INA 212(e)", "8 CFR 212.7(c)"], rules: "Waiver of the J-1 two year home residency rule: no objection statement (not for graduate medical training), interested government agency, Conrad 30 state program for physicians, persecution, or exceptional hardship to a US citizen or LPR spouse or child (higher than extreme hardship). State Department recommendation." },
+  "I-612": { cites: ["INA 212(e)", "8 CFR 212.7(c)"], rules: "Waiver of the J-1 two year home residency rule: no objection statement (not for graduate medical training), interested government agency, Conrad 30 state program for physicians, persecution, or exceptional hardship to a US citizen or LPR spouse or child (higher than extreme hardship). Starts with the State Department waiver application (DS-3035); the State Department recommends and USCIS decides." },
   "A, G and NATO": { cites: ["8 CFR 214.2(a)", "8 CFR 214.2(g)"], rules: "Diplomatic and international organization status; employment of dependents; adjustment requires the I-508 waiver of privileges and immunities and sometimes I-566; special immigrant G-4 retirees. Specialist." },
   "I visa": { cites: ["8 CFR 214.2(i)"], rules: "Representative of foreign media, working for a media organization with a home office abroad, engaged in news gathering; reciprocity; not for commercial or entertainment productions." },
 
@@ -192,7 +194,7 @@ const R: Record<string, Rulebook> = {
   "RFE": { cites: ["8 CFR 103.2(b)(8)", "8 CFR 103.2(b)(11)"], rules: "Answer every point in the order raised, with evidence, within the deadline (no extensions; up to 12 weeks for most RFEs); submit all requested evidence at once (partial responses are decided on the record). Identify each regulatory requirement behind the request and show how the evidence meets it; do not change the material facts of the petition (a petition cannot be made approvable by changing the job or duties after filing, Matter of Izummi). Late responses are not considered." },
   "NOID": { cites: ["8 CFR 103.2(b)(8)", "8 CFR 103.2(b)(16)"], rules: "Notice of intent to deny: respond to each stated ground within the deadline (often 30 days); derogatory information must be rebutted with evidence; consider whether withdrawal is better if the case cannot succeed." },
   "NOIR": { cites: ["8 CFR 205.2"], rules: "Notice of intent to revoke an approved petition: good and sufficient cause shown by the record at the time of the notice (Matter of Ho, Matter of Estime); rebut each ground; derivative consequences for later benefits." },
-  "I-290B": { cites: ["8 CFR 103.3", "8 CFR 103.5"], rules: "Appeal to the AAO (where it has jurisdiction) or motion: 30 days from the decision (33 if mailed). Motion to reopen states new facts with evidence; motion to reconsider shows the decision was wrong in law or policy on the record at the time. On appeal identify the error; new evidence the petitioner was asked for and did not provide may be excluded (Matter of Soriano). Ineffective assistance claims need the Lozada requirements. The AAO reviews de novo." },
+  "I-290B": { cites: ["8 CFR 103.3", "8 CFR 103.5"], rules: "Appeal to the AAO (where it has jurisdiction) or motion: 30 days from the decision (33 if mailed). Motion to reopen states new facts with evidence; motion to reconsider shows the decision was wrong in law or policy on the record at the time. On appeal identify the error; new evidence the petitioner was asked for and did not provide may be excluded (Matter of Soriano). Ineffective assistance claims need the Lozada requirements. The AAO reviews de novo. A case certified to a higher authority (I-290C) allows a brief within the stated time." },
   "I-824": { cites: [], rules: "Action on an approved petition or application: duplicate approval notice or notify a consulate, or request the follow to join process for derivatives of a person who adjusted." },
   "221(g)": { cites: ["INA 221(g)"], rules: "Consular refusal pending documents or administrative processing: supply what was requested promptly; one year to overcome before the case may need a new application; mandamus only after unreasonable delay." },
   "Consular reconsideration": { cites: ["22 CFR 42.81", "22 CFR 41.121"], rules: "A refused applicant may submit additional evidence within one year to overcome the refusal; consular nonreviewability limits challenges; advisory opinions from the Visa Office on legal questions." },
@@ -205,7 +207,7 @@ const R: Record<string, Rulebook> = {
   "EOIR-42B": { cites: ["INA 240A(b)(1)"], rules: "Non LPR cancellation: ten years of continuous physical presence (stopped by a complete NTA or a specified offense; departures over 90 days or 180 in total break it), good moral character for ten years, no conviction under listed grounds, exceptional and extremely unusual hardship to a US citizen or LPR spouse, parent or child (well beyond what is normally expected; Matter of Monreal; Matter of Recinas); annual cap; discretion." },
   "Bond": { cites: ["INA 236(a)", "INA 236(c)", "8 CFR 1236.1"], rules: "Bond redetermination: the person must show they are not a danger and are likely to appear (Matter of Guerra factors: ties, employment, criminal history, immigration history); mandatory detention under 236(c) for certain crimes (Joseph hearing if the classification is wrong); arriving aliens are generally not bond eligible." },
   "Motion to reopen": { cites: ["8 CFR 1003.2", "8 CFR 1003.23", "INA 240(c)(7)"], rules: "One motion to reopen within 90 days of the final order, with new material evidence not available earlier and the relief application; exceptions for changed country conditions (asylum), in absentia orders (180 days for exceptional circumstances; any time for lack of notice), equitable tolling. Motion to reconsider within 30 days, showing legal or factual error. Ineffective assistance: Matter of Lozada." },
-  "EOIR-26": { cites: ["8 CFR 1003.3", "8 CFR 1003.38"], rules: "Appeal to the BIA within 30 days of the immigration judge's decision; state the specific grounds; brief schedule; facts reviewed for clear error, law and discretion de novo." },
+  "EOIR-26": { cites: ["8 CFR 1003.3", "8 CFR 1003.38"], rules: "Appeal to the BIA within 30 days of the immigration judge's decision (fee or fee waiver request EOIR-26A); state the specific grounds; brief schedule; facts reviewed for clear error, law and discretion de novo." },
   "EOIR-29": { cites: ["8 CFR 1003.3"], rules: "Appeal to the BIA from certain DHS decisions (for example denials of I-130 petitions), filed with the DHS office within 30 days." },
   "I-246": { cites: ["8 CFR 241.6"], rules: "Stay of removal from ICE: discretionary, humanitarian factors, pending relief; a denial is not appealable." },
   "Prosecutorial discretion": { cites: ["INA 240"], rules: "Requests to ICE or DHS counsel to dismiss, close or not pursue a case; based on current enforcement priorities (check current guidance), equities and criminal history." },
@@ -229,13 +231,31 @@ const R: Record<string, Rulebook> = {
   "G-884": { cites: ["8 CFR 103.2(b)(5)"], rules: "Request return of original documents submitted to USCIS." },
   "G-1041": { cites: ["8 CFR 103.40"], rules: "Genealogy index search and records requests for deceased individuals." },
   "G-1566": { cites: ["8 CFR 103.7"], rules: "Certificate of non existence of a USCIS record." },
-  "AR-11": { cites: ["INA 265"], rules: "Change of address within ten days of moving; failure can be a removable offense in rare cases and causes missed notices." },
+  "AR-11": { cites: ["INA 265"], rules: "Change of address within ten days of moving; failure can be a removable offense in rare cases and causes missed notices. In immigration court the change goes to EOIR on EOIR-33 within five days." },
 
   // Advice
   "Consultation": { cites: [], rules: "Identify every possible route, the facts that decide each, the immigration and criminal history needed, and the risks (unlawful presence bars, misrepresentation, removability); then apply the rulebook for each route." },
   "Criminal consequences": { cites: ["INA 101(a)(43)", "INA 212(a)(2)", "INA 237(a)(2)"], rules: "Categorical approach to the statute of conviction (aggravated felony, crime involving moral turpitude, controlled substance, firearms, domestic violence); definition of conviction (INA 101(a)(48)(A)); Padilla duties; petty offense exception; the record of conviction decides divisible statutes." },
   "Travel advice": { cites: ["INA 212(a)(9)(B)", "8 CFR 245.2(a)(4)"], rules: "Departure can trigger unlawful presence bars, abandon a pending adjustment without advance parole, break continuous residence, or lead to inadmissibility at return; check status, pending filings and criminal history before any trip." },
   "Status planning": { cites: [], rules: "Map current status and expiry, every route to the goal and its timeline (priority dates, caps), maintenance requirements, and risks; apply each route's rulebook." },
+
+  // Codes in the State Department and work permit lists that had no rulebook of their own.
+  "H-1C": { cites: ["INA 101(a)(15)(H)"], rules: "Registered nurses in health professional shortage area hospitals; the program expired and no H-1C petitions have been accepted since December 20, 2009. Relevant only to records and past status; current nurse routes are Schedule A immigrant petitions, H-1B for advanced practice positions, and TN." },
+  "VI5": { cites: ["INA 201(b)"], rules: "Parent of a US citizen where the parent's own residence came under the Virgin Islands Nonimmigrant Alien Adjustment Act of 1982: a closed historic category; the parent of an adult citizen is now an ordinary immediate relative (I-130)." },
+  "Former citizen": { cites: ["INA 324(a)", "INA 327"], rules: "Immigrant visas for former citizens: women who lost citizenship by marriage to a noncitizen before September 22, 1922 (INA 324), and people who lost it by serving in allied foreign armed forces in World War II (INA 327); most may instead regain citizenship by taking the oath. Check first whether the loss was valid under Afroyim and Vance v. Terrazas, since many past losses were not." },
+  "SP": { cites: [], rules: "USA PATRIOT Act section 421 special immigrants: beneficiaries of petitions or labor certifications filed before September 11, 2001 that were revoked or terminated because of the attacks, and their families. Historic; relevant to records and old cases." },
+  "I-765 compelling": { cites: ["8 CFR 204.5(p)", "8 CFR 274a.12(c)(35)", "8 CFR 274a.12(c)(36)"], rules: "Compelling circumstances work permit: principal beneficiary of an approved EB-1, EB-2 or EB-3 petition, in E-3, H-1B, H-1B1, L-1 or O-1 status or its grace period, whose priority date is not current, showing compelling circumstances (serious illness or disability, employer dispute or retaliation, other substantial harm, or significant disruption to the employer), with no felony or two or more misdemeanors; family members under (c)(36). It gives work authorization but not status, so the person falls out of status once it is used." },
+
+  // Found in the forms the regulations name (8 CFR, 20 CFR 655 and 656, 22 CFR), 2026-11-22.
+  "EOIR-40": { cites: [], rules: "Suspension of deportation under former INA 244(a), only in deportation proceedings begun before April 1, 1997: seven years of continuous physical presence, good moral character, and extreme hardship to the person or a US citizen or resident spouse, parent or child (ten years and exceptional hardship for some grounds). NACARA special rule cancellation (I-881) is the related route for ABC class members and certain others." },
+  "Carrier fines": { cites: ["INA 273", "8 CFR 280.1"], rules: "Fines on airlines and vessels for bringing passengers without required documents or failing to detain or remove (INA 273 and related sections): Notice of Intention to Fine (I-79), a written defense within the deadline, then appeal to the BIA (EOIR-45). Defenses include documents that appeared valid on reasonable inspection and mitigation for screening programs." },
+  "Recognition and accreditation": { cites: ["8 CFR 1292.11", "8 CFR 1292.12"], rules: "EOIR recognition of a nonprofit (EOIR-31): religious, charitable, social service or similar organization, federally tax exempt, providing immigration legal services primarily to low income people, with adequate knowledge, information and experience, including access to an attorney or accredited representative for supervision. Accreditation of its representatives (EOIR-31A): good character and fitness, broad knowledge of immigration law and procedure, training; partial (DHS only) or full (DHS and EOIR); renewal on the regulatory cycle." },
+  "I-700": { cites: ["INA 210"], rules: "Special agricultural worker legalization (1986): 90 days of qualifying seasonal agricultural work in the year ending May 1, 1986; the application period ended November 30, 1988. Historic; relevant to old records, work permit category (c)(20) and class settlements." },
+  "OCAHO": { cites: ["INA 274A(e)", "INA 274C", "8 CFR 274a.9"], rules: "Administrative hearings before the Office of the Chief Administrative Hearing Officer: employer sanctions under INA 274A (knowing hire or continued employment of unauthorized workers, I-9 paperwork violations, with penalties set by size of business, good faith, seriousness, unauthorized workers involved and history), document fraud under INA 274C, and discrimination under INA 274B. A hearing must be requested within 30 days of the Notice of Intent to Fine or the final order follows; settlement and penalty mitigation are common." },
+  "274B discrimination": { cites: ["INA 274B"], rules: "Unfair immigration related employment practices: citizenship status discrimination against protected individuals, national origin discrimination (employers of 4 to 14 employees; larger ones go to the EEOC), unfair documentary practices (requesting more or different documents, or rejecting valid ones, with discriminatory intent), and retaliation. A charge with the Immigrant and Employee Rights Section within 180 days, then OCAHO. Employers: E-Verify and reverification practices are the usual source of claims." },
+  "Bond breach": { cites: ["8 CFR 103.6"], rules: "Immigration bonds (delivery bonds on Form I-352, voluntary departure and maintenance of status bonds): a delivery bond is breached when the obligor fails to produce the person after a proper demand; breach is noticed on I-323 and may be appealed to the AAO; defenses include a defective demand notice and substantial performance; cancellation when the conditions are met (departure, residence, death)." },
+  "Ineffective assistance": { cites: [], rules: "A claim that former counsel was ineffective, usually inside a motion to reopen: the person's affidavit of the agreement with counsel, notice to former counsel with a chance to respond, and a statement whether a bar complaint was filed and why not (Matter of Lozada, 19 I&N Dec. 637 (BIA 1988)), plus prejudice (Matter of Melgar, 28 I&N Dec. 169 (BIA 2020)) and diligence for equitable tolling of the deadline. Many circuits apply the tolling doctrine to notarios and unlicensed preparers." },
+  "INA 289": { cites: ["INA 289", "8 CFR 289.2"], rules: "American Indians born in Canada with at least 50 percent American Indian blood may enter and live in the US freely and are treated as lawfully admitted for permanent residence; proof of blood quantum through tribal and Canadian records; members of the Texas Band of Kickapoo hold the I-872 card. Check removability questions carefully: the protection against removal is contested." },
 
   // Added 2026-11-22 so the library covers the whole US immigration system, not only the most common filings.
   // Nonimmigrant classes and dependents
@@ -334,3 +354,59 @@ export function rulebookFor(type: string | null | undefined): { code: string; te
 }
 
 export const RULEBOOK_CODES = Object.keys(R);
+
+// What else a case can carry besides its type: the issues that bring their own legal tests. Each pattern is narrow on
+// purpose, since every rulebook added costs space in the prompt.
+const STACK: [RegExp, string][] = [
+  [/unlawful presence|three year bar|ten year bar|3 year bar|10 year bar|212\(a\)\(9\)\(B\)/i, "Unlawful presence"],
+  [/permanent bar|212\(a\)\(9\)\(C\)|prior removal|was (?:removed|deported)|removal order|deportation order|I-212/i, "I-212"],
+  [/212\(i\)|212\(h\)|misrepresentation|I-601\b/i, "I-601"],
+  [/I-601A|provisional (?:unlawful presence )?waiver/i, "I-601A"],
+  [/arrest|convict|criminal (?:charge|history|record)|guilty plea|probation/i, "Criminal consequences"],
+  [/public charge/i, "Public charge"],
+  [/material support|terroris/i, "TRIG"],
+  [/notice to appear|removal proceedings|immigration court|immigration judge/i, "Removal defense"],
+  [/request for evidence|\bRFE\b/i, "RFE"],
+  [/notice of intent to deny|\bNOID\b/i, "NOID"],
+  [/notice of intent to revoke|\bNOIR\b/i, "NOIR"],
+  [/\bage[sd]? out|turns 21|\bCSPA\b/i, "CSPA"],
+  [/two year home residency|212\(e\)/i, "I-612"],
+  [/advance parole|travel (?:abroad|outside)/i, "Travel advice"],
+  [/affidavit of support|I-864/i, "I-864"],
+  [/priority date|visa bulletin|retrogress/i, "Priority date"],
+  [/expedited removal|credible fear|reasonable fear/i, "Expedited removal"],
+  [/marriage fraud|204\(c\)/i, "I-130"],
+];
+
+// Official codes worth finding in free text: those with a digit, so "I" or "D" in a sentence never match.
+const CODE_INDEX = OFFICIAL_CODES.filter((c) => /\d/.test(c.code) && c.kind !== "work permit");
+const codeRe = (c: string) => new RegExp(`(?:^|[^A-Za-z0-9/-])${c.replace(/[()/]/g, "\\$&")}(?![A-Za-z0-9/])`);
+const CODE_RES = CODE_INDEX.map((c) => [codeRe(c.code), c] as const);
+// Work permit categories are written "(c)(8)" or "c8" on cards and notices.
+const EAD_RES = OFFICIAL_CODES.filter((c) => c.kind === "work permit").map((c) => [new RegExp(`(?:category\\s*)?${c.code.replace(/[()]/g, "\\$&")}(?![\\d(])|\\b${c.code.replace(/[()]/g, "")}\\b(?=.{0,40}(?:EAD|work permit|employment authorization))`, "i"), c] as const);
+
+/** Every rulebook a case touches: its type first, then the official codes and issues found in what is known of it
+ *  (summary, issues, the request), up to a size budget. The type's own rulebook always comes first. */
+export function rulebooksFor(type: string | null | undefined, context = "", maxChars = 14000): { codes: string[]; text: string; cites: string[] } | null {
+  const keys: string[] = [];
+  const add = (k: string) => { if (R[k] && !keys.includes(k)) keys.push(k); };
+  const primary = rulebookFor(type);
+  if (primary) add(primary.code);
+  const hay = `${type ?? ""} ${context}`;
+  for (const [re, c] of CODE_RES) if (re.test(hay)) c.rulebooks.forEach(add);
+  for (const [re, c] of EAD_RES) if (re.test(hay)) c.rulebooks.forEach(add);
+  for (const [re, k] of STACK) if (re.test(context)) add(k);
+  if (!keys.length) return null;
+  const parts: string[] = [];
+  const cites: string[] = [];
+  let size = 0;
+  for (const k of keys) {
+    const block = `Rulebook for ${k}${parts.length ? " (raised by this case's facts)" : ""}:\n${R[k].rules}`;
+    if (parts.length && size + block.length > maxChars) break;
+    parts.push(block);
+    cites.push(...R[k].cites);
+    size += block.length;
+  }
+  const used = keys.slice(0, parts.length);
+  return { codes: used, text: `Rulebooks, Lincoln's summary of the governing law (the official text, where given, governs). Apply each one's tests in order. ${GENERAL}\n\n${parts.join("\n\n")}`, cites: [...new Set(cites)] };
+}

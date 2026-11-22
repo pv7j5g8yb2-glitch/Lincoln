@@ -355,7 +355,8 @@ export function lawText(cites: string[], max = 16000) {
     if (seen.has(key)) continue;
     seen.add(key);
     const block = `${hit.cite}${hit.alias ? ` (${hit.alias})` : ""}, ${hit.heading} [${hit.version}]\n${hit.text.slice(startOf(hit, c))}`;
-    if (size + block.length > max) break;
+    // A passage that does not fit is skipped, so shorter ones after it still get in.
+    if (size + block.length > max) continue;
     parts.push(block); size += block.length;
   }
   return parts.join("\n\n---\n\n");

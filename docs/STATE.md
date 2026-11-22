@@ -414,11 +414,11 @@ from the repo the same day. History is in git up to commit `341cf65`.
   Lincoln when it works that type (most misses were a specific test not applied). 4. Compare models on the set (no
   model bias). 5. Every attorney correction becomes a new test case. Attorney approval stays on everything.
 * Step 3 done (2026-11-22): `lincoln/src/lib/rulebooks.ts` has a rulebook for every case type in the library, widened
-  the same day from 156 to 222 types to cover the whole US immigration system (adjustment routes such as DV, registry,
+  the same day from 156 to 236 types to cover the whole US immigration system (adjustment routes such as DV, registry,
   Cuban, refugee, asylee, U, T, VAWA and SIJS; dependents; AC21; Schedule A; enforcement such as reinstatement, 238(b),
   port of entry; citizenship suits 1503, 1447(b), 1421(c); BALCA, DOL investigations, corporate changes, layoffs). Each has: the tests in the order an adjudicator applies them, the standard, key precedents and the usual traps. Lincoln
   gets it when it reads a file, on the second check and when drafting, and the draft also gets the official text of
-  every provision the rulebook cites. All 645 citations the law library covers were checked against the published text
+  every provision the rulebook cites. All 679 citations the law library covers were checked against the published text
   (none missing). Drafted by Claude from the regulations, not yet reviewed by an attorney; fast moving areas (fees, DACA,
   TPS, parole, H-1B selection, Gold Card) say "check current". Found while checking: the public charge regulations (8 CFR 212.20 to 212.23) were removed from the CFR on 2026-09-18
   and the NACARA rule 245.13 is gone, so those rulebooks apply the statute and say so; the T visa rules moved from 8 CFR
@@ -426,6 +426,14 @@ from the repo the same day. History is in git up to commit `341cf65`.
   parts of 8 CFR 214.2(h), the SIJS rule 204.11 and 1208.18, and giving passages that opened on the paragraph before
   the one cited. Fixed; the live library rebuilds itself on the next deploy. Not yet measured: needs a paid rerun of
   the ten cases (about $1.25), which waits for funding.
+
+* Official codes (2026-11-22): `lincoln/src/lib/codes.ts` indexes all 289 codes from the government's own lists: the
+  State Department's 242 visa symbols (22 CFR 41.12 and 42.11) and the 47 work permit categories (8 CFR 274a.12 plus
+  (c)(31)), each pointing to its rulebooks. Every form named in 8 CFR, 20 CFR 655 and 656 and 22 CFR was checked
+  against the library; the rest are agency paperwork (warrants, manifests, cards), not cases. DHS class of admission
+  codes for adjustment (IR6 and so on) are not in any regulation and are not indexed. Stacked cases: the second check
+  and drafts get every rulebook the facts raise (a waiver, a prior removal, an arrest, an RFE, ageing out), with the
+  official text, up to a size limit. 679 citations checked, none missing.
 
 ## Real case test set (2026-11-22)
 * `lincoln/tests/aao/`: ten real USCIS AAO appeal decisions (EB-1A, O-1A, NIW, H-1B, EB-1C, 212(i) waiver, 212(h)
