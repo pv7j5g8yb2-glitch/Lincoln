@@ -413,12 +413,15 @@ from the repo the same day. History is in git up to commit `341cf65`.
   the score. 3. Case type rulebooks: the exact legal tests per case type from the regulations and Policy Manual, given to
   Lincoln when it works that type (most misses were a specific test not applied). 4. Compare models on the set (no
   model bias). 5. Every attorney correction becomes a new test case. Attorney approval stays on everything.
-* Step 3 done (2026-11-22): `lincoln/src/lib/rulebooks.ts` has a rulebook for every one of the 156 case types in the
-  library: the tests in the order an adjudicator applies them, the standard, key precedents and the usual traps. Lincoln
+* Step 3 done (2026-11-22): `lincoln/src/lib/rulebooks.ts` has a rulebook for every case type in the library, widened
+  the same day from 156 to 222 types to cover the whole US immigration system (adjustment routes such as DV, registry,
+  Cuban, refugee, asylee, U, T, VAWA and SIJS; dependents; AC21; Schedule A; enforcement such as reinstatement, 238(b),
+  port of entry; citizenship suits 1503, 1447(b), 1421(c); BALCA, DOL investigations, corporate changes, layoffs). Each has: the tests in the order an adjudicator applies them, the standard, key precedents and the usual traps. Lincoln
   gets it when it reads a file, on the second check and when drafting, and the draft also gets the official text of
-  every provision the rulebook cites. All 449 citations the law library covers were checked against the published text
+  every provision the rulebook cites. All 645 citations the law library covers were checked against the published text
   (none missing). Drafted by Claude from the regulations, not yet reviewed by an attorney; fast moving areas (fees, DACA,
-  TPS, parole, H-1B selection, Gold Card) say "check current". Found while checking: the T visa rules moved from 8 CFR
+  TPS, parole, H-1B selection, Gold Card) say "check current". Found while checking: the public charge regulations (8 CFR 212.20 to 212.23) were removed from the CFR on 2026-09-18
+  and the NACARA rule 245.13 is gone, so those rulebooks apply the statute and say so; the T visa rules moved from 8 CFR
   214.11 to 214.200 to 214.216 in 2024 (the old AAO case 10 applies the old text), and the law library was mislabelling
   parts of 8 CFR 214.2(h), the SIJS rule 204.11 and 1208.18, and giving passages that opened on the paragraph before
   the one cited. Fixed; the live library rebuilds itself on the next deploy. Not yet measured: needs a paid rerun of
