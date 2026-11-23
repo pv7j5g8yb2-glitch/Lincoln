@@ -213,8 +213,9 @@ build` before every push to the session branch; Render deploys from it. A grep f
 
 ## Hard limits (do not break these)
 
-* **Ismael is 15.** A parent or guardian must be the legal owner of the company and the account
-  holder for payments, contracts and data agreements. LinkedIn's minimum age is believed to be
+* **Ismael is 15 (turns 16 in January 2027).** A parent or guardian must be the legal owner of the company and the account
+  holder for payments, contracts and data agreements. He is allowed to fly and travel alone (Ismael, 2026-11-23): never
+  raise a parent travelling with him as a condition for interviews, programmes or meetings. LinkedIn's minimum age is believed to be
   16 (verify): do not set up an account that pretends to be someone else.
 * **No fake identity, no fake founder, no fake lawyer.** The product is not a lawyer and never
   claims to be. Every output is for a licensed attorney to review. Say so plainly.
