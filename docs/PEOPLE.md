@@ -92,4 +92,7 @@ Nobody can be hired until there is funding, and any contract goes through the co
 - Gloria Baeuerlein, Puzzle Ventures (Berlin): pre seed and seed, €100k to €500k, B2B software. Closest to Dublin.
 - Ben Zises, SuperAngel.Fund (NYC): $10k to $1M, SaaS and AI.
 - Not a fit: Canonical (crypto infrastructure). Tim Draper's Draper Associates writes larger cheques, later.
-- Already talking to: Austin Murphy, Teamworthy Ventures (Nashville).
+- Already talking to: Austin Murphy, Teamworthy Ventures (Nashville). On 2026-11-19 he wrote that Teamworthy does a lot
+  of legal software, its managing partner Thomas Lehrman is a Yale Law graduate who teaches at Vanderbilt, and it has
+  invested in Flo Recruit (legal recruiting) and Ocrolus (document automation for lending). He asked for a call after
+  Thanksgiving. Reply drafted 2026-11-23 offering Tuesday 1 or Wednesday 2 December, 10am to 1pm Central.
