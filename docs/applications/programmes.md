@@ -8,7 +8,7 @@ From web search, mostly third party directories that often disagree. Check each 
 |---|---|---|---|---|---|
 | Y Combinator | San Francisco | about 3 months | 4 batches a year (Winter, Spring, Summer, Fall); 2027 dates on ycombinator.com | $500k ($125k + $375k uncapped MFN SAFE) | 7% plus the SAFE |
 | a16z speedrun | SF | about 3 months | SR008 deadline was 1 Nov 2026 | $500k, plus $500k in next round | 10% |
-| PearX (Pear VC) | Palo Alto / SF | 12 weeks | W27 cycle; S27 dates not out | $250k to $2M (sources differ) | targets about 7% |
+| PearX (Pear VC) | Palo Alto / SF | 12 weeks | W27 form (seen 2026-11-23): early deadline 16 Aug, regular 4 Oct, decisions early Nov, starts Jan 2027, so W27 is effectively closed; late policy and age rule unknown (pear.vc not reachable from here; ask a partner); round 2 interview in person in SF | $250k to $2M (sources differ) | targets about 7% |
 | Neo Residency | SF, 2 weeks in Oregon | 3 months | ? | $750k uncapped SAFE | up to 5% at next round |
 | Neo Scholars | SF | ? | 2026 round closed 14 Jun | $40k grant | none |
 | South Park Commons Founder Fellowship | SF / NYC | ? | rolling cohorts | $400k now, $600k in next round | 7% |
