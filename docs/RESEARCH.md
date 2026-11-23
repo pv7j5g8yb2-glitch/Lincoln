@@ -1117,3 +1117,15 @@ Company claims, from the founder; Legora valued $675M then, $80M Series B (Iconi
   Biglaw partner says prompt formulas put lawyers off experimenting; another wants "agentic workflows ... mini employees
   that deliver on schedule". Evidence for Lincoln's thesis: lawyers are still being taught to prompt; Lincoln removes
   the prompt.
+* Uwais Iqbal ("I help legal teams build with AI"), "top 10 controversial legal AI takes", LinkedIn 2026-11-23, 44
+  reactions. Takes: firms should build on LLMs in their own cloud rather than buy; smart UX beats a better model; which
+  LLM rarely matters; firms want AI but will not sort their data; the best use cases come from practising lawyers; big
+  labs like Anthropic entering legal will end vendors' information advantage. Comments worth keeping: Alaro (a
+  company) says pilots that stick start with "a dull, high-volume workflow, not the flashiest one"; Ingrid Kao
+  (Taiwan-qualified attorney at a legal AI startup): a best selling point was court decisions pasting without broken
+  lines, "lawyers notice the small stuff", and "a tool that admits what it didn't check earns more trust than one that
+  sounds sure about everything"; Ankit Gordhandas (Eigenomic founder) disagrees that open models are enough, frontier
+  models lead on long tasks; a trial judge (Brian Palmucci) doubts AI only makes lawyers' lives better.
+  Read for Lincoln: small immigration firms will not build their own (the build take is about big firms with IT teams);
+  immigration forms and RFEs are the dull high-volume work pilots stick on; Lincoln already says what it did not check
+  (blank boxes rather than guesses, "not shown" citation notes), which is a trust point to show, not hide.
