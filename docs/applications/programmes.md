@@ -17,7 +17,7 @@ From web search, mostly third party directories that often disagree. Check each 
 | Afore Capital (Founders in Residence) | SF | 2 months | 3 cohorts a year | $100k+, pre seed lead | ? |
 | Antler US | several US cities | ? | rolling | $500k to $1M | 8% to 12% (sources differ) |
 | Entrepreneur First | SF, London | about 6 months | rolling | about $125k to $200k (unverified) | about 8% to 10% |
-| Vercel X | Vercel HQ, SF | 6 weeks, 19 Jan to 2 Mar 2027 | deadline 29 Nov 2026 | $9M+ in credits shared; winners get Vercel Ventures funding (terms unpublished) | none |
+| Vercel X | Vercel HQ, SF | 6 weeks, 19 Jan to 2 Mar 2027 | deadline 29 Nov 2026 | $9M+ in credits shared; winners get Vercel Ventures funding (terms unpublished) | none. Not eligible (2026-11-23): applicants must be at or above the age of majority in their jurisdiction (18 in Ireland), six weeks in person in SF, and a Vercel customer |
 | Z Fellows | mostly online, final day SF or NYC | 1 week | rolling, about every other month | $10k (SAFE at $1B cap, per most sources) | tiny |
 | The Residency | SF founder houses (plus Vienna and others) | 3 to 6 months | 3 cohorts a year | none; rent about $2k a month or about 2% equity (reported) | about 2% if paid in equity |
 | Thiel Fellowship | anywhere | 2 years | rolling (one listing says 31 Dec 2026) | $250k grant | none; age 22 or under, no degree |

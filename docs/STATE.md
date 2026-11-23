@@ -397,8 +397,10 @@ from the repo the same day. History is in git up to commit `341cf65`.
 * Honest odds of the goal: low single digits to about ten percent. A guess.
 
 ## Funding plan (Ismael, 2026-11-19)
-1. Apply to accelerators and fellowships now: Z Fellows (submitted wording in docs/applications/z-fellows.md, reuse it for the others), Vercel X
-   (deadline 29 November), YC W27 (late application), Thiel Fellowship, PearX, and similar.
+1. Apply to accelerators and fellowships now: Z Fellows (submitted wording in docs/applications/z-fellows.md, reuse it for the others),
+   YC W27 (late application), Thiel Fellowship, PearX, and similar. Not Vercel X: it requires applicants to be of
+   age (18 in Ireland) and six weeks in person in San Francisco (checked 2026-11-23). Check the age rule of every
+   programme before applying; never misstate it.
 2. Take their money for equity (usually $10k to $500k). Keep total dilution before the seed low.
 3. Spend it on what gets the first paying firms: the security minimum for real client files, the company and
    contracts, model costs, and possibly Jim Melo.
