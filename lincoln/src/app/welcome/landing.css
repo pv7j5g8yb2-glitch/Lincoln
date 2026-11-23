@@ -18,3 +18,12 @@
   .hero-title { font-size: min(calc((min(100vw, 1200px) - 64px) / 9.6), 76px); }
   .hero-line { font-size: min(calc((min(100vw, 1200px) - 64px) / 25), 20px); }
 }
+/* Get In Touch: a dropdown opens with a short fade; the tick on the thank you draws once, then stays. */
+@keyframes dropdown-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.dropdown-in { animation: dropdown-in .16s ease-out both; }
+@keyframes tick-pop { 0% { opacity: 0; transform: scale(.6); } 60% { opacity: 1; transform: scale(1.08); } 100% { transform: scale(1); } }
+@keyframes tick-draw { to { stroke-dashoffset: 0; } }
+.tick { animation: tick-pop .5s cubic-bezier(.2,.8,.2,1) both; }
+.tick-ring { stroke-dasharray: 208; stroke-dashoffset: 208; animation: tick-draw .55s ease-out .1s forwards; }
+.tick-mark { stroke-dasharray: 44; stroke-dashoffset: 44; animation: tick-draw .35s ease-out .55s forwards; }
+@media (prefers-reduced-motion: reduce) { .dropdown-in, .tick { animation: none; } .tick-ring, .tick-mark { animation: none; stroke-dashoffset: 0; } }
