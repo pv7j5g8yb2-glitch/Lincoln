@@ -59,7 +59,7 @@ function Dropdown({ q, value, onChange }: { q: Question; value: string | string[
 
 export default function StartForm() {
   const [v, setV] = useState<Record<string, string | string[]>>({});
-  const [state, setState] = useState<"idle" | "sending" | "sent" | "done">("idle");
+  const [state, setState] = useState<"idle" | "sending" | "done">("idle");
   const [error, setError] = useState("");
 
   const set = (id: string, val: string | string[]) => { setV((o) => ({ ...o, [id]: val })); setError(""); };
@@ -79,9 +79,7 @@ export default function StartForm() {
       });
       const out = await res.json().catch(() => ({}));
       if (!res.ok) { setError(out.error ?? "Not sent. Try again."); setState("idle"); return; }
-      // As with Approve and send in the app: the button turns, reads "Sent!", then the thank you comes up.
-      setState("sent");
-      await new Promise((ok) => setTimeout(ok, 1100));
+      // The button turns while it sends, then the thank you comes up.
       setState("done");
       window.scrollTo({ top: 0 });
     } catch {
@@ -103,7 +101,7 @@ export default function StartForm() {
     );
   }
 
-  const busy = state === "sending" || state === "sent";
+  const busy = state === "sending";
 
   return (
     <div className="min-h-dvh bg-[#0e0e0d] font-sans text-[#f4f3ef] antialiased selection:bg-[#3a3122]">
@@ -141,7 +139,7 @@ export default function StartForm() {
           {error && <p className="text-[14.5px] text-[#e0796f]">{error}</p>}
           <button type="submit" disabled={busy} className="relative flex h-14 w-full items-center justify-center rounded-xl bg-[#f4f3ef] text-[16px] font-medium text-[#0e0e0d] transition active:scale-[0.99] [@media(hover:hover)]:hover:opacity-90">
             <span className={busy ? "invisible" : ""}>Send</span>
-            {busy && <span className="absolute inset-0 flex items-center justify-center">{state === "sending" ? <span aria-label="Sending" className="h-5 w-5 animate-spin rounded-full border-2 border-[#0e0e0d]/25 border-t-[#0e0e0d]" /> : "Sent!"}</span>}
+            {busy && <span className="absolute inset-0 flex items-center justify-center"><span aria-label="Sending" className="h-5 w-5 animate-spin rounded-full border-2 border-[#0e0e0d]/25 border-t-[#0e0e0d]" /></span>}
           </button>
         </form>
       </main>

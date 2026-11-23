@@ -415,15 +415,12 @@ export default function Landing() {
         </nav>
       </header>
 
-      {/* Hero: the words, and the film rising into its frame beneath them. */}
-      <section className="mx-auto max-w-[1200px] px-4 pb-20 pt-11 md:px-8 md:pb-28 md:pt-16">
+      {/* Hero: the line, and the film rising into its frame beneath it. */}
+      <section className="mx-auto max-w-[1200px] px-4 pb-20 pt-16 md:px-8 md:pb-28 md:pt-24">
         <div className="mx-auto max-w-[880px] text-center">
           <p className={`hero-in ${eyebrow}`}>For immigration law firms</p>
           <h1 className="hero-in hero-title mx-auto mt-4 font-serif font-semibold leading-[1.04] tracking-[-0.035em] [animation-delay:120ms]">Your work done before you even ask.</h1>
-          <p className="hero-in hero-line mx-auto mt-6 max-w-[34em] leading-[1.6] text-[#a6a39c] [animation-delay:240ms]">
-            Lincoln works autonomously for you, no need for prompts. Once it&apos;s done you review and approve.
-          </p>
-          <div className="hero-in mt-9 flex items-center justify-center gap-2 [animation-delay:360ms]">
+          <div className="hero-in mt-10 flex items-center justify-center gap-2 [animation-delay:240ms] md:mt-12">
             <Link href="/start" className="rounded-[10px] bg-[#f4f3ef] px-6 py-3.5 font-sans text-[15.5px] font-medium text-[#0e0e0d] transition hover:opacity-85">Get In Touch</Link>
             <a href="#work" className="rounded-[10px] px-5 py-3.5 font-sans text-[15.5px] font-medium transition hover:bg-[#1f1f1d]">How it works</a>
           </div>
