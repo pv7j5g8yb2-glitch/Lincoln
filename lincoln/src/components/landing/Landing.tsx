@@ -75,7 +75,7 @@ function Reveal({ text, className = "" }: { text: string; className?: string }) 
   return (
     <p ref={ref} className={className}>
       {words.map((w, i) => (
-        <span key={i} className="transition-colors duration-500" style={{ color: i < lit ? "#161614" : "rgba(22,22,20,0.16)" }}>{w}{" "}</span>
+        <span key={i} className="transition-colors duration-500" style={{ color: i < lit ? "#f4f3ef" : "rgba(244,243,239,0.16)" }}>{w}{" "}</span>
       ))}
     </p>
   );
@@ -97,22 +97,22 @@ function In({ children, delay = 0, className = "" }: { children: ReactNode | ((o
 }
 
 /* The work, laid on the photographs. */
-const card = "relative w-[86%] rounded-2xl bg-white font-sans shadow-[0_1px_2px_rgba(0,0,0,0.04),0_40px_80px_-24px_rgba(0,0,0,0.5)] md:w-[80%]";
-const eyebrow = "font-sans text-[12.5px] font-medium uppercase tracking-[0.16em] text-[#8a867f] md:text-[13px]";
-const label = "text-[12px] font-medium uppercase tracking-[0.12em] text-[#a09d96]";
+const card = "relative w-[86%] rounded-2xl bg-[#171716] ring-1 ring-[#262523] font-sans shadow-[0_1px_2px_rgba(0,0,0,0.04),0_40px_80px_-24px_rgba(0,0,0,0.5)] md:w-[80%]";
+const eyebrow = "font-sans text-[12.5px] font-medium uppercase tracking-[0.16em] text-[#8d8982] md:text-[13px]";
+const label = "text-[12px] font-medium uppercase tracking-[0.12em] text-[#74716b]";
 const rise = (on: boolean, d: number) => ({ className: `transition-all duration-700 ease-out motion-reduce:transition-none ${on ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`, style: { transitionDelay: `${d}ms` } });
 
 function MailCard({ on }: { on: boolean }) {
   return (
     <div className={`${card} p-5 md:p-6`}>
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f4f3f0] text-[13px] font-semibold">DR</div>
-        <div className="min-w-0"><p className="text-[14.5px] font-semibold">Daniel Reyes</p><p className="truncate text-[13px] text-[#6b6862]">Green card for my wife</p></div>
-        <span className="ml-auto text-[12.5px] text-[#a09d96]">8:02 AM</span>
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1d1d1b] text-[13px] font-semibold">DR</div>
+        <div className="min-w-0"><p className="text-[14.5px] font-semibold">Daniel Reyes</p><p className="truncate text-[13px] text-[#a6a39c]">Green card for my wife</p></div>
+        <span className="ml-auto text-[12.5px] text-[#74716b]">8:02 AM</span>
       </div>
-      <p className="mt-4 text-[14.5px] leading-relaxed text-[#6b6862]">Hi, my wife Sofia and I want to apply for her green card. Her documents are attached.</p>
+      <p className="mt-4 text-[14.5px] leading-relaxed text-[#a6a39c]">Hi, my wife Sofia and I want to apply for her green card. Her documents are attached.</p>
       <div {...rise(on, 900)}>
-        <div className="mt-5 flex items-center justify-between rounded-xl bg-[#f4f3f0] px-4 py-3 text-[13.5px]"><span className="font-medium">Case opened</span><span className="text-[#6b6862]">Sofia Reyes · I-485</span></div>
+        <div className="mt-5 flex items-center justify-between rounded-xl bg-[#1d1d1b] px-4 py-3 text-[13.5px]"><span className="font-medium">Case opened</span><span className="text-[#a6a39c]">Sofia Reyes · I-485</span></div>
       </div>
     </div>
   );
@@ -123,12 +123,12 @@ function ReadCard({ on }: { on: boolean }) {
   return (
     <div className={`${card} p-5 md:p-6`}>
       <p className={label}>Sofia Reyes · For review</p>
-      <div className="mt-3 flex flex-col divide-y divide-[#ebe9e4]">
+      <div className="mt-3 flex flex-col divide-y divide-[#262523]">
         {rows.map(([a, b, c], i) => (
           <div key={a} {...rise(on, 600 + i * 220)}>
             <div className="flex items-center justify-between gap-3 py-3">
-              <div className="min-w-0"><p className="text-[12.5px] text-[#a09d96]">{a}</p><p className="truncate text-[14.5px] font-medium">{b}</p></div>
-              <span className="shrink-0 text-[12.5px] text-[#a09d96]">{c}</span>
+              <div className="min-w-0"><p className="text-[12.5px] text-[#74716b]">{a}</p><p className="truncate text-[14.5px] font-medium">{b}</p></div>
+              <span className="shrink-0 text-[12.5px] text-[#74716b]">{c}</span>
             </div>
           </div>
         ))}
@@ -138,7 +138,7 @@ function ReadCard({ on }: { on: boolean }) {
 }
 
 function LetterCard({ on }: { on: boolean }) {
-  const cite = (t: string, d: number) => <span className={`rounded px-0.5 transition-colors duration-700 ${on ? "bg-[#efe6d6] text-[#7a5f35]" : "text-[#a09d96]"}`} style={{ transitionDelay: `${d}ms` }}>{t}</span>;
+  const cite = (t: string, d: number) => <span className={`rounded px-0.5 transition-colors duration-700 ${on ? "bg-[#3a3122] text-[#dcbd82]" : "text-[#74716b]"}`} style={{ transitionDelay: `${d}ms` }}>{t}</span>;
   return (
     <div className={`${card} p-6 md:p-7`}>
       <p className={label}>Support letter · Draft</p>
@@ -154,11 +154,11 @@ function ApproveCard({ on }: { on: boolean }) {
     <div className={`${card} p-5 md:p-6`}>
       <p className={label}>Awaiting approval</p>
       <p className="mt-3 text-[19px] font-semibold tracking-[-0.01em]">Filing packet · Sofia Reyes</p>
-      <p className="mt-1 text-[14px] text-[#6b6862]">Cover letter, 5 forms, 14 exhibits</p>
+      <p className="mt-1 text-[14px] text-[#a6a39c]">Cover letter, 5 forms, 14 exhibits</p>
       <div {...rise(on, 800)}>
         <div className="mt-5 flex gap-2.5">
-          <span className="rounded-[10px] bg-[#161614] px-5 py-2.5 text-[14px] font-medium text-white">Approve</span>
-          <span className="rounded-[10px] px-5 py-2.5 text-[14px] font-medium ring-1 ring-[#d3cfc8]">Review</span>
+          <span className="rounded-[10px] bg-[#f4f3ef] px-5 py-2.5 text-[14px] font-medium text-[#0e0e0d]">Approve</span>
+          <span className="rounded-[10px] px-5 py-2.5 text-[14px] font-medium ring-1 ring-[#3b3a36]">Review</span>
         </div>
       </div>
     </div>
@@ -303,32 +303,32 @@ function Steps() {
           <div className="md:hidden">
             <div className="flex items-center gap-3">
               <p className={eyebrow}>0{at + 1} / 0{STEPS.length}</p>
-              <div className="h-px flex-1 bg-[#ebe9e4]"><div className="h-px bg-[#161614] transition-[width] duration-500" style={{ width: `${((at + 1) / STEPS.length) * 100}%` }} /></div>
+              <div className="h-px flex-1 bg-[#262523]"><div className="h-px bg-[#f4f3ef] transition-[width] duration-500" style={{ width: `${((at + 1) / STEPS.length) * 100}%` }} /></div>
             </div>
             <div className="relative mt-3 h-[112px]">
               {STEPS.map((s, i) => (
                 <div key={s.title} className="absolute inset-0 transition-all duration-500 ease-out" style={{ opacity: i === at ? 1 : 0, transform: `translateY(${i === at ? 0 : i < at ? -14 : 14}px)` }}>
                   <h3 className="font-serif text-[30px] font-semibold leading-[1.1] tracking-[-0.025em]">{s.title}</h3>
-                  <p className="mt-2 text-[16.5px] leading-[1.55] text-[#6b6862]">{s.line}</p>
+                  <p className="mt-2 text-[16.5px] leading-[1.55] text-[#a6a39c]">{s.line}</p>
                 </div>
               ))}
             </div>
           </div>
           {/* Laptops: every step listed, the one in view in ink, a thin line filling beside them. */}
           <div className="relative hidden pl-7 md:block">
-            <div className="absolute bottom-2 left-0 top-2 w-px bg-[#ebe9e4]"><div className="w-px bg-[#161614] transition-[height] duration-500" style={{ height: `${((at + 1) / STEPS.length) * 100}%` }} /></div>
+            <div className="absolute bottom-2 left-0 top-2 w-px bg-[#262523]"><div className="w-px bg-[#f4f3ef] transition-[height] duration-500" style={{ height: `${((at + 1) / STEPS.length) * 100}%` }} /></div>
             {STEPS.map((s, i) => (
               <div key={s.title} className={`transition-all duration-500 ${i ? "mt-9" : ""}`} style={{ opacity: i === at ? 1 : 0.28 }}>
                 <p className={eyebrow}>0{i + 1}</p>
                 <h3 className="mt-2 font-serif text-[40px] font-semibold leading-[1.05] tracking-[-0.025em] lg:text-[46px]">{s.title}</h3>
                 <div className="grid transition-all duration-500" style={{ gridTemplateRows: i === at ? "1fr" : "0fr" }}>
-                  <p className="overflow-hidden text-[18px] leading-[1.6] text-[#6b6862]"><span className="block max-w-[32ch] pt-3">{s.line}</span></p>
+                  <p className="overflow-hidden text-[18px] leading-[1.6] text-[#a6a39c]"><span className="block max-w-[32ch] pt-3">{s.line}</span></p>
                 </div>
               </div>
             ))}
           </div>
           {/* The frame: photographs crossfade, the work on them changes with the step. */}
-          <div className="relative h-[min(56vh,520px)] overflow-hidden rounded-[20px] bg-[#e4e1db] md:h-[min(74vh,640px)]">
+          <div className="relative h-[min(56vh,520px)] overflow-hidden rounded-[20px] bg-[#1a1a18] md:h-[min(74vh,640px)]">
             {STEPS.map((s, i) => s.photo && (
               // eslint-disable-next-line @next/next/no-img-element
               <img key={s.photo} src={s.photo} alt="" className="absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-[900ms] ease-out" style={{ objectPosition: s.pos ?? "50% 50%", filter: s.dim ? `brightness(${s.dim})` : undefined, opacity: i === at ? 1 : 0, transform: `scale(${i === at ? 1.02 + p * 0.04 : 1.1})` }} />
@@ -368,9 +368,9 @@ function Close() {
 }
 
 function Footer() {
-  const icon = "flex h-10 w-10 items-center justify-center rounded-[10px] ring-1 ring-[#e2dfd8] text-[#161614] transition hover:bg-[#f0eee9]";
+  const icon = "flex h-10 w-10 items-center justify-center rounded-[10px] ring-1 ring-[#302f2c] text-[#f4f3ef] transition hover:bg-[#1f1f1d]";
   return (
-    <footer className="mt-20 border-t border-[#ebe9e4] md:mt-28">
+    <footer className="mt-20 border-t border-[#262523] md:mt-28">
       <div className="mx-auto max-w-[1200px] px-4 pb-10 pt-14 md:px-8 md:pb-12 md:pt-20">
         <div className="flex flex-col gap-10 md:flex-row md:items-end md:justify-between">
           <div>
@@ -386,11 +386,11 @@ function Footer() {
             </a>
           </div>
         </div>
-        <div className="mt-12 flex flex-col gap-3 border-t border-[#ebe9e4] pt-6 text-[13px] text-[#8a867f] md:mt-16 md:flex-row md:items-center md:justify-between">
+        <div className="mt-12 flex flex-col gap-3 border-t border-[#262523] pt-6 text-[13px] text-[#8d8982] md:mt-16 md:flex-row md:items-center md:justify-between">
           <span>© 2026 Lincoln. All rights reserved.</span>
           <div className="flex gap-5 text-[12.5px]">
-            <Link href="/terms" className="transition hover:text-[#161614]">Terms</Link>
-            <Link href="/privacy" className="transition hover:text-[#161614]">Privacy</Link>
+            <Link href="/terms" className="transition hover:text-[#f4f3ef]">Terms</Link>
+            <Link href="/privacy" className="transition hover:text-[#f4f3ef]">Privacy</Link>
           </div>
         </div>
       </div>
@@ -405,12 +405,12 @@ export default function Landing() {
     on(); window.addEventListener("scroll", on, { passive: true }); return () => window.removeEventListener("scroll", on);
   }, []);
   return (
-    <div className="min-h-dvh overflow-x-clip bg-[#faf9f6] font-serif text-[#161614] antialiased selection:bg-[#efe6d6]">
-      <header className={`sticky top-0 z-50 bg-[#faf9f6]/85 backdrop-blur-md transition-[border-color] duration-300 ${scrolled ? "border-b border-[#ebe9e4]" : "border-b border-transparent"}`}>
+    <div className="min-h-dvh overflow-x-clip bg-[#0e0e0d] font-serif text-[#f4f3ef] antialiased selection:bg-[#3a3122]">
+      <header className={`sticky top-0 z-50 bg-[#0e0e0d]/85 backdrop-blur-md transition-[border-color] duration-300 ${scrolled ? "border-b border-[#262523]" : "border-b border-transparent"}`}>
         <nav className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 md:px-8">
           <Link href="/" className="font-serif text-[26px] font-semibold tracking-[-0.02em] md:text-[28px]">Lincoln</Link>
           <div className="flex items-center gap-1">
-            <Link href="/start" className="rounded-[9px] bg-[#161614] px-4 py-2 font-sans text-[14.5px] font-medium text-white transition hover:opacity-85">Get In Touch</Link>
+            <Link href="/start" className="rounded-[9px] bg-[#f4f3ef] px-4 py-2 font-sans text-[14.5px] font-medium text-[#0e0e0d] transition hover:opacity-85">Get In Touch</Link>
           </div>
         </nav>
       </header>
@@ -420,35 +420,35 @@ export default function Landing() {
         <div className="mx-auto max-w-[880px] text-center">
           <p className={`hero-in ${eyebrow}`}>For immigration law firms</p>
           <h1 className="hero-in hero-title mx-auto mt-4 font-serif font-semibold leading-[1.04] tracking-[-0.035em] [animation-delay:120ms]">Your work done before you even ask.</h1>
-          <p className="hero-in hero-line mx-auto mt-6 max-w-[34em] leading-[1.6] text-[#6b6862] [animation-delay:240ms]">
+          <p className="hero-in hero-line mx-auto mt-6 max-w-[34em] leading-[1.6] text-[#a6a39c] [animation-delay:240ms]">
             Lincoln works autonomously for you, no need for prompts. Once it&apos;s done you review and approve.
           </p>
           <div className="hero-in mt-9 flex items-center justify-center gap-2 [animation-delay:360ms]">
-            <Link href="/start" className="rounded-[10px] bg-[#161614] px-6 py-3.5 font-sans text-[15.5px] font-medium text-white transition hover:opacity-85">Get In Touch</Link>
-            <a href="#work" className="rounded-[10px] px-5 py-3.5 font-sans text-[15.5px] font-medium transition hover:bg-[#f0eee9]">How it works</a>
+            <Link href="/start" className="rounded-[10px] bg-[#f4f3ef] px-6 py-3.5 font-sans text-[15.5px] font-medium text-[#0e0e0d] transition hover:opacity-85">Get In Touch</Link>
+            <a href="#work" className="rounded-[10px] px-5 py-3.5 font-sans text-[15.5px] font-medium transition hover:bg-[#1f1f1d]">How it works</a>
           </div>
         </div>
         <div className="mt-12 md:mt-16"><Film /></div>
       </section>
 
       {/* The statement, lit word by word. */}
-      <section className="border-t border-[#ebe9e4]">
+      <section className="border-t border-[#262523]">
         <div className="mx-auto max-w-[1200px] px-4 py-24 md:px-8 md:py-44">
           <Reveal className="max-w-[20ch] font-serif text-[36px] font-semibold leading-[1.12] tracking-[-0.025em] md:text-[68px]" text="Most of an immigration practice is paperwork. Lincoln does the paperwork. You practice law." />
         </div>
       </section>
 
       {/* The work: one pinned scene that moves through the four steps as the page scrolls. */}
-      <section id="work" className="border-t border-[#ebe9e4]"><Steps /></section>
+      <section id="work" className="border-t border-[#262523]"><Steps /></section>
 
       {/* Client files. */}
-      <section className="border-t border-[#ebe9e4]">
+      <section className="border-t border-[#262523]">
         <div className="mx-auto grid max-w-[1200px] gap-7 px-4 py-24 md:grid-cols-2 md:items-center md:gap-20 md:px-8 md:py-36">
           <In><h2 className="font-serif text-[36px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[56px]">Built for privacy.</h2></In>
           <div className="flex flex-col">
             {TRUST.map(([a, b], i) => (
               <In key={a} delay={i * 90}>
-                <div className={`py-5 ${i ? "border-t border-[#ebe9e4]" : "pt-1"}`}><p className="text-[19px] font-semibold tracking-[-0.01em]">{a}</p><p className="mt-1 text-[16.5px] text-[#6b6862]">{b}</p></div>
+                <div className={`py-5 ${i ? "border-t border-[#262523]" : "pt-1"}`}><p className="text-[19px] font-semibold tracking-[-0.01em]">{a}</p><p className="mt-1 text-[16.5px] text-[#a6a39c]">{b}</p></div>
               </In>
             ))}
           </div>

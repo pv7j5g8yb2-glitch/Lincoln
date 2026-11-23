@@ -582,6 +582,9 @@ from the repo the same day. History is in git up to commit `341cf65`.
   case (new case for the firm link) and Lincoln reads it as usual. Progress is kept on the phone. Not built yet:
   reminders to clients who stop halfway, other languages, adding documents later to a firm link case. Unverified:
   how immigration firms actually take in new clients.
+* Landing page colours (2026-11-23): mirrored to dark (near black page, off white type and buttons, dark product
+  cards) on the landing page and /start, pushed so Ismael can see it live; not yet decided. To go back, revert the commit
+  "Landing page in dark".
 * Landing page (2026-11-16): lives at uselincoln.com (Ismael: app.uselincoln.com is strictly the app). One Next app
   serves both; src/proxy.ts shows the landing page on uselincoln.com/, keeps /terms and /privacy, sends www to the
   bare domain and every other path to app.uselincoln.com. Needs uselincoln.com added in Render and DNS at GoDaddy
