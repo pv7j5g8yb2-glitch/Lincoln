@@ -21,7 +21,7 @@ From web search, mostly third party directories that often disagree. Check each 
 | Z Fellows | mostly online, final day SF or NYC | 1 week | rolling, about every other month | $10k (SAFE at $1B cap, per most sources) | tiny |
 | The Residency | SF founder houses (plus Vienna and others) | 3 to 6 months | 3 cohorts a year | none; rent about $2k a month or about 2% equity (reported) | about 2% if paid in equity |
 | Thiel Fellowship | anywhere | 2 years | rolling (one listing says 31 Dec 2026) | $250k grant | none; age 22 or under, no degree |
-| Emergent Ventures | anywhere | grant | rolling | about $1k to $50k+, varies | none; open from age 13 |
+| Emergent Ventures | anywhere | grant | rolling | about $1k to $50k+, varies | none; open from age 13. Form (seen 2026-11-24): rejects AI written applications (AI allowed for proofreading only), so Ismael writes it himself; proposal under 1,500 words in three parts (his story, a mainstream view he agrees with, the idea), optional budget; the grant must be spent on charitable, scientific or educational purposes, profit from the project is fine |
 | Plug and Play, Google for Startups, StartX, MassChallenge | various | varies | varies | mostly none or small | none |
 
 ## Canada
