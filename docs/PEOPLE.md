@@ -100,3 +100,6 @@ Nobody can be hired until there is funding, and any contract goes through the co
   Deel's partnerships with those programmes (selling Deel to their startups), not that he is a YC partner. Ex US Air
   Force programme manager, then SDR roles. Sent Ismael a connection request on 2026-11-24 after viewing his profile;
   likely prospecting for Deel. Worth accepting, no action needed.
+  Ismael asked about SOC 2 and ISO pricing; call booked with Marcelus and a Deel compliance colleague on Monday
+  30 November 2026, 1:30pm PST (9:30pm Irish time), invite sent to Ismael's work email. Marcelus is starting a founder
+  network and offered to add Ismael. Told he is 15 (16 in January); Marcelus said that is not a problem.
