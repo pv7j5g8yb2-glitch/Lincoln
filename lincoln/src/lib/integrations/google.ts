@@ -111,17 +111,17 @@ export async function addEvent(c: Connection, e: { title: string; date: string; 
 // Drive, Docs, Sheets, Slides
 
 export async function searchFiles(c: Connection, q: string): Promise<FileHit[]> {
-  const kinds = ["application/pdf", "application/msword", "application/rtf", "text/plain", "text/csv", "application/zip", "message/rfc822", "application/vnd.ms-outlook", "application/vnd.google-apps.document", "application/vnd.google-apps.spreadsheet", OFFICE_MIME.document, OFFICE_MIME.spreadsheet];
+  const kinds = ["application/pdf", "application/msword", "application/rtf", "text/plain", "text/csv", "application/zip", "message/rfc822", "application/vnd.ms-outlook", "application/vnd.google-apps.document", "application/vnd.google-apps.spreadsheet", "application/vnd.google-apps.presentation", OFFICE_MIME.document, OFFICE_MIME.spreadsheet, OFFICE_MIME.presentation, "application/vnd.ms-powerpoint", "application/vnd.ms-excel", "application/vnd.oasis.opendocument.text", "application/vnd.oasis.opendocument.spreadsheet", "application/vnd.oasis.opendocument.presentation", "application/vnd.wordperfect", "text/html"];
   const terms = [`(mimeType contains 'image/' or ${kinds.map((k) => `mimeType = '${k}'`).join(" or ")})`, "trashed = false", ...(q ? [`name contains '${q.replace(/['\\]/g, "")}'`] : [])].join(" and ");
   const r = await call<{ files?: { id: string; name: string; mimeType?: string; modifiedTime?: string }[] }>(c, `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(terms)}&orderBy=modifiedTime desc&pageSize=25&fields=files(id,name,mimeType,modifiedTime)&supportsAllDrives=true&includeItemsFromAllDrives=true`, {}, "Google Drive");
   // A Google Doc or Sheet has no file of its own; it is downloaded as Word or Excel, marked in its id.
-  const tag = (m?: string) => (m === "application/vnd.google-apps.document" ? "gdoc:" : m === "application/vnd.google-apps.spreadsheet" ? "gsheet:" : "");
+  const tag = (m?: string) => (m === "application/vnd.google-apps.document" ? "gdoc:" : m === "application/vnd.google-apps.spreadsheet" ? "gsheet:" : m === "application/vnd.google-apps.presentation" ? "gslides:" : "");
   return (r.files ?? []).map((f) => ({ id: `${tag(f.mimeType)}${f.id}`, name: f.name, modified: f.modifiedTime ?? null, where: "Google Drive" }));
 }
 
 export const download = (c: Connection, id: string) => {
-  const [, kind, file] = /^(gdoc:|gsheet:)?(.+)$/.exec(id)!;
-  if (kind) return raw(c, `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(file)}/export?mimeType=${encodeURIComponent(kind === "gdoc:" ? OFFICE_MIME.document : OFFICE_MIME.spreadsheet)}`);
+  const [, kind, file] = /^(gdoc:|gsheet:|gslides:)?(.+)$/.exec(id)!;
+  if (kind) return raw(c, `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(file)}/export?mimeType=${encodeURIComponent(kind === "gdoc:" ? OFFICE_MIME.document : kind === "gsheet:" ? OFFICE_MIME.spreadsheet : OFFICE_MIME.presentation)}`);
   return raw(c, `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(file)}?alt=media&supportsAllDrives=true`);
 };
 

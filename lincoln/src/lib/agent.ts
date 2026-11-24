@@ -1,7 +1,7 @@
 import { db, uid } from "./db";
 import { chat, forCase, llmConfigured, parseJson } from "./llm";
 import { LIBRARY, typeOf } from "./library";
-import { EMAIL_STYLE } from "./style";
+import { EMAIL_STYLE, formal } from "./style";
 import { firmStyle } from "./memory";
 import { UNNAMED, applyDateRules, draftForCase, processCase } from "./intake";
 import { fileKind, unreadable } from "./pdf";
@@ -56,7 +56,7 @@ function cannotOpen(firmId: string, caseId: string, names: string[]) {
   const title = `Could not open: ${names.join(", ")}`.slice(0, 200);
   if (d.prepare("SELECT 1 FROM issues WHERE firm_id = ? AND case_id = ? AND title = ? AND status = 'open'").get(firmId, caseId, title)) return;
   d.prepare("INSERT INTO issues (id, firm_id, case_id, kind, severity, title, detail, sources, status, created_at) VALUES (?, ?, ?, 'missing', 'low', ?, ?, '[]', 'open', ?)")
-    .run(uid(), firmId, caseId, title, "Sent in a format Lincoln cannot read, such as Pages, PowerPoint, a password protected file or winmail.dat. A PDF or Word copy is needed.", now());
+    .run(uid(), firmId, caseId, title, "Password protected, damaged or in a format Lincoln cannot read. An unlocked PDF or Word copy is needed.", now());
 }
 
 export function handleInbound(firmId: string, mail: Inbound, mailboxId: string | null) {
@@ -558,7 +558,7 @@ Write the reply.
 ${EMAIL_STYLE}${firmStyle(firmId, "email")}
 Reply with one JSON object: {"subject": "", "body": ""}` },
     ], { maxTokens: 1500 }));
-    return r.body?.trim() ? { subject: r.subject ?? "", body: r.body } : null;
+    return r.body?.trim() ? { subject: formal(r.subject ?? ""), body: formal(r.body) } : null;
   } catch {
     return null;
   }
@@ -585,7 +585,7 @@ ${missing.map((x) => `- ${x.title}: ${x.detail}`).join("\n") || "- nothing else 
 Write a short, friendly follow up from ${sender} that picks up the earlier email and asks again for what is still outstanding.
 ${EMAIL_STYLE}${firmStyle(m.firm_id, "email")}` },
     ], { maxTokens: 1200 });
-    if (text.trim().length > 40) return text.trim().slice(0, 4000);
+    if (text.trim().length > 40) return formal(text.trim().slice(0, 4000));
   } catch {
     // The plain follow up below is used instead.
   }

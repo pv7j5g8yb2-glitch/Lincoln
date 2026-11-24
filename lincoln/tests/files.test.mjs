@@ -7,8 +7,11 @@ import sharp from "sharp";
 import { register } from "node:module";
 register("./eval/loader.mjs", import.meta.url);
 const { fileKind, docxText, xlsxText, plainText, renderFiles, unreadable } = await import("../src/lib/pdf.ts");
-const { docText, msgParts } = await import("../src/lib/ole.ts");
-const { emlParts, rtfText } = await import("../src/lib/mime.ts");
+const { docText, msgParts, pptText, xlsText } = await import("../src/lib/ole.ts");
+const { wpdText } = await import("../src/lib/wpd.ts");
+const { iworkText } = await import("../src/lib/iwork.ts");
+const { pptxText, odfText } = await import("../src/lib/pdf.ts");
+const { emlParts, rtfText, tnefFiles } = await import("../src/lib/mime.ts");
 
 const docx = async (body) => { const z = new JSZip(); z.file("[Content_Types].xml", "<Types/>"); z.file("word/document.xml", `<w:document xmlns:w="x"><w:body>${body}</w:body></w:document>`); return z.generateAsync({ type: "uint8array" }); };
 const p = (t) => `<w:p><w:r><w:t>${t}</w:t></w:r></w:p>`;
@@ -88,4 +91,24 @@ await sharp([await page(), await page()], { join: { animated: true } }).tiff().t
 const tiff = new Uint8Array(fs.readFileSync(tiffPath)); fs.rmSync(tiffPath);
 assert.equal(fileKind(tiff), "tiff");
 assert.ok(await renderFiles([tiff], () => {}) >= 1);
+// Every other format a firm or client sends (fixtures in tests/fixtures, see its README).
+const fx = (n) => new Uint8Array(fs.readFileSync(new URL(`./fixtures/${n}`, import.meta.url)));
+assert.equal(fileKind(fx("deck.pptx")), "pptx");
+assert.equal(await pptxText(fx("deck.pptx")), "Slide 1\nProposed endeavor\nNotes:\nSpeaker note about the endeavor\n\nSlide 2\nNational importance of AI safety research");
+assert.equal(fileKind(fx("deck.ppt")), "ppt");
+assert.equal(pptText(fx("deck.ppt")), "Proposed endeavor\n\nNational importance of AI safety research\nSpeaker note about the endeavor", "old PowerPoint with its notes, without its master placeholders");
+assert.equal(fileKind(fx("staff.xls")), "xls");
+assert.equal(xlsText(fx("staff.xls")), "Sheet: Employees\nName | Title | Salary\nMaria Hernandez | Senior Engineer | 145000\nJosé Núñez | Analyst | 98500.5");
+assert.equal(fileKind(fx("staff.ods")), "odf");
+assert.equal(await odfText(fx("staff.ods")), "Name | Title | Salary\nMaria Hernandez | Senior Engineer | 145000\nJosé Núñez | Analyst | 98500.5");
+assert.equal(await odfText(fx("letter.odt")), "Expert opinion letter for José Núñez\nDr. 王伟 confirms the beneficiary is among the top researchers in the field.\nAward | Year\nHealthBridge Innovation Challenge | 2024\nSigned in Boston.");
+assert.equal(fileKind(fx("wordperfect51.wp")), "wpd");
+assert.ok(wpdText(fx("wordperfect51.wp")).startsWith("REPORT TITLE: Western Gulf of Alaska Petroleum Development Scenarios Transportation Systems Analysis.\nSTUDY TITLE:"));
+assert.ok(wpdText(fx("wordperfect6.wpd")).startsWith('APPENDIX "A"\n\nAND FURTHER'));
+assert.equal(fileKind(fx("pages2013.pages")), "iwork");
+assert.ok((await iworkText(fx("pages2013.pages"))).includes("Some plain text to parse."));
+assert.equal(fileKind(fx("winmail.dat")), "tnef");
+assert.deepEqual(tnefFiles(fx("winmail.dat")).map((a) => `${a.name} ${fileKind(a.data)}`), ["quick.doc doc", "QUICK~1.HTM text", "quick.pdf pdf", "quick.txt text", "quick.xml text"]);
+assert.ok(await renderFiles([fx("winmail.dat")], () => {}) >= 4, "every file inside winmail.dat is read");
+assert.equal(plainText(new TextEncoder().encode("<!DOCTYPE html><html><head><style>p{}</style></head><body><p>Offer letter</p><p>Salary $145,000</p></body></html>")), "Offer letter\nSalary $145,000");
 console.log("all file reading tests passed");

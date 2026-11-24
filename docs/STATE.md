@@ -484,6 +484,15 @@ from the repo the same day. History is in git up to commit `341cf65`.
   chat, client intake link) offers the same list (`src/lib/accept.ts`).
 * Stand-in mailbox checks: every email, attachment, send and folder check passes. The Teams and Google Chat request
   checks fail with the free stand-in on the old code as well (they depend on what the model replies); not caused here.
+* Every common office format is read too: PowerPoint (.pptx and old .ppt, with speaker notes), old Excel (.xls),
+  OpenDocument (.odt, .ods, .odp), Apple Pages, Keynote and Numbers (2009 and 2013+ formats), WordPerfect (5.x and
+  6+), winmail.dat (the files inside it), web pages, GIF, BMP and AVIF. Google Slides come in from Drive as PowerPoint.
+  What is still refused: password protected or damaged files ("Could not open" asks for an unlocked copy). No audio
+  or video (Ismael, 2026-11-24: no call recordings for now).
+* Writing (Ismael, 2026-11-24): "&" from the State Department code table had leaked into names and the model's
+  writing. The table now says "and"; LEGAL_STYLE (every draft, note and chat document text) and EMAIL_STYLE set the
+  attorney's standard, judged per character (§, I&N Dec., official names kept; "&" never for "and" in running text);
+  `formal()` fixes "&" between ordinary words in every draft, email and redline edit. `tests/style.test.mjs`.
 * A file Lincoln cannot read is never dropped in silence: the case gets "Could not open: name" asking for a PDF or Word
   copy (Pages, PowerPoint, password protected files, winmail.dat). Calendar invites, contact cards and signature
   files are ignored as not evidence.

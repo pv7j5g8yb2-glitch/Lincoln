@@ -147,6 +147,15 @@ warm, brief, human, following the thread and the case. Never "reply yes", stock 
 numbers, dashes or anything that sounds robotic or confusing. The rules live in `lincoln/src/lib/style.ts`; every
 email prompt uses them. Lincoln is AI but acts as a human P.A.
 
+**Lincoln writes like a lawyer (Ismael, 2026-11-24).** Everything Lincoln writes reads as an experienced immigration
+attorney or paralegal would write it, and important legal work (filings, letters, declarations, RFE responses, memos,
+case notes) meets the formal standard the law and USCIS expect. Not a ban on symbols: every character is the one a
+careful attorney would use there. "&", "§", "$", "U.S." and the like where the law, USCIS, a form's instructions or an
+official name use them (I&N Dec., 8 C.F.R. § 204.5, Johnson & Johnson); never "&" standing in for "and" in running
+text, no contractions, no shorthand, slang or emoji. Client emails may be warmer but stay professional. Lincoln is an
+autonomous paralegal and lawyer, so these small details are the job. The rules are `LEGAL_STYLE` and `EMAIL_STYLE` in
+`lincoln/src/lib/style.ts`; `formal()` there is the last guard on every draft and email.
+
 **Anthropic credits need approval every time (Ismael, 2026-11-14).** The API key has $20 of credits that must also
 cover free testers. Before any call that spends them (live tests, model comparisons, anything run with a real key),
 say what it is and the estimated cost, end the message asking for approval, and spend nothing until he says yes.

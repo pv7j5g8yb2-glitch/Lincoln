@@ -8,6 +8,8 @@ import { decrypt, encrypt, pagesDir } from "./storage";
 import { caseRecord, systemPrompt } from "./intake";
 import { rulebooksFor } from "./rulebooks";
 import { notify } from "./push";
+import { formal } from "./style";
+
 
 // Tracked changes. When a Word document arrives (a client's draft declaration, a referee's letter, a colleague's
 // draft), Lincoln marks it up as the responsible attorney would: facts that conflict with the client file corrected,
@@ -113,11 +115,11 @@ ${record.slice(0, 60000)}
 ${paras.map((t, i) => (t.trim() ? `[${i}] ${t}` : "")).filter(Boolean).join("\n").slice(0, 60000)}
 </document>
 
-Propose the fewest edits that matter: a name, date, number, place or other fact that conflicts with the record, corrected, with the page in the reason; something the document needs for its purpose (a missing statement, a missing date or signature line, a legal standard misstated), as a comment; and clear errors of grammar or wording that would weaken it. Keep the author's voice. Never add a fact that is not in the record; where a fact is needed and missing, say so in a comment instead. For a comment without a change, set replace equal to find. Each find is an exact quote from that paragraph, as short as will identify the place (at most 200 characters). At most 30 edits.
+Propose the fewest edits that matter: a name, date, number, place or other fact that conflicts with the record, corrected, with the page in the reason; something the document needs for its purpose (a missing statement, a missing date or signature line, a legal standard misstated), as a comment; and clear errors of grammar or wording that would weaken it, including "&" written for "and" in running text, contractions, slang or shorthand in a formal document (a name or citation written with "&" or "§" as officially written is correct and stays). Keep the author's voice. Never add a fact that is not in the record; where a fact is needed and missing, say so in a comment instead. For a comment without a change, set replace equal to find. Each find is an exact quote from that paragraph, as short as will identify the place (at most 200 characters). At most 30 edits.
 Reply with one JSON object and nothing else:
 {"summary": "one sentence", "edits": [{"p": 0, "find": "", "replace": "", "why": ""}]}`;
   const r = parseJson<{ summary?: string; edits?: Edit[] }>(await forCase({ firmId, caseId, purpose: "redline" }, () => chat([{ role: "system", content: systemPrompt() }, { role: "user", content: ask }], { maxTokens: 8000, effort: "medium", timeoutMs: 240_000 })));
-  const edits = (r.edits ?? []).filter((e) => Number.isInteger(e.p) && typeof e.find === "string" && e.find && paras[e.p]?.includes(e.find) && typeof e.replace === "string" && typeof e.why === "string").slice(0, 30);
+  const edits = (r.edits ?? []).map((e) => (typeof e.replace === "string" && e.replace !== e.find ? { ...e, replace: formal(e.replace) } : e)).filter((e) => Number.isInteger(e.p) && typeof e.find === "string" && e.find && paras[e.p]?.includes(e.find) && typeof e.replace === "string" && typeof e.why === "string").slice(0, 30);
   return { summary: String(r.summary ?? "").slice(0, 300), edits };
 }
 

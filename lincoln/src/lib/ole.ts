@@ -21,14 +21,113 @@ const at = (c: Container, path: string) => {
   return i < 0 ? undefined : c.FileIndex[i];
 };
 
-/** "doc" for a readable Word 97 to 2003 file, "msg" for an Outlook message, otherwise null (encrypted, Excel 97, etc). */
-export function oleKind(b: Uint8Array): "doc" | "msg" | null {
+/** Which older Office file this is: Word, Outlook, PowerPoint or Excel 97 to 2003. Null when it is password protected
+ *  (a new Office file with a password is also stored this way) or anything else. */
+export function oleKind(b: Uint8Array): "doc" | "msg" | "ppt" | "xls" | null {
   const c = open(b);
   if (!c) return null;
-  const word = bytes(at(c, `${c.FullPaths[0]}WordDocument`));
-  if (word && word.length > 0x20) return word[0x0b] & 0x01 ? null : "doc"; // fEncrypted: a password protected file
+  const root = c.FullPaths[0];
+  if (at(c, `${root}EncryptionInfo`)) return null;
+  const word = bytes(at(c, `${root}WordDocument`));
+  if (word && word.length > 0x20) return word[0x0b] & 0x01 ? null : "doc"; // fEncrypted
   if (c.FullPaths.some((p) => /\/__substg1\.0_[0-9A-F]{8}$/i.test(p))) return "msg";
+  if (at(c, `${root}PowerPoint Document`)) return at(c, `${root}EncryptedSummary`) ? null : "ppt";
+  const book = bytes(at(c, `${root}Workbook`) ?? at(c, `${root}Book`));
+  if (book) { for (let i = 0; i + 4 <= book.length && i < 4096;) { const t = u16(book, i); if (t === 0x002f) return null; i += 4 + u16(book, i + 2); } return "xls"; }
   return null;
+}
+
+/** The words of a PowerPoint 97 to 2003 file, slide by slide as stored (master and layout placeholders left out). */
+export function pptText(b: Uint8Array): string {
+  const c = open(b);
+  const doc = c && bytes(at(c, `${c.FullPaths[0]}PowerPoint Document`));
+  if (!doc) return "";
+  const out: string[] = [];
+  let i = 0;
+  // Records are an 8 byte header (version, type, length); a container (version 0xF) holds records, an atom is skipped.
+  while (i + 8 <= doc.length && out.length < 20000) {
+    const ver = doc[i] & 0x0f, type = u16(doc, i + 2), len = u32(doc, i + 4);
+    if (type === 0x03ee) out.push(""); // a new slide
+    if (ver === 0x0f) { i += 8; continue; }
+    if (type === 0x0fa0) out.push(utf16.decode(doc.subarray(i + 8, i + 8 + len)));
+    else if (type === 0x0fa8) out.push(cp1252.decode(doc.subarray(i + 8, i + 8 + len)));
+    i += 8 + len;
+  }
+  // The same words are stored twice (the outline and the slide itself); each block is kept once.
+  const seen = new Set<string>();
+  return out.map((t) => t.replace(/\r|\v/g, "\n")).filter((t) => !/^Click to edit\b|^(Second|Third|Fourth|Fifth|Sixth|Seventh|Eighth|Ninth) (Outline )?level$/i.test(t.trim()) && t !== "*")
+    .filter((t) => { const key = t.trim(); if (!key) return true; if (seen.has(key)) return false; seen.add(key); return true; })
+    .join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+/** The rows of every sheet of an Excel 97 to 2003 file, cells separated by " | ", each sheet under its name. */
+export function xlsText(b: Uint8Array): string {
+  const c = open(b);
+  const book = c && bytes(at(c, `${c.FullPaths[0]}Workbook`) ?? at(c, `${c.FullPaths[0]}Book`));
+  if (!book) return "";
+  const records: { t: number; d: Uint8Array }[] = [];
+  for (let i = 0; i + 4 <= book.length;) { const t = u16(book, i), n = u16(book, i + 2); records.push({ t, d: book.subarray(i + 4, i + 4 + n) }); i += 4 + n; }
+  // Shared strings: one record, carried on in CONTINUE records; a string cut at a boundary restarts with a flags byte.
+  const sst: string[] = [];
+  const si = records.findIndex((r) => r.t === 0x00fc);
+  if (si >= 0) {
+    const parts = [records[si].d.subarray(8)];
+    for (let k = si + 1; k < records.length && records[k].t === 0x003c; k++) parts.push(records[k].d);
+    let part = 0, p = 0;
+    const need = () => { if (p >= parts[part].length && part + 1 < parts.length) { part++; p = 0; return true; } return false; };
+    const total = u32(records[si].d, 4);
+    for (let n = 0; n < total && part < parts.length; n++) {
+      need();
+      const cur = () => parts[part];
+      if (p + 3 > cur().length) break;
+      let chars = u16(cur(), p); let flags = cur()[p + 2]; p += 3;
+      const runs = flags & 0x08 ? u16(cur(), p) : 0; if (flags & 0x08) p += 2;
+      const ext = flags & 0x04 ? u32(cur(), p) : 0; if (flags & 0x04) p += 4;
+      let str = "";
+      while (chars > 0) {
+        if (p >= cur().length) { if (!need()) break; flags = cur()[p]; p += 1; }
+        const wide = flags & 0x01, avail = Math.floor((cur().length - p) / (wide ? 2 : 1)), take = Math.min(chars, avail);
+        str += wide ? utf16.decode(cur().subarray(p, p + take * 2)) : cp1252.decode(cur().subarray(p, p + take));
+        p += take * (wide ? 2 : 1); chars -= take;
+        if (take === 0 && !need()) break;
+      }
+      let skip = runs * 4 + ext;
+      while (skip > 0) { const here = Math.min(skip, cur().length - p); p += here; skip -= here; if (skip > 0 && !need()) break; }
+      sst.push(str);
+    }
+  }
+  const rk = (v: number) => {
+    let x: number;
+    if (v & 0x02) x = (v >> 2); else { const buf = new DataView(new ArrayBuffer(8)); buf.setUint32(4, v & 0xfffffffc, true); x = buf.getFloat64(0, true); }
+    return v & 0x01 ? x / 100 : x;
+  };
+  const f64 = (d: Uint8Array, i: number) => new DataView(d.buffer, d.byteOffset + i, 8).getFloat64(0, true);
+  const num = (x: number) => (Number.isInteger(x) ? String(x) : String(Math.round(x * 1e6) / 1e6));
+  const names = records.filter((r) => r.t === 0x0085).map((r) => { const n = r.d[6], wide = r.d[7] & 1; return wide ? utf16.decode(r.d.subarray(8, 8 + n * 2)) : cp1252.decode(r.d.subarray(8, 8 + n)); });
+  const out: string[] = [];
+  let sheet = -1, grid = new Map<number, Map<number, string>>();
+  const flush = () => {
+    if (sheet >= 0 && grid.size) {
+      const rows = [...grid.keys()].sort((a, b) => a - b).slice(0, 2000).map((r) => { const cells = grid.get(r)!; const max = Math.max(...cells.keys()); return Array.from({ length: Math.min(max + 1, 200) }, (_, k) => cells.get(k) ?? "").join(" | ").replace(/( \| )+$/, ""); }).filter((r) => r.replace(/[ |]/g, ""));
+      if (rows.length) out.push(`Sheet: ${names[sheet] ?? `Sheet ${sheet + 1}`}`, ...rows, "");
+    }
+    grid = new Map();
+  };
+  const put = (r: number, col: number, v: string) => { if (!grid.has(r)) grid.set(r, new Map()); grid.get(r)!.set(col, v); };
+  let pendingFormula: [number, number] | null = null;
+  for (const { t, d } of records) {
+    if (t === 0x0809 && u16(d, 2) === 0x0010) { flush(); sheet++; }
+    else if (sheet < 0) continue;
+    else if (t === 0x00fd) put(u16(d, 0), u16(d, 2), sst[u32(d, 6)] ?? "");
+    else if (t === 0x0203) put(u16(d, 0), u16(d, 2), num(f64(d, 6)));
+    else if (t === 0x027e) put(u16(d, 0), u16(d, 2), num(rk(u32(d, 6))));
+    else if (t === 0x00bd) { const r = u16(d, 0), first = u16(d, 2); for (let k = 0; 4 + k * 6 + 6 <= d.length - 2; k++) put(r, first + k, num(rk(u32(d, 4 + k * 6 + 2)))); }
+    else if (t === 0x0204) { const n = u16(d, 6), wide = d[8] & 1; put(u16(d, 0), u16(d, 2), wide ? utf16.decode(d.subarray(9, 9 + n * 2)) : cp1252.decode(d.subarray(9, 9 + n))); }
+    else if (t === 0x0006) { if (u16(d, 12) === 0xffff && d[6] === 0) pendingFormula = [u16(d, 0), u16(d, 2)]; else if (u16(d, 12) !== 0xffff) put(u16(d, 0), u16(d, 2), num(f64(d, 6))); }
+    else if (t === 0x0207 && pendingFormula) { const n = u16(d, 0), wide = d[2] & 1; put(pendingFormula[0], pendingFormula[1], wide ? utf16.decode(d.subarray(3, 3 + n * 2)) : cp1252.decode(d.subarray(3, 3 + n))); pendingFormula = null; }
+  }
+  flush();
+  return out.join("\n").trim();
 }
 
 const u16 = (b: Uint8Array, i: number) => b[i] | (b[i + 1] << 8);

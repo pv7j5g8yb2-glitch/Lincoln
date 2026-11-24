@@ -110,3 +110,20 @@ export function rtfText(t: string): string {
   if (html) return htmlText(t.replace(/\s+/g, " ")).split("\n").map((l) => l.trim()).join("\n").replace(/\n{3,}/g, "\n\n").trim();
   return t.replace(/\n{3,}/g, "\n\n").trim();
 }
+
+/** The files inside winmail.dat, the wrapper some Outlook setups put around every attachment. */
+export function tnefFiles(b: Uint8Array): { name: string; data: Uint8Array }[] {
+  const u32 = (i: number) => (b[i] | (b[i + 1] << 8) | (b[i + 2] << 16) | (b[i + 3] << 24)) >>> 0;
+  if (b.length < 6 || u32(0) !== 0x223e9f78) return [];
+  const files: { name: string; data?: Uint8Array }[] = [];
+  // After the signature and key: attributes of level (1 byte), id (4), length (4), data, checksum (2). Each attachment
+  // starts with its rendering record; its name and its data follow in either order.
+  for (let i = 6; i + 9 <= b.length && files.length <= 30;) {
+    const id = u32(i + 1), len = u32(i + 5), data = b.subarray(i + 9, i + 9 + len);
+    if (id === 0x00069002) files.push({ name: "" });
+    else if (id === 0x00018010 && files.length) files[files.length - 1].name = new TextDecoder("windows-1252").decode(data).replace(/\0+$/, "");
+    else if (id === 0x0006800f && files.length) files[files.length - 1].data = new Uint8Array(data);
+    i += 9 + len + 2;
+  }
+  return files.filter((f) => f.data?.length).map((f) => ({ name: f.name || "an attachment", data: f.data! }));
+}

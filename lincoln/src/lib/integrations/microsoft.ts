@@ -110,13 +110,13 @@ export async function addEvent(c: Connection, e: { title: string; date: string; 
 export async function searchFiles(c: Connection, q: string): Promise<FileHit[]> {
   type Item = { id: string; name: string; lastModifiedDateTime?: string; parentReference?: { driveId?: string }; webUrl?: string };
   try {
-    const r = await call<{ value?: { hitsContainers?: { hits?: { resource: Item }[] }[] }[] }>(c, "/search/query", { method: "POST", body: JSON.stringify({ requests: [{ entityTypes: ["driveItem"], query: { queryString: `${q ? `${q} ` : ""}(filetype:pdf OR filetype:jpg OR filetype:jpeg OR filetype:png OR filetype:heic OR filetype:tif OR filetype:tiff OR filetype:docx OR filetype:doc OR filetype:xlsx OR filetype:csv OR filetype:txt OR filetype:rtf OR filetype:msg OR filetype:eml OR filetype:zip)` }, from: 0, size: 25 }] }) }, "Microsoft Search");
+    const r = await call<{ value?: { hitsContainers?: { hits?: { resource: Item }[] }[] }[] }>(c, "/search/query", { method: "POST", body: JSON.stringify({ requests: [{ entityTypes: ["driveItem"], query: { queryString: `${q ? `${q} ` : ""}(filetype:pdf OR filetype:jpg OR filetype:jpeg OR filetype:png OR filetype:heic OR filetype:tif OR filetype:tiff OR filetype:docx OR filetype:doc OR filetype:xlsx OR filetype:csv OR filetype:txt OR filetype:rtf OR filetype:msg OR filetype:eml OR filetype:zip OR filetype:pptx OR filetype:ppt OR filetype:xls OR filetype:odt OR filetype:wpd OR filetype:pages)` }, from: 0, size: 25 }] }) }, "Microsoft Search");
     const hits = r.value?.[0]?.hitsContainers?.[0]?.hits ?? [];
     return hits.map(({ resource: f }) => ({ id: `${f.parentReference?.driveId ?? "me"}::${f.id}`, name: f.name, modified: f.lastModifiedDateTime ?? null, where: /sharepoint\.com\/sites\//i.test(f.webUrl ?? "") ? "SharePoint" : "OneDrive" }));
   } catch {
     // Personal Microsoft accounts have no Search API; fall back to OneDrive search.
     const r = await call<{ value?: Item[] }>(c, `/me/drive/root/search(q='${encodeURIComponent((q || "pdf").replace(/'/g, ""))}')?$top=25`, {}, "OneDrive");
-    return (r.value ?? []).filter((f) => /\.(pdf|jpe?g|png|heic|webp|tiff?|docx?|xlsx|csv|txt|rtf|msg|eml|zip)$/i.test(f.name)).map((f) => ({ id: `me::${f.id}`, name: f.name, modified: f.lastModifiedDateTime ?? null, where: "OneDrive" }));
+    return (r.value ?? []).filter((f) => /\.(pdf|jpe?g|png|heic|webp|gif|bmp|tiff?|docx?|xlsx?|pptx?|od[tsp]|pages|key|numbers|wpd?|csv|txt|rtf|html?|msg|eml|zip)$/i.test(f.name)).map((f) => ({ id: `me::${f.id}`, name: f.name, modified: f.lastModifiedDateTime ?? null, where: "OneDrive" }));
   }
 }
 
