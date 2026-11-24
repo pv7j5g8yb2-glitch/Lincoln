@@ -8,6 +8,8 @@ import JSZip from "jszip";
 
 process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "lincoln-wsg-"));
 process.env.LINCOLN_SECRET ||= "workspace-check-secret-0123456789ab";
+// Links Lincoln posts are absolute, as in production (APP_URL is set on the server).
+process.env.APP_URL ||= "https://app.uselincoln.com";
 const MOCK = process.env.INTEGRATIONS_MOCK_URL!;
 const { db } = await import("../../src/lib/db.ts");
 const { seal } = await import("../../src/lib/secret.ts");

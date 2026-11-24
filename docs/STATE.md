@@ -468,6 +468,19 @@ from the repo the same day. History is in git up to commit `341cf65`.
   elements of each offence, timelines, contradictions; the firm supplies discovery, Lincoln cannot fetch evidence).
   Ceilings estimated the same day are in docs/RESEARCH.md.
 
+## Readiness pass (2026-11-24, after "Lincoln should be ready now for any attorney")
+* Word (.docx), text, RTF, Markdown and saved email files are read everywhere a file comes in (email attachments, uploads,
+  Drive, the intake link): before this they were silently skipped. They become pages of their words (tables as rows),
+  so consultation notes, CVs and draft letters are read like a scan. Old .doc and Excel are still not read.
+* The case record now holds the client's recent emails (quoted replies stripped), and the second reading has a seventh
+  check: a claim made in an email, the questionnaire, consultation notes or a letter (award, publication, judging,
+  role, salary, prior visa, marriage, trip) that no document proves becomes "No proof in the file: ...".
+* Evidence sent later is placed in the case: each new document gets a line in the case activity saying which
+  requirement it strengthens, adds to or weakens, or that it is not relevant.
+* Count phrases read correctly in the singular ("1 requirement"). The old Google Chat check failure was the test
+  missing APP_URL; fixed in the test, all workspace checks pass.
+* Free check: tests/eval/case-flow-check.mts with tests/eval/model-standin-case.cjs. Not yet run on the real model.
+
 ## Real case test set (2026-11-22)
 * `lincoln/tests/aao/`: ten real USCIS AAO appeal decisions (EB-1A, O-1A, NIW, H-1B, EB-1C, 212(i) waiver, 212(h)
   waiver, U, VAWA, T), each turned into a case file and an answer key from USCIS's own findings. Tests legal judgement,
