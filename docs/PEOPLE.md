@@ -96,3 +96,7 @@ Nobody can be hired until there is funding, and any contract goes through the co
   of legal software, its managing partner Thomas Lehrman is a Yale Law graduate who teaches at Vanderbilt, and it has
   invested in Flo Recruit (legal recruiting) and Ocrolus (document automation for lending). He asked for a call after
   Thanksgiving. Reply drafted 2026-11-23 offering Tuesday 1 or Wednesday 2 December, 10am to 1pm Central.
+- Marcelus Pender (Austin): Partnership Growth at Deel; "YC, a16z, Techstars Partner" in his headline means he runs
+  Deel's partnerships with those programmes (selling Deel to their startups), not that he is a YC partner. Ex US Air
+  Force programme manager, then SDR roles. Sent Ismael a connection request on 2026-11-24 after viewing his profile;
+  likely prospecting for Deel. Worth accepting, no action needed.
