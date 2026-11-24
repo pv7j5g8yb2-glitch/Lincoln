@@ -9,8 +9,11 @@ assert.equal(formal("Awards (2019 & 2021) and patents"), "Awards (2019 and 2021)
 assert.equal(formal("She worked at Johnson & Johnson and Procter & Gamble."), "She worked at Johnson & Johnson and Procter & Gamble.");
 assert.equal(formal("Matter of Dhanasar, 26 I&N Dec. 884 (AAO 2016); AT&T; R&D budget"), "Matter of Dhanasar, 26 I&N Dec. 884 (AAO 2016); AT&T; R&D budget");
 assert.equal(formal("Fragomen, Del Rey, Bernsen & Loewy LLP"), "Fragomen, Del Rey, Bernsen & Loewy LLP");
-assert.ok(LEGAL_STYLE.includes('"&" never stands in for "and"') && LEGAL_STYLE.includes('§'));
+assert.ok(LEGAL_STYLE.includes('reproduced exactly as its source writes it') && LEGAL_STYLE.includes('own sentences write "and"'));
 assert.ok(EMAIL_STYLE.includes('rather than "&"'));
-// The official names Lincoln shows and gives the model are written out in full.
-assert.ok(!/ & /.test(JSON.stringify(OFFICIAL_CODES)), "an official name written with &");
+// Quoted and official text stays exactly as its source writes it.
+assert.equal(formal('The class is "Temporary Visitor for Business & Pleasure" & the petition follows.'), 'The class is "Temporary Visitor for Business & Pleasure" and the petition follows.');
+assert.equal(formal("The regulation reads \u201cmaterial in professional publications & other major media\u201d."), "The regulation reads \u201cmaterial in professional publications & other major media\u201d.");
+// The official code table is kept as the State Department publishes it.
+assert.ok(JSON.stringify(OFFICIAL_CODES).includes("Temporary Visitor for Business & Pleasure"));
 console.log("all writing style tests passed");

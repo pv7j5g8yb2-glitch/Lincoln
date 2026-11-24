@@ -149,10 +149,12 @@ email prompt uses them. Lincoln is AI but acts as a human P.A.
 
 **Lincoln writes like a lawyer (Ismael, 2026-11-24).** Everything Lincoln writes reads as an experienced immigration
 attorney or paralegal would write it, and important legal work (filings, letters, declarations, RFE responses, memos,
-case notes) meets the formal standard the law and USCIS expect. Not a ban on symbols: every character is the one a
-careful attorney would use there. "&", "§", "$", "U.S." and the like where the law, USCIS, a form's instructions or an
-official name use them (I&N Dec., 8 C.F.R. § 204.5, Johnson & Johnson); never "&" standing in for "and" in running
-text, no contractions, no shorthand, slang or emoji. Client emails may be warmer but stay professional. Lincoln is an
+case notes) meets the formal standard the law and USCIS expect. It is a hybrid, never a ban on symbols: official text
+is kept exactly as its source writes it, "&" and every other character included (the INA, the CFR, forms and their
+instructions, USCIS and State Department names and visa classes such as "Business & Pleasure", I&N Dec., registered
+names such as Johnson & Johnson), and so is anything a form or the law requires a field to say. Lincoln's own
+sentences write "and", never "&", with no contractions, shorthand, slang or emoji. Never rewrite official text to
+match a style rule. Client emails may be warmer but stay professional. Lincoln is an
 autonomous paralegal and lawyer, so these small details are the job. The rules are `LEGAL_STYLE` and `EMAIL_STYLE` in
 `lincoln/src/lib/style.ts`; `formal()` there is the last guard on every draft and email.
 

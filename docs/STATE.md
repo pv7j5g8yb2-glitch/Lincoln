@@ -489,10 +489,11 @@ from the repo the same day. History is in git up to commit `341cf65`.
   6+), winmail.dat (the files inside it), web pages, GIF, BMP and AVIF. Google Slides come in from Drive as PowerPoint.
   What is still refused: password protected or damaged files ("Could not open" asks for an unlocked copy). No audio
   or video (Ismael, 2026-11-24: no call recordings for now).
-* Writing (Ismael, 2026-11-24): "&" from the State Department code table had leaked into names and the model's
-  writing. The table now says "and"; LEGAL_STYLE (every draft, note and chat document text) and EMAIL_STYLE set the
-  attorney's standard, judged per character (§, I&N Dec., official names kept; "&" never for "and" in running text);
-  `formal()` fixes "&" between ordinary words in every draft, email and redline edit. `tests/style.test.mjs`.
+* Writing (Ismael, 2026-11-24): a hybrid. Official text stays exactly as its source writes it ("&" included: the State
+  Department code table is as published, "Business & Pleasure"); Lincoln's own sentences write "and". LEGAL_STYLE
+  (every draft, note and chat document text) and EMAIL_STYLE set this; `formal()` fixes "&" between ordinary words in
+  Lincoln's own sentences in every draft, email and redline edit, never inside quotation marks, names or citations.
+  `tests/style.test.mjs`.
 * A file Lincoln cannot read is never dropped in silence: the case gets "Could not open: name" asking for a PDF or Word
   copy (Pages, PowerPoint, password protected files, winmail.dat). Calendar invites, contact cards and signature
   files are ignored as not evidence.

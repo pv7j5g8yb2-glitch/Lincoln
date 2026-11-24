@@ -16,17 +16,22 @@ export const EMAIL_STYLE = `How the email must read:
 // paralegal writes for USCIS, the Department of Labor, the State Department, the immigration courts and the BIA.
 export const LEGAL_STYLE = `How the writing must read:
 - As an experienced immigration attorney writes for USCIS, the Department of Labor, the immigration courts and the BIA: formal, precise, complete sentences.
-- Every character is the one a careful attorney would use there. Symbols are right where the law, USCIS or the official record uses them: § and ¶ in citations, "I&N Dec.", "U.S.", "$" and "%", an employer's or institution's name exactly as registered (Johnson & Johnson), and on a form whatever its instructions ask for ("N/A", "None", the format a field wants). In running text "&" never stands in for "and", and nothing reads like a note to a friend.
+- Every character is the one a careful attorney would use there. Official text is reproduced exactly as its source writes it, symbols included: statutes, regulations, forms and their instructions, USCIS and State Department names and visa classes ("Temporary Visitor for Business & Pleasure"), case names and reporters ("I&N Dec."), and the names of employers, schools and agencies as registered. The same goes for whatever a form or the law requires a field to say ("N/A", "None", the format a field wants). Lincoln's own sentences write "and", never "&", and nothing reads like a note to a friend.
 - No contractions (does not, cannot), no abbreviated ordinary words (approx., w/, b/c, info, govt, yrs), no slang, no emoji, no exclamation marks, no rhetorical questions.
 - A term is written in full the first time with its short form after it, "Request for Evidence (RFE)", then used the same way throughout.
 - Parties keep one defined name throughout: the Petitioner, the Beneficiary, the Applicant, the Respondent.
 - Law is cited in standard form: INA § 203(b)(1)(A); 8 C.F.R. § 204.5(h)(3); Matter of Dhanasar, 26 I&N Dec. 884 (AAO 2016).
 - American English and US dates ("March 2, 2027"); amounts as "$145,000".`;
 
-/** Last guard on anything Lincoln writes: an "&" standing for "and" between ordinary words becomes "and". Names
- *  (Johnson & Johnson, Fragomen, Del Rey, Bernsen & Loewy) and citations (I&N Dec., AT&T) are left exactly as written. */
+/** Last guard on Lincoln's own sentences: an "&" standing for "and" between ordinary words becomes "and". Anything in
+ *  quotation marks (quoted law, an official title) and every name or citation (Johnson & Johnson, I&N Dec., AT&T) is
+ *  left exactly as its source writes it. */
 export function formal(text: string): string {
-  return text.replace(/(\S+)( ?)&( ?)(\S+)/g, (m, a: string, s1: string, s2: string, b: string) => {
+  return text.split(/("[^"\n]*"|\u201c[^\u201d\n]*\u201d)/).map((part, i) => (i % 2 ? part : own(part))).join("");
+}
+
+function own(text: string): string {
+  return text.replace(/(^|\S+)( ?)&( ?)(\S+)/g, (m, a: string, s1: string, s2: string, b: string) => {
     if (!s1 || !s2) return m; // I&N, AT&T, R&D: part of a name or citation
     const name = (w: string) => /^[A-Z]/.test(w.replace(/^[("'“]+/, ""));
     return name(a) && name(b) ? m : `${a} and ${b}`;
