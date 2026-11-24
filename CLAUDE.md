@@ -169,8 +169,11 @@ build` before every push to the session branch; Render deploys from it. A grep f
   so no single state). Like Claude or ChatGPT, trained and set up for immigration work: it takes
   any time consuming task, returns a finished file (Word, PDF, Excel), and connects to the tools
   lawyers use (Word, Google Docs, Outlook, Drive, their case software). Ready made workflows
-  first, a general assistant on top. Priced per seat per month (about $300 is the working figure,
-  untested).
+  first, a general assistant on top. Pricing (Ismael, 2026-11-24): no public price; each firm gets a quote by email
+  from its Get In Touch answers (new cases a month above all, then users), later on demo calls once there is a sales
+  rep (Jim or another). Unlimited users. Internal guide, untested: up to 10 new cases a month $1,500, up to 50
+  $4,500, up to 100 $8,000, up to 200 $14,000, 200+ quoted. The old $300 a seat figure is dropped (seats charge
+  less as Lincoln does more of the work).
 * **First workflows (draft, to be tested):** employment based cases (O-1, EB-1, H-1B, L-1 and
   green cards from them), end to end from client questionnaire and evidence to a finished filing
   packet. Family cases, forms, deadlines and billing come later.

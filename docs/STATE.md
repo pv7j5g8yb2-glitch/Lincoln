@@ -294,7 +294,9 @@ from the repo the same day. History is in git up to commit `341cf65`.
 
 * Whether the L monogram becomes the icon, or the wordmark stands alone, and the trademark result.
 * The exact first workflow, and whether the first release is one case type end to end or wider.
-* Price figure. Structure decided 2026-11-12: one fixed monthly fee per firm, unlimited use, no per case fee (per user, see `docs/LINCOLN.md`). $199 to $300 a seat mentioned earlier.
+* Price figure. Decided 2026-11-24 (Ismael): quote per firm from the Get In Touch answers, unlimited users, a fixed
+  monthly fee set by new cases a month (guide in CLAUDE.md, untested), later on demo calls with a sales rep. Replaces
+  the per seat structure (2026-11-12) and the $199 to $300 a seat figure.
 * Who the parent or guardian owner is, and how payments and contracts are held.
 * Which immigration lawyer will advise (nobody yet).
 * Which model providers and what data agreements.
