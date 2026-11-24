@@ -1171,3 +1171,10 @@ Company claims, from the founder; Legora valued $675M then, $80M Series B (Iconi
   $5M to $10M a year bootstrapped, $20M to $60M with YC. All US law: about 1.37M lawyers (ABA 2025), law firm revenue
   about $400B (IBISWorld $427B, MarketLine $410B), 420k to 460k firms; Lincoln fits case based small firm areas (about
   $5B to $7B a year pot), realistic $150M to $350M a year venture backed over 8 to 10 years, $10M to $50M bootstrapped.
+* Legora "Fact Intelligence" (LinkedIn launch, 2026-11-24): extracts and connects facts across millions of documents,
+  each linked to its source; its Agent reasons over the full case record, investigates conflicting accounts and builds
+  chronologies. Aimed at litigation and disputes teams; quote from a Goodwin partner. Nearly every comment on the post
+  was from Legora staff, so it is launch hype, not customer signal. Read for Lincoln: the criminal and investigations
+  idea Ismael raised is exactly where Legora is moving, which supports staying on immigration. Source linked facts,
+  conflict checks and timelines are becoming expected; Lincoln already cites every fact to its page, checks conflicts
+  in the second reading and builds case dates, at the size of one immigration case.
