@@ -1153,3 +1153,17 @@ Company claims, from the founder; Legora valued $675M then, $80M Series B (Iconi
   premium for legal judgement built into the product. Lincoln's case is the same "one area deep, then expand" thesis,
   shown with evidence: 236 rulebooks, the law library checked against the official text, and graded results on real
   USCIS decisions. The gap is no lawyer on the team; an immigration attorney adviser and graded results close it most.
+
+## Average immigration firm and what it would pay (2026-11-24)
+* Real figures: USCIS received 2.6M applications and petitions in Q1 FY2025 (American Immigration Council), so about
+  10M a year. AILA has 18,000+ US lawyer members (aila.org). AILA's 2025 media kit, via a secondary source: 34.8% of
+  members are solo, 26.1% in firms of 2 to 5 attorneys, 8.9% in firms of 75+. Earlier AILA studies: about 76% in firms
+  of three or fewer lawyers (2019). The 2022 Marketplace Study PDF could not be read from here (aila.org files host
+  blocked); it may hold caseload and fee figures.
+* Not found anywhere public: the share of filings made through an attorney, and new cases per attorney a month.
+* Estimate (assumptions marked): about 2.5 forms per case (assumption) gives about 4M cases a year; if about 30% go
+  through attorneys (assumption) that is about 1.2M cases, about 65 a year or 5 to 6 a month per attorney. Matches the
+  caseload anecdotes (70 to 150 open clients per attorney, cases lasting 6 to 12 months, so about 6 to 25 new a month).
+* So under the pricing guide: a solo firm opens under 10 new cases a month ($1,500); a 2 to 5 attorney firm opens about
+  10 to 50 ($3,500). Most firms are solo or small, so the typical firm pays $1,500 to $3,500 a month, and the average
+  across firms is roughly $2,000 to $2,500 a month (about $25k to $30k a year). Larger firms pull revenue up.
