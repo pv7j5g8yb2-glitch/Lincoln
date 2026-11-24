@@ -2,50 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import LightField from "./LightField";
 
-// Lincoln's public front page. Warm white, serif type and Ismael's own photographs, with the work laid on top of
-// them. Motion stays quiet: photographs drift against the scroll, one sentence turns to ink word by word, each
-// piece of work settles into place, and the case papers spread across a desk fold into a filing packet in 3D.
+// Lincoln's public front page. Dark ground, serif type and one band of warm, grainy light (the hero and the close).
+// Motion stays quiet: the light drifts, one sentence turns to ink word by word, the work opens one piece at a time,
+// the case types drift past and the tools are wired into Lincoln. No stock photographs.
 // American English. Every name and number on the page is made up.
-
-/** Progress of an element through the viewport: 0 when its top meets the bottom of the screen, 1 when its
- *  bottom leaves the top. */
-function useProgress<T extends HTMLElement>() {
-  const ref = useRef<T>(null);
-  const [p, setP] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    const tick = () => {
-      raf = 0;
-      const el = ref.current; if (!el) return;
-      const r = el.getBoundingClientRect(), h = window.innerHeight;
-      setP(Math.min(1, Math.max(0, (h - r.top) / (r.height + h))));
-    };
-    const on = () => { if (!raf) raf = requestAnimationFrame(tick); };
-    tick(); window.addEventListener("scroll", on, { passive: true }); window.addEventListener("resize", on);
-    return () => { window.removeEventListener("scroll", on); window.removeEventListener("resize", on); cancelAnimationFrame(raf); };
-  }, []);
-  return [ref, p] as const;
-}
-
-/** Progress through a tall section whose content is pinned: 0 when it reaches the top, 1 when it lets go. */
-function usePinned<T extends HTMLElement>() {
-  const ref = useRef<T>(null);
-  const [p, setP] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    const tick = () => {
-      raf = 0;
-      const el = ref.current; if (!el) return;
-      const r = el.getBoundingClientRect();
-      setP(Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - window.innerHeight))));
-    };
-    const on = () => { if (!raf) raf = requestAnimationFrame(tick); };
-    tick(); window.addEventListener("scroll", on, { passive: true }); window.addEventListener("resize", on);
-    return () => { window.removeEventListener("scroll", on); window.removeEventListener("resize", on); cancelAnimationFrame(raf); };
-  }, []);
-  return [ref, p] as const;
-}
 
 const clamp = (x: number) => Math.min(1, Math.max(0, x));
 const ease = (x: number) => 1 - Math.pow(1 - clamp(x), 3);
@@ -165,12 +127,226 @@ function ApproveCard({ on }: { on: boolean }) {
   );
 }
 
-const STEPS: { title: string; line: string; photo?: string; pos?: string; dim?: number; Card: (p: { on: boolean }) => ReactNode }[] = [
-  { title: "Reads your mail.", line: "A client writes in. The case is open before anyone sees the email.", photo: "/landing/concrete.jpg", Card: MailCard },
-  { title: "Reads your files.", line: "Conflicts, gaps and bars, each with the page it came from.", photo: "/landing/marble.jpg", Card: ReadCard },
-  { title: "Drafts your letters.", line: "Support letters and RFE responses, cited to the evidence.", photo: "/landing/letters.jpg", dim: 0.55, Card: LetterCard },
-  { title: "Asks for approval.", line: "Nothing is filed or sent without an attorney's approval.", photo: "/landing/court.jpg", pos: "30% 50%", Card: ApproveCard },
+function FormCard({ on }: { on: boolean }) {
+  const rows = [["Part 1, 1.a", "Family name", "REYES"], ["Part 1, 1.b", "Given name", "SOFIA"], ["Part 1, 3", "A-Number", "None"], ["Part 1, 19", "Date of last arrival", "06/14/2022"]];
+  return (
+    <div className={`${card} p-5 md:p-6`}>
+      <div className="flex items-baseline justify-between"><p className={label}>Form I-485 · Sofia Reyes</p><span className="text-[12px] text-[#74716b]">Edition 01/20/25</span></div>
+      <div className="mt-3 flex flex-col divide-y divide-[#262523]">
+        {rows.map(([n, f, v], i) => (
+          <div key={n} className="flex items-center gap-3 py-2.5">
+            <span className="w-[86px] shrink-0 text-[12px] text-[#74716b]">{n}</span>
+            <span className="min-w-0 flex-1 truncate text-[13.5px] text-[#a6a39c]">{f}</span>
+            <span {...rise(on, 500 + i * 200)}><span className="rounded-md bg-[#1d1d1b] px-2 py-1 font-mono text-[13px] tracking-[0.02em]">{v}</span></span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RfeCard({ on }: { on: boolean }) {
+  const rows = [["Substantial merit and national importance", "Exhibits 4, 7, 9"], ["Well positioned to advance the endeavor", "Exhibits 2, 11"], ["On balance, beneficial to waive", "Brief, section III"]];
+  return (
+    <div className={`${card} p-5 md:p-6`}>
+      <p className={label}>Request for Evidence · Dr. Okoro</p>
+      <div className="mt-3 flex flex-col gap-2">
+        {rows.map(([a, b], i) => (
+          <div key={a} {...rise(on, 500 + i * 220)}>
+            <div className="flex items-start gap-3 rounded-xl bg-[#1d1d1b] px-4 py-3">
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#3a3122] text-[11px] font-semibold text-[#dcbd82]">{i + 1}</span>
+              <div className="min-w-0"><p className="text-[14px] font-medium leading-snug">{a}</p><p className="mt-0.5 text-[12.5px] text-[#8d8982]">{b}</p></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ChaseCard({ on }: { on: boolean }) {
+  const rows: [string, boolean][] = [["Passport", true], ["Birth certificate", true], ["Marriage certificate", true], ["Tax returns, 2023 to 2025", false]];
+  return (
+    <div className={`${card} p-5 md:p-6`}>
+      <div className="flex items-baseline justify-between"><p className={label}>Documents · Sofia Reyes</p><span className="text-[12.5px] text-[#a6a39c]">3 of 4</span></div>
+      <div className="mt-3 flex flex-col divide-y divide-[#262523]">
+        {rows.map(([a, done], i) => (
+          <div key={a} {...rise(on, 400 + i * 180)}>
+            <div className="flex items-center justify-between gap-3 py-2.5">
+              <span className="text-[14px]">{a}</span>
+              {done
+                ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dcbd82" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                : <span className="text-[12.5px] text-[#8d8982]">Reminder sent Tuesday</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DeadlineCard({ on }: { on: boolean }) {
+  const rows = [["Dec 14", "RFE response due", "Dr. Okoro · I-140"], ["Jan 6", "Biometrics appointment", "Sofia Reyes · I-485"], ["Feb 2", "I-94 expires", "Amir Haddad · H-1B"]];
+  return (
+    <div className={`${card} p-5 md:p-6`}>
+      <p className={label}>Upcoming</p>
+      <div className="mt-3 flex flex-col divide-y divide-[#262523]">
+        {rows.map(([d, a, b], i) => (
+          <div key={a} {...rise(on, 400 + i * 200)}>
+            <div className="flex items-center gap-4 py-3">
+              <span className="w-[54px] shrink-0 font-serif text-[18px] font-semibold tracking-[-0.01em]">{d}</span>
+              <div className="min-w-0"><p className="truncate text-[14.5px] font-medium">{a}</p><p className="truncate text-[12.5px] text-[#8d8982]">{b}</p></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function WordCard({ on }: { on: boolean }) {
+  return (
+    <div className={`${card} p-6 md:p-7`}>
+      <div className="flex items-center justify-between"><p className={label}>Expert letter.docx · Suggesting</p><span className="rounded bg-[#1d4ed8]/15 px-1.5 py-0.5 text-[11px] font-semibold text-[#8fb0ff]">W</span></div>
+      <p className="mt-4 font-serif text-[15.5px] leading-[1.75] md:text-[16px]">
+        In 2024 Dr. Okoro <span className={`transition-all duration-700 ${on ? "text-[#e0796f] line-through" : ""}`} style={{ transitionDelay: "700ms" }}>received an award at</span>{" "}
+        <span className={`transition-all duration-700 ${on ? "text-[#8fb0ff] underline decoration-[#8fb0ff]/60 underline-offset-2" : "opacity-0"}`} style={{ transitionDelay: "1100ms" }}>won first place in</span> the HealthBridge Innovation Challenge.
+      </p>
+      <div {...rise(on, 1500)}><p className="mt-4 border-l-2 border-[#3b3a36] pl-3 text-[13px] leading-relaxed text-[#a6a39c]">Exhibit 12 shows first place, not an award of participation.</p></div>
+    </div>
+  );
+}
+
+const WORK: { title: string; line: string; Card: (p: { on: boolean }) => ReactNode }[] = [
+  { title: "Opens cases from email", line: "A client writes in. The case is open before anyone sees the email.", Card: MailCard },
+  { title: "Reads every page", line: "Conflicts, gaps and bars, each with the page it came from.", Card: ReadCard },
+  { title: "Fills every form", line: "Current editions, every answer traced to the file.", Card: FormCard },
+  { title: "Drafts the petition", line: "Support letters and briefs, cited to the evidence and the law.", Card: LetterCard },
+  { title: "Answers RFEs", line: "Each point of the notice mapped to the evidence that meets it.", Card: RfeCard },
+  { title: "Collects documents", line: "Clients upload through a secure link. Lincoln follows up.", Card: ChaseCard },
+  { title: "Keeps every deadline", line: "On the firm's calendar the moment a notice arrives.", Card: DeadlineCard },
+  { title: "Works in Word and Google Docs", line: "Tracked changes on the firm's own documents, with the reason.", Card: WordCard },
+  { title: "Waits for approval", line: "Nothing is filed or sent without an attorney's approval.", Card: ApproveCard },
 ];
+
+/** The warm, grainy ground the work sits on. */
+const ground = "grain absolute inset-0 bg-[radial-gradient(120%_90%_at_85%_10%,#6b2a17_0%,#2a1410_38%,#121110_70%),radial-gradient(80%_60%_at_10%_100%,#1f2a3d_0%,transparent_60%)] bg-blend-screen";
+
+function WorkPanel({ i, seen, className = "" }: { i: number; seen: boolean; className?: string }) {
+  return (
+    <div className={`relative overflow-hidden rounded-[20px] bg-[#121110] ${className}`}>
+      <div className={ground} />
+      {WORK.map((w, k) => (
+        <div key={w.title} className="absolute inset-0 flex items-center justify-center transition-all duration-700 ease-out" style={{ opacity: k === i ? 1 : 0, transform: `translateY(${k === i ? 0 : k < i ? -24 : 24}px) scale(${k === i ? 1 : 0.97})`, pointerEvents: k === i ? "auto" : "none" }}>
+          <w.Card on={k === i && seen} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Everything Lincoln does, one item open at a time: the list on the left, that piece of the work on the right. It
+ *  moves on by itself while in view, and stops once someone chooses. */
+function Work() {
+  const [at, setAt] = useState(0);
+  const [auto, setAuto] = useState(true);
+  const [seen, setSeen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const io = new IntersectionObserver(([e]) => setSeen(e.isIntersecting), { threshold: 0.35 });
+    io.observe(box.current!); return () => io.disconnect();
+  }, []);
+  useEffect(() => {
+    // Only on wider screens: on a phone the open item sits in the page, so moving on by itself would shift it.
+    if (!auto || !seen || window.matchMedia("(prefers-reduced-motion: reduce), (max-width: 767px)").matches) return;
+    const id = window.setTimeout(() => setAt((i) => (i + 1) % WORK.length), 5200);
+    return () => window.clearTimeout(id);
+  }, [at, auto, seen]);
+  const pick = (i: number) => { setAuto(false); setAt(i); };
+  return (
+    <div ref={box} className="mt-12 grid gap-10 md:mt-16 md:grid-cols-[minmax(0,1fr)_minmax(0,600px)] md:gap-16">
+      <div className="flex flex-col">
+        {WORK.map((w, i) => (
+          <div key={w.title} className="border-t border-[#262523] last:border-b">
+            <button type="button" onClick={() => pick(i)} aria-expanded={i === at} className="group flex w-full items-baseline gap-4 py-4 text-left md:py-5">
+              <span className="w-6 shrink-0 font-sans text-[12.5px] tabular-nums text-[#74716b]">{String(i + 1).padStart(2, "0")}</span>
+              <span className={`font-serif text-[22px] font-semibold leading-tight tracking-[-0.02em] transition-colors duration-300 md:text-[26px] ${i === at ? "text-[#f4f3ef]" : "text-[#f4f3ef]/35 group-hover:text-[#f4f3ef]/70"}`}>{w.title}</span>
+            </button>
+            <div className="grid transition-[grid-template-rows] duration-500 ease-out" style={{ gridTemplateRows: i === at ? "1fr" : "0fr" }}>
+              <div className="overflow-hidden">
+                <p className="max-w-[40ch] pb-4 pl-10 font-sans text-[16.5px] leading-[1.55] text-[#a6a39c] md:pb-6">{w.line}</p>
+                {i === at && auto && seen && <div className="mb-5 ml-10 hidden h-px bg-[#262523] md:block"><div key={at} className="work-progress h-px bg-[#f4f3ef]/70" /></div>}
+                <WorkPanel i={i} seen={seen} className="mb-6 h-[400px] md:hidden" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hidden md:block">
+        <div className="sticky top-24"><WorkPanel i={at} seen={seen} className="h-[min(72vh,600px)]" /></div>
+      </div>
+    </div>
+  );
+}
+
+const TYPES = [
+  ["H-1B", "O-1A", "O-1B", "EB-1A", "EB-1B", "EB-1C", "EB-2 NIW", "PERM", "L-1A", "L-1B", "TN", "E-2", "E-3", "R-1", "H-2B"],
+  ["I-130", "I-485", "K-1", "I-751", "N-400", "DACA", "TPS", "Asylum", "U visa", "T visa", "VAWA", "Waivers", "Removal defense", "Consular processing", "SIJ"],
+];
+
+/** Every case type, drifting past in two rows. */
+function Types() {
+  return (
+    <div className="flex flex-col gap-3 md:gap-5" aria-label={TYPES.flat().join(", ")}>
+      {TYPES.map((row, r) => (
+        <div key={r} className="marquee flex w-max" style={{ animationDirection: r ? "reverse" : "normal" }} aria-hidden>
+          {[...row, ...row].map((t, i) => (
+            <span key={i} className="flex items-center whitespace-nowrap font-serif text-[40px] font-semibold tracking-[-0.03em] text-[#f4f3ef]/90 md:text-[72px]">
+              {t}<span className="mx-6 text-[#f4f3ef]/20 md:mx-10">·</span>
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const TOOLS: [string[], string[]] = [["Gmail", "Outlook", "Google Drive", "OneDrive", "SharePoint"], ["Microsoft Word", "Google Docs", "Google Calendar", "Microsoft Teams", "Google Chat"]];
+
+/** Lincoln in the middle, wired to the tools a firm already works in. */
+function Tools() {
+  const chip = "rounded-[8px] bg-[#151514] px-3.5 py-2 font-mono text-[12px] uppercase tracking-[0.12em] text-[#d6d3cc] ring-1 ring-[#2b2a27]";
+  return (
+    <div className="relative mt-14 md:mt-20">
+      {/* Laptops: two columns of tools with lines running into Lincoln. */}
+      <div className="relative mx-auto hidden h-[420px] max-w-[980px] md:block">
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 980 420" preserveAspectRatio="none" aria-hidden>
+          {TOOLS.map((col, side) => col.map((_, i) => {
+            const y = 42 + i * 84, x0 = side ? 770 : 210, x1 = side ? 570 : 410;
+            return <path key={`${side}${i}`} d={`M${x0} ${y} C ${(x0 + x1) / 2} ${y}, ${(x0 + x1) / 2} 210, ${x1} 210`} fill="none" stroke="#57534b" strokeWidth="1" className="wire" style={{ animationDelay: `${(side * 5 + i) * -0.6}s` }} />;
+          }))}
+        </svg>
+        {TOOLS.map((col, side) => (
+          <div key={side} className={`absolute top-0 flex h-full flex-col justify-between py-[22px] ${side ? "right-0 items-start" : "left-0 items-end"}`} style={{ width: 210 }}>
+            {col.map((t) => <span key={t} className={chip}>{t}</span>)}
+          </div>
+        ))}
+        <div className="absolute left-1/2 top-1/2 flex h-[160px] w-[160px] -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden rounded-[28px] ring-1 ring-[#3a3833]">
+          <div className={ground} />
+          <span className="relative font-serif text-[34px] font-semibold tracking-[-0.03em]">Lincoln</span>
+        </div>
+      </div>
+      {/* Phones: Lincoln, then the tools beneath it. */}
+      <div className="md:hidden">
+        <div className="relative mx-auto flex h-[120px] w-[120px] items-center justify-center overflow-hidden rounded-[24px] ring-1 ring-[#3a3833]">
+          <div className={ground} />
+          <span className="relative font-serif text-[26px] font-semibold tracking-[-0.03em]">Lincoln</span>
+        </div>
+        <div className="mt-8 flex flex-wrap justify-center gap-2">{TOOLS.flat().map((t) => <span key={t} className={chip}>{t}</span>)}</div>
+      </div>
+    </div>
+  );
+}
 
 /** The film plays when it comes into view and pauses when it leaves. No sound, no controls. */
 /** The film plays from the moment the page opens, silent and looping, and keeps playing. Only a click or tap on it
@@ -205,146 +381,6 @@ function Film() {
   return <div ref={box} className="hero-photo overflow-hidden rounded-[20px] bg-[#151513] shadow-[0_40px_100px_-40px_rgba(22,22,20,0.55)]" dangerouslySetInnerHTML={{ __html: FILM }} />;
 }
 
-/** The four steps as one scene: the page holds still while the scroll moves through them. On the left the steps
- *  light up one by one; on the right one frame crossfades between the photographs and the work changes on it. */
-function Steps() {
-  const [ref, p] = usePinned<HTMLDivElement>();
-  const marks = useRef<(HTMLDivElement | null)[]>([]);
-  const [at, setAt] = useState(0);
-  const atRef = useRef(0);
-  useEffect(() => {
-    // The step comes from where the page is against fixed marks in the section, never from the window's height, so
-    // a phone's address bar showing or hiding cannot change it. Inside the section, and only there, one swipe or one
-    // scroll moves exactly one step: the page glides to it and the rest of that gesture (a phone's glide included)
-    // is ignored. Swiping past the first or last step lets the page go, and before and after the section the page
-    // scrolls freely.
-    const root = document.documentElement;
-    const smooth: ScrollBehavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
-    let raf = 0, inside = false, lockedUntil = 0, wheel = 0, touchY: number | null = null;
-    const geometry = () => {
-      const wrap = ref.current, m = marks.current;
-      if (!wrap || m.some((x) => !x)) return null;
-      const top = wrap.getBoundingClientRect().top + window.scrollY;
-      const tops = m.map((x) => x!.offsetTop);
-      return { top, tops, step: tops[1] - tops[0], off: window.scrollY - top };
-    };
-    const glide = (y: number) => {
-      lockedUntil = Date.now() + 850;
-      // Stops a phone's glide in its tracks before moving, so it cannot carry on past the step.
-      root.style.overflow = "hidden";
-      requestAnimationFrame(() => { root.style.overflow = ""; window.scrollTo({ top: y, behavior: smooth }); });
-    };
-    const move = (dir: number) => {
-      const g = geometry(); if (!g) return;
-      const last = g.tops.length - 1, next = atRef.current + dir;
-      if (next < 0) glide(g.top + g.tops[0] - g.step * 0.7);
-      else if (next > last) glide(g.top + g.tops[last] + g.step * 0.7);
-      else glide(g.top + g.tops[next]);
-    };
-    const tick = () => {
-      raf = 0;
-      const g = geometry(); if (!g) return;
-      const last = g.tops.length - 1;
-      const now = g.off > g.tops[0] - g.step * 0.5 && g.off < g.tops[last] + g.step * 0.5;
-      let i = 0;
-      while (i < last && g.off >= g.tops[i] + g.step * 0.5) i++;
-      atRef.current = i; setAt(i);
-      // Coming into the section, from above or below, the page settles on the first or last step.
-      if (now && !inside && Date.now() > lockedUntil) glide(g.top + g.tops[g.off < (g.tops[0] + g.tops[last]) / 2 ? 0 : last]);
-      inside = now;
-    };
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(tick); };
-    const onWheel = (e: WheelEvent) => {
-      if (!inside) return;
-      e.preventDefault();
-      if (Date.now() < lockedUntil) { wheel = 0; return; }
-      wheel += e.deltaY;
-      if (Math.abs(wheel) >= 30) { const dir = Math.sign(wheel); wheel = 0; move(dir); }
-    };
-    const onTouchStart = (e: TouchEvent) => { touchY = e.touches[0]?.clientY ?? null; };
-    const onTouchMove = (e: TouchEvent) => { if (inside) e.preventDefault(); };
-    const onTouchEnd = (e: TouchEvent) => {
-      if (!inside || touchY === null) return;
-      const dy = touchY - (e.changedTouches[0]?.clientY ?? touchY);
-      touchY = null;
-      if (Math.abs(dy) < 24 || Date.now() < lockedUntil) return;
-      move(Math.sign(dy));
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (!inside || e.altKey || e.ctrlKey || e.metaKey) return;
-      const dir = ["ArrowDown", "PageDown", " "].includes(e.key) ? 1 : ["ArrowUp", "PageUp"].includes(e.key) ? -1 : 0;
-      if (!dir) return;
-      e.preventDefault();
-      if (Date.now() >= lockedUntil) move(e.shiftKey && e.key === " " ? -1 : dir);
-    };
-    tick();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    window.addEventListener("wheel", onWheel, { passive: false });
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: false });
-    window.addEventListener("touchend", onTouchEnd, { passive: true });
-    window.addEventListener("keydown", onKey);
-    return () => {
-      cancelAnimationFrame(raf); root.style.overflow = "";
-      window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll);
-      window.removeEventListener("wheel", onWheel); window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchmove", onTouchMove); window.removeEventListener("touchend", onTouchEnd);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [ref]);
-  return (
-    // The marks are where each step sits fully in view; each swipe moves from one to the next.
-    <div ref={ref} className="relative [--step:36vh] md:[--step:32vh]" style={{ height: `calc(100vh + ${STEPS.length} * var(--step))` }}>
-      {STEPS.map((s, i) => <div key={s.title} ref={(el) => { marks.current[i] = el; }} aria-hidden className="step-mark pointer-events-none absolute left-0 h-px w-px" style={{ top: `calc(${i + 0.5} * var(--step))` }} />)}
-      <div className="sticky top-16 flex h-[calc(100dvh-4rem)] items-center overflow-hidden">
-        <div className="mx-auto grid w-full max-w-[1200px] gap-5 px-4 md:grid-cols-[minmax(0,1fr)_minmax(0,560px)] md:items-center md:gap-20 md:px-8">
-          {/* Phones: only the step in view, above the frame. */}
-          <div className="md:hidden">
-            <div className="flex items-center gap-3">
-              <p className={eyebrow}>0{at + 1} / 0{STEPS.length}</p>
-              <div className="h-px flex-1 bg-[#262523]"><div className="h-px bg-[#f4f3ef] transition-[width] duration-500" style={{ width: `${((at + 1) / STEPS.length) * 100}%` }} /></div>
-            </div>
-            <div className="relative mt-3 h-[112px]">
-              {STEPS.map((s, i) => (
-                <div key={s.title} className="absolute inset-0 transition-all duration-500 ease-out" style={{ opacity: i === at ? 1 : 0, transform: `translateY(${i === at ? 0 : i < at ? -14 : 14}px)` }}>
-                  <h3 className="font-serif text-[30px] font-semibold leading-[1.1] tracking-[-0.025em]">{s.title}</h3>
-                  <p className="mt-2 text-[16.5px] leading-[1.55] text-[#a6a39c]">{s.line}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          {/* Laptops: every step listed, the one in view in ink, a thin line filling beside them. */}
-          <div className="relative hidden pl-7 md:block">
-            <div className="absolute bottom-2 left-0 top-2 w-px bg-[#262523]"><div className="w-px bg-[#f4f3ef] transition-[height] duration-500" style={{ height: `${((at + 1) / STEPS.length) * 100}%` }} /></div>
-            {STEPS.map((s, i) => (
-              <div key={s.title} className={`transition-all duration-500 ${i ? "mt-9" : ""}`} style={{ opacity: i === at ? 1 : 0.28 }}>
-                <p className={eyebrow}>0{i + 1}</p>
-                <h3 className="mt-2 font-serif text-[40px] font-semibold leading-[1.05] tracking-[-0.025em] lg:text-[46px]">{s.title}</h3>
-                <div className="grid transition-all duration-500" style={{ gridTemplateRows: i === at ? "1fr" : "0fr" }}>
-                  <p className="overflow-hidden text-[18px] leading-[1.6] text-[#a6a39c]"><span className="block max-w-[32ch] pt-3">{s.line}</span></p>
-                </div>
-              </div>
-            ))}
-          </div>
-          {/* The frame: photographs crossfade, the work on them changes with the step. */}
-          <div className="relative h-[min(56vh,520px)] overflow-hidden rounded-[20px] bg-[#1a1a18] md:h-[min(74vh,640px)]">
-            {STEPS.map((s, i) => s.photo && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={s.photo} src={s.photo} alt="" className="absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-[900ms] ease-out" style={{ objectPosition: s.pos ?? "50% 50%", filter: s.dim ? `brightness(${s.dim})` : undefined, opacity: i === at ? 1 : 0, transform: `scale(${i === at ? 1.02 + p * 0.04 : 1.1})` }} />
-            ))}
-            {STEPS.map((s, i) => (
-              <div key={s.title} className="absolute inset-0 flex items-center justify-center transition-all duration-700 ease-out" style={{ opacity: i === at ? 1 : 0, transform: `translateY(${i === at ? 0 : i < at ? -28 : 28}px) scale(${i === at ? 1 : 0.97})`, pointerEvents: i === at ? "auto" : "none" }}>
-                <s.Card on={i === at} />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 const TRUST = [
   ["Encrypted", "The database and every file, at rest."],
   ["Never used for training", "Client files are not used to train AI models."],
@@ -353,12 +389,9 @@ const TRUST = [
 ];
 
 function Close() {
-  const [ref, p] = useProgress<HTMLDivElement>();
   return (
-    <div ref={ref} className="relative h-[560px] overflow-hidden rounded-[24px] bg-[#222] md:h-[760px]">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/landing/board.jpg" alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover motion-reduce:!transform-none" style={{ objectPosition: "50% 45%", filter: "brightness(0.6)", transform: `scale(${1.14 - 0.14 * ease(p * 1.7)})` }} />
-      <div className="absolute inset-0 bg-black/25" />
+    <div className="relative isolate h-[560px] overflow-hidden rounded-[24px] bg-[#0e0e0d] md:h-[720px]">
+      <div className="absolute inset-0 -z-10"><LightField shape={1} /></div>
       <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-white">
         <In><h2 className="font-serif text-[48px] font-semibold leading-[1] tracking-[-0.035em] md:text-[88px]">Start your<br />first case.</h2></In>
         <In delay={150}><Link href="/start" className="mt-7 inline-block rounded-[10px] bg-white px-6 py-3.5 font-sans text-[15.5px] font-medium text-[#161614] transition hover:bg-white/85 md:mt-8">Get In Touch</Link></In>
@@ -406,7 +439,7 @@ export default function Landing() {
   }, []);
   return (
     <div className="min-h-dvh overflow-x-clip bg-[#0e0e0d] font-serif text-[#f4f3ef] antialiased selection:bg-[#3a3122]">
-      <header className={`sticky top-0 z-50 bg-[#0e0e0d]/85 backdrop-blur-md transition-[border-color] duration-300 ${scrolled ? "border-b border-[#262523]" : "border-b border-transparent"}`}>
+      <header className={`sticky top-0 z-50 transition-[background-color,border-color] duration-300 ${scrolled ? "border-b border-[#262523] bg-[#0e0e0d]/80 backdrop-blur-md" : "border-b border-transparent bg-transparent"}`}>
         <nav className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 md:px-8">
           <Link href="/" className="font-serif text-[26px] font-semibold tracking-[-0.02em] md:text-[28px]">Lincoln</Link>
           <div className="flex items-center gap-1">
@@ -415,17 +448,23 @@ export default function Landing() {
         </nav>
       </header>
 
-      {/* Hero: the line, and the film rising into its frame beneath it. */}
-      <section className="mx-auto max-w-[1200px] px-4 pb-20 pt-16 md:px-8 md:pb-28 md:pt-24">
-        <div className="mx-auto max-w-[880px] text-center">
-          <p className={`hero-in ${eyebrow}`}>For immigration law firms</p>
-          <h1 className="hero-in hero-title mx-auto mt-4 font-serif font-semibold leading-[1.04] tracking-[-0.035em] [animation-delay:120ms]">Your work done before you even ask.</h1>
-          <div className="hero-in mt-10 flex items-center justify-center gap-2 [animation-delay:240ms] md:mt-12">
+      {/* Hero: the line, set low on a band of warm light. */}
+      <section className="relative isolate -mt-16 overflow-hidden">
+        <div className="absolute inset-0 -z-10"><LightField /></div>
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-b from-transparent to-[#0e0e0d]" />
+        <div className="mx-auto flex min-h-[100svh] max-w-[1200px] flex-col justify-end px-4 pb-16 pt-32 md:px-8 md:pb-24">
+          <p className={`hero-in ${eyebrow} text-[#d6d3cc]`}>For immigration law firms</p>
+          <h1 className="hero-in mt-5 max-w-[12ch] font-serif text-[52px] font-semibold leading-[0.98] tracking-[-0.04em] [animation-delay:120ms] sm:text-[72px] md:text-[104px] lg:text-[120px]">Your work done before you even ask.</h1>
+          <div className="hero-in mt-10 flex items-center gap-2 [animation-delay:240ms] md:mt-12">
             <Link href="/start" className="rounded-[10px] bg-[#f4f3ef] px-6 py-3.5 font-sans text-[15.5px] font-medium text-[#0e0e0d] transition hover:opacity-85">Get In Touch</Link>
-            <a href="#work" className="rounded-[10px] px-5 py-3.5 font-sans text-[15.5px] font-medium transition hover:bg-[#1f1f1d]">How it works</a>
+            <a href="#work" className="rounded-[10px] px-5 py-3.5 font-sans text-[15.5px] font-medium transition hover:bg-white/10">How it works</a>
           </div>
         </div>
-        <div className="mt-12 md:mt-16"><Film /></div>
+      </section>
+
+      {/* The film. */}
+      <section className="mx-auto max-w-[1200px] px-4 pb-20 pt-4 md:px-8 md:pb-28">
+        <Film />
       </section>
 
       {/* The statement, lit word by word. */}
@@ -435,8 +474,27 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* The work: one pinned scene that moves through the four steps as the page scrolls. */}
-      <section id="work" className="border-t border-[#262523]"><Steps /></section>
+      {/* Everything Lincoln does. */}
+      <section id="work" className="scroll-mt-16 border-t border-[#262523]">
+        <div className="mx-auto max-w-[1200px] px-4 py-24 md:px-8 md:py-36">
+          <In><p className={eyebrow}>What Lincoln does</p><h2 className="mt-4 font-serif text-[40px] font-semibold leading-[1.02] tracking-[-0.035em] md:text-[72px]">Every part of the case.</h2></In>
+          <Work />
+        </div>
+      </section>
+
+      {/* Every case type. */}
+      <section className="overflow-hidden border-t border-[#262523] py-24 md:py-36">
+        <div className="mx-auto max-w-[1200px] px-4 md:px-8"><In><p className={eyebrow}>Every case type a firm takes</p></In></div>
+        <div className="mt-10 md:mt-14"><Types /></div>
+      </section>
+
+      {/* The tools. */}
+      <section className="border-t border-[#262523]">
+        <div className="mx-auto max-w-[1200px] px-4 py-24 md:px-8 md:py-36">
+          <In><p className={`${eyebrow} md:text-center`}>Connected</p><h2 className="mt-4 max-w-[18ch] font-serif text-[40px] font-semibold leading-[1.02] tracking-[-0.035em] md:mx-auto md:text-center md:text-[64px]">Inside the tools the firm already uses.</h2></In>
+          <In delay={150}><Tools /></In>
+        </div>
+      </section>
 
       {/* Client files. */}
       <section className="border-t border-[#262523]">

@@ -468,6 +468,14 @@ from the repo the same day. History is in git up to commit `341cf65`.
   elements of each offence, timelines, contradictions; the firm supplies discovery, Lincoln cannot fetch evidence).
   Ceilings estimated the same day are in docs/RESEARCH.md.
 
+## Landing page redesign (2026-11-24, from Ismael's references)
+* Hero: one slow band of warm grainy light (WebGL, `src/components/landing/LightField.tsx`; amber, burnt orange,
+  oxblood, ink blue edge; rests off screen, still for reduced motion, CSS fallback), headline large and set low.
+* The film sits under the hero. "Every part of the case." replaces the 01 to 04 photo steps: nine capabilities, each
+  with its own piece of product (auto advance on laptops only). Case types drift past in two rows. "Inside the tools
+  the firm already uses." wires Lincoln to the ten tools it really connects to. The close uses the light band.
+* Following his "vibecoded" checklist: no stock photos, no purple, glow only in the hero and the close.
+
 ## Readiness pass (2026-11-24, after "Lincoln should be ready now for any attorney")
 * Word (.docx), text, RTF, Markdown and saved email files are read everywhere a file comes in (email attachments, uploads,
   Drive, the intake link): before this they were silently skipped. They become pages of their words (tables as rows),
