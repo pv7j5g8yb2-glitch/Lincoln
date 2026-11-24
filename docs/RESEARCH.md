@@ -1129,3 +1129,27 @@ Company claims, from the founder; Legora valued $675M then, $80M Series B (Iconi
   Read for Lincoln: small immigration firms will not build their own (the build take is about big firms with IT teams);
   immigration forms and RFEs are the dull high-volume work pilots stick on; Lincoln already says what it did not check
   (blank boxes rather than guesses, "not shown" citation notes), which is a trust point to show, not hide.
+
+## YC and legal AI (2026-11-24, from a Business Insider piece on FluxCap Ismael sent, plus searches)
+* FluxCap: founded by Jonathan Kanter and Doha Mekki, former top DOJ antitrust officials. YC led a $6.4M seed (with
+  Burford Capital, Bloomberg Beta, Omidyar Network and others) at a bigger check and higher valuation than its standard
+  deal, per Kanter; YC declined to comment on terms. Founders got the network and credits without attending in person
+  (affiliated with the spring 2026 batch). Product: an agentic platform for complex litigation, starting with
+  antitrust (curated doctrine, facts linked to claims, strategy). Built over more than a year with former DOJ lawyers
+  testing and picking apart answers alongside engineers from Palantir and Meta. Kanter's frame: "deep legal tech"
+  versus "BLTs" (basic legal tech that automates tasks without understanding the law); master one area at a time, like
+  Waymo learning one city. YC's Luther Lowe on why: lawyers who have tried high stakes cases plus engineers who can
+  build that judgement into the product. Sources: Business Insider (Melia Robinson, 2026-11-23), law.com 2026-11-03.
+* YC's legal bets in 2026 lean to AI native law firms that sell the finished work: W26 had General Legal, Arcline,
+  LegalOS and Vector Legal; S26 had Perceptron ML, Erinys, Osmaura, Async (per Artificial Lawyer). A secondary blog
+  says YC's 2025 Requests for Startups asked for AI native law firms (not checked on ycombinator.com/rfs).
+* YC already backs immigration: LegalOS (W26, AI native immigration firm, attorneys review every filing, about $500k
+  raised per Caplight; a $10M Series A claim on one site is unverified) and Gale (W25, H-1B software plus attorneys,
+  $999 a petition). Parley (S24) started in immigration and is now general. Both LegalOS and Gale sell the outcome to
+  companies and individuals; neither sells software to existing immigration firms.
+* Read for Lincoln: (1) a YC application must name LegalOS and Gale and say plainly why Lincoln is different: they
+  compete with immigration firms, Lincoln works inside them, using clients the firms already have. (2) Expect "why not
+  be an AI native firm?": an AI firm needs licensed lawyers and an ABS or MSO structure; Lincoln does not. (3) YC pays a
+  premium for legal judgement built into the product. Lincoln's case is the same "one area deep, then expand" thesis,
+  shown with evidence: 236 rulebooks, the law library checked against the official text, and graded results on real
+  USCIS decisions. The gap is no lawyer on the team; an immigration attorney adviser and graded results close it most.
