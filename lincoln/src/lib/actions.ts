@@ -623,7 +623,7 @@ export async function newInboundAddress() {
   redirect(`/integrations?inbound=${token}`);
 }
 
-/** PDFs, photos, Word and text files from a form, checked by content. "size" over 25 MB in total, "type" for anything else. */
+/** Readable files (see fileKind) from a form, checked by content. "size" over 25 MB in total, "type" for anything else. */
 async function uploads(form: FormData, words = false): Promise<Uint8Array[] | "size" | "type"> {
   const files = form.getAll("file").filter((f): f is File => f instanceof File && f.size > 0).slice(0, 40);
   if (files.reduce((s, f) => s + f.size, 0) > 25 * 1024 * 1024) return "size";

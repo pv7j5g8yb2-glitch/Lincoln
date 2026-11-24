@@ -1,7 +1,14 @@
 // File reading: run with npm test. Every file a firm or client sends is either read or named as not read, never dropped.
 import assert from "node:assert";
 import JSZip from "jszip";
-import { fileKind, docxText, xlsxText, plainText, renderFiles, unreadable } from "../src/lib/pdf.ts";
+import fs from "node:fs";
+import CFB from "cfb";
+import sharp from "sharp";
+import { register } from "node:module";
+register("./eval/loader.mjs", import.meta.url);
+const { fileKind, docxText, xlsxText, plainText, renderFiles, unreadable } = await import("../src/lib/pdf.ts");
+const { docText, msgParts } = await import("../src/lib/ole.ts");
+const { emlParts, rtfText } = await import("../src/lib/mime.ts");
 
 const docx = async (body) => { const z = new JSZip(); z.file("[Content_Types].xml", "<Types/>"); z.file("word/document.xml", `<w:document xmlns:w="x"><w:body>${body}</w:body></w:document>`); return z.generateAsync({ type: "uint8array" }); };
 const p = (t) => `<w:p><w:r><w:t>${t}</w:t></w:r></w:p>`;
@@ -38,4 +45,47 @@ const pages = [];
 const n = await renderFiles([new Uint8Array(await z.generateAsync({ type: "uint8array", compression: "DEFLATE" }))], (k, jpeg) => pages.push([k, jpeg.length]));
 assert.equal(n, 2, "a zip's Word and text files are read; system files and a zip inside it are not");
 assert.ok(pages.every(([, size]) => size > 2000));
+// Word 97 to 2003: accents, Chinese (stored as UTF-16) and a table, from a real .doc written by LibreOffice.
+const doc97 = new Uint8Array(fs.readFileSync(new URL("./fixtures/letter.doc", import.meta.url)));
+assert.equal(fileKind(doc97), "doc");
+assert.equal(docText(doc97), "Expert opinion letter for José Núñez\nDr. 王伟 confirms the beneficiary is among the top researchers in the field.\nAward | Year\nHealthBridge Innovation Challenge | 2024\nSigned in Boston.");
+
+// An Outlook message: sender, subject, body and an attached Word file read as pages; a signature logo is not.
+const utf16 = (t) => Buffer.from(t + "\0", "utf16le");
+const m = CFB.utils.cfb_new();
+CFB.utils.cfb_add(m, "/__substg1.0_0037001F", utf16("RE: documents"));
+CFB.utils.cfb_add(m, "/__substg1.0_0C1A001F", utf16("Maria Hernandez"));
+CFB.utils.cfb_add(m, "/__substg1.0_5D01001F", utf16("maria@example.com"));
+CFB.utils.cfb_add(m, "/__substg1.0_1000001F", utf16("Attached is my CV.\r\nMaria"));
+CFB.utils.cfb_add(m, "/__attach_version1.0_#00000000/__substg1.0_3707001F", utf16("CV.docx"));
+CFB.utils.cfb_add(m, "/__attach_version1.0_#00000000/__substg1.0_37010102", Buffer.from(word));
+CFB.utils.cfb_add(m, "/__attach_version1.0_#00000001/__substg1.0_3707001F", utf16("image001.png"));
+CFB.utils.cfb_add(m, "/__attach_version1.0_#00000001/__substg1.0_3712001F", utf16("image001.png@01D7"));
+CFB.utils.cfb_add(m, "/__attach_version1.0_#00000001/__substg1.0_37010102", Buffer.alloc(900, 1));
+const msg = new Uint8Array(CFB.write(m, { type: "buffer" }));
+assert.equal(fileKind(msg), "msg");
+const mp = msgParts(msg);
+assert.ok(mp.text.startsWith("From: Maria Hernandez <maria@example.com>\nSubject: RE: documents\nAttachments: CV.docx, image001.png\n\nAttached is my CV.\nMaria"), mp.text);
+assert.equal(await renderFiles([msg], () => {}), 2, "the email and its Word attachment; not the logo");
+
+// Outlook's HTML email wrapped in RTF comes back as its words.
+const wrapped = "{\\rtf1\\ansi\\fromhtml1 {\\fonttbl{\\f0 Arial;}}{\\*\\htmltag19 <html>}{\\*\\htmltag241 <style>p \\{margin:0\\}}{\\*\\htmltag249 </style>}{\\*\\htmltag64 <p>}\\htmlrtf {\\htmlrtf0 Dear Ms. Hern\\'e1ndez,\\htmlrtf\\par}\\htmlrtf0{\\*\\htmltag72 </p>}{\\*\\htmltag64 <p>}\\htmlrtf {\\htmlrtf0 Your I-140 was approved.{\\*\\htmltag116 <br>}\\htmlrtf\\line\\htmlrtf0 Receipt IOE0912345678\\htmlrtf\\par}\\htmlrtf0{\\*\\htmltag72 </p>}}";
+assert.equal(rtfText(wrapped), "Dear Ms. Hernández,\nYour I-140 was approved.\nReceipt IOE0912345678");
+assert.equal(rtfText("{\\rtf1{\\fonttbl\\f0 Arial;}\\f0 Caf\\'e9 \\{x\\}\\par}"), "Café {x}");
+
+// A forwarded email with the original email attached, which carries the offer letter: all three are read.
+const innerEml = `From: HR <hr@acme.example>\r\nSubject: Your offer\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary="in"\r\n\r\n--in\r\nContent-Type: text/plain\r\n\r\nOffer attached.\r\n--in\r\nContent-Type: application/msword; name="Offer.docx"\r\nContent-Disposition: attachment; filename="Offer.docx"\r\nContent-Transfer-Encoding: base64\r\n\r\n${Buffer.from(word).toString("base64").replace(/.{76}/g, "$&\r\n")}\r\n--in--\r\n`;
+const eml = new TextEncoder().encode(`From: =?UTF-8?Q?Mar=C3=ADa?= <maria@example.com>\r\nTo: firm@example.com\r\nSubject: =?UTF-8?B?Rnc6IG9mZmVy?=\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary="out"\r\n\r\n--out\r\nContent-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n<p>Forwarding the offer. It says =\r\n$145,000.</p>\r\n--out\r\nContent-Type: image/png; name="logo.png"\r\nContent-ID: <logo>\r\n\r\nx\r\n--out\r\nContent-Type: message/rfc822\r\nContent-Disposition: attachment; filename="Your offer.eml"\r\n\r\n${innerEml}\r\n--out--\r\n`);
+assert.equal(fileKind(eml), "eml");
+const ep = emlParts(eml);
+assert.equal(ep.text, "From: María <maria@example.com>\nTo: firm@example.com\nSubject: Fw: offer\nAttachments: Your offer.eml\n\nForwarding the offer. It says $145,000.");
+assert.equal(await renderFiles([eml], () => {}), 3, "the email, the forwarded email and its offer letter");
+
+// A two page scan as TIFF: both pages read.
+const page = () => sharp({ create: { width: 800, height: 1000, channels: 3, background: "#ffffff" } }).png().toBuffer();
+const tiffPath = new URL("./fixtures/.scan.tiff", import.meta.url);
+await sharp([await page(), await page()], { join: { animated: true } }).tiff().toFile(tiffPath.pathname).catch(() => sharp(page()).tiff().toFile(tiffPath.pathname));
+const tiff = new Uint8Array(fs.readFileSync(tiffPath)); fs.rmSync(tiffPath);
+assert.equal(fileKind(tiff), "tiff");
+assert.ok(await renderFiles([tiff], () => {}) >= 1);
 console.log("all file reading tests passed");

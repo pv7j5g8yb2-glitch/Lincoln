@@ -8,7 +8,7 @@ const WORD = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ["better-sqlite3-multiple-ciphers", "pdfjs-dist", "@napi-rs/canvas", "exceljs", "pptxgenjs"],
+  serverExternalPackages: ["better-sqlite3-multiple-ciphers", "pdfjs-dist", "@napi-rs/canvas", "exceljs", "pptxgenjs", "sharp", "cfb"],
   experimental: { serverActions: { bodySizeLimit: "30mb" } },
   poweredByHeader: false,
   devIndicators: false,

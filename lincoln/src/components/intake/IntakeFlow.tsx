@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ABOUT, GROUPS, type Field, type Matter } from "@/lib/intake-matters";
+import { READABLE } from "@/lib/accept";
 
 // The page a client opens from their law firm's link. Plain questions, then their documents, then Send.
 // Progress stays on the phone, so a client can stop and come back. Nothing here gives legal answers.
@@ -176,7 +177,7 @@ export default function IntakeFlow({ token, firm, fixed, name, matters, more = f
             {more && <a href={`/intake/${token}`} className="mb-5 inline-block font-sans text-[14.5px] text-[#6b6862] transition hover:text-[#161614]">← Your case</a>}
             <h1 className="text-[34px] font-semibold leading-[1.08] tracking-[-0.03em] md:text-[40px]">{more ? "More documents" : "Your documents"}</h1>
             <p className="mt-3 text-[17px] leading-[1.6] text-[#6b6862]">A clear photo of each page, or a PDF.</p>
-            <input ref={pick} type="file" accept="image/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,text/plain,.txt,.rtf" multiple className="hidden" onChange={(e) => void upload(e.target.files)} />
+            <input ref={pick} type="file" accept={`image/*,${READABLE}`} multiple className="hidden" onChange={(e) => void upload(e.target.files)} />
             <div className="mt-8 flex flex-col">
               {matter.documents.map((d, i) => {
                 const mine = s.files.filter((f) => f.item === d.id);

@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/session";
 
 const ERRORS: Record<string, string> = {
   size: "25 MB max.",
-  type: "PDFs, photos, Word and text files only.",
+  type: "PDFs, photos, scans, Word, Excel, text and email files only.",
   sample: "Not available in the sample workspace.",
   model: "Lincoln's model is not connected.",
   failed: "Could not open the case. Try again.",

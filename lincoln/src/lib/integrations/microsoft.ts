@@ -2,7 +2,7 @@ import { db } from "../db";
 import { open, seal } from "../secret";
 import { api, callback, json } from "./http";
 import type { FolderHit, Connection, FileHit, Inbound, OfficeKind } from "./types";
-import { OFFICE_EXT, OFFICE_MIME, safeAddress, settingsOf } from "./types";
+import { OFFICE_EXT, OFFICE_MIME, keepAttachment, safeAddress, settingsOf } from "./types";
 import { sign } from "../secret";
 import { appUrl } from "./http";
 
@@ -70,10 +70,15 @@ export async function readMessage(c: Connection, id: string): Promise<Inbound> {
   const m = await call<Msg>(c, `/me/messages/${encodeURIComponent(id)}?$select=id,conversationId,subject,from,body,hasAttachments,internetMessageHeaders`, { headers: { Prefer: 'outlook.body-content-type="text"' } }, "Outlook");
   const attachments: Inbound["attachments"] = [];
   if (m.hasAttachments) {
-    const a = await call<{ value?: { "@odata.type": string; name: string; contentType: string; contentBytes?: string; size?: number; isInline?: boolean }[] }>(c, `/me/messages/${encodeURIComponent(id)}/attachments`, {}, "Outlook");
-    for (const x of a.value ?? []) {
-      const ok = /pdf/i.test(x.contentType + x.name) || /\.docx$/i.test(x.name) || (/^image\/(jpeg|png|webp|heic|heif)$/i.test(x.contentType) && !x.isInline && (x.size ?? 0) > 60_000);
-      if (x["@odata.type"] === "#microsoft.graph.fileAttachment" && ok && x.contentBytes && (x.size ?? 0) < 25 * 1024 * 1024) attachments.push({ name: x.name, type: x.contentType, data: Buffer.from(x.contentBytes, "base64") });
+    const a = await call<{ value?: { id: string; "@odata.type": string; name: string; contentType: string; contentBytes?: string; size?: number; isInline?: boolean }[] }>(c, `/me/messages/${encodeURIComponent(id)}/attachments`, {}, "Outlook");
+    for (const x of (a.value ?? []).slice(0, 30)) {
+      if (!keepAttachment(x.name ?? "", x.contentType ?? "", x.size ?? 0, x.isInline)) continue;
+      if (x["@odata.type"] === "#microsoft.graph.fileAttachment" && x.contentBytes) attachments.push({ name: x.name, type: x.contentType, data: Buffer.from(x.contentBytes, "base64") });
+      // An email attached to an email (forwarded as an attachment) comes as its MIME text, read like a saved email.
+      else if (x["@odata.type"] === "#microsoft.graph.itemAttachment") {
+        const raw = await fetch(api(`${GRAPH}/me/messages/${encodeURIComponent(id)}/attachments/${encodeURIComponent(x.id)}/$value`), { headers: { Authorization: `Bearer ${await access(c)}` } }).catch(() => null);
+        if (raw?.ok) attachments.push({ name: `${x.name || "Attached email"}.eml`, type: "message/rfc822", data: Buffer.from(await raw.arrayBuffer()) });
+      }
     }
   }
   const from = (m.from?.emailAddress?.address ?? "").toLowerCase();
@@ -105,13 +110,13 @@ export async function addEvent(c: Connection, e: { title: string; date: string; 
 export async function searchFiles(c: Connection, q: string): Promise<FileHit[]> {
   type Item = { id: string; name: string; lastModifiedDateTime?: string; parentReference?: { driveId?: string }; webUrl?: string };
   try {
-    const r = await call<{ value?: { hitsContainers?: { hits?: { resource: Item }[] }[] }[] }>(c, "/search/query", { method: "POST", body: JSON.stringify({ requests: [{ entityTypes: ["driveItem"], query: { queryString: `${q ? `${q} ` : ""}(filetype:pdf OR filetype:jpg OR filetype:jpeg OR filetype:png OR filetype:heic)` }, from: 0, size: 25 }] }) }, "Microsoft Search");
+    const r = await call<{ value?: { hitsContainers?: { hits?: { resource: Item }[] }[] }[] }>(c, "/search/query", { method: "POST", body: JSON.stringify({ requests: [{ entityTypes: ["driveItem"], query: { queryString: `${q ? `${q} ` : ""}(filetype:pdf OR filetype:jpg OR filetype:jpeg OR filetype:png OR filetype:heic OR filetype:tif OR filetype:tiff OR filetype:docx OR filetype:doc OR filetype:xlsx OR filetype:csv OR filetype:txt OR filetype:rtf OR filetype:msg OR filetype:eml OR filetype:zip)` }, from: 0, size: 25 }] }) }, "Microsoft Search");
     const hits = r.value?.[0]?.hitsContainers?.[0]?.hits ?? [];
     return hits.map(({ resource: f }) => ({ id: `${f.parentReference?.driveId ?? "me"}::${f.id}`, name: f.name, modified: f.lastModifiedDateTime ?? null, where: /sharepoint\.com\/sites\//i.test(f.webUrl ?? "") ? "SharePoint" : "OneDrive" }));
   } catch {
     // Personal Microsoft accounts have no Search API; fall back to OneDrive search.
     const r = await call<{ value?: Item[] }>(c, `/me/drive/root/search(q='${encodeURIComponent((q || "pdf").replace(/'/g, ""))}')?$top=25`, {}, "OneDrive");
-    return (r.value ?? []).filter((f) => /\.(pdf|jpe?g|png|heic|webp)$/i.test(f.name)).map((f) => ({ id: `me::${f.id}`, name: f.name, modified: f.lastModifiedDateTime ?? null, where: "OneDrive" }));
+    return (r.value ?? []).filter((f) => /\.(pdf|jpe?g|png|heic|webp|tiff?|docx?|xlsx|csv|txt|rtf|msg|eml|zip)$/i.test(f.name)).map((f) => ({ id: `me::${f.id}`, name: f.name, modified: f.lastModifiedDateTime ?? null, where: "OneDrive" }));
   }
 }
 

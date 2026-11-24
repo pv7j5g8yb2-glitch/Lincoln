@@ -2,7 +2,7 @@ import { db } from "../db";
 import { open, seal } from "../secret";
 import { api, callback, json } from "./http";
 import type { Connection, FileHit, FolderHit, Inbound, OfficeKind } from "./types";
-import { OFFICE_MIME, safeAddress, settingsOf } from "./types";
+import { OFFICE_MIME, keepAttachment, safeAddress, settingsOf } from "./types";
 
 // One Google sign in covers Gmail, Drive, Docs, Sheets, Slides and Calendar. Docs, Sheets and Slides
 // are created through Drive by converting the Word, Excel and PowerPoint files Lincoln produces.
@@ -75,11 +75,13 @@ export async function readMessage(c: Connection, id: string): Promise<Inbound> {
   const attachments: Inbound["attachments"] = [];
   const walk = async (p: Part) => {
     if (p.mimeType === "text/plain" && p.body?.data && !p.filename) text += Buffer.from(p.body.data, "base64url").toString("utf8");
-    const isPdf = /pdf$/i.test(p.mimeType + p.filename) || /\.docx$/i.test(p.filename ?? "");
-    const isPhoto = /^image\/(jpeg|png|webp|heic|heif)$/i.test(p.mimeType) && (p.body?.size ?? 0) > 60_000;
-    if (p.filename && (isPdf || isPhoto) && p.body?.attachmentId && (p.body.size ?? 0) < 25 * 1024 * 1024) {
+    // An inline part (a logo in a signature) has a Content-ID and no attachment disposition.
+    const inline = Boolean(p.headers?.some((x) => x.name.toLowerCase() === "content-id")) && !p.headers?.some((x) => x.name.toLowerCase() === "content-disposition" && /attachment/i.test(x.value));
+    if (p.filename && p.body?.attachmentId && attachments.length < 30 && keepAttachment(p.filename, p.mimeType, p.body.size ?? 0, inline)) {
       const a = await call<{ data: string }>(c, `${GMAIL}/messages/${id}/attachments/${p.body.attachmentId}`, {}, "Gmail");
       attachments.push({ name: p.filename, type: p.mimeType, data: Buffer.from(a.data, "base64url") });
+      // A forwarded email attached whole is read as the email it is; its own parts are not walked twice.
+      if (/^message\/rfc822$/i.test(p.mimeType)) return;
     }
     for (const x of p.parts ?? []) await walk(x);
   };
@@ -109,12 +111,19 @@ export async function addEvent(c: Connection, e: { title: string; date: string; 
 // Drive, Docs, Sheets, Slides
 
 export async function searchFiles(c: Connection, q: string): Promise<FileHit[]> {
-  const terms = [`(mimeType = 'application/pdf' or mimeType contains 'image/')`, "trashed = false", ...(q ? [`name contains '${q.replace(/['\\]/g, "")}'`] : [])].join(" and ");
-  const r = await call<{ files?: { id: string; name: string; modifiedTime?: string }[] }>(c, `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(terms)}&orderBy=modifiedTime desc&pageSize=25&fields=files(id,name,modifiedTime)&supportsAllDrives=true&includeItemsFromAllDrives=true`, {}, "Google Drive");
-  return (r.files ?? []).map((f) => ({ id: f.id, name: f.name, modified: f.modifiedTime ?? null, where: "Google Drive" }));
+  const kinds = ["application/pdf", "application/msword", "application/rtf", "text/plain", "text/csv", "application/zip", "message/rfc822", "application/vnd.ms-outlook", "application/vnd.google-apps.document", "application/vnd.google-apps.spreadsheet", OFFICE_MIME.document, OFFICE_MIME.spreadsheet];
+  const terms = [`(mimeType contains 'image/' or ${kinds.map((k) => `mimeType = '${k}'`).join(" or ")})`, "trashed = false", ...(q ? [`name contains '${q.replace(/['\\]/g, "")}'`] : [])].join(" and ");
+  const r = await call<{ files?: { id: string; name: string; mimeType?: string; modifiedTime?: string }[] }>(c, `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(terms)}&orderBy=modifiedTime desc&pageSize=25&fields=files(id,name,mimeType,modifiedTime)&supportsAllDrives=true&includeItemsFromAllDrives=true`, {}, "Google Drive");
+  // A Google Doc or Sheet has no file of its own; it is downloaded as Word or Excel, marked in its id.
+  const tag = (m?: string) => (m === "application/vnd.google-apps.document" ? "gdoc:" : m === "application/vnd.google-apps.spreadsheet" ? "gsheet:" : "");
+  return (r.files ?? []).map((f) => ({ id: `${tag(f.mimeType)}${f.id}`, name: f.name, modified: f.modifiedTime ?? null, where: "Google Drive" }));
 }
 
-export const download = (c: Connection, id: string) => raw(c, `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(id)}?alt=media&supportsAllDrives=true`);
+export const download = (c: Connection, id: string) => {
+  const [, kind, file] = /^(gdoc:|gsheet:)?(.+)$/.exec(id)!;
+  if (kind) return raw(c, `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(file)}/export?mimeType=${encodeURIComponent(kind === "gdoc:" ? OFFICE_MIME.document : OFFICE_MIME.spreadsheet)}`);
+  return raw(c, `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(file)}?alt=media&supportsAllDrives=true`);
+};
 
 async function folder(c: Connection) {
   const s = settingsOf(c);

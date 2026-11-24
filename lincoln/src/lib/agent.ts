@@ -56,7 +56,7 @@ function cannotOpen(firmId: string, caseId: string, names: string[]) {
   const title = `Could not open: ${names.join(", ")}`.slice(0, 200);
   if (d.prepare("SELECT 1 FROM issues WHERE firm_id = ? AND case_id = ? AND title = ? AND status = 'open'").get(firmId, caseId, title)) return;
   d.prepare("INSERT INTO issues (id, firm_id, case_id, kind, severity, title, detail, sources, status, created_at) VALUES (?, ?, ?, 'missing', 'low', ?, ?, '[]', 'open', ?)")
-    .run(uid(), firmId, caseId, title, "Sent in a format Lincoln cannot read, such as an older Word (.doc) or Outlook (.msg) file. A PDF or Word (.docx) copy is needed.", now());
+    .run(uid(), firmId, caseId, title, "Sent in a format Lincoln cannot read, such as Pages, PowerPoint, a password protected file or winmail.dat. A PDF or Word copy is needed.", now());
 }
 
 export function handleInbound(firmId: string, mail: Inbound, mailboxId: string | null) {

@@ -18,7 +18,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
     if (!(file instanceof File) || !file.size) return NextResponse.json({ error: "No file." }, { status: 400 });
     if (file.size > MAX_BYTES) return NextResponse.json({ error: "This file is over 20 MB." }, { status: 400 });
     const data = Buffer.from(await file.arrayBuffer());
-    if (!fileKind(data)) return NextResponse.json({ error: "Send a photo, a PDF or a Word file." }, { status: 400 });
+    if (!fileKind(data)) return NextResponse.json({ error: "Send a photo, a scan, a PDF or a Word file." }, { status: 400 });
     const session = String(form.get("session") ?? "") || newSession(link);
     const id = addSessionFile(link, session, String(form.get("item") ?? ""), file.name, data);
     if (!id) return NextResponse.json({ error: "This file could not be added." }, { status: 400 });

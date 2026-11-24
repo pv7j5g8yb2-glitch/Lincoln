@@ -1,3 +1,7 @@
+import { docText, msgParts, oleKind } from "./ole";
+import { emlParts, looksLikeEmail, rtfText } from "./mime";
+import { keepAttachment } from "./integrations/types";
+
 
 // Pages one case can hold. Cost grows with every page read (about a cent a page on Sonnet), so the
 // limit is generous for real files (O-1 and EB-1 evidence often runs to 150 to 300 pages) but stops a
@@ -33,7 +37,7 @@ export async function renderPdf(data: Uint8Array, put: Put, start = 1): Promise<
   return n;
 }
 
-export type FileKind = "pdf" | "jpeg" | "png" | "webp" | "heic" | "docx" | "xlsx" | "zip" | "text";
+export type FileKind = "pdf" | "jpeg" | "png" | "webp" | "heic" | "tiff" | "docx" | "xlsx" | "zip" | "text" | "eml" | "doc" | "msg";
 
 /** Identifies a file by its first bytes, never by its name. */
 export function fileKind(b: Uint8Array): FileKind | null {
@@ -43,6 +47,8 @@ export function fileKind(b: Uint8Array): FileKind | null {
   if (b[0] === 0x89 && s(1, 3) === "PNG") return "png";
   if (s(0, 4) === "RIFF" && s(8, 4) === "WEBP") return "webp";
   if (s(4, 4) === "ftyp" && /^(heic|heix|hevc|heim|heis|mif1|msf1)$/.test(s(8, 4))) return "heic";
+  // Scanners and fax services send TIFF, often several pages in one file.
+  if (s(0, 4) === "II*\0" || s(0, 4) === "MM\0*") return "tiff";
   // A Word file is a zip holding word/document.xml (Excel and PowerPoint files are zips too, and are not read).
   if (s(0, 4) === "PK\x03\x04") {
     const names = zipNames(b);
@@ -53,6 +59,10 @@ export function fileKind(b: Uint8Array): FileKind | null {
     // Any other zip is a folder of files sent at once, opened and read one by one.
     return "zip";
   }
+  // Word 97 to 2003 and Outlook messages are compound files; anything else in that format (old Excel) is not read.
+  if (b[0] === 0xd0 && b[1] === 0xcf && b[2] === 0x11 && b[3] === 0xe0) return oleKind(b);
+  // A saved or forwarded email: read as the email, with its own attachments.
+  if (looksLikeEmail(b)) return "eml";
   // Calendar invites and contact cards ride along with emails; they are not evidence.
   if (looksLikeText(b)) return /^\s*BEGIN:(VCALENDAR|VCARD)/.test(new TextDecoder().decode(b.subarray(0, 64))) ? null : "text";
   return null;
@@ -159,11 +169,8 @@ export async function unzipFiles(b: Uint8Array): Promise<Uint8Array[]> {
 
 /** The words of a text file. RTF loses its control words; a saved email loses the base64 blocks of its attachments. */
 export function plainText(b: Uint8Array) {
-  let t = new TextDecoder("utf-8").decode(b).replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n");
-  if (t.startsWith("{\\rtf")) {
-    t = t.replace(/\{\\(?:fonttbl|colortbl|stylesheet|info)(?:[^{}]|\{[^{}]*\})*\}/g, "").replace(/\{\\\*[^{}]*\}/g, "").replace(/\\par[d]?\b ?/g, "\n").replace(/\\'([0-9a-f]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)))
-      .replace(/\\[a-z]+-?\d* ?/gi, "").replace(/[{}]/g, "");
-  }
+  const t = new TextDecoder("utf-8").decode(b).replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n");
+  if (t.startsWith("{\\rtf")) return rtfText(t);
   return t.split("\n").filter((line) => !/^[A-Za-z0-9+/=]{60,}$/.test(line.trim())).join("\n").trim();
 }
 
@@ -213,6 +220,19 @@ export async function renderText(text: string, put: Put, start = 1, maxPages = 6
  * Turns photos and scans into pages: HEIC is converted, the camera's rotation is applied by the
  * decoder, and each image is resized so the longest side is at most 1600 pixels.
  */
+/** Each page of a TIFF (a scan or a fax) as a JPEG page. */
+export async function renderTiff(b: Uint8Array, put: Put, start = 1): Promise<number> {
+  const sharp = (await import("sharp")).default;
+  const meta = await sharp(b, { limitInputPixels: 80_000_000 }).metadata();
+  let n = 0;
+  for (let page = 0; page < Math.min(meta.pages ?? 1, 200) && start - 1 + n < MAX_PAGES; page++) {
+    const jpeg = await sharp(b, { page, limitInputPixels: 80_000_000 }).flatten({ background: "#ffffff" }).resize(1600, 1600, { fit: "inside", withoutEnlargement: true }).jpeg({ quality: 82 }).toBuffer();
+    n++;
+    put(start - 1 + n, jpeg);
+  }
+  return n;
+}
+
 export async function renderImages(images: Uint8Array[], put: Put, start = 1): Promise<number> {
   const { createCanvas, loadImage } = await import("@napi-rs/canvas");
   let n = 0;
@@ -242,7 +262,7 @@ export async function renderImages(images: Uint8Array[], put: Put, start = 1): P
 /** Attachments Lincoln could not read and that may matter (an old .doc, an Outlook .msg), by name. Invites, contact
  *  cards and signature files are left out: they are not evidence. */
 export function unreadable(files: { name: string; data: Uint8Array | Buffer }[]) {
-  return files.filter((f) => !fileKind(new Uint8Array(f.data)) && !/\.(ics|vcf|p7s|p7m|asc|sig|gif)$|winmail\.dat$/i.test(f.name)).map((f) => f.name || "an attachment").slice(0, 6);
+  return files.filter((f) => !fileKind(new Uint8Array(f.data)) && !/\.(ics|vcf|p7s|p7m|asc|sig|gif)$/i.test(f.name)).map((f) => f.name || "an attachment").slice(0, 6);
 }
 
 /** Renders a mixed set of PDFs and images, in order, as consecutive pages. Returns pages added. */
@@ -254,8 +274,18 @@ export async function renderFiles(files: Uint8Array[], put: Put, start = 1, dept
     // Word and text files become pages of their words, so a CV, a letter or consultation notes are read like a scan.
     else if (k === "docx") { const t = await docxText(f); if (t) added += await renderText(t, put, start + added); }
     else if (k === "xlsx") { const t = await xlsxText(f); if (t) added += await renderText(t, put, start + added); }
-    // The files of a zip are read in order as if sent one by one; a zip inside a zip is not opened.
-    else if (k === "zip" && depth === 0) added += await renderFiles(await unzipFiles(f), put, start + added, 1);
+    // The files of a zip are read in order as if sent one by one (also a zip attached to an Outlook message); a zip
+    // inside a zip is not opened.
+    else if (k === "zip" && depth < 2) added += await renderFiles(await unzipFiles(f), put, start + added, 2);
+    else if (k === "doc") { const t = docText(f); if (t) added += await renderText(t, put, start + added); }
+    // An Outlook message reads as the email it is, then each of its attachments as if sent on its own.
+    else if (k === "msg" || k === "eml") {
+      const m = k === "msg" ? msgParts(f) : emlParts(f);
+      if (m.text) added += await renderText(m.text, put, start + added);
+      const files = m.attachments.filter((a) => keepAttachment(a.name, "", a.data.length, "inline" in a && Boolean(a.inline))).map((a) => a.data);
+      if (depth < 2) added += await renderFiles(files, put, start + added, depth + 1);
+    }
+    else if (k === "tiff") added += await renderTiff(f, put, start + added);
     else if (k === "text") { const t = plainText(f); if (t) added += await renderText(t, put, start + added); }
     else if (k === "jpeg" || k === "png" || k === "webp" || k === "heic") added += await renderImages([f], put, start + added);
   }

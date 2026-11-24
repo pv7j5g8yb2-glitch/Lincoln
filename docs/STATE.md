@@ -473,8 +473,20 @@ from the repo the same day. History is in git up to commit `341cf65`.
   Drive, the intake link): before this they were silently skipped. They become pages of their words (tables as rows),
   so consultation notes, CVs and draft letters are read like a scan. Excel (.xlsx) is read as rows per sheet (blank
   columns kept in line), and a zip is opened and every file in it read (not a zip inside a zip, not Mac system files).
+* Old Word (.doc), Outlook messages (.msg), saved and forwarded emails (.eml, an email attached to an email) and
+  TIFF scans (several pages, faxes) are read too. An email reads as the email (from, to, date, subject, body; HTML
+  and Outlook's RTF bodies unwrapped) and its attachments are read as files, so an offer letter forwarded inside
+  an email reaches the case. Logos in signatures are skipped. Tested on real Outlook files and a real Word 97 file.
+* The Gmail and Outlook connectors used to fetch only PDFs, photos and Word files, so Excel, zips, text, old Word,
+  emails and scans sent by email never reached Lincoln. Both now fetch every document (one rule, `keepAttachment`
+  in `integrations/types.ts`); Outlook fetches an attached email too. Drive and OneDrive search find Word, Excel,
+  text, email and scan files, and a Google Doc or Sheet comes in as Word or Excel. Every upload box (case, new case,
+  chat, client intake link) offers the same list (`src/lib/accept.ts`).
+* Stand-in mailbox checks: every email, attachment, send and folder check passes. The Teams and Google Chat request
+  checks fail with the free stand-in on the old code as well (they depend on what the model replies); not caused here.
 * A file Lincoln cannot read is never dropped in silence: the case gets "Could not open: name" asking for a PDF or Word
-  copy. Calendar invites, contact cards, signatures and winmail.dat are ignored as not evidence.
+  copy (Pages, PowerPoint, password protected files, winmail.dat). Calendar invites, contact cards and signature
+  files are ignored as not evidence.
 * `tests/files.test.mjs` is part of `npm test`, so file reading cannot quietly break again.
 * The case record now holds the client's recent emails (quoted replies stripped), and the second reading has a seventh
   check: a claim made in an email, the questionnaire, consultation notes or a letter (award, publication, judging,

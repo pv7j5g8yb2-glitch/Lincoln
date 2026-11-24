@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import Composer from "./Composer";
 import { notify } from "./Toaster";
 import { startCase } from "@/lib/actions";
+import { READABLE } from "@/lib/accept";
 
 // Case files, plus an old system's case list (CSV or Excel) or a zip of client folders, for moving to Lincoln.
-const ACCEPT = "application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.zip,application/zip";
+const ACCEPT = READABLE;
 const isImport = (f: File) => /\.(csv|xlsx|zip)$/i.test(f.name);
 
 /** One box: what the case is, and the client's files if there are any. Lincoln opens and works it. */

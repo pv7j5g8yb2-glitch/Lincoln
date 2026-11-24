@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, FileText, Mic, Plus, Square, X } from "lucide-react";
+import { READABLE } from "@/lib/accept";
 
-const ACCEPT = "application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.heic";
+const ACCEPT = READABLE;
 
 type Recognition = {
   lang: string;
