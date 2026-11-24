@@ -1178,3 +1178,18 @@ Company claims, from the founder; Legora valued $675M then, $80M Series B (Iconi
   idea Ismael raised is exactly where Legora is moving, which supports staying on immigration. Source linked facts,
   conflict checks and timelines are becoming expected; Lincoln already cites every fact to its page, checks conflicts
   in the second reading and builds case dates, at the size of one immigration case.
+* One Click Immigration (new competitor, found 2026-11-24 via a LinkedIn post by Dobrina M. Ustun, Esq., lead
+  immigration attorney at Tukki): a "story graph" assistant named Edwin for EB-1A, NIW and O-1. Company claims, not
+  verified: links every piece of evidence (hundreds to thousands of documents) to the story of the case; remembers
+  the consultation call transcript and asks the attorney when a client mentions something (an award) with no
+  evidence for it; places late evidence against what is already in the case and says when it is not relevant; guards
+  the petition draft so no evidence or connection is missed. Sold by demo. Her framing: "speed isn't what wins,
+  understanding the case is"; she is wary of "process 100 cases a day" pitches.
+  Read for Lincoln: Lincoln maps evidence to criteria and flags unsupported claims and missing evidence, but does not
+  take consultation call transcripts, and the "client said X, file has no proof of X" check across emails and intake
+  answers has not been tested. Worth a graded test case. Her line is also a positioning warning: lead with Lincoln
+  understanding the whole case, not with speed or volume.
+* Justin Hansky (founder, AI agents for legal diligence), on the TLTF Summit 2026: Anthropic's Robert Mahari said
+  Anthropic's contracting is led by a non lawyer (its most experienced sales person) working with Claude, with a lawyer
+  signing off only on critical points. Signal that companies will do more legal work themselves with AI and use
+  lawyers for judgement; supports Lincoln's model (AI does the work, the attorney approves).
