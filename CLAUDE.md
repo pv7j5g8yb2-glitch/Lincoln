@@ -172,8 +172,9 @@ build` before every push to the session branch; Render deploys from it. A grep f
   first, a general assistant on top. Pricing (Ismael, 2026-11-24): no public price; each firm gets a quote by email
   from its Get In Touch answers (new cases a month above all, then users), later on demo calls once there is a sales
   rep (Jim or another). Unlimited users. Internal guide, untested, by the form's "New cases a month" answer: Under 10 $1,500,
-  10 to 50 $3,500, 51 to 100 $7,500, 101 to 200 $13,000, 200+ about $65 a case quoted; about 25 percent less when
-  the case types are mostly forms work (naturalization, DACA and TPS, renewals). Users, email provider and case
+  10 to 50 $3,500, 51 to 100 $7,500, 101 to 200 $13,000, 200+ about $65 a case quoted; 25 percent less only when
+  every case type ticked is forms work (Naturalization and citizenship, DACA and TPS, Students and exchange visitors,
+  Visitors and consular processing); one other type ticked means full price. Users, email provider and case
   software do not change the price. The old $300 a seat figure is dropped (seats charge less as Lincoln does more of
   the work). Ismael sends each new firm's answers; Claude writes the quote email.
 * **First workflows (draft, to be tested):** employment based cases (O-1, EB-1, H-1B, L-1 and
