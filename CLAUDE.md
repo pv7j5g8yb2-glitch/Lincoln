@@ -171,9 +171,11 @@ build` before every push to the session branch; Render deploys from it. A grep f
   lawyers use (Word, Google Docs, Outlook, Drive, their case software). Ready made workflows
   first, a general assistant on top. Pricing (Ismael, 2026-11-24): no public price; each firm gets a quote by email
   from its Get In Touch answers (new cases a month above all, then users), later on demo calls once there is a sales
-  rep (Jim or another). Unlimited users. Internal guide, untested: up to 10 new cases a month $1,500, up to 50
-  $4,500, up to 100 $8,000, up to 200 $14,000, 200+ quoted. The old $300 a seat figure is dropped (seats charge
-  less as Lincoln does more of the work).
+  rep (Jim or another). Unlimited users. Internal guide, untested, by the form's "New cases a month" answer: Under 10 $1,500,
+  10 to 50 $3,500, 51 to 100 $7,500, 101 to 200 $13,000, 200+ about $65 a case quoted; about 25 percent less when
+  the case types are mostly forms work (naturalization, DACA and TPS, renewals). Users, email provider and case
+  software do not change the price. The old $300 a seat figure is dropped (seats charge less as Lincoln does more of
+  the work). Ismael sends each new firm's answers; Claude writes the quote email.
 * **First workflows (draft, to be tested):** employment based cases (O-1, EB-1, H-1B, L-1 and
   green cards from them), end to end from client questionnaire and evidence to a finished filing
   packet. Family cases, forms, deadlines and billing come later.
@@ -211,6 +213,9 @@ build` before every push to the session branch; Render deploys from it. A grep f
   No public sign up (Ismael, 2026-11-16): Lincoln sets up each firm from /ops (staff emails in LINCOLN_OPS_EMAILS)
   with an admin invite for the person who contacted us. That admin invites everyone else, sets their roles and
   decides who else is admin. Admin is a permission, not a job title; a firm always keeps one admin.
+* Sales rep (Ismael, 2026-11-24): once Lincoln has a sales rep (Jim or another), the rep reaches out to firms and runs
+  demo calls; Ismael still does no outreach or calls with buyers himself. Every firm, inbound or from the rep, goes
+  through the same Get In Touch answers so it gets a consistent quote.
 * No video or phone calls with buyers. Selling and talking to customers in writing is fine (email,
   DMs, LinkedIn), as long as it is a normal human conversation, not template pitching.
 
