@@ -471,7 +471,11 @@ from the repo the same day. History is in git up to commit `341cf65`.
 ## Readiness pass (2026-11-24, after "Lincoln should be ready now for any attorney")
 * Word (.docx), text, RTF, Markdown and saved email files are read everywhere a file comes in (email attachments, uploads,
   Drive, the intake link): before this they were silently skipped. They become pages of their words (tables as rows),
-  so consultation notes, CVs and draft letters are read like a scan. Old .doc and Excel are still not read.
+  so consultation notes, CVs and draft letters are read like a scan. Excel (.xlsx) is read as rows per sheet (blank
+  columns kept in line), and a zip is opened and every file in it read (not a zip inside a zip, not Mac system files).
+* A file Lincoln cannot read is never dropped in silence: the case gets "Could not open: name" asking for a PDF or Word
+  copy. Calendar invites, contact cards, signatures and winmail.dat are ignored as not evidence.
+* `tests/files.test.mjs` is part of `npm test`, so file reading cannot quietly break again.
 * The case record now holds the client's recent emails (quoted replies stripped), and the second reading has a seventh
   check: a claim made in an email, the questionnaire, consultation notes or a letter (award, publication, judging,
   role, salary, prior visa, marriage, trip) that no document proves becomes "No proof in the file: ...".

@@ -4,7 +4,7 @@ import { LIBRARY, typeOf } from "./library";
 import { EMAIL_STYLE } from "./style";
 import { firmStyle } from "./memory";
 import { UNNAMED, applyDateRules, draftForCase, processCase } from "./intake";
-import { fileKind } from "./pdf";
+import { fileKind, unreadable } from "./pdf";
 import { addEvent, canReadChat, canReadTeams, channelMessages, chatFile, chatMessages, chatPost, connectionsOf, docAsWord, downloadShared, ensurePush, googleDocIds, fetchNew, replyInChannel, send, sendDraft, settingsOf, teamsPost, updateDraft, type Connection, type Inbound } from "./integrations";
 import { isDocx, redline } from "./redline";
 
@@ -48,6 +48,15 @@ export async function checkMailbox(c: Connection) {
   } finally {
     busy.delete(c.id);
   }
+}
+
+/** Files Lincoln could not open become one issue on the case, so the attorney knows something was not read. */
+function cannotOpen(firmId: string, caseId: string, names: string[]) {
+  const d = db();
+  const title = `Could not open: ${names.join(", ")}`.slice(0, 200);
+  if (d.prepare("SELECT 1 FROM issues WHERE firm_id = ? AND case_id = ? AND title = ? AND status = 'open'").get(firmId, caseId, title)) return;
+  d.prepare("INSERT INTO issues (id, firm_id, case_id, kind, severity, title, detail, sources, status, created_at) VALUES (?, ?, ?, 'missing', 'low', ?, ?, '[]', 'open', ?)")
+    .run(uid(), firmId, caseId, title, "Sent in a format Lincoln cannot read, such as an older Word (.doc) or Outlook (.msg) file. A PDF or Word (.docx) copy is needed.", now());
 }
 
 export function handleInbound(firmId: string, mail: Inbound, mailboxId: string | null) {
@@ -135,6 +144,9 @@ Rules: new_case only when someone asks the firm to take on an immigration matter
     for (const x of (t.dates ?? []).filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x.date)).slice(0, 10)) insDate.run(uid(), firmId, caseId, String(x.label).slice(0, 120), x.date, `Email from ${mail.fromName}`);
 
     const files = mail.attachments.map((a) => new Uint8Array(a.data)).filter((b) => fileKind(b)).slice(0, 20);
+    // An attachment Lincoln cannot open is said, never dropped in silence.
+    const skipped = unreadable(mail.attachments.map((a) => ({ name: a.name, data: new Uint8Array(a.data) })));
+    if (skipped.length) cannotOpen(firmId, caseId!, skipped);
     // Word documents (a draft declaration, a referee's letter) are marked up with tracked changes for the attorney.
     const words = mail.attachments.filter((a) => isDocx(a.name, a.data)).slice(0, 5);
     const startedAt = now();
@@ -230,6 +242,7 @@ Reply with one JSON object only:
     try { const w = await docAsWord(own, id); if (w) linked.push({ name: w.name, data: new Uint8Array(w.data), google: true }); } catch { /* a Doc that cannot be opened is left out */ }
   }
   const files = input.files.map((f) => f.data).filter((b) => fileKind(b)).slice(0, 20);
+  const skipped = unreadable(input.files);
   const words = [...input.files, ...linked].filter((f) => isDocx(f.name, f.data)).slice(0, 5);
   let caseId = open.some((c) => c.id === t.case_id) ? t.case_id : null;
   if (!caseId && (t.new_case || files.length || words.length)) {
@@ -245,6 +258,7 @@ Reply with one JSON object only:
   if (!caseId) return { caseId: null, summary, work: Promise.resolve() };
   const id = caseId;
   log(firmId, id, "file", `Took an instruction from ${member.name}: ${summary}`, 3);
+  if (skipped.length) cannotOpen(firmId, id, skipped);
   const insDate = d.prepare("INSERT INTO dates (id, firm_id, case_id, label, date, kind, source) VALUES (?, ?, ?, ?, ?, 'target', ?)");
   const source = input.via === "email" ? `Email from ${member.name}` : `From ${member.name}`;
   for (const x of (t.dates ?? []).filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x.date)).slice(0, 10)) insDate.run(uid(), firmId, id, String(x.label).slice(0, 120), x.date, source);

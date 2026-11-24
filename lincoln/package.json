@@ -8,7 +8,7 @@
     "start": "NEXT_TELEMETRY_DISABLED=1 next start -p ${PORT:-3210}",
     "seed": "node scripts/seed.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --no-warnings tests/rules.test.mjs && node --experimental-strip-types --no-warnings tests/forms.test.mjs && node --experimental-strip-types --no-warnings tests/json.test.mjs && node --experimental-strip-types --no-warnings tests/rulebooks.test.mjs && node --experimental-strip-types --no-warnings tests/forms-guard.test.mjs"
+    "test": "node --experimental-strip-types --no-warnings tests/rules.test.mjs && node --experimental-strip-types --no-warnings tests/forms.test.mjs && node --experimental-strip-types --no-warnings tests/json.test.mjs && node --experimental-strip-types --no-warnings tests/rulebooks.test.mjs && node --experimental-strip-types --no-warnings tests/forms-guard.test.mjs && node --experimental-strip-types --no-warnings tests/files.test.mjs"
   },
   "dependencies": {
     "@cantoo/pdf-lib": "^2.11.1",

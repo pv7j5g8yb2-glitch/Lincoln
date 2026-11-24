@@ -33,7 +33,7 @@ export async function renderPdf(data: Uint8Array, put: Put, start = 1): Promise<
   return n;
 }
 
-export type FileKind = "pdf" | "jpeg" | "png" | "webp" | "heic" | "docx" | "text";
+export type FileKind = "pdf" | "jpeg" | "png" | "webp" | "heic" | "docx" | "xlsx" | "zip" | "text";
 
 /** Identifies a file by its first bytes, never by its name. */
 export function fileKind(b: Uint8Array): FileKind | null {
@@ -44,9 +44,37 @@ export function fileKind(b: Uint8Array): FileKind | null {
   if (s(0, 4) === "RIFF" && s(8, 4) === "WEBP") return "webp";
   if (s(4, 4) === "ftyp" && /^(heic|heix|hevc|heim|heis|mif1|msf1)$/.test(s(8, 4))) return "heic";
   // A Word file is a zip holding word/document.xml (Excel and PowerPoint files are zips too, and are not read).
-  if (s(0, 4) === "PK\x03\x04" && Buffer.from(b.buffer, b.byteOffset, b.byteLength).includes("word/document.xml")) return "docx";
-  if (looksLikeText(b)) return "text";
+  if (s(0, 4) === "PK\x03\x04") {
+    const names = zipNames(b);
+    if (names.has("word/document.xml")) return "docx";
+    // A spreadsheet (payroll, a list of employees, an exhibit index) is read as rows; slides are not read.
+    if (names.has("xl/workbook.xml")) return "xlsx";
+    if (names.has("ppt/presentation.xml")) return null;
+    // Any other zip is a folder of files sent at once, opened and read one by one.
+    return "zip";
+  }
+  // Calendar invites and contact cards ride along with emails; they are not evidence.
+  if (looksLikeText(b)) return /^\s*BEGIN:(VCALENDAR|VCARD)/.test(new TextDecoder().decode(b.subarray(0, 64))) ? null : "text";
   return null;
+}
+
+/** The names of the files in a zip, from its central directory (not from its contents, which may hold other zips). */
+function zipNames(b: Uint8Array) {
+  const names = new Set<string>();
+  const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  // The end record sits in the last 64 KB; it gives where the directory starts and how many entries it has.
+  for (let i = b.length - 22; i >= Math.max(0, b.length - 65_557); i--) {
+    if (v.getUint32(i, true) !== 0x06054b50) continue;
+    const count = v.getUint16(i + 10, true);
+    let at = v.getUint32(i + 16, true);
+    for (let k = 0; k < count && at + 46 <= b.length && v.getUint32(at, true) === 0x02014b50; k++) {
+      const n = v.getUint16(at + 28, true), extra = v.getUint16(at + 30, true), comment = v.getUint16(at + 32, true);
+      names.add(new TextDecoder().decode(b.subarray(at + 46, at + 46 + n)));
+      at += 46 + n + extra + comment;
+    }
+    break;
+  }
+  return names;
 }
 
 /** Plain text, Markdown, RTF or a saved email: no zero bytes, valid UTF-8, almost no control characters. */
@@ -78,6 +106,55 @@ export async function docxText(b: Uint8Array) {
   const body = tables.replace(/<w:tab\/>/g, "\t").replace(/<w:br[^>]*\/>/g, "\n");
   const paras = body.split(/<\/w:p>/).map((p) => xmlText([...p.matchAll(/<w:t(?:\s[^>]*)?>([^<]*)<\/w:t>|(\t|\n)/g)].map((m) => m[1] ?? m[2]).join("")));
   return paras.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+/** The rows of every sheet in a spreadsheet, cells separated by " | ", each sheet under its own name. */
+export async function xlsxText(b: Uint8Array) {
+  const JSZip = (await import("jszip")).default;
+  const zip = await JSZip.loadAsync(b);
+  const shared = [...((await zip.file("xl/sharedStrings.xml")?.async("string")) ?? "").matchAll(/<si>([\s\S]*?)<\/si>/g)]
+    .map((m) => xmlText([...m[1].matchAll(/<t(?:\s[^>]*)?>([^<]*)<\/t>/g)].map((t) => t[1]).join("")));
+  const book = (await zip.file("xl/workbook.xml")?.async("string")) ?? "";
+  const names = [...book.matchAll(/<sheet [^>]*name="([^"]*)"/g)].map((m) => xmlText(m[1]));
+  const sheets = Object.keys(zip.files).filter((n) => /^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort((a, b) => Number(a.match(/\d+/)![0]) - Number(b.match(/\d+/)![0]));
+  const out: string[] = [];
+  for (const [i, name] of sheets.entries()) {
+    const xml = (await zip.file(name)!.async("string"));
+    const rows = [...xml.matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)].map((r) => {
+      const cells: string[] = [];
+      for (const c of r[1].matchAll(/<c(?:\s([^>]*?))?(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+        const a = c[1] ?? "";
+        const v = c[2]?.match(/<v>([^<]*)<\/v>/)?.[1] ?? c[2]?.match(/<t[^>]*>([^<]*)<\/t>/)?.[1] ?? "";
+        // A cell's column comes from its reference (C5 is the third), so a blank cell keeps the others in line.
+        const col = a.match(/\br="([A-Z]+)\d+"/)?.[1];
+        const at = col ? [...col].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) - 1 : cells.length;
+        while (cells.length < at && cells.length < 200) cells.push("");
+        cells.push(/\bt="s"/.test(a) ? shared[Number(v)] ?? "" : xmlText(v));
+      }
+      return cells.join(" | ").replace(/( \| )+$/, "");
+    }).filter((r) => r.replace(/[ |]/g, ""));
+    if (rows.length) out.push(`Sheet: ${names[i] ?? `Sheet ${i + 1}`}`, ...rows.slice(0, 2000), "");
+  }
+  return out.join("\n").trim();
+}
+
+/** The files inside a zip, in name order: folders, system files and anything past the safe size are skipped. */
+export async function unzipFiles(b: Uint8Array): Promise<Uint8Array[]> {
+  const JSZip = (await import("jszip")).default;
+  const zip = await JSZip.loadAsync(b);
+  const out: Uint8Array[] = [];
+  let total = 0;
+  for (const name of Object.keys(zip.files).sort()) {
+    const f = zip.files[name];
+    if (f.dir || /(^|\/)(__MACOSX|\.)/.test(name)) continue;
+    if (out.length >= 200) break;
+    const data = await f.async("uint8array");
+    total += data.length;
+    // A small zip that unpacks to an enormous size is refused rather than filling the disk.
+    if (total > 200 * 1024 * 1024) break;
+    out.push(data);
+  }
+  return out;
 }
 
 /** The words of a text file. RTF loses its control words; a saved email loses the base64 blocks of its attachments. */
@@ -162,16 +239,25 @@ export async function renderImages(images: Uint8Array[], put: Put, start = 1): P
   return n;
 }
 
+/** Attachments Lincoln could not read and that may matter (an old .doc, an Outlook .msg), by name. Invites, contact
+ *  cards and signature files are left out: they are not evidence. */
+export function unreadable(files: { name: string; data: Uint8Array | Buffer }[]) {
+  return files.filter((f) => !fileKind(new Uint8Array(f.data)) && !/\.(ics|vcf|p7s|p7m|asc|sig|gif)$|winmail\.dat$/i.test(f.name)).map((f) => f.name || "an attachment").slice(0, 6);
+}
+
 /** Renders a mixed set of PDFs and images, in order, as consecutive pages. Returns pages added. */
-export async function renderFiles(files: Uint8Array[], put: Put, start = 1): Promise<number> {
+export async function renderFiles(files: Uint8Array[], put: Put, start = 1, depth = 0): Promise<number> {
   let added = 0;
   for (const f of files) {
     const k = fileKind(f);
     if (k === "pdf") added += await renderPdf(f, put, start + added);
     // Word and text files become pages of their words, so a CV, a letter or consultation notes are read like a scan.
     else if (k === "docx") { const t = await docxText(f); if (t) added += await renderText(t, put, start + added); }
+    else if (k === "xlsx") { const t = await xlsxText(f); if (t) added += await renderText(t, put, start + added); }
+    // The files of a zip are read in order as if sent one by one; a zip inside a zip is not opened.
+    else if (k === "zip" && depth === 0) added += await renderFiles(await unzipFiles(f), put, start + added, 1);
     else if (k === "text") { const t = plainText(f); if (t) added += await renderText(t, put, start + added); }
-    else if (k) added += await renderImages([f], put, start + added);
+    else if (k === "jpeg" || k === "png" || k === "webp" || k === "heic") added += await renderImages([f], put, start + added);
   }
   return added;
 }
