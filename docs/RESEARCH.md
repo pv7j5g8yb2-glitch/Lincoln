@@ -1167,3 +1167,7 @@ Company claims, from the founder; Legora valued $675M then, $80M Series B (Iconi
 * So under the pricing guide: a solo firm opens under 10 new cases a month ($1,500); a 2 to 5 attorney firm opens about
   10 to 50 ($3,500). Most firms are solo or small, so the typical firm pays $1,500 to $3,500 a month, and the average
   across firms is roughly $2,000 to $2,500 a month (about $25k to $30k a year). Larger firms pull revenue up.
+* Ceilings (2026-11-24, estimates): immigration only about $230M a year if every AILA firm paid the price guide; realistic
+  $5M to $10M a year bootstrapped, $20M to $60M with YC. All US law: about 1.37M lawyers (ABA 2025), law firm revenue
+  about $400B (IBISWorld $427B, MarketLine $410B), 420k to 460k firms; Lincoln fits case based small firm areas (about
+  $5B to $7B a year pot), realistic $150M to $350M a year venture backed over 8 to 10 years, $10M to $50M bootstrapped.

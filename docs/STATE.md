@@ -462,6 +462,12 @@ from the repo the same day. History is in git up to commit `341cf65`.
   `lincoln/tests/forms-guard.test.mjs` runs these on the real forms in npm test. Swept all 37 forms (10,047 boxes):
   every wrong-shaped answer the test produced was stopped. Not yet measured: a live fill with the real model.
 
+## Focus (Ismael, 2026-11-24)
+* Stay focused and small: immigration firms only for now. Ideas noted for later, not to be raised again until he does:
+  BigLaw practice areas (after funding and certification), criminal defence and investigations (evidence mapped to the
+  elements of each offence, timelines, contradictions; the firm supplies discovery, Lincoln cannot fetch evidence).
+  Ceilings estimated the same day are in docs/RESEARCH.md.
+
 ## Real case test set (2026-11-22)
 * `lincoln/tests/aao/`: ten real USCIS AAO appeal decisions (EB-1A, O-1A, NIW, H-1B, EB-1C, 212(i) waiver, 212(h)
   waiver, U, VAWA, T), each turned into a case file and an answer key from USCIS's own findings. Tests legal judgement,
