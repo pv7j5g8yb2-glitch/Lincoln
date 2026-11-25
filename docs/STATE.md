@@ -763,3 +763,6 @@ from the repo the same day. History is in git up to commit `341cf65`.
   outside Adobe; check whether that matters before filing. Still missing: I-360, I-821, I-730, I-134, I-212,
   I-192, I-526, N-600K, N-336, N-470, and court (EOIR) forms.
 
+## Logo (2026-11-25)
+
+The L and the Lincoln wordmark are set in Literata 500, the landing page's serif, white on pure black (#000000). Every favicon, app icon, notification badge, sign in mark and the link preview image (og.png) use them. Masters (SVG, large PNG, transparent white and black, a 1080 profile photo) are in `docs/brand/`. Drawn by `lincoln/.work/logo.py` and rendered by `lincoln/.work/render-logo.cjs` (local only, not in the repo).
