@@ -114,7 +114,7 @@ export default function Landing() {
 
       {/* The services Lincoln connects to, drifting: Google on one line, Microsoft on the other. */}
       <section className="overflow-hidden py-36 md:py-52">
-        <div className="mx-auto max-w-[1320px] px-5 md:px-10"><In><p className={small}>Connected to the tools the firm already uses</p></In></div>
+        <div className="mx-auto max-w-[1320px] px-5 md:px-10"><In><p className={small}>Connected to the tools you already use</p></In></div>
         <div className="mt-12 flex flex-col gap-4 md:mt-16 md:gap-6" aria-label={CONNECTORS.flatMap(([, list]) => list).join(", ")}>
           {CONNECTORS.map(([, row], r) => (
             <div key={r} className="marquee flex w-max" style={{ animationDirection: r ? "reverse" : "normal", animationDuration: "70s" }} aria-hidden>
