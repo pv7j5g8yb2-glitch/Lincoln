@@ -468,6 +468,14 @@ from the repo the same day. History is in git up to commit `341cf65`.
   elements of each offence, timelines, contradictions; the firm supplies discovery, Lincoln cannot fetch evidence).
   Ceilings estimated the same day are in docs/RESEARCH.md.
 
+## Get In Touch form (2026-11-25, Ismael: "highest conversion and completion rate", no question removed)
+* One question per screen, a thin progress line at the top and a step count. Order for finishing: role first (easiest),
+  then case types, new cases a month, users, email provider, case software, and last "Where should we send your quote?"
+  (name, work email, firm, anything else; "By email within 48hrs"), so contact details come once the firm is invested.
+  Single answers move on by themselves when tapped; multi choice and the last step have a button; Enter and Back work;
+  answers survive a refresh (this browser only). Same black, square, light serif look as the landing page. Tested end to
+  end on phone and laptop; every answer reaches /api/enquiry as before.
+
 ## Search and AI search (2026-11-25)
 * Goal (Ismael): win "Lincoln AI" and "Lincoln legal AI" first, then be one of the meanings AI answers give for plain
   "Lincoln". Funding news and a handful of firms will make "Lincoln AI" winnable. Plan and listing copy: `docs/SEARCH.md`.

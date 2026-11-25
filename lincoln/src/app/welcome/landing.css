@@ -33,3 +33,15 @@ html:has(.landing-root), body:has(.landing-root) { overflow-x: hidden; overscrol
 .landing-root { touch-action: pan-y pinch-zoom; }
 /* Links within the page (How it works and the rest) glide down to their section rather than jumping. */
 @media (prefers-reduced-motion: no-preference) { html:has(.landing-root) { scroll-behavior: smooth; } }
+/* Get In Touch, one question at a time: each step slides in (from the right going on, from the left going back) and its
+   options rise in one after another. */
+@keyframes step-in { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes step-back { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+@keyframes option-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.step-in { animation: step-in .42s cubic-bezier(.2,.8,.2,1) both; }
+.step-back { animation: step-back .42s cubic-bezier(.2,.8,.2,1) both; }
+.option-in { animation: option-in .4s cubic-bezier(.2,.8,.2,1) both; }
+@media (prefers-reduced-motion: reduce) { .step-in, .step-back, .option-in { animation: none; } }
+/* The public pages are square and black: focus shows as a square white outline, never the app's rounded dark one. */
+.landing-root :focus-visible { border-radius: 0; outline-color: #fff; }
+.landing-root input:focus-visible, .landing-root textarea:focus-visible { outline: none; }
