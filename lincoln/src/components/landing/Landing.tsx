@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Points from "./Points";
-import { HEADLINE, STATEMENT, TOOLS, TRUST, TYPES, WORK } from "./content";
+import { AREAS, CONNECTORS, HEADLINE, STATEMENT, TRUST, WORK } from "./content";
 
 // Lincoln's public front page. Black, light serif type, and points of light: a courthouse that assembles, turns and
 // breathes over a rolling field in the hero, and a stack of filing pages at the close. Between them the page stays
@@ -56,7 +56,6 @@ export default function Landing() {
     const on = () => setScrolled(scrollY > 40);
     on(); addEventListener("scroll", on, { passive: true }); return () => removeEventListener("scroll", on);
   }, []);
-  const half = Math.ceil(TYPES.length / 2);
 
   return (
     <div className="min-h-dvh overflow-x-clip bg-black font-sans text-white antialiased selection:bg-white/20">
@@ -64,7 +63,7 @@ export default function Landing() {
         <nav className="mx-auto flex h-16 max-w-[1320px] items-center justify-between px-5 md:h-20 md:px-10">
           <Link href="/" className="font-serif text-[22px] font-light tracking-[0.01em]">Lincoln</Link>
           <div className="hidden gap-9 text-[12.5px] text-white/60 md:flex">
-            <a href="#work" className="transition hover:text-white">Product</a><a href="#types" className="transition hover:text-white">Case types</a><a href="#security" className="transition hover:text-white">Security</a>
+            <a href="#work" className="transition hover:text-white">Product</a><a href="#cases" className="transition hover:text-white">Case types</a><a href="#security" className="transition hover:text-white">Security</a>
           </div>
           <Link href="/start" className="bg-white px-4 py-2 text-[12.5px] font-medium text-black transition hover:bg-white/85">Get In Touch</Link>
         </nav>
@@ -109,27 +108,23 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Every case type, drifting. */}
-      <section id="types" className="scroll-mt-24 overflow-hidden py-36 md:py-52">
-        <div className="mx-auto max-w-[1320px] px-5 md:px-10"><In><p className={small}>Every case type a firm takes</p></In></div>
-        <div className="mt-12 flex flex-col gap-4 md:mt-16 md:gap-6" aria-label={TYPES.join(", ")}>
-          {[TYPES.slice(0, half), TYPES.slice(half)].map((row, r) => (
-            <div key={r} className="marquee flex w-max" style={{ animationDirection: r ? "reverse" : "normal", animationDuration: "80s" }} aria-hidden>
+      {/* Any case. */}
+      <section id="cases" className="mx-auto max-w-[1320px] scroll-mt-24 px-5 pt-36 md:px-10 md:pt-52">
+        <In><h2 className={`${light} max-w-[16ch] text-[44px] leading-[1.02] md:text-[96px]`}>Any immigration case.</h2></In>
+        <In delay={150}><p className="mt-6 max-w-[44ch] text-[16.5px] leading-[1.6] text-white/50 md:text-[18px]">{AREAS}</p></In>
+      </section>
+
+      {/* The services Lincoln connects to, drifting: Google on one line, Microsoft on the other. */}
+      <section className="overflow-hidden py-36 md:py-52">
+        <div className="mx-auto max-w-[1320px] px-5 md:px-10"><In><p className={small}>Connected to the tools the firm already uses</p></In></div>
+        <div className="mt-12 flex flex-col gap-4 md:mt-16 md:gap-6" aria-label={CONNECTORS.flatMap(([, list]) => list).join(", ")}>
+          {CONNECTORS.map(([, row], r) => (
+            <div key={r} className="marquee flex w-max" style={{ animationDirection: r ? "reverse" : "normal", animationDuration: "70s" }} aria-hidden>
               {[...row, ...row].map((t, i) => (
                 <span key={i} className={`${light} flex items-center whitespace-nowrap text-[40px] text-white/85 md:text-[80px]`}>{t}<span className="mx-7 inline-block h-1.5 w-1.5 rounded-full bg-white/25 md:mx-12" /></span>
               ))}
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* The tools. */}
-      <section className="border-y border-white/12">
-        <div className="mx-auto max-w-[1320px] px-5 py-12 md:px-10">
-          <In><p className={small}>Inside the tools the firm already uses</p></In>
-          <div className="mt-6 flex flex-wrap gap-x-10 gap-y-3">
-            {TOOLS.map((t, i) => <In key={t} delay={i * 60}><span className="text-[15.5px] text-white/75">{t}</span></In>)}
-          </div>
         </div>
       </section>
 

@@ -476,8 +476,10 @@ from the repo the same day. History is in git up to commit `341cf65`.
   back). Close: three fanned filing pages form the same way.
 * Phones: no cursor, so a finger moving over the page parts the points, a tap sends a ripple, and scrolling turns the
   building. No tilt sensor (iPhone would ask permission first). Fewer points on phones.
-* Page: statement lit word by word, 3x3 hairline grid of the nine capabilities (fills white on hover), case types
-  drifting in two rows, tools in one line, privacy, one row footer. Copy shared in `src/components/landing/content.ts`.
+* Page: statement lit word by word, 3x3 hairline grid of the nine capabilities (fills white on hover), "Any
+  immigration case." with the families of work under it (Ismael, 2026-11-25: say it once rather than list types), the
+  connectors drifting in two rows (Google's seven services on one, Microsoft's eight on the other, only ones Lincoln
+  really connects to), privacy, one row footer. Copy shared in `src/components/landing/content.ts`.
 * The other four options (Atelier, Thermal, Field, Glass) and the warm light version are in git history (commit
   d1b2ec9) if ever wanted.
 

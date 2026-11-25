@@ -15,15 +15,14 @@ export const WORK: { title: string; line: string }[] = [
   { title: "Waits for approval", line: "Nothing is filed or sent without an attorney's approval." },
 ];
 
-export const TYPES = [
-  "H-1B", "O-1A", "O-1B", "EB-1A", "EB-1B", "EB-1C", "EB-2 NIW", "PERM", "L-1A", "L-1B", "TN", "E-2", "E-3", "R-1", "H-2B",
-  "I-130", "I-485", "K-1", "I-751", "N-400", "DACA", "TPS", "Asylum", "U visa", "T visa", "VAWA", "Waivers", "Removal defense", "Consular processing", "SIJ",
+/** Lincoln works on any immigration case; these are the families of work, for the line under that statement. */
+export const AREAS = "Employment, family, humanitarian, removal defense and naturalization.";
+
+/** The Google and Microsoft services Lincoln connects to (the scopes in lib/integrations). */
+export const CONNECTORS: [string, string[]][] = [
+  ["Google", ["Gmail", "Google Drive", "Google Docs", "Google Sheets", "Google Slides", "Google Calendar", "Google Chat"]],
+  ["Microsoft", ["Outlook", "Outlook Calendar", "Word", "Excel", "PowerPoint", "OneDrive", "SharePoint", "Teams"]],
 ];
-
-/** Case types with their own rulebook in Lincoln (tests/rulebooks.test.mjs counts them). */
-export const RULEBOOKS = 236;
-
-export const TOOLS = ["Gmail", "Outlook", "Google Drive", "OneDrive", "SharePoint", "Microsoft Word", "Google Docs", "Google Calendar", "Microsoft Teams", "Google Chat"];
 
 export const TRUST: [string, string][] = [
   ["Encrypted", "The database and every file, at rest."],
