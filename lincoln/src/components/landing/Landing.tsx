@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Points from "./Points";
-import { AREAS, CONNECTORS, HEADLINE, STATEMENT, TRUST, WORK } from "./content";
+import { CONNECTORS, HEADLINE, STATEMENT, TRUST, WORK } from "./content";
 import { LOGOS } from "./logos";
 
 // Lincoln's public front page. Black, light serif type, and points of light: LINCOLN in heavy serif that assembles,
@@ -110,12 +110,6 @@ export default function Landing() {
             </In>
           ))}
         </div>
-      </section>
-
-      {/* Any case. */}
-      <section id="cases" className="mx-auto max-w-[1320px] scroll-mt-24 px-5 pt-36 md:px-10 md:pt-52">
-        <In><h2 className={`${light} max-w-[16ch] text-[44px] leading-[1.02] md:text-[96px]`}>Any immigration case.</h2></In>
-        <In delay={150}><p className="mt-6 max-w-[44ch] text-[16.5px] leading-[1.6] text-white/50 md:text-[18px]">{AREAS}</p></In>
       </section>
 
       {/* The services Lincoln connects to, drifting: Google on one line, Microsoft on the other. */}
