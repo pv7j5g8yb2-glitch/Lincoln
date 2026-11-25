@@ -63,9 +63,6 @@ export default function Landing() {
       <header className={`fixed inset-x-0 top-0 z-50 transition-[background-color,border-color] duration-500 ${scrolled ? "border-b border-white/10 bg-black/70 backdrop-blur-md" : "border-b border-transparent"}`}>
         <nav className="mx-auto flex h-16 max-w-[1320px] items-center justify-between px-5 md:h-20 md:px-10">
           <Link href="/" className="font-serif text-[22px] font-light tracking-[0.01em]">Lincoln</Link>
-          <div className="hidden gap-9 text-[12.5px] text-white/60 md:flex">
-            <a href="#work" className="transition hover:text-white">Product</a><a href="#cases" className="transition hover:text-white">Case types</a><a href="#security" className="transition hover:text-white">Security</a>
-          </div>
           <Link href="/start" className="bg-white px-4 py-2 text-[12.5px] font-medium text-black transition hover:bg-white/85">Get In Touch</Link>
         </nav>
       </header>
