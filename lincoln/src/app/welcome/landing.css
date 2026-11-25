@@ -28,3 +28,6 @@
 @keyframes marquee { to { transform: translateX(-50%); } }
 .marquee { animation: marquee 60s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .marquee { animation: none; } }
+/* The public pages never move sideways, on any phone (iOS Safari can pan wider content even when it is clipped). */
+html:has(.landing-root), body:has(.landing-root) { overflow-x: hidden; overscroll-behavior-x: none; }
+.landing-root { touch-action: pan-y pinch-zoom; }

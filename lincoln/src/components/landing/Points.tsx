@@ -5,8 +5,8 @@ import { useEffect, useRef } from "react";
 // Lincoln's particle scenes, drawn on a 2D canvas. Each scene is a set of points in 3D (a courthouse with fluted
 // columns on a rolling field, or a stack of filing pages), turned slowly, seen in perspective, and drawn as fine
 // white points that twinkle. The points stream in from a scattered cloud when the scene first comes into view, follow
-// their places with a little lag so the whole thing feels alive, part around a cursor or a finger, ripple out from a
-// tap, and drift apart into dust as the scene is scrolled away (coming back together on the way up). Points sit
+// their places with a little lag, and each keeps drifting on its own small path, so the shape is always alive. Only a
+// cursor or finger on the shape itself moves them (it parts them, a tap there sends a ripple); they drift apart into dust as the scene is scrolled away (coming back together on the way up). Points sit
 // mostly on edges, so the shape reads clean. Anyone who asks for less motion gets the finished scene, still.
 
 export type Scene = "court" | "packet";
@@ -113,8 +113,12 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const touch = matchMedia("(hover: none)").matches;
     let w = 0, h = 0, raf = 0, visible = false, started = 0;
-    let pts: (P3 & { sx: number; sy: number; vx: number; vy: number; tw: number; delay: number; dir: [number, number]; a: number })[] = [];
+    let pts: (P3 & { sx: number; sy: number; vx: number; vy: number; tw: number; delay: number; dir: [number, number]; a: number; f1: number; f2: number; p1: number; p2: number })[] = [];
     const pointer = { x: -9999, y: -9999, sx: 0 };
+    // The area the shape covers on screen, from the last frame. Only a cursor or finger inside it moves the points: a
+    // touch on the header, the headline or anywhere else on the page leaves them alone.
+    const area = { x0: 0, y0: 0, x1: -1, y1: -1 };
+    const inside = (x: number, y: number) => x >= area.x0 - 24 && x <= area.x1 + 24 && y >= area.y0 - 24 && y <= area.y1 + 24;
     const ripples: { x: number; y: number; t: number }[] = [];
 
     const build = () => {
@@ -125,7 +129,7 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
       const old = pts;
       pts = (scene === "court" ? court(dense) : packet(dense)).map((p, i) => {
         const ang = Math.random() * Math.PI * 2;
-        return { ...p, sx: old[i]?.sx ?? rand(-0.2, 1.2) * w, sy: old[i]?.sy ?? rand(-0.3, 1.3) * h, vx: 0, vy: 0, tw: Math.random() * Math.PI * 2, delay: p.k === 2 ? 0 : Math.random() * 1.6 + (p.k === 1 ? 0.4 : 0), dir: [Math.cos(ang), Math.sin(ang)], a: p.k === 0 ? rand(0.45, 1) : p.k === 1 ? rand(0.18, 0.45) : rand(0.12, 0.35) };
+        return { ...p, sx: old[i]?.sx ?? rand(-0.2, 1.2) * w, sy: old[i]?.sy ?? rand(-0.3, 1.3) * h, vx: 0, vy: 0, tw: Math.random() * Math.PI * 2, delay: p.k === 2 ? 0 : Math.random() * 1.6 + (p.k === 1 ? 0.4 : 0), dir: [Math.cos(ang), Math.sin(ang)], a: p.k === 0 ? rand(0.45, 1) : p.k === 1 ? rand(0.18, 0.45) : rand(0.12, 0.35), f1: rand(0.7, 1.9), f2: rand(0.7, 1.9), p1: rand(0, 6.28), p2: rand(0, 6.28) };
       });
     };
 
@@ -138,8 +142,11 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
       const gone = scene === "court" ? Math.min(1, Math.max(0, -r.top / (r.height * 0.75))) : Math.min(1, Math.max(0, (r.top - innerHeight * 0.25) / (innerHeight * 0.75)));
       const sc = Math.min(w * (touch ? 0.86 : 0.5), h * (scene === "court" ? 0.95 : 0.8));
       const cx = w * 0.5, cy = h * (scene === "court" ? (touch ? 0.4 : 0.44) : 0.4);
-      pointer.sx += ((pointer.x > -9000 ? (pointer.x / w - 0.5) : 0) - pointer.sx) * 0.04;
-      const turn = (scene === "court" ? -0.32 : 0.35) + 0.22 * Math.sin(t * 0.13) + pointer.sx * 0.5 + (touch ? scrollY * 0.0009 : 0);
+      const on = pointer.x > -9000 && inside(pointer.x, pointer.y);
+      pointer.sx += ((on ? (pointer.x - (area.x0 + area.x1) / 2) / Math.max(1, area.x1 - area.x0) : 0) - pointer.sx) * 0.05;
+      // Always turning on its own, a little faster than before, in a slow figure that never quite repeats.
+      const turn = (scene === "court" ? -0.32 : 0.35) + 0.26 * Math.sin(t * 0.21) + 0.1 * Math.sin(t * 0.083 + 1.3) + pointer.sx * 0.35;
+      let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
       const cos = Math.cos(turn), sin = Math.sin(turn), tilt = scene === "court" ? 0.2 : 0.12, ct = Math.cos(tilt), st = Math.sin(tilt);
       g.clearRect(0, 0, w, h);
       for (let i = ripples.length - 1; i >= 0; i--) if (t - ripples[i].t > 1.6) ripples.splice(i, 1);
@@ -151,25 +158,30 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
         const y2 = y * ct - z1 * st, z2 = y * st + z1 * ct;
         const f = 2.4 / (2.4 + z2);
         let tx = cx + x1 * f * sc, ty = cy - y2 * f * sc;
+        if (p.k === 0) { if (tx < bx0) bx0 = tx; if (tx > bx1) bx1 = tx; if (ty < by0) by0 = ty; if (ty > by1) by1 = ty; }
+        // Every point drifts on its own small path all the time, so the whole shape is alive even when nothing touches it.
+        const amp = (p.k === 2 ? 7 : p.k === 1 ? 2.2 : 2.6) * f;
+        tx += Math.sin(t * p.f1 + p.p1) * amp; ty += Math.cos(t * p.f2 + p.p2) * amp;
         if (gone > 0) { const k = gone * gone * (p.k === 2 ? 0.6 : 1); tx += p.dir[0] * k * w * 0.35; ty += p.dir[1] * k * h * 0.3 - k * h * 0.2; }
         const live = life > p.delay || still;
         if (still) { p.sx = tx; p.sy = ty; }
-        let ax = live ? (tx - p.sx) * 0.05 : 0, ay = live ? (ty - p.sy) * 0.05 : 0;
+        let ax = live ? (tx - p.sx) * 0.07 : 0, ay = live ? (ty - p.sy) * 0.07 : 0;
         const dx = p.sx - pointer.x, dy = p.sy - pointer.y, d2 = dx * dx + dy * dy, R = touch ? 9000 : 12000;
-        if (d2 < R) { const d = Math.sqrt(d2) || 1, push = (1 - d2 / R) * 3.2; ax += (dx / d) * push; ay += (dy / d) * push; }
+        if (on && d2 < R) { const d = Math.sqrt(d2) || 1, push = (1 - d2 / R) * 3.2; ax += (dx / d) * push; ay += (dy / d) * push; }
         for (const rp of ripples) {
           const age = t - rp.t, rad = age * 520, ddx = p.sx - rp.x, ddy = p.sy - rp.y, d = Math.sqrt(ddx * ddx + ddy * ddy) || 1;
           const band = Math.exp(-((d - rad) ** 2) / 1800) * (1 - age / 1.6) * 5;
           ax += (ddx / d) * band; ay += (ddy / d) * band;
         }
-        p.vx = (p.vx + ax) * 0.82; p.vy = (p.vy + ay) * 0.82; p.sx += p.vx; p.sy += p.vy;
-        const twinkle = 0.65 + 0.35 * Math.sin(t * (1.2 + (p.tw % 1.3)) + p.tw);
+        p.vx = (p.vx + ax) * 0.8; p.vy = (p.vy + ay) * 0.8; p.sx += p.vx; p.sy += p.vy;
+        const twinkle = 0.65 + 0.35 * Math.sin(t * (1.6 + (p.tw % 1.6)) + p.tw);
         const alpha = p.a * twinkle * Math.min(1, f * 0.95) * (1 - gone * 0.85) * (live ? 1 : 0.35);
         if (alpha < 0.02) continue;
         const s = (p.k === 0 ? 1.25 : 1) * f * (p.tw > 5.9 ? 1.8 : 1);
         g.fillStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
         g.fillRect(p.sx, p.sy, s, s);
       }
+      if (bx1 > bx0) { area.x0 = bx0; area.y0 = by0; area.x1 = bx1; area.y1 = by1; }
       if (!still && visible) raf = requestAnimationFrame(frame);
     };
 
@@ -177,7 +189,7 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
     const onMove = (e: PointerEvent) => at(e.clientX, e.clientY);
     const onTouch = (e: TouchEvent) => { const p = e.touches[0]; if (p) at(p.clientX, p.clientY); };
     const onLeave = () => { pointer.x = pointer.y = -9999; };
-    const onDown = (e: PointerEvent) => { const b = c.getBoundingClientRect(); if (e.clientY < b.top || e.clientY > b.bottom) return; ripples.push({ x: e.clientX - b.left, y: e.clientY - b.top, t: performance.now() / 1000 }); };
+    const onDown = (e: PointerEvent) => { const b = c.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top; if (!inside(x, y)) return; ripples.push({ x, y, t: performance.now() / 1000 }); };
     const wake = () => { if (!raf && visible) raf = requestAnimationFrame(frame); };
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible && !started && scene === "packet") started = 0; wake(); }, { threshold: 0 });
     const onResize = () => { build(); wake(); };

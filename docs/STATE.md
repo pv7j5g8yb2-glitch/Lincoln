@@ -474,8 +474,10 @@ from the repo the same day. History is in git up to commit `341cf65`.
   rolling field of points, with dust. It streams in from a scattered cloud, turns slowly, twinkles, leans toward the
   cursor, parts around it, ripples from a tap, and scatters into dust as the hero is scrolled away (reforms on the way
   back). Close: three fanned filing pages form the same way.
-* Phones: no cursor, so a finger moving over the page parts the points, a tap sends a ripple, and scrolling turns the
-  building. No tilt sensor (iPhone would ask permission first). Fewer points on phones.
+* Only a cursor or finger on the shape itself moves the points (parts them; a tap there ripples); a touch on the header,
+  the headline or anywhere else leaves them alone. Rule for this and every future particle effect (Ismael, 2026-11-25).
+  Every point also drifts on its own small path all the time, and the turn is a little faster, so it is always alive.
+  No tilt sensor (iPhone would ask permission first). Fewer points on phones. The page cannot scroll sideways.
 * Page: statement lit word by word, 3x3 hairline grid of the nine capabilities (fills white on hover), "Any
   immigration case." with the families of work under it (Ismael, 2026-11-25: say it once rather than list types), the
   connectors drifting in two rows with their logos in white, names in grey (Simple Icons, CC0; Google seven, Microsoft eight; Outlook Calendar mark from Microsoft Fluent icons, MIT; only ones Lincoln

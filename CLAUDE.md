@@ -114,6 +114,9 @@ rejected "Lincoln working a case live" as a hero for that reason. On 2026-11-16 
 the direction is now clean and minimal (the app's own colours, large serif type, quiet motion). Framer is connected
 (his free workspace) and is an option for building and hosting it.
 
+**Particle effects (Ismael, 2026-11-25).** Any particle effect on Lincoln's pages moves only when the cursor or finger is on
+the shape itself, never from a touch elsewhere on the page, and is always gently moving on its own without looking awkward.
+
 **The bar is the game changer (Ismael, 2026-11-16).** Judge Lincoln against being the complete, game changing
 platform for immigration firms, never against "a first version" or an MVP. Build only what a firm will find genuinely
 valuable and convenient, keep the app simple and minimal, and let details appear only when needed or when the user

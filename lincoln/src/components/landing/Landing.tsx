@@ -59,7 +59,7 @@ export default function Landing() {
   }, []);
 
   return (
-    <div className="min-h-dvh overflow-x-clip bg-black font-sans text-white antialiased selection:bg-white/20">
+    <div className="landing-root min-h-dvh overflow-x-clip bg-black font-sans text-white antialiased selection:bg-white/20">
       <header className={`fixed inset-x-0 top-0 z-50 transition-[background-color,border-color] duration-500 ${scrolled ? "border-b border-white/10 bg-black/70 backdrop-blur-md" : "border-b border-transparent"}`}>
         <nav className="mx-auto flex h-16 max-w-[1320px] items-center justify-between px-5 md:h-20 md:px-10">
           <Link href="/" className="font-serif text-[22px] font-light tracking-[0.01em]">Lincoln</Link>
