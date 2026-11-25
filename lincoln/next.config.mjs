@@ -28,7 +28,7 @@ const nextConfig = {
           { key: "Referrer-Policy", value: "same-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=(), payment=(), usb=()" },
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
-          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+          // Search engines: src/proxy.ts keeps the app out (X-Robots-Tag); the public site on uselincoln.com is open.
         ],
       },
       // The Word add-in's pane: Word on the web shows it in a frame on Microsoft's domains, and it runs

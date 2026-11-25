@@ -9,7 +9,8 @@ const PUBLIC = new Set(["/terms", "/privacy", "/start"]);
 
 export function proxy(req: NextRequest) {
   const host = (req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "").split(",")[0].split(":")[0].trim().toLowerCase();
-  if (host !== MAIN && host !== `www.${MAIN}`) return NextResponse.next();
+  // The app (and anything that is not the public site) is kept out of search engines entirely.
+  if (host !== MAIN && host !== `www.${MAIN}`) { const res = NextResponse.next(); res.headers.set("X-Robots-Tag", "noindex, nofollow"); return res; }
   const { pathname, search } = req.nextUrl;
   if (host !== MAIN) return NextResponse.redirect(`https://${MAIN}${pathname}${search}`, 308);
   if (pathname === "/") return NextResponse.rewrite(new URL(`/welcome${search}`, req.url));

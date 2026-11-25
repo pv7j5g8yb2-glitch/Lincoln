@@ -468,6 +468,16 @@ from the repo the same day. History is in git up to commit `341cf65`.
   elements of each offence, timelines, contradictions; the firm supplies discovery, Lincoln cannot fetch evidence).
   Ceilings estimated the same day are in docs/RESEARCH.md.
 
+## Search and AI search (2026-11-25)
+* Goal (Ismael): win "Lincoln AI" and "Lincoln legal AI" first, then be one of the meanings AI answers give for plain
+  "Lincoln". Funding news and a handful of firms will make "Lincoln AI" winnable. Plan and listing copy: `docs/SEARCH.md`.
+* Done: uselincoln.com and /start open to search engines (the whole site had been "don't index" since the draft days,
+  including a blanket header in next.config.mjs); the app stays closed (X-Robots-Tag from src/proxy.ts on any host but
+  uselincoln.com). robots.txt welcomes the AI crawlers, sitemap.xml, llms.txt, schema.org structured data. Terms and
+  Privacy stay closed until the legal name and address placeholders are filled.
+* Needs Ismael or a parent: Google Search Console and Bing, then LinkedIn company page, Crunchbase, G2, Capterra,
+  Product Hunt, Legaltech Hub, using the copy in docs/SEARCH.md. Next on the site: guide pages.
+
 ## Landing page: particles (2026-11-25, Ismael chose it from five options, then asked for it cleaner and more alive)
 * Black, light serif type, points of light (`src/components/landing/Points.tsx`, 2D canvas). Hero: "LINCOLN" in heavy
   Literata as points (Ismael, 2026-11-25, replacing the courthouse), letters spaced, half the points on the outlines,
