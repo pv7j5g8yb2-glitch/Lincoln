@@ -468,13 +468,18 @@ from the repo the same day. History is in git up to commit `341cf65`.
   elements of each offence, timelines, contradictions; the firm supplies discovery, Lincoln cannot fetch evidence).
   Ceilings estimated the same day are in docs/RESEARCH.md.
 
-## Landing page redesign (2026-11-24, from Ismael's references)
-* Hero: one slow band of warm grainy light (WebGL, `src/components/landing/LightField.tsx`; amber, burnt orange,
-  oxblood, ink blue edge; rests off screen, still for reduced motion, CSS fallback), headline large and set low.
-* The film sits under the hero. "Every part of the case." replaces the 01 to 04 photo steps: nine capabilities, each
-  with its own piece of product (auto advance on laptops only). Case types drift past in two rows. "Inside the tools
-  the firm already uses." wires Lincoln to the ten tools it really connects to. The close uses the light band.
-* Following his "vibecoded" checklist: no stock photos, no purple, glow only in the hero and the close.
+## Landing page: particles (2026-11-25, Ismael chose it from five options, then asked for it cleaner and more alive)
+* Black, light serif type, points of light (`src/components/landing/Points.tsx`, 2D canvas, no WebGL needed). Hero: a
+  3D courthouse (fluted columns, entablature, pediment, steps; points mostly on edges, spread by edge length) over a
+  rolling field of points, with dust. It streams in from a scattered cloud, turns slowly, twinkles, leans toward the
+  cursor, parts around it, ripples from a tap, and scatters into dust as the hero is scrolled away (reforms on the way
+  back). Close: three fanned filing pages form the same way.
+* Phones: no cursor, so a finger moving over the page parts the points, a tap sends a ripple, and scrolling turns the
+  building. No tilt sensor (iPhone would ask permission first). Fewer points on phones.
+* Page: statement lit word by word, 3x3 hairline grid of the nine capabilities (fills white on hover), case types
+  drifting in two rows, tools in one line, privacy, one row footer. Copy shared in `src/components/landing/content.ts`.
+* The other four options (Atelier, Thermal, Field, Glass) and the warm light version are in git history (commit
+  d1b2ec9) if ever wanted.
 
 ## Readiness pass (2026-11-24, after "Lincoln should be ready now for any attorney")
 * Word (.docx), text, RTF, Markdown and saved email files are read everywhere a file comes in (email attachments, uploads,

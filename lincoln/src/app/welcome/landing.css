@@ -24,16 +24,7 @@
 .tick-ring { stroke-dasharray: 208; stroke-dashoffset: 208; animation: tick-draw .55s ease-out .1s forwards; }
 .tick-mark { stroke-dasharray: 44; stroke-dashoffset: 44; animation: tick-draw .35s ease-out .55s forwards; }
 @media (prefers-reduced-motion: reduce) { .dropdown-in, .tick { animation: none; } .tick-ring, .tick-mark { animation: none; stroke-dashoffset: 0; } }
-/* Without WebGL the light is laid as a still gradient. */
-.light-field[data-fallback] { background: radial-gradient(60% 40% at 70% 45%, #f5c27f 0%, #cc5c24 30%, #5c1c12 60%, transparent 80%), radial-gradient(90% 60% at 30% 70%, #26334a 0%, transparent 60%), #0e0e0d; }
-/* Film grain over a gradient. */
-.grain::after { content: ""; position: absolute; inset: 0; opacity: .22; mix-blend-mode: overlay; pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-/* The case types drift; the wires carry a slow pulse into Lincoln; the open item fills its line while it waits. */
+/* The case types drift. */
 @keyframes marquee { to { transform: translateX(-50%); } }
 .marquee { animation: marquee 60s linear infinite; }
-@keyframes wire { to { stroke-dashoffset: -240; } }
-.wire { stroke-dasharray: 2 6; animation: wire 9s linear infinite; }
-@keyframes work-progress { from { width: 0; } to { width: 100%; } }
-.work-progress { animation: work-progress 5.2s linear both; }
-@media (prefers-reduced-motion: reduce) { .marquee, .wire, .work-progress { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .marquee { animation: none; } }
