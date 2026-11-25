@@ -52,15 +52,19 @@ const light = "font-serif font-light tracking-[-0.02em]";
 const small = "font-sans text-[11px] uppercase tracking-[0.18em] text-white/45";
 
 export default function Landing() {
-  const [scrolled, setScrolled] = useState(false);
+  // The header stays out of sight while the hero is on screen (it already shows LINCOLN, the line and Get In Touch)
+  // and slides down once the hero has been scrolled past.
+  const hero = useRef<HTMLElement>(null);
+  const [past, setPast] = useState(false);
   useEffect(() => {
-    const on = () => setScrolled(scrollY > 40);
-    on(); addEventListener("scroll", on, { passive: true }); return () => removeEventListener("scroll", on);
+    const on = () => { const el = hero.current; if (el) setPast(el.getBoundingClientRect().bottom < 72); };
+    on(); addEventListener("scroll", on, { passive: true }); addEventListener("resize", on);
+    return () => { removeEventListener("scroll", on); removeEventListener("resize", on); };
   }, []);
 
   return (
     <div className="landing-root min-h-dvh overflow-x-clip bg-black font-sans text-white antialiased selection:bg-white/20">
-      <header className={`fixed inset-x-0 top-0 z-50 transition-[background-color,border-color] duration-500 ${scrolled ? "border-b border-white/10 bg-black/70 backdrop-blur-md" : "border-b border-transparent"}`}>
+      <header inert={!past} className={`fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-md transition-[transform,opacity] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] ${past ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-full opacity-0"}`}>
         <nav className="mx-auto flex h-16 max-w-[1320px] items-center justify-between px-5 md:h-20 md:px-10">
           <Link href="/" className="font-serif text-[22px] font-light tracking-[0.01em]">Lincoln</Link>
           <Link href="/start" className="bg-white px-4 py-2 text-[12.5px] font-medium text-black transition hover:bg-white/85">Get In Touch</Link>
@@ -68,7 +72,7 @@ export default function Landing() {
       </header>
 
       {/* Hero: LINCOLN forms in points. */}
-      <section className="relative isolate h-[100svh] min-h-[640px] overflow-hidden">
+      <section ref={hero} className="relative isolate h-[100svh] min-h-[640px] overflow-hidden">
         <div className="absolute inset-0 -z-10"><Points scene="word" /></div>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-56 bg-gradient-to-t from-black via-black/70 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 mx-auto flex max-w-[1320px] flex-col items-center gap-8 px-5 pb-10 text-center md:gap-10 md:px-10 md:pb-14">

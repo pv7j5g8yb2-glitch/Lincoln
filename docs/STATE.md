@@ -479,6 +479,8 @@ from the repo the same day. History is in git up to commit `341cf65`.
   touches them (2026-11-25 fix: a finger also turned the word, and the turn fed on itself until it collapsed into a
   blob; and a phone's address bar changing the height on scroll rebuilt the points. Both gone: the points are made once
   and a height change alone moves nothing).
+* Header (Ismael, 2026-11-25): only Lincoln and Get In Touch, on every screen; hidden while the hero is on screen and
+  slides down once the hero has been scrolled past (the hero already shows LINCOLN, the line and Get In Touch).
 * Ambient motion (Ismael, 2026-11-25: "like in movies when you show a prototype"): a slow wave runs through the letters,
   every point shimmers on its own path, the word sways, and a soft band of light sweeps across it every few seconds.
   Steady, never fast; scaled to the word so it stays sharp on phones.
