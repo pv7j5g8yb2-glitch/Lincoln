@@ -475,8 +475,9 @@ from the repo the same day. History is in git up to commit `341cf65`.
   including a blanket header in next.config.mjs); the app stays closed (X-Robots-Tag from src/proxy.ts on any host but
   uselincoln.com). robots.txt welcomes the AI crawlers, sitemap.xml, llms.txt, schema.org structured data. Terms and
   Privacy stay closed until the legal name and address placeholders are filled.
-* Needs Ismael or a parent: Google Search Console and Bing, then LinkedIn company page, Crunchbase, G2, Capterra,
-  Product Hunt, Legaltech Hub, using the copy in docs/SEARCH.md. Next on the site: guide pages.
+* Needs Ismael or a parent (Ismael, 2026-11-25: he will do these later; remind him): Google Search Console and Bing,
+  then LinkedIn company page, Crunchbase, G2, Capterra, Product Hunt, Legaltech Hub, using the copy in docs/SEARCH.md.
+  Next on the site: guide pages.
 
 ## Landing page: particles (2026-11-25, Ismael chose it from five options, then asked for it cleaner and more alive)
 * Black, light serif type, points of light (`src/components/landing/Points.tsx`, 2D canvas). Hero: "LINCOLN" in heavy

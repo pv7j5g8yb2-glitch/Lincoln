@@ -1193,3 +1193,19 @@ Company claims, from the founder; Legora valued $675M then, $80M Series B (Iconi
   Anthropic's contracting is led by a non lawyer (its most experienced sales person) working with Claude, with a lawyer
   signing off only on critical points. Signal that companies will do more legal work themselves with AI and use
   lawyers for judgement; supports Lincoln's model (AI does the work, the attorney approves).
+
+## AI use and privilege: United States v. Heppner (seen 2026-11-25, LinkedIn post by Scott Simpson, litigator)
+* As the post reports (citations not yet checked against the opinions): United States v. Heppner, 820 F. Supp. 3d 292
+  (S.D.N.Y. 2026): a client researched his case with Claude on his own and later shared it with his lawyers; the court
+  rejected attorney-client privilege and work-product protection, because counsel had not directed the use and the
+  platform's terms undermined confidentiality. Warner v. Gilbarco, 820 F. Supp. 3d 629 (E.D. Mich. 2026) protected a
+  self-represented litigant's AI-assisted trial preparation as work product.
+* His advice: an engagement letter clause (no generative AI on the matter without written consent; preserve any chats;
+  the firm names the approved platform and the task). The line that matters: permission versus direction. Counsel
+  directing the client to a reviewed, confidential platform for a specific task is the stronger privilege position.
+* Comments: UK solicitors say client care letters need the same; one asks whether local, offline AI changes it.
+* For Lincoln: the client intake link is exactly "the firm's approved platform, directed by counsel, for a specific
+  task", so it is on the right side of this line, provided Lincoln's confidentiality terms hold up (the model provider
+  terms and the zero retention agreement, not yet signed, become sales questions). Possible: an engagement letter AI
+  clause Lincoln drafts for each new matter, and intake link wording that states the link is provided at the attorney's
+  direction for the matter. A guide on the clause is good search content once the citations are checked.
