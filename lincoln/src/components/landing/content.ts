@@ -1,7 +1,8 @@
 // What the landing page says, shared by every design so they differ only in how they look. American English.
 // Every name and number in an example is made up; every claim about Lincoln is true of the product today.
 
-export const HEADLINE = "Your work done before you even ask.";
+/** The hero line, in two lines: the first in white, the second in grey. No full stop (Ismael, 2026-11-25). */
+export const HEADLINE: [string, string] = ["Your work done", "before you even ask"];
 
 export const WORK: { title: string; line: string }[] = [
   { title: "Opens cases from email", line: "A client writes in. The case is open before anyone sees the email." },

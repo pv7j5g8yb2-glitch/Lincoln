@@ -75,8 +75,10 @@ export default function Landing() {
         <div className="absolute inset-0 -z-10"><Points scene="word" /></div>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-56 bg-gradient-to-t from-black via-black/70 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 mx-auto flex max-w-[1320px] flex-col gap-8 px-5 pb-10 md:flex-row md:items-end md:justify-between md:px-10 md:pb-14">
-          <h1 className={`${light} hero-in max-w-[15ch] text-[40px] leading-[1.06] [animation-delay:1400ms] md:text-[64px]`}>
-            {HEADLINE.split(" ").map((w, i) => <span key={i} className={i < 2 ? "" : "text-white/50"}>{w} </span>)}
+          {/* Two lines at every width: the size follows the screen so "before you even ask" never wraps. */}
+          <h1 className={`${light} hero-in whitespace-nowrap text-[clamp(28px,8.6vw,40px)] leading-[1.08] [animation-delay:1400ms] md:text-[64px]`}>
+            <span className="block">{HEADLINE[0]}</span>
+            <span className="block text-white/50">{HEADLINE[1]}</span>
           </h1>
           <div className="hero-in flex shrink-0 items-center gap-6 whitespace-nowrap [animation-delay:1700ms]">
             <a href="#work" className="text-[13px] text-white/60 transition hover:text-white">How it works</a>
