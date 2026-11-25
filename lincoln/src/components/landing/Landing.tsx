@@ -122,9 +122,11 @@ export default function Landing() {
           {CONNECTORS.map(([, row], r) => (
             <div key={r} className="marquee flex w-max" style={{ animationDirection: r ? "reverse" : "normal", animationDuration: "70s" }} aria-hidden>
               {[...row, ...row].map((t, i) => (
-                <span key={i} className={`${light} flex items-center whitespace-nowrap text-[40px] text-white/75 md:text-[80px]`}>
-                  <svg viewBox="0 0 24 24" aria-hidden className="mr-4 h-[0.72em] w-[0.72em] shrink-0 fill-white md:mr-6"><path d={LOGOS[t]} /></svg>
-                  {t}<span className="mx-8 inline-block h-1.5 w-1.5 rounded-full bg-white/20 md:mx-14" />
+                // The logo is exactly as tall as the capitals (0.71em in Literata) and stands on the baseline, so it lines up
+                // with the name, not with the letters that drop below it.
+                <span key={i} className={`${light} flex items-baseline whitespace-nowrap text-[40px] text-white/75 md:text-[80px]`}>
+                  <svg viewBox="0 0 24 24" aria-hidden className="mr-[0.28em] h-[0.71em] w-[0.71em] shrink-0 self-baseline fill-white"><path d={LOGOS[t]} /></svg>
+                  {t}<span className="mx-8 inline-block h-1.5 w-1.5 self-center rounded-full bg-white/20 md:mx-14" />
                 </span>
               ))}
             </div>
