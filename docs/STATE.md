@@ -475,6 +475,10 @@ from the repo the same day. History is in git up to commit `341cf65`.
   14, 14 Pro Max, Pixel 7, iPad Mini, iPad Pro, laptop, 2560 wide and a short laptop. It streams in from a scattered
   cloud, sways gently and drifts; drift and depth scale with the word so it stays sharp on phones. Close: three fanned
   filing pages form the same way when scrolled to. Scrolling no longer scatters either scene.
+* A cursor or finger on the letters swells the points under it and pushes them apart, like a lens; nothing else
+  touches them (2026-11-25 fix: a finger also turned the word, and the turn fed on itself until it collapsed into a
+  blob; and a phone's address bar changing the height on scroll rebuilt the points. Both gone: the points are made once
+  and a height change alone moves nothing).
 * Only a cursor or finger on the shape itself moves the points (parts them; a tap there ripples); a touch on the header,
   the headline or anywhere else leaves them alone. Rule for this and every future particle effect (Ismael, 2026-11-25).
   Every point also drifts on its own small path all the time, and the turn is a little faster, so it is always alive.

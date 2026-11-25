@@ -76,15 +76,22 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
     const inside = (x: number, y: number) => x >= area.x0 - 24 && x <= area.x1 + 24 && y >= area.y0 - 24 && y <= area.y1 + 24;
     const ripples: { x: number; y: number; t: number }[] = [];
 
-    const build = () => {
-      const dpr = Math.min(devicePixelRatio || 1, 2);
-      w = c.clientWidth; h = c.clientHeight;
+    // The layout height: set once, and again only when the width changes. A phone's address bar showing or hiding while
+    // scrolling changes the height alone; that must not move a single point.
+    let lh = 0;
+    /** Fits the canvas to its box. The points are made once; a resize only redraws them in the new space. */
+    const size = () => {
+      const dpr = Math.min(devicePixelRatio || 1, 2), nw = c.clientWidth, nh = c.clientHeight;
+      if (nw !== w || !lh) lh = nh;
+      w = nw; h = nh;
       c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const dense = Math.min(1, (w * h) / (1440 * 900)) * (touch ? 0.75 : 1) + 0.25;
-      const old = pts;
-      pts = (scene === "word" ? word(dense) : packet(dense)).map((p, i) => {
+    };
+    const build = () => {
+      size();
+      const dense = Math.min(1, (w * lh) / (1440 * 900)) * (touch ? 0.75 : 1) + 0.25;
+      pts = (scene === "word" ? word(dense) : packet(dense)).map((p) => {
         const ang = Math.random() * Math.PI * 2;
-        return { ...p, sx: old[i]?.sx ?? rand(-0.2, 1.2) * w, sy: old[i]?.sy ?? rand(-0.3, 1.3) * h, vx: 0, vy: 0, tw: Math.random() * Math.PI * 2, delay: p.k === 2 ? 0 : Math.random() * 1.6 + (p.k === 1 ? 0.4 : 0), dir: [Math.cos(ang), Math.sin(ang)], a: p.k === 0 ? rand(0.45, 1) : p.k === 1 ? rand(0.18, 0.45) : rand(0.12, 0.35), f1: rand(0.7, 1.9), f2: rand(0.7, 1.9), p1: rand(0, 6.28), p2: rand(0, 6.28) };
+        return { ...p, sx: rand(-0.2, 1.2) * w, sy: rand(-0.3, 1.3) * lh, vx: 0, vy: 0, tw: Math.random() * Math.PI * 2, delay: p.k === 2 ? 0 : Math.random() * 1.6 + (p.k === 1 ? 0.4 : 0), dir: [Math.cos(ang), Math.sin(ang)], a: p.k === 0 ? rand(0.45, 1) : p.k === 1 ? rand(0.18, 0.45) : rand(0.12, 0.35), f1: rand(0.7, 1.9), f2: rand(0.7, 1.9), p1: rand(0, 6.28), p2: rand(0, 6.28) };
       });
     };
 
@@ -93,14 +100,13 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
       if (!started) started = now;
       const t = now / 1000, life = (now - started) / 1000;
       // The word spans most of a phone's width and about two thirds of a laptop's, never wider than 1100 pixels.
-      const sc = scene === "word" ? Math.min(w * (w < 768 ? 0.88 : 0.72), 1100) : Math.min(w * (touch ? 0.86 : 0.5), h * 0.8);
-      const cx = w * 0.5, cy = h * (scene === "word" ? 0.4 : 0.4);
+      const sc = scene === "word" ? Math.min(w * (w < 768 ? 0.88 : 0.72), 1100) : Math.min(w * (touch ? 0.86 : 0.5), lh * 0.8);
+      const cx = w * 0.5, cy = lh * 0.4;
       const on = pointer.x > -9000 && inside(pointer.x, pointer.y);
-      pointer.sx += ((on ? (pointer.x - (area.x0 + area.x1) / 2) / Math.max(1, area.x1 - area.x0) : 0) - pointer.sx) * 0.05;
       // Always turning on its own, a little faster than before, in a slow figure that never quite repeats.
       // Always turning a little on its own (gently for the word, so it stays easy to read).
       const sway = scene === "word" ? (w < 768 ? 0.3 : 0.42) : 1;
-      const turn = (scene === "word" ? 0 : 0.35) + sway * (0.26 * Math.sin(t * 0.21) + 0.1 * Math.sin(t * 0.083 + 1.3)) + pointer.sx * 0.25;
+      const turn = (scene === "word" ? 0 : 0.35) + sway * (0.26 * Math.sin(t * 0.21) + 0.1 * Math.sin(t * 0.083 + 1.3));
       let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
       const cos = Math.cos(turn), sin = Math.sin(turn), tilt = (scene === "word" ? 0.06 : 0.12) + 0.04 * Math.sin(t * 0.17), ct = Math.cos(tilt), st = Math.sin(tilt);
       g.clearRect(0, 0, w, h);
@@ -122,7 +128,9 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
         if (still) { p.sx = tx; p.sy = ty; }
         let ax = live ? (tx - p.sx) * 0.07 : 0, ay = live ? (ty - p.sy) * 0.07 : 0;
         const dx = p.sx - pointer.x, dy = p.sy - pointer.y, d2 = dx * dx + dy * dy, R = touch ? 9000 : 12000;
-        if (on && d2 < R) { const d = Math.sqrt(d2) || 1, push = (1 - d2 / R) * 3.2; ax += (dx / d) * push; ay += (dy / d) * push; }
+        // Under a cursor or finger the points swell and move apart, like a lens; nowhere else does anything touch them.
+        const lens = on && d2 < R ? 1 - d2 / R : 0;
+        if (lens) { const d = Math.sqrt(d2) || 1, push = lens * 3.2; ax += (dx / d) * push; ay += (dy / d) * push; }
         for (const rp of ripples) {
           const age = t - rp.t, rad = age * 520, ddx = p.sx - rp.x, ddy = p.sy - rp.y, d = Math.sqrt(ddx * ddx + ddy * ddy) || 1;
           const band = Math.exp(-((d - rad) ** 2) / 1800) * (1 - age / 1.6) * 5;
@@ -130,9 +138,9 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
         }
         p.vx = (p.vx + ax) * 0.8; p.vy = (p.vy + ay) * 0.8; p.sx += p.vx; p.sy += p.vy;
         const twinkle = 0.65 + 0.35 * Math.sin(t * (1.6 + (p.tw % 1.6)) + p.tw);
-        const alpha = p.a * twinkle * Math.min(1, f * 0.95) * (live ? 1 : 0.35);
+        const alpha = Math.min(1, p.a * twinkle * Math.min(1, f * 0.95) * (live ? 1 : 0.35) * (1 + lens * 0.8));
         if (alpha < 0.02) continue;
-        const s = (p.k === 0 ? (scene === "word" && w < 768 ? 1.05 : 1.25) : 1) * f * (p.tw > 5.9 ? 1.8 : 1);
+        const s = (p.k === 0 ? (scene === "word" && w < 768 ? 1.05 : 1.25) : 1) * f * (p.tw > 5.9 ? 1.8 : 1) * (1 + lens * 1.8);
         g.fillStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
         g.fillRect(p.sx, p.sy, s, s);
       }
@@ -147,7 +155,7 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
     const onDown = (e: PointerEvent) => { const b = c.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top; if (!inside(x, y)) return; ripples.push({ x, y, t: performance.now() / 1000 }); };
     const wake = () => { if (!raf && visible) raf = requestAnimationFrame(frame); };
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible && !started && scene === "packet") started = 0; wake(); }, { threshold: 0 });
-    const onResize = () => { build(); wake(); };
+    const onResize = () => { size(); wake(); };
 
     // The word is drawn from the page's own serif, so it waits for the font.
     const ready = scene === "word" ? document.fonts.load(`800 100px ${getComputedStyle(document.body).getPropertyValue("--font-serif") || "serif"}`).catch(() => undefined) : Promise.resolve();
