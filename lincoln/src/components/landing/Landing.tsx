@@ -155,13 +155,15 @@ export default function Landing() {
       </section>
 
       <footer className="mx-auto max-w-[1320px] px-5 md:px-10">
-        <div className="flex flex-col gap-5 border-t border-white/12 py-8 text-[13px] text-white/55 md:flex-row md:items-center md:justify-between">
-          <p className="font-serif text-[20px] font-medium tracking-[-0.005em] text-white">Lincoln</p>
-          <div className="flex flex-wrap gap-x-7 gap-y-2">
+        {/* Phones: Lincoln, the links, then the copyright, one under another. Wider screens: Lincoln with the copyright
+            under it on the left, the links on the right. */}
+        <div className="flex flex-col gap-5 border-t border-white/12 py-8 text-[13px] text-white/55 md:grid md:grid-cols-[1fr_auto] md:items-center md:gap-x-10 md:gap-y-2">
+          <p className="font-serif text-[20px] font-medium tracking-[-0.005em] text-white md:col-start-1 md:row-start-1">Lincoln</p>
+          <div className="flex flex-wrap gap-x-7 gap-y-2 md:col-start-2 md:row-span-2 md:row-start-1 md:justify-end">
             <Link href="/terms" className="hover:text-white">Terms</Link>
             <Link href="/privacy" className="hover:text-white">Privacy</Link>
           </div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-white/30">© 2026 Lincoln. All rights reserved.</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-white/30 md:col-start-1 md:row-start-2">© 2026 Lincoln. All rights reserved.</p>
         </div>
       </footer>
     </div>
