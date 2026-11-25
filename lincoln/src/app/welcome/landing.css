@@ -31,3 +31,5 @@
 /* The public pages never move sideways, on any phone (iOS Safari can pan wider content even when it is clipped). */
 html:has(.landing-root), body:has(.landing-root) { overflow-x: hidden; overscroll-behavior-x: none; }
 .landing-root { touch-action: pan-y pinch-zoom; }
+/* Links within the page (How it works and the rest) glide down to their section rather than jumping. */
+@media (prefers-reduced-motion: no-preference) { html:has(.landing-root) { scroll-behavior: smooth; } }
