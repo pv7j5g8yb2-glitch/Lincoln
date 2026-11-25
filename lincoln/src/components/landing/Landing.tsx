@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Points from "./Points";
 import { AREAS, CONNECTORS, HEADLINE, STATEMENT, TRUST, WORK } from "./content";
+import { LOGOS } from "./logos";
 
 // Lincoln's public front page. Black, light serif type, and points of light: a courthouse that assembles, turns and
 // breathes over a rolling field in the hero, and a stack of filing pages at the close. Between them the page stays
@@ -121,7 +122,10 @@ export default function Landing() {
           {CONNECTORS.map(([, row], r) => (
             <div key={r} className="marquee flex w-max" style={{ animationDirection: r ? "reverse" : "normal", animationDuration: "70s" }} aria-hidden>
               {[...row, ...row].map((t, i) => (
-                <span key={i} className={`${light} flex items-center whitespace-nowrap text-[40px] text-white/85 md:text-[80px]`}>{t}<span className="mx-7 inline-block h-1.5 w-1.5 rounded-full bg-white/25 md:mx-12" /></span>
+                <span key={i} className={`${light} flex items-center whitespace-nowrap text-[40px] text-white/75 md:text-[80px]`}>
+                  <svg viewBox="0 0 24 24" aria-hidden className="mr-4 h-[0.72em] w-[0.72em] shrink-0 fill-white md:mr-6"><path d={LOGOS[t]} /></svg>
+                  {t}<span className="mx-8 inline-block h-1.5 w-1.5 rounded-full bg-white/20 md:mx-14" />
+                </span>
               ))}
             </div>
           ))}

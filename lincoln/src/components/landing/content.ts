@@ -18,10 +18,11 @@ export const WORK: { title: string; line: string }[] = [
 /** Lincoln works on any immigration case; these are the families of work, for the line under that statement. */
 export const AREAS = "Employment, family, humanitarian, removal defense and naturalization.";
 
-/** The Google and Microsoft services Lincoln connects to (the scopes in lib/integrations). */
+/** The Google and Microsoft services Lincoln connects to (the scopes in lib/integrations). Outlook covers its mail and
+ *  calendar. Each has its logo in logos.ts. */
 export const CONNECTORS: [string, string[]][] = [
   ["Google", ["Gmail", "Google Drive", "Google Docs", "Google Sheets", "Google Slides", "Google Calendar", "Google Chat"]],
-  ["Microsoft", ["Outlook", "Outlook Calendar", "Word", "Excel", "PowerPoint", "OneDrive", "SharePoint", "Teams"]],
+  ["Microsoft", ["Outlook", "Word", "Excel", "PowerPoint", "OneDrive", "SharePoint", "Teams"]],
 ];
 
 export const TRUST: [string, string][] = [
