@@ -156,15 +156,12 @@ export default function Landing() {
 
       <footer className="mx-auto max-w-[1320px] px-5 md:px-10">
         <div className="flex flex-col gap-5 border-t border-white/12 py-8 text-[13px] text-white/55 md:flex-row md:items-center md:justify-between">
-          <p className="font-serif text-[20px] font-light text-white">Lincoln</p>
+          <p className="font-serif text-[20px] font-medium tracking-[-0.005em] text-white">Lincoln</p>
           <div className="flex flex-wrap gap-x-7 gap-y-2">
-            <Link href="/start" className="hover:text-white">Get In Touch</Link>
-            <a href="https://instagram.com/lincoln.app" target="_blank" rel="noopener noreferrer" className="hover:text-white">Instagram</a>
-            <a href="mailto:hello@uselincoln.com" className="hover:text-white">Email</a>
             <Link href="/terms" className="hover:text-white">Terms</Link>
             <Link href="/privacy" className="hover:text-white">Privacy</Link>
           </div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-white/30">© 2026 Lincoln</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-white/30">© 2026 Lincoln. All rights reserved.</p>
         </div>
       </footer>
     </div>
