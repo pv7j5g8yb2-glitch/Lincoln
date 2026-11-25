@@ -479,6 +479,9 @@ from the repo the same day. History is in git up to commit `341cf65`.
   touches them (2026-11-25 fix: a finger also turned the word, and the turn fed on itself until it collapsed into a
   blob; and a phone's address bar changing the height on scroll rebuilt the points. Both gone: the points are made once
   and a height change alone moves nothing).
+* Ambient motion (Ismael, 2026-11-25: "like in movies when you show a prototype"): a slow wave runs through the letters,
+  every point shimmers on its own path, the word sways, and a soft band of light sweeps across it every few seconds.
+  Steady, never fast; scaled to the word so it stays sharp on phones.
 * Only a cursor or finger on the shape itself moves the points (parts them; a tap there ripples); a touch on the header,
   the headline or anywhere else leaves them alone. Rule for this and every future particle effect (Ismael, 2026-11-25).
   Every point also drifts on its own small path all the time, and the turn is a little faster, so it is always alive.

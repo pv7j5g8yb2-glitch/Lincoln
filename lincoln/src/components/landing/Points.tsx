@@ -91,7 +91,7 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
       const dense = Math.min(1, (w * lh) / (1440 * 900)) * (touch ? 0.75 : 1) + 0.25;
       pts = (scene === "word" ? word(dense) : packet(dense)).map((p) => {
         const ang = Math.random() * Math.PI * 2;
-        return { ...p, sx: rand(-0.2, 1.2) * w, sy: rand(-0.3, 1.3) * lh, vx: 0, vy: 0, tw: Math.random() * Math.PI * 2, delay: p.k === 2 ? 0 : Math.random() * 1.6 + (p.k === 1 ? 0.4 : 0), dir: [Math.cos(ang), Math.sin(ang)], a: p.k === 0 ? rand(0.45, 1) : p.k === 1 ? rand(0.18, 0.45) : rand(0.12, 0.35), f1: rand(0.7, 1.9), f2: rand(0.7, 1.9), p1: rand(0, 6.28), p2: rand(0, 6.28) };
+        return { ...p, sx: rand(-0.2, 1.2) * w, sy: rand(-0.3, 1.3) * lh, vx: 0, vy: 0, tw: Math.random() * Math.PI * 2, delay: p.k === 2 ? 0 : Math.random() * 1.6 + (p.k === 1 ? 0.4 : 0), dir: [Math.cos(ang), Math.sin(ang)], a: p.k === 0 ? rand(0.45, 1) : p.k === 1 ? rand(0.18, 0.45) : rand(0.12, 0.35), f1: rand(1.1, 2.6), f2: rand(1.1, 2.6), p1: rand(0, 6.28), p2: rand(0, 6.28) };
       });
     };
 
@@ -103,10 +103,11 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
       const sc = scene === "word" ? Math.min(w * (w < 768 ? 0.88 : 0.72), 1100) : Math.min(w * (touch ? 0.86 : 0.5), lh * 0.8);
       const cx = w * 0.5, cy = lh * 0.4;
       const on = pointer.x > -9000 && inside(pointer.x, pointer.y);
-      // Always turning on its own, a little faster than before, in a slow figure that never quite repeats.
       // Always turning a little on its own (gently for the word, so it stays easy to read).
-      const sway = scene === "word" ? (w < 768 ? 0.3 : 0.42) : 1;
-      const turn = (scene === "word" ? 0 : 0.35) + sway * (0.26 * Math.sin(t * 0.21) + 0.1 * Math.sin(t * 0.083 + 1.3));
+      const sway = scene === "word" ? (w < 768 ? 0.42 : 0.6) : 1;
+      // A band of light sweeps across the shape every few seconds, like a hologram prototype in a film.
+      const scan = cx + (((t * 0.22) % 1.5) - 0.75) * sc * 1.4, band = sc * 0.06;
+      const turn = (scene === "word" ? 0 : 0.35) + sway * (0.26 * Math.sin(t * 0.32) + 0.1 * Math.sin(t * 0.12 + 1.3));
       let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
       const cos = Math.cos(turn), sin = Math.sin(turn), tilt = (scene === "word" ? 0.06 : 0.12) + 0.04 * Math.sin(t * 0.17), ct = Math.cos(tilt), st = Math.sin(tilt);
       g.clearRect(0, 0, w, h);
@@ -119,10 +120,12 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
         const y2 = y * ct - z1 * st, z2 = y * st + z1 * ct;
         const f = 2.4 / (2.4 + z2);
         let tx = cx + x1 * f * sc, ty = cy - y2 * f * sc;
+        // A slow wave runs through the shape, so it visibly breathes.
+        if (p.k === 0) ty += Math.sin(p.x * 9 - t * 1.7) * sc * 0.006 + Math.sin(p.x * 3.1 + t * 1.1) * sc * 0.004;
         if (p.k === 0) { if (tx < bx0) bx0 = tx; if (tx > bx1) bx1 = tx; if (ty < by0) by0 = ty; if (ty > by1) by1 = ty; }
         // Every point drifts on its own small path all the time, so the whole shape is alive even when nothing touches it.
         // The drift scales with the shape, so small letters on a phone stay sharp.
-        const amp = (p.k === 2 ? 7 : p.k === 1 ? 2.2 : scene === "word" ? Math.max(0.5, sc * 0.0017) : 2.6) * f;
+        const amp = (p.k === 2 ? 7 : p.k === 1 ? 2.2 : scene === "word" ? Math.max(0.9, sc * 0.0032) : 3.2) * f;
         tx += Math.sin(t * p.f1 + p.p1) * amp; ty += Math.cos(t * p.f2 + p.p2) * amp;
         const live = life > p.delay || still;
         if (still) { p.sx = tx; p.sy = ty; }
@@ -137,10 +140,11 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
           ax += (ddx / d) * band; ay += (ddy / d) * band;
         }
         p.vx = (p.vx + ax) * 0.8; p.vy = (p.vy + ay) * 0.8; p.sx += p.vx; p.sy += p.vy;
-        const twinkle = 0.65 + 0.35 * Math.sin(t * (1.6 + (p.tw % 1.6)) + p.tw);
-        const alpha = Math.min(1, p.a * twinkle * Math.min(1, f * 0.95) * (live ? 1 : 0.35) * (1 + lens * 0.8));
+        const twinkle = 0.62 + 0.38 * Math.sin(t * (2.2 + (p.tw % 1.8)) + p.tw);
+        const lit = p.k === 0 ? Math.exp(-(((p.sx - scan) / band) ** 2)) : 0;
+        const alpha = Math.min(1, p.a * twinkle * Math.min(1, f * 0.95) * (live ? 1 : 0.35) * (1 + lens * 0.8 + lit * 0.9));
         if (alpha < 0.02) continue;
-        const s = (p.k === 0 ? (scene === "word" && w < 768 ? 1.05 : 1.25) : 1) * f * (p.tw > 5.9 ? 1.8 : 1) * (1 + lens * 1.8);
+        const s = (p.k === 0 ? (scene === "word" && w < 768 ? 1.05 : 1.25) : 1) * f * (p.tw > 5.9 ? 1.8 : 1) * (1 + lens * 1.8 + lit * 0.5);
         g.fillStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
         g.fillRect(p.sx, p.sy, s, s);
       }
