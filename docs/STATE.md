@@ -469,11 +469,12 @@ from the repo the same day. History is in git up to commit `341cf65`.
   Ceilings estimated the same day are in docs/RESEARCH.md.
 
 ## Landing page: particles (2026-11-25, Ismael chose it from five options, then asked for it cleaner and more alive)
-* Black, light serif type, points of light (`src/components/landing/Points.tsx`, 2D canvas, no WebGL needed). Hero: a
-  3D courthouse (fluted columns, entablature, pediment, steps; points mostly on edges, spread by edge length) over a
-  rolling field of points, with dust. It streams in from a scattered cloud, turns slowly, twinkles, leans toward the
-  cursor, parts around it, ripples from a tap, and scatters into dust as the hero is scrolled away (reforms on the way
-  back). Close: three fanned filing pages form the same way.
+* Black, light serif type, points of light (`src/components/landing/Points.tsx`, 2D canvas). Hero: "LINCOLN" in heavy
+  Literata as points (Ismael, 2026-11-25, replacing the courthouse), letters spaced, half the points on the outlines,
+  a little depth; 88 percent of a phone's width, 72 percent of a laptop's, at most 1100 pixels; checked on iPhone SE,
+  14, 14 Pro Max, Pixel 7, iPad Mini, iPad Pro, laptop, 2560 wide and a short laptop. It streams in from a scattered
+  cloud, sways gently and drifts; drift and depth scale with the word so it stays sharp on phones. Close: three fanned
+  filing pages form the same way when scrolled to. Scrolling no longer scatters either scene.
 * Only a cursor or finger on the shape itself moves the points (parts them; a tap there ripples); a touch on the header,
   the headline or anywhere else leaves them alone. Rule for this and every future particle effect (Ismael, 2026-11-25).
   Every point also drifts on its own small path all the time, and the turn is a little faster, so it is always alive.

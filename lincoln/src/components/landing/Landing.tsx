@@ -6,8 +6,8 @@ import Points from "./Points";
 import { AREAS, CONNECTORS, HEADLINE, STATEMENT, TRUST, WORK } from "./content";
 import { LOGOS } from "./logos";
 
-// Lincoln's public front page. Black, light serif type, and points of light: a courthouse that assembles, turns and
-// breathes over a rolling field in the hero, and a stack of filing pages at the close. Between them the page stays
+// Lincoln's public front page. Black, light serif type, and points of light: LINCOLN in heavy serif that assembles,
+// sways and breathes in the hero, and a stack of filing pages at the close. Between them the page stays
 // quiet and spacious: a sentence that lights up word by word, the work in a hairline grid, case types drifting past.
 // American English.
 
@@ -70,15 +70,15 @@ export default function Landing() {
         </nav>
       </header>
 
-      {/* Hero: the courthouse forms. */}
+      {/* Hero: LINCOLN forms in points. */}
       <section className="relative isolate h-[100svh] min-h-[640px] overflow-hidden">
-        <div className="absolute inset-0 -z-10"><Points scene="court" /></div>
+        <div className="absolute inset-0 -z-10"><Points scene="word" /></div>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-56 bg-gradient-to-t from-black via-black/70 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 mx-auto flex max-w-[1320px] flex-col gap-8 px-5 pb-10 md:flex-row md:items-end md:justify-between md:px-10 md:pb-14">
           <h1 className={`${light} hero-in max-w-[15ch] text-[40px] leading-[1.06] [animation-delay:1400ms] md:text-[64px]`}>
             {HEADLINE.split(" ").map((w, i) => <span key={i} className={i < 2 ? "" : "text-white/50"}>{w} </span>)}
           </h1>
-          <div className="hero-in flex items-center gap-6 [animation-delay:1700ms]">
+          <div className="hero-in flex shrink-0 items-center gap-6 whitespace-nowrap [animation-delay:1700ms]">
             <a href="#work" className="text-[13px] text-white/60 transition hover:text-white">How it works</a>
             <Link href="/start" className="bg-white px-5 py-3 text-[13px] font-medium text-black transition hover:bg-white/85">Get In Touch</Link>
           </div>
