@@ -1209,3 +1209,10 @@ Company claims, from the founder; Legora valued $675M then, $80M Series B (Iconi
   terms and the zero retention agreement, not yet signed, become sales questions). Possible: an engagement letter AI
   clause Lincoln drafts for each new matter, and intake link wording that states the link is provided at the attorney's
   direction for the matter. A guide on the clause is good search content once the citations are checked.
+
+## Legal AI news (LinkedIn screenshots, 2026-11-26)
+* Skadden is rolling out Legora globally across every practice group, about 1,700 lawyers (Max Junestrand's own post,
+  2026-11-25). Big Law standardises on one general platform; the buyer is a firm wide IT and innovation team.
+* ProVision (two former Goodwin lawyers and their CTO) raised a further $11m for investment fund work: side letters,
+  legal obligations and investor relationships (Artificial Lawyer, 2026-11-25). Not a competitor. Shows investors
+  funding narrow, practice specific legal AI built by people from that practice.
