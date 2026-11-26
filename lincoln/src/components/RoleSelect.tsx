@@ -21,7 +21,7 @@ export default function RoleSelect({ userId, role, roles }: { userId: string; ro
           if ("error" in r) { setValue(before); notify(r.error ?? "Not changed"); } else notify("Saved");
         });
       }}
-      className="h-8 shrink-0 rounded-lg border border-line bg-card px-2 text-[12.5px] text-ink outline-none focus:border-ink disabled:opacity-50"
+      className="h-8 shrink-0 border border-line bg-card px-2 text-[12.5px] text-ink outline-none focus:border-ink disabled:opacity-50"
     >
       {[...new Set([...roles, role])].map((r) => <option key={r} value={r}>{r}</option>)}
     </select>

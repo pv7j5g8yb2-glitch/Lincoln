@@ -221,7 +221,7 @@ export default function TabBar({ firm, user, review, demo }: Props) {
       <span>{label}</span>
     </Link>
   );
-  const sheetItem = "flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-[15px] text-ink transition active:bg-ink/[0.07]";
+  const sheetItem = "flex h-11 w-full items-center gap-3 px-3 text-left text-[15px] text-ink transition active:bg-ink/[0.07]";
 
   return (
     <div className={clsx("md:hidden", hidden && "hidden")}>

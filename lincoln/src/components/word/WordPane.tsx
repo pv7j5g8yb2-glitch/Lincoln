@@ -116,9 +116,9 @@ function Main({ api }: { api: (path: string, body?: unknown) => Promise<any> }) 
         {cases.length === 0 && <option value="">No cases</option>}
         {cases.map((c) => <option key={c.id} value={c.id}>{c.client} · {c.type}</option>)}
       </select>
-      <div className="mt-4 grid grid-cols-3 rounded-lg bg-panel p-0.5 text-[12.5px] font-medium">
+      <div className="mt-4 grid grid-cols-3 bg-panel p-0.5 text-[12.5px] font-medium">
         {(["drafts", "check", "library"] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)} className={clsx("rounded-md py-1.5 transition", tab === t ? "bg-card text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]" : "text-muted hover:text-ink")}>{{ drafts: "Drafts", check: "Check", library: "Library" }[t]}</button>
+          <button key={t} onClick={() => setTab(t)} className={clsx(" py-1.5 transition", tab === t ? "bg-card text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]" : "text-muted hover:text-ink")}>{{ drafts: "Drafts", check: "Check", library: "Library" }[t]}</button>
         ))}
       </div>
       <div className="mt-4">

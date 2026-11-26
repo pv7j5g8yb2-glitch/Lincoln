@@ -70,7 +70,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
       <Link href="/cases" className="mb-5 inline-flex items-center gap-1 text-[12.5px] text-muted transition hover:text-ink"><ChevronLeft size={14} /> Cases</Link>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="serif flex items-center gap-2 text-[27px] font-medium leading-tight">{c.sensitive ? <Lock size={17} className="text-faint" /> : null}{c.client}</h1>
+          <h1 className="serif flex items-center gap-2 text-[28px] font-light leading-tight tracking-[-0.02em]">{c.sensitive ? <Lock size={17} className="text-faint" /> : null}{c.client}</h1>
           <p className="mt-1.5 text-[13px] text-muted">
             {c.type_code}{c.counterpart ? ` · ${c.counterpart}` : ""} · {c.stage}{c.receipt ? ` · ${c.receipt}` : ""}{uscis?.text ? <span title={uscis.detail ?? undefined}> · {uscis.text}</span> : null}{c.sensitive ? " · Restricted" : ""}
           </p>
@@ -86,7 +86,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
         {c.processing ? (
           <div>
             <p className="text-[14px]">Reading the client file</p>
-            <div className="mt-3 h-[3px] w-full max-w-[320px] overflow-hidden rounded-full bg-line"><div className="sweep h-full w-1/3 rounded-full bg-ink" /></div>
+            <div className="mt-3 h-[3px] w-full max-w-[320px] overflow-hidden bg-line"><div className="sweep h-full w-1/3 bg-ink" /></div>
           </div>
         ) : (
           <>
@@ -97,7 +97,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
       </div>
 
       {pending.length > 0 && (
-        <ul className="mt-6 overflow-hidden rounded-xl border border-line">
+        <ul className="mt-6 overflow-hidden border border-line">
           {pending.map((a) => (
             <li key={a.id} className="border-b border-line last:border-0">
               <Link href={`/approvals?id=${a.id}`} className="group flex items-center gap-3 px-4 py-3 transition hover:bg-side">
@@ -130,7 +130,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="text-[13.5px] font-medium">{i.title}</span>
                       <span className="flex shrink-0 items-center gap-2 text-[12px] text-faint">{KIND[i.kind] ?? "Risk"}{i.severity === "high" ? " · High" : ""}
-                        <form action={resolveIssue.bind(null, i.id)}><button aria-label="Resolve" title="Resolve" className="flex h-6 w-6 items-center justify-center rounded-md text-faint transition hover:bg-panel hover:text-ink"><Check size={14} /></button></form>
+                        <form action={resolveIssue.bind(null, i.id)}><button aria-label="Resolve" title="Resolve" className="flex h-6 w-6 items-center justify-center text-faint transition hover:bg-panel hover:text-ink"><Check size={14} /></button></form>
                       </span>
                     </div>
                     <p className="mt-0.5 text-[13px] leading-relaxed text-muted">{i.detail}</p>
@@ -147,7 +147,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
               <details className="mt-3 text-[13px]">
                 <summary className="cursor-pointer text-muted transition hover:text-ink">{minor.length} minor</summary>
                 <ul className="mt-2 border-t border-line">
-                  {minor.map((i) => <li key={i.id} className="flex items-start gap-3 border-b border-line py-2.5"><div className="min-w-0 flex-1"><div className="text-[13px]">{i.title}</div><div className="text-[12px] text-muted">{i.detail}</div></div><form action={resolveIssue.bind(null, i.id)}><button aria-label="Resolve" title="Resolve" className="flex h-6 w-6 items-center justify-center rounded-md text-faint transition hover:bg-panel hover:text-ink"><Check size={14} /></button></form></li>)}
+                  {minor.map((i) => <li key={i.id} className="flex items-start gap-3 border-b border-line py-2.5"><div className="min-w-0 flex-1"><div className="text-[13px]">{i.title}</div><div className="text-[12px] text-muted">{i.detail}</div></div><form action={resolveIssue.bind(null, i.id)}><button aria-label="Resolve" title="Resolve" className="flex h-6 w-6 items-center justify-center text-faint transition hover:bg-panel hover:text-ink"><Check size={14} /></button></form></li>)}
                 </ul>
               </details>
             )}
@@ -266,7 +266,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
                       <span className="shrink-0 text-[12px] text-faint">
                         {f.status === "ready" ? `${answers.length} of ${f.fields}` : f.status === "filling" ? "Filling" : f.status === "no_template" ? "Blank form not added" : "Not filled"}
                       </span>
-                      {f.status === "ready" && <a href={`/api/form?id=${f.id}`} target="_blank" className="shrink-0 rounded-md border border-line px-2.5 py-1 text-[12.5px] font-medium transition hover:bg-panel">PDF</a>}
+                      {f.status === "ready" && <a href={`/api/form?id=${f.id}`} target="_blank" className="shrink-0 border border-line px-2.5 py-1 text-[12.5px] font-medium transition hover:bg-panel">PDF</a>}
                     </summary>
                     {f.status === "ready" && <FormReview formId={f.id} caseId={id} layout={JSON.parse(f.layout)} answers={answers} />}
                   </details>
@@ -292,13 +292,13 @@ export default async function CasePage({ params, searchParams }: { params: Promi
             )}
             {drafts.length > 1 && (
               <div className="mb-5 flex flex-wrap gap-1.5">
-                {drafts.map((x) => <Link key={x.id} href={`/cases/${id}?tab=drafts&draft=${x.id}`} scroll={false} className={clsx("max-w-[260px] truncate rounded-lg border px-2.5 py-1 text-[12.5px] transition", x.id === dr?.id ? "border-ink text-ink" : "border-line text-muted hover:text-ink")}>{x.title}</Link>)}
+                {drafts.map((x) => <Link key={x.id} href={`/cases/${id}?tab=drafts&draft=${x.id}`} scroll={false} className={clsx("max-w-[260px] truncate border px-2.5 py-1 text-[12.5px] transition", x.id === dr?.id ? "border-ink text-ink" : "border-line text-muted hover:text-ink")}>{x.title}</Link>)}
               </div>
             )}
             {!dr || !L ? (
               decisions ? <Empty>Awaiting strategy decisions. <Link href={`/approvals?id=${decisions.id}`} className="text-ink underline underline-offset-4">Open decisions</Link></Empty> : null
             ) : dr.status === "drafting" ? (
-              <div className="py-6"><Refresher /><p className="text-[14px]">Drafting</p><div className="mt-3 h-[3px] w-full max-w-[320px] overflow-hidden rounded-full bg-line"><div className="sweep h-full w-1/3 rounded-full bg-ink" /></div></div>
+              <div className="py-6"><Refresher /><p className="text-[14px]">Drafting</p><div className="mt-3 h-[3px] w-full max-w-[320px] overflow-hidden bg-line"><div className="sweep h-full w-1/3 bg-ink" /></div></div>
             ) : dr.status === "failed" ? (
               <p className="text-[13px] text-risk">The draft could not be produced. {L.error}</p>
             ) : (

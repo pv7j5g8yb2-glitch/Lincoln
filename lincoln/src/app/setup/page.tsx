@@ -22,12 +22,12 @@ export default async function Setup({ searchParams }: { searchParams: Promise<{ 
   const out = (
     <form action={signOut}><button className="text-[13px] text-muted transition hover:text-ink">Sign out</button></form>
   );
-  const option = "press flex h-12 w-full items-center justify-center gap-3 rounded-lg border border-line bg-card text-[14.5px] font-medium text-ink transition hover:bg-side";
+  const option = "press flex h-12 w-full items-center justify-center gap-3 border border-line bg-card text-[14.5px] font-medium text-ink transition hover:bg-side";
 
   if (!profiled) {
     return (
       <AuthShell title="Welcome to Lincoln" footer={out}>
-        {error === "name" && <p className="mb-4 rounded-lg bg-risk-bg px-3 py-2.5 text-[13px] text-risk">Name and role required</p>}
+        {error === "name" && <p className="mb-4 bg-risk-bg px-3 py-2.5 text-[13px] text-risk">Name and role required</p>}
         <form action={saveSetupProfile} className="flex flex-col gap-4">
           <div className="flex justify-center"><AvatarField initials={user.initials} current={user.avatar} /></div>
           <label className="block"><span className={fieldLabel}>Full name</span><input name="name" required maxLength={100} defaultValue={user.name === "Administrator" ? "" : user.name} autoComplete="name" className={field} /></label>
@@ -45,7 +45,7 @@ export default async function Setup({ searchParams }: { searchParams: Promise<{ 
 
   return (
     <AuthShell title="Connect the firm's work" footer={out}>
-      {error === "connect" && <p className="mb-4 rounded-lg bg-risk-bg px-3 py-2.5 text-[13px] text-risk">Not connected. Try again.</p>}
+      {error === "connect" && <p className="mb-4 bg-risk-bg px-3 py-2.5 text-[13px] text-risk">Not connected. Try again.</p>}
       <div className="flex flex-col gap-2.5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <a href="/api/connect/microsoft" className={option}><img src="/logos/microsoft.svg" alt="" width={18} height={18} />Microsoft 365{conns.some((c) => c.provider === "microsoft") && <Check size={16} className="text-ok" />}</a>

@@ -27,17 +27,17 @@ export default function AssignMenu({ caseId, attorney, paralegal, people, canEdi
     const r = await setCaseTeam(caseId, na, np);
     if (r.error) { setA(ba); setP(bp); notify(r.error); } else notify("Saved");
   });
-  const select = "h-9 w-full rounded-lg border border-line bg-card px-2.5 text-[13px] outline-none focus:border-ink";
+  const select = "h-9 w-full border border-line bg-card px-2.5 text-[13px] outline-none focus:border-ink";
   return (
     <div ref={box} className="relative">
       <button type="button" onClick={() => setOpen((o) => !o)} className={btn.secondary} aria-label="Team">
         <span className="flex -space-x-1.5">
-          {[a, p].filter((x, i, all) => x && all.indexOf(x) === i).map((x) => <span key={x} className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[10px] font-semibold text-canvas ring-2 ring-card">{who(x)?.initials ?? "?"}</span>)}
+          {[a, p].filter((x, i, all) => x && all.indexOf(x) === i).map((x) => <span key={x} className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[10px] font-medium text-canvas ring-2 ring-card">{who(x)?.initials ?? "?"}</span>)}
         </span>
         Team
       </button>
       {open && (
-        <div className="absolute right-0 top-11 z-30 w-[260px] rounded-xl border border-line bg-card p-3 shadow-[0_16px_40px_-16px_rgba(0,0,0,0.3)]">
+        <div className="absolute right-0 top-11 z-30 w-[260px] border border-line bg-card p-3 shadow-[0_16px_40px_-16px_rgba(0,0,0,0.3)]">
           <label className="block"><span className="mb-1 block text-[12px] text-muted">Attorney</span>
             <select value={a} disabled={!canEdit || pending} onChange={(e) => save(e.target.value, p)} className={select}>
               {people.filter((x) => x.lawyer || x.id === a).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}

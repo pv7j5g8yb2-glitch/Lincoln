@@ -779,3 +779,10 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
   change it whenever either text changes). The four public pages are now black edge to edge, browser bar included.
   Placeholders for the legal name, address, contact and governing law remain until the business is registered. Next,
   when Ismael says: the app interface in the new look.
+* App in the new look (2026-11-26, Ismael: "no UI trace left of the older off-black, thick"): colour tokens in
+  `lincoln/src/app/globals.css` are the website's palette (light: #000 on #fff with neutral greys; dark: pitch black
+  #000 with white and the website's greys), no warm tints anywhere; square corners everywhere except avatars, status
+  dots, toggles, spinners and the phone's Liquid Glass tab bar; titles in the light serif (font-light, -0.02em) and
+  the wordmark at weight 500 like the website; no semibold except bold text in chat replies. The client intake pages
+  now use the same tokens (they had their own warm paper colours) and follow the device's light or dark setting.
+  Word exports use neutral black and greys. The app still follows the device's light or dark setting.

@@ -37,9 +37,9 @@ export default function EvidenceGrid({ caseId, rows, docs }: { caseId: string; r
                 return (
                   <td key={d.n} className="border-b border-line px-2 py-3 align-top">
                     {top && (
-                      <a href={`/api/pages/${caseId}/${top.page}`} target="_blank" title={here.map((e) => `p. ${e.page}: ${e.note ?? GRADES[e.grade]}`).join("\n")} className="block rounded-md px-1.5 py-1 transition hover:bg-panel">
+                      <a href={`/api/pages/${caseId}/${top.page}`} target="_blank" title={here.map((e) => `p. ${e.page}: ${e.note ?? GRADES[e.grade]}`).join("\n")} className="block px-1.5 py-1 transition hover:bg-panel">
                         <span className="flex items-center gap-[3px]">
-                          {[1, 2, 3, 4].map((g) => <span key={g} className={clsx("h-[5px] flex-1 rounded-full", top.grade === 0 ? "bg-line" : g <= top.grade ? "bg-ink" : "bg-line")} />)}
+                          {[1, 2, 3, 4].map((g) => <span key={g} className={clsx("h-[5px] flex-1", top.grade === 0 ? "bg-line" : g <= top.grade ? "bg-ink" : "bg-line")} />)}
                         </span>
                         <span className={clsx("mt-1 block text-[11.5px] text-muted", top.grade === 0 && "line-through")}>p. {here.map((e) => e.page).join(", ")}</span>
                       </a>

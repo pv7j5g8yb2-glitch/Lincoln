@@ -1,17 +1,17 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-export const field = "h-10 w-full rounded-lg border border-line bg-card px-3 text-[14px] outline-none transition placeholder:text-faint focus:border-ink focus:ring-4 focus:ring-ink/[0.06]";
-export const submit = "press flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-ink text-[14px] font-medium text-canvas shadow-[0_1px_0_rgba(255,255,255,0.12)_inset,0_1px_2px_rgba(22,22,20,0.2)] transition hover:opacity-90";
+export const field = "h-10 w-full border border-line bg-card px-3 text-[14px] outline-none transition placeholder:text-faint focus:border-ink focus:ring-4 focus:ring-ink/[0.06]";
+export const submit = "press flex h-10 w-full items-center justify-center gap-1.5 bg-ink text-[14px] font-medium text-canvas shadow-[0_1px_0_rgba(255,255,255,0.12)_inset,0_1px_2px_rgba(22,22,20,0.2)] transition hover:opacity-90";
 export const fieldLabel = "mb-1.5 flex items-baseline justify-between text-[12.5px] font-medium text-ink";
 
 export function Notice({ tone = "risk", children }: { tone?: "risk" | "ok"; children: ReactNode }) {
-  return <p className={`mb-4 rounded-lg px-3 py-2.5 text-[13px] leading-relaxed ${tone === "ok" ? "bg-panel text-ink" : "bg-risk-bg text-risk"}`}>{children}</p>;
+  return <p className={`mb-4 px-3 py-2.5 text-[13px] leading-relaxed ${tone === "ok" ? "bg-panel text-ink" : "bg-risk-bg text-risk"}`}>{children}</p>;
 }
 
 /** Continue with Microsoft / Google: signs in, or creates the account and connects everything in one step. */
 export function SocialButtons() {
-  const b = "press flex h-10 w-full items-center justify-center gap-2.5 rounded-lg border border-line bg-card text-[14px] font-medium text-ink transition hover:bg-side";
+  const b = "press flex h-10 w-full items-center justify-center gap-2.5 border border-line bg-card text-[14px] font-medium text-ink transition hover:bg-side";
   return (
     <div className="flex flex-col gap-2">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -28,12 +28,12 @@ export default function AuthShell({ title, children, footer, below }: { title: s
     <main className="flex min-h-dvh bg-side">
       <section className="flex flex-1 flex-col items-center justify-center px-5 py-10">
         <div className="auth-in w-full max-w-[400px]">
-          <div className="overflow-hidden rounded-[18px] border border-line bg-panel shadow-[0_1px_2px_rgba(22,22,20,0.04),0_12px_40px_-16px_rgba(22,22,20,0.22)]">
-            <div className="rounded-b-[16px] bg-card px-8 pb-8 pt-9 shadow-[0_1px_0_var(--color-line)]">
+          <div className="overflow-hidden border border-line bg-panel shadow-[0_1px_2px_rgba(22,22,20,0.04),0_12px_40px_-16px_rgba(22,22,20,0.22)]">
+            <div className="bg-card px-8 pb-8 pt-9 shadow-[0_1px_0_var(--color-line)]">
               <div className="flex flex-col items-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <Link href="/signin" aria-label="Lincoln"><img src="/mark.png" alt="" width={44} height={44} className="rounded-[11px]" /></Link>
-                <h1 className="mt-5 text-center text-[24px] font-semibold leading-tight tracking-[-0.02em]">{title}</h1>
+                <Link href="/signin" aria-label="Lincoln"><img src="/mark.png" alt="" width={44} height={44} className=""/></Link>
+                <h1 className="mt-5 text-center font-serif text-[30px] font-light leading-tight tracking-[-0.02em]">{title}</h1>
               </div>
               <div className="mt-8">{children}</div>
             </div>
@@ -46,7 +46,7 @@ export default function AuthShell({ title, children, footer, below }: { title: s
         </div>
       </section>
       <aside className="relative hidden w-[46%] max-w-[760px] p-3 lg:block">
-        <div className="relative h-full overflow-hidden rounded-[22px] bg-ink">
+        <div className="relative h-full overflow-hidden bg-ink">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/auth.jpg" alt="" className="auth-photo absolute inset-0 h-full w-full object-cover" />
           <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/45 to-transparent" />

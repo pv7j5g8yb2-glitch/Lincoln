@@ -20,7 +20,7 @@ const asText = (p: Seg[]) => p.map((g) => (g.k === "note" ? ` [Attorney: ${g.t.t
 function Grow({ value, onChange, className }: { value: string; onChange: (v: string) => void; className?: string }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   useEffect(() => { const el = ref.current; if (el) { el.style.height = "auto"; el.style.height = `${el.scrollHeight}px`; } }, [value]);
-  return <textarea ref={ref} value={value} rows={1} onChange={(e) => onChange(e.target.value)} className={clsx("w-full resize-none overflow-hidden rounded-md bg-transparent outline-none ring-line transition focus:bg-panel/60 focus:ring-1", className)} />;
+  return <textarea ref={ref} value={value} rows={1} onChange={(e) => onChange(e.target.value)} className={clsx("w-full resize-none overflow-hidden bg-transparent outline-none ring-line transition focus:bg-panel/60 focus:ring-1", className)} />;
 }
 
 export default function DraftView({ caseId, draftId, title, subtitle, sections, facts, calls, notes, status, generic, by, exports }: Props) {
@@ -77,7 +77,7 @@ export default function DraftView({ caseId, draftId, title, subtitle, sections, 
     g.k === "fact" ? (
       <span key={k} tabIndex={0} onMouseEnter={(e) => g.page && show(g.page, g.doc, e.currentTarget)} onMouseLeave={hide} onClick={(e) => g.page && show(g.page, g.doc, e.currentTarget)} className={clsx("cursor-help decoration-ink/35 decoration-dotted underline-offset-[5px]", focus ? "text-faint" : "underline")}>{g.t}</span>
     ) : g.k === "call" ? (
-      <mark key={k} className="rounded-[2px] bg-panel px-0.5 text-ink">{g.t}</mark>
+      <mark key={k} className="bg-panel px-0.5 text-ink">{g.t}</mark>
     ) : g.k === "note" ? (
       <span key={k} className="font-sans text-[12.5px] italic text-ink"> [Attorney: {g.t.trim()}]</span>
     ) : generic ? (
@@ -95,19 +95,19 @@ export default function DraftView({ caseId, draftId, title, subtitle, sections, 
         </div>
         {editing ? (
           <>
-            <button disabled={pending} onClick={() => setEditing(null)} className="h-8 rounded-lg px-3 text-[12.5px] font-medium text-muted transition hover:bg-panel hover:text-ink">Cancel</button>
-            <button disabled={pending} onClick={save} className="h-8 rounded-lg bg-ink px-3.5 text-[12.5px] font-medium text-canvas transition hover:opacity-90 disabled:opacity-50">{pending ? "Saving" : "Save"}</button>
+            <button disabled={pending} onClick={() => setEditing(null)} className="h-8 px-3 text-[12.5px] font-medium text-muted transition hover:bg-panel hover:text-ink">Cancel</button>
+            <button disabled={pending} onClick={save} className="h-8 bg-ink px-3.5 text-[12.5px] font-medium text-canvas transition hover:opacity-90 disabled:opacity-50">{pending ? "Saving" : "Save"}</button>
           </>
         ) : (
           <>
-            <button onClick={() => setFocus((v) => !v)} className={clsx("h-8 rounded-lg border px-3 text-[12.5px] font-medium transition", focus ? "border-ink bg-ink text-canvas" : "border-line bg-card hover:bg-panel")}>Review mode</button>
-            <button onClick={() => { setFocus(false); setEditing(sections.map((s) => ({ heading: s.heading, paras: s.paras.map(asText) }))); }} className="h-8 rounded-lg border border-line bg-card px-3 text-[12.5px] font-medium transition hover:bg-panel">Edit</button>
+            <button onClick={() => setFocus((v) => !v)} className={clsx("h-8 border px-3 text-[12.5px] font-medium transition", focus ? "border-ink bg-ink text-canvas" : "border-line bg-card hover:bg-panel")}>Review mode</button>
+            <button onClick={() => { setFocus(false); setEditing(sections.map((s) => ({ heading: s.heading, paras: s.paras.map(asText) }))); }} className="h-8 border border-line bg-card px-3 text-[12.5px] font-medium transition hover:bg-panel">Edit</button>
             <ExportMenu items={exports} label="Open" />
           </>
         )}
       </div>
 
-      <article className="mx-auto max-w-[740px] rounded-xl border border-line bg-card px-5 py-9 shadow-[0_1px_3px_rgba(22,22,20,0.04)] md:px-14 md:py-14">
+      <article className="mx-auto max-w-[740px] border border-line bg-card px-5 py-9 shadow-[0_1px_3px_rgba(22,22,20,0.04)] md:px-14 md:py-14">
         <h2 className="serif mb-1 text-[22px] font-medium">{title}</h2>
         <p className="mb-10 text-[12.5px] text-faint">{subtitle}</p>
         {editing ? editing.map((s, si) => (
@@ -132,7 +132,7 @@ export default function DraftView({ caseId, draftId, title, subtitle, sections, 
       </article>
 
       {hover && (
-        <div className="rise fixed z-50 w-[340px] max-w-[calc(100vw-24px)] overflow-hidden rounded-xl border border-line bg-card shadow-[0_16px_44px_-14px_rgba(22,22,20,0.35)]" style={{ left: hover.x, top: hover.y }} onMouseEnter={() => timer.current && clearTimeout(timer.current)} onMouseLeave={hide}>
+        <div className="rise fixed z-50 w-[340px] max-w-[calc(100vw-24px)] overflow-hidden border border-line bg-card shadow-[0_16px_44px_-14px_rgba(22,22,20,0.35)]" style={{ left: hover.x, top: hover.y }} onMouseEnter={() => timer.current && clearTimeout(timer.current)} onMouseLeave={hide}>
           <div className="border-b border-line px-3.5 py-2">
             {hover.doc && <div className="truncate text-[12.5px] font-medium">{hover.doc}</div>}
             <div className="text-[11.5px] text-faint">Client file, page {hover.page}</div>

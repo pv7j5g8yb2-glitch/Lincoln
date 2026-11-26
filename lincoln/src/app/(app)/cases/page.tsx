@@ -19,7 +19,7 @@ export default async function Cases({ searchParams }: { searchParams: Promise<{ 
       <PageHead title="Cases" right={<div className="flex items-center gap-2"><ExportMenu items={exportItems(firm.id, user.id, "cases")} /><Link href="/cases/new" className={btn.primary}><Plus size={14} /> New case</Link></div>} />
       <form className="relative mb-5 max-w-[340px]">
         <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" />
-        <input name="q" defaultValue={q} placeholder="Search" className="h-9 w-full rounded-lg border border-line bg-card pl-8 pr-3 text-[13px] outline-none transition placeholder:text-faint focus:border-ink" />
+        <input name="q" defaultValue={q} placeholder="Search" className="h-9 w-full border border-line bg-card pl-8 pr-3 text-[13px] outline-none transition placeholder:text-faint focus:border-ink" />
       </form>
       {rows.length === 0 ? (
         <Empty page>{term ? "No matching cases" : "No cases yet"}</Empty>

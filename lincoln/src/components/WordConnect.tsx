@@ -27,7 +27,7 @@ export default function WordConnect({ connected, app = "word" }: { connected: bo
     start(async () => { const r = await newWordCodeAction(ok.password); if (r.code) { setCode(r.code); setOn(false); } else if ("error" in r && r.error) notify(r.error); });
   };
   const codeBox = code && (
-    <button onClick={() => { void navigator.clipboard?.writeText(code).then(() => notify("Copied"), () => undefined); }} className="mt-4 w-full rounded-xl border border-line bg-panel py-3 text-center font-mono text-[20px] tracking-[0.18em] transition hover:border-edge" title="Copy">{code}</button>
+    <button onClick={() => { void navigator.clipboard?.writeText(code).then(() => notify("Copied"), () => undefined); }} className="mt-4 w-full border border-line bg-panel py-3 text-center font-mono text-[20px] tracking-[0.18em] transition hover:border-edge" title="Copy">{code}</button>
   );
   return (
     <div>
@@ -40,14 +40,14 @@ export default function WordConnect({ connected, app = "word" }: { connected: bo
       {!guide && codeBox}
       {guide && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 p-6 backdrop-blur-[2px]" onMouseDown={(e) => { if (e.target === e.currentTarget) setGuide(false); }}>
-          <div role="dialog" aria-modal="true" aria-labelledby="word-guide" className="rise w-full max-w-[420px] rounded-2xl border border-line bg-card p-6 text-ink shadow-[0_24px_60px_-20px_rgba(0,0,0,0.45)]">
+          <div role="dialog" aria-modal="true" aria-labelledby="word-guide" className="rise w-full max-w-[420px] border border-line bg-card p-6 text-ink shadow-[0_24px_60px_-20px_rgba(0,0,0,0.45)]">
             <div className="flex items-center justify-between">
-              <h2 id="word-guide" className="text-[17px] font-semibold">{A.title}</h2>
-              <button onClick={() => setGuide(false)} aria-label="Close" className="rounded-full p-1 text-faint transition hover:text-ink"><X size={18} /></button>
+              <h2 id="word-guide" className="text-[17px] font-medium">{A.title}</h2>
+              <button onClick={() => setGuide(false)} aria-label="Close" className="p-1 text-faint transition hover:text-ink"><X size={18} /></button>
             </div>
             <ol className="mt-5 flex flex-col gap-3.5 text-[14px] leading-relaxed">
               {A.steps.map((t, i) => (
-                <li key={i} className="flex gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-panel text-[12px] font-medium">{i + 1}</span><span className="pt-0.5">{t}</span></li>
+                <li key={i} className="flex gap-3"><span className="flex h-6 w-6 shrink-0 items-center justify-center bg-panel text-[12px] font-medium">{i + 1}</span><span className="pt-0.5">{t}</span></li>
               ))}
             </ol>
             {code ? codeBox : <button disabled={pending} onClick={() => void getCode()} className={`${btn.primary} mt-6 w-full justify-center`}>Code</button>}

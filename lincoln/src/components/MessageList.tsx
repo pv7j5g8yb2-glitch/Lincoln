@@ -29,12 +29,12 @@ export default function MessageList({ items, showCase = false, cases = [] }: { i
               {m.state === "unsure" && cases.length > 0 && (
                 <form action={sortMessage} className="mb-4 flex max-w-[480px] gap-2">
                   <input type="hidden" name="message" value={m.id} />
-                  <select name="case" required defaultValue="" aria-label="Case" className="h-9 min-w-0 flex-1 rounded-lg border border-line bg-card px-2.5 text-[13px] outline-none focus:border-edge">
+                  <select name="case" required defaultValue="" aria-label="Case" className="h-9 min-w-0 flex-1 border border-line bg-card px-2.5 text-[13px] outline-none focus:border-edge">
                     <option value="" disabled>Choose a case</option>
                     {cases.map((c) => <option key={c.id} value={c.id}>{c.client} · {c.type_code}</option>)}
                     <option value="none">Not case mail</option>
                   </select>
-                  <button className="h-9 rounded-lg bg-ink px-3.5 text-[13px] font-medium text-canvas transition hover:opacity-90">File</button>
+                  <button className="h-9 bg-ink px-3.5 text-[13px] font-medium text-canvas transition hover:opacity-90">File</button>
                 </form>
               )}
             </details>

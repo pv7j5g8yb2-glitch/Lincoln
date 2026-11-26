@@ -88,7 +88,7 @@ export async function caseDeck(firmId: string, caseId: string) {
   pptx.layout = "LAYOUT_WIDE";
   pptx.author = "Lincoln";
   pptx.title = `${c.client}: case summary`;
-  const ink = "161614", muted = "6B6862", faint = "A8A49C", line = "E4E1DA", paper = "F7F6F3";
+  const ink = "000000", muted = "666666", faint = "A3A3A3", line = "E5E5E5", paper = "F5F5F5";
   const serif = "Georgia", sans = "Arial";
   let page = 0;
   // Every slide: paper background, the case in the footer, a page number.

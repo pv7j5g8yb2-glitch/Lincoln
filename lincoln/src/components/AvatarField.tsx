@@ -39,8 +39,8 @@ export default function AvatarField({ initials, current }: { initials: string; c
       <input ref={input} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
       <div className="flex flex-col gap-1">
         <div className="flex gap-2">
-          <button type="button" onClick={() => input.current?.click()} className="h-8 rounded-lg border border-line bg-card px-3 text-[12.5px] font-medium transition hover:bg-panel">Upload photo</button>
-          {preview && <button type="button" onClick={() => { setValue("remove"); setPreview(null); }} className="h-8 rounded-lg px-2.5 text-[12.5px] text-muted transition hover:bg-panel hover:text-ink">Remove</button>}
+          <button type="button" onClick={() => input.current?.click()} className="h-8 border border-line bg-card px-3 text-[12.5px] font-medium transition hover:bg-panel">Upload photo</button>
+          {preview && <button type="button" onClick={() => { setValue("remove"); setPreview(null); }} className="h-8 px-2.5 text-[12.5px] text-muted transition hover:bg-panel hover:text-ink">Remove</button>}
         </div>
         <span className={error ? "text-[12px] text-risk" : "text-[12px] text-faint"}>{error ? "The image could not be read" : ""}</span>
       </div>

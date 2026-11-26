@@ -5,7 +5,7 @@ import { citationsIn, lawStatus, searchLaw } from "@/lib/law";
 
 // The law library: the INA and the immigration regulations as officially published, searched by citation or words.
 
-const marked = (s: string) => s.split(/(\u0002[^\u0003]*\u0003)/).map((p, i) => p.startsWith("\u0002") ? <mark key={i} className="rounded-sm bg-panel px-0.5 font-medium text-ink">{p.slice(1, -1)}</mark> : p);
+const marked = (s: string) => s.split(/(\u0002[^\u0003]*\u0003)/).map((p, i) => p.startsWith("\u0002") ? <mark key={i} className="bg-panel px-0.5 font-medium text-ink">{p.slice(1, -1)}</mark> : p);
 const NAMES: Record<string, string> = { INA: "Immigration and Nationality Act", "8 CFR": "8 CFR, Aliens and Nationality", "20 CFR": "20 CFR 655 and 656, Labor", "22 CFR": "22 CFR 40 to 42, Visas" };
 
 export default async function LibraryPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
@@ -19,7 +19,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
       <PageHead title="Library" />
       <form action="/library" className="relative">
         <Search size={16} strokeWidth={1.8} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-faint" />
-        <input name="q" defaultValue={q} autoComplete="off" placeholder="Search" className="h-11 w-full rounded-xl border border-line bg-card pl-10 pr-3 text-[14.5px] outline-none transition placeholder:text-faint focus:border-ink" />
+        <input name="q" defaultValue={q} autoComplete="off" placeholder="Search" className="h-11 w-full border border-line bg-card pl-10 pr-3 text-[14.5px] outline-none transition placeholder:text-faint focus:border-ink" />
       </form>
 
       {!q ? (

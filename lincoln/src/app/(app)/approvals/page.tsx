@@ -29,7 +29,7 @@ export default async function Review({ searchParams }: { searchParams: Promise<{
             {pending.map((a) => (
               <li key={a.id} data-row={a.id} className="border-b border-line">
                 <Link href={`/approvals?id=${a.id}`} scroll={false} className={clsx("relative block py-3 pl-3 pr-2 transition hover:bg-side", sel?.id === a.id && "bg-side")}>
-                  {sel?.id === a.id && <span className="absolute inset-y-2 left-0 w-[2px] rounded-full bg-ink" />}
+                  {sel?.id === a.id && <span className="absolute inset-y-2 left-0 w-[2px] bg-ink" />}
                   <div className="text-[13.5px] font-medium leading-snug">{a.title}</div>
                   <div className="mt-0.5 truncate text-[12px] text-muted">{a.client}{a.due ? ` · due ${inDays(a.due)}` : ""}</div>
                 </Link>
@@ -40,7 +40,7 @@ export default async function Review({ searchParams }: { searchParams: Promise<{
             <div key={sel.id} data-item className={clsx("item-in min-w-0 max-w-[760px]", !id && "hidden lg:block")}>
               <Link href="/approvals" className="mb-4 inline-flex items-center gap-1 text-[12.5px] text-muted lg:hidden"><ChevronLeft size={14} /> Review</Link>
               <p className="mb-1 text-[12.5px] text-muted"><Link href={`/cases/${sel.case_id}`} className="hover:text-ink hover:underline">{sel.client}</Link> · {sel.type_code} · {ago(sel.created_at)}</p>
-              <h2 className="serif mb-2 text-[22px] font-medium leading-snug">{sel.title}</h2>
+              <h2 className="serif mb-2 text-[23px] font-light leading-snug tracking-[-0.015em]">{sel.title}</h2>
               <p className="max-w-[640px] text-[13.5px] leading-relaxed">{sel.brief}</p>
               {(sel.least_sure || sel.if_wrong) && (
                 <dl className="mt-3 grid max-w-[640px] gap-1.5 text-[13px] leading-relaxed">

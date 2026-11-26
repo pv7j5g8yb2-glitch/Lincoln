@@ -68,7 +68,7 @@ export default function Toaster({ initial }: { initial?: string | null }) {
           opacity: shown ? 1 : 0,
           transition: start.current !== null ? "none" : "transform 420ms cubic-bezier(0.22, 1, 0.36, 1), opacity 300ms ease",
         }}
-        className="pointer-events-auto min-w-[160px] max-w-[420px] cursor-grab touch-none select-none rounded-2xl border border-line bg-card px-5 py-3 text-center text-[13.5px] font-medium text-ink shadow-[0_12px_36px_-12px_rgba(22,22,20,0.35)] active:cursor-grabbing"
+        className="pointer-events-auto min-w-[160px] max-w-[420px] cursor-grab touch-none select-none border border-line bg-card px-5 py-3 text-center text-[13.5px] font-medium text-ink shadow-[0_12px_36px_-12px_rgba(22,22,20,0.35)] active:cursor-grabbing"
       >
         {item.text}
       </div>

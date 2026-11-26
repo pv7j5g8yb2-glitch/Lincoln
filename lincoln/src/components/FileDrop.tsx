@@ -26,14 +26,14 @@ export default function FileDrop() {
           set(e.dataTransfer.files);
         }
       }}
-      className={clsx("rounded-lg border border-dashed transition", over ? "border-ink bg-side" : "border-edge")}
+      className={clsx(" border border-dashed transition", over ? "border-ink bg-side" : "border-edge")}
     >
       <input ref={input} type="file" name="file" multiple accept={READABLE} className="hidden" onChange={(e) => set(e.target.files)} />
       {file ? (
         <div className="flex items-center gap-3 px-3.5 py-3">
           <FileText size={16} className="shrink-0 text-muted" />
           <span className="min-w-0 flex-1"><span className="block truncate text-[13px]">{file.name}</span><span className="block text-[12px] text-faint">{(file.size / 1048576).toFixed(1)} MB</span></span>
-          <button type="button" aria-label="Remove file" onClick={() => { if (input.current) input.current.value = ""; setFile(null); }} className="rounded-md p-1 text-faint transition hover:bg-panel hover:text-ink"><X size={15} /></button>
+          <button type="button" aria-label="Remove file" onClick={() => { if (input.current) input.current.value = ""; setFile(null); }} className="p-1 text-faint transition hover:bg-panel hover:text-ink"><X size={15} /></button>
         </div>
       ) : (
         <button type="button" onClick={() => input.current?.click()} className="flex w-full items-center justify-center gap-2 px-4 py-3 text-[13px] text-muted transition hover:text-ink">

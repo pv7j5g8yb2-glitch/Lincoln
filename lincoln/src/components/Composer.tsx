@@ -78,16 +78,16 @@ export default function Composer({ value, onChange, onSend, onStop, busy, placeh
     try { r.start(); setListening(true); } catch { setListening(false); }
   };
 
-  const iconBtn = "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-panel hover:text-ink";
+  const iconBtn = "flex h-8 w-8 shrink-0 items-center justify-center text-muted transition hover:bg-panel hover:text-ink";
   return (
-    <form onSubmit={(e) => { e.preventDefault(); go(); }} className="rounded-[22px] border border-line bg-card shadow-[0_2px_12px_-6px_rgba(22,22,20,0.18)] transition focus-within:border-edge md:rounded-[18px]">
+    <form onSubmit={(e) => { e.preventDefault(); go(); }} className="border border-line bg-card shadow-[0_2px_12px_-6px_rgba(22,22,20,0.18)] transition focus-within:border-edge md:">
       {files.length > 0 && (
         <ul className="flex flex-wrap gap-1.5 px-3 pt-3">
           {files.map((f, i) => (
-            <li key={i} className="fade-in flex max-w-[220px] items-center gap-1.5 rounded-lg bg-panel py-1 pl-2 pr-1 text-[12.5px]">
+            <li key={i} className="fade-in flex max-w-[220px] items-center gap-1.5 bg-panel py-1 pl-2 pr-1 text-[12.5px]">
               <FileText size={13} className="shrink-0 text-muted" />
               <span className="truncate">{f.name}</span>
-              <button type="button" aria-label={`Remove ${f.name}`} onClick={() => setFiles(files.filter((_, k) => k !== i))} className="rounded p-0.5 text-faint transition hover:text-ink"><X size={13} /></button>
+              <button type="button" aria-label={`Remove ${f.name}`} onClick={() => setFiles(files.filter((_, k) => k !== i))} className="p-0.5 text-faint transition hover:text-ink"><X size={13} /></button>
             </li>
           ))}
         </ul>
@@ -117,13 +117,13 @@ export default function Composer({ value, onChange, onSend, onStop, busy, placeh
           className={`block max-h-[220px] min-h-[24px] flex-1 resize-none bg-transparent py-[4px] text-[16px] leading-6 outline-none placeholder:text-faint md:order-first md:mb-2 md:min-h-[48px] md:basis-full md:px-1.5 ${attach ? "px-1" : "pl-2"}`}
         />
         {canSpeak && (
-          <button type="button" onClick={toggleMic} aria-label={listening ? "Stop dictation" : "Dictate"} aria-pressed={listening} className={`${listening ? "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink/[0.08] text-ink" : iconBtn} md:order-3`}>
+          <button type="button" onClick={toggleMic} aria-label={listening ? "Stop dictation" : "Dictate"} aria-pressed={listening} className={`${listening ? "flex h-8 w-8 shrink-0 items-center justify-center bg-ink/[0.08] text-ink" : iconBtn} md:order-3`}>
             {listening ? <span className="mic-live flex items-center gap-[2px]"><i /><i /><i /></span> : <Mic size={17} strokeWidth={1.8} />}
           </button>
         )}
         {busy && onStop
-          ? <button type="button" onClick={onStop} aria-label="Stop" className="mb-px flex md:order-3 h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-canvas transition hover:opacity-90"><Square size={12} fill="currentColor" /></button>
-          : <button key={fly} disabled={!ready} aria-label="Send" className={`mb-px flex md:order-3 h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-ink text-canvas transition-colors hover:opacity-90 ${fly ? "send-pop" : ""} ${ready ? "" : "opacity-20"}`}><ArrowUp size={16} /></button>}
+          ? <button type="button" onClick={onStop} aria-label="Stop" className="mb-px flex md:order-3 h-8 w-8 shrink-0 items-center justify-center bg-ink text-canvas transition hover:opacity-90"><Square size={12} fill="currentColor" /></button>
+          : <button key={fly} disabled={!ready} aria-label="Send" className={`mb-px flex md:order-3 h-8 w-8 shrink-0 items-center justify-center overflow-hidden bg-ink text-canvas transition-colors hover:opacity-90 ${fly ? "send-pop" : ""} ${ready ? "" : "opacity-20"}`}><ArrowUp size={16} /></button>}
       </div>
     </form>
   );

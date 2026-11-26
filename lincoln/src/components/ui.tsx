@@ -5,7 +5,7 @@ type Tone = "neutral" | "ok" | "warn" | "risk" | "ink";
 
 /** A quiet label. Tone is accepted for older callers; only "ink" changes the look. */
 export function Chip({ tone = "neutral", children, className }: { tone?: Tone; children: ReactNode; className?: string }) {
-  return <span className={clsx("inline-flex items-center gap-1 whitespace-nowrap rounded-[5px] px-1.5 py-[1px] text-[11.5px] font-medium", tone === "ink" ? "bg-ink text-canvas" : "bg-panel text-muted", className)}>{children}</span>;
+  return <span className={clsx("inline-flex items-center gap-1 whitespace-nowrap px-1.5 py-[1px] text-[11.5px] font-medium", tone === "ink" ? "bg-ink text-canvas" : "bg-panel text-muted", className)}>{children}</span>;
 }
 
 export function Dot({ tone = "neutral" }: { tone?: Tone }) {
@@ -28,7 +28,7 @@ export function PageHead({ title, sub, right }: { title: ReactNode; sub?: ReactN
   return (
     <div className="mb-7 flex flex-wrap items-center justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="serif text-[24px] font-medium leading-tight">{title}</h1>
+        <h1 className="serif text-[26px] font-light leading-tight tracking-[-0.02em]">{title}</h1>
         {sub && <p className="mt-1 text-[13px] text-muted">{sub}</p>}
       </div>
       {right}
@@ -37,7 +37,7 @@ export function PageHead({ title, sub, right }: { title: ReactNode; sub?: ReactN
 }
 
 export function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={clsx("rounded-xl border border-line bg-card", className)}>{children}</div>;
+  return <div className={clsx(" border border-line bg-card", className)}>{children}</div>;
 }
 
 export function SectionTitle({ children, right }: { children: ReactNode; right?: ReactNode }) {
@@ -56,11 +56,11 @@ export function Empty({ children, page }: { children: ReactNode; page?: boolean 
 }
 
 export const btn = {
-  primary: "inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-ink px-3.5 text-[13px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98] disabled:opacity-40",
-  secondary: "inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-line bg-card px-3.5 text-[13px] font-medium text-ink transition hover:bg-panel active:scale-[0.98] disabled:opacity-40",
-  ghost: "inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-[13px] font-medium text-muted transition hover:bg-panel hover:text-ink",
+  primary: "inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap bg-ink px-3.5 text-[13px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98] disabled:opacity-40",
+  secondary: "inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap border border-line bg-card px-3.5 text-[13px] font-medium text-ink transition hover:bg-panel active:scale-[0.98] disabled:opacity-40",
+  ghost: "inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap px-2.5 text-[13px] font-medium text-muted transition hover:bg-panel hover:text-ink",
 };
-export const field = "h-10 w-full rounded-lg border border-line bg-card px-3 text-[13.5px] outline-none transition placeholder:text-faint focus:border-ink";
+export const field = "h-10 w-full border border-line bg-card px-3 text-[13.5px] outline-none transition placeholder:text-faint focus:border-ink";
 export const label = "mb-1.5 block text-[12.5px] font-medium text-muted";
 
 export const STAGES = ["Intake", "Evidence", "Strategy", "Drafting", "Review", "Filed", "Decision"];

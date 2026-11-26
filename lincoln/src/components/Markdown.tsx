@@ -88,7 +88,7 @@ function Inline({ text, caseId }: { text: string; caseId?: string }) {
     <>
       {parts.map((p, i): ReactNode => {
         if (!(i % 2)) return <Fragment key={i}>{p}</Fragment>;
-        if (p.startsWith("`")) return <code key={i} className="rounded-[5px] bg-panel px-[5px] py-[1px] font-mono text-[0.88em]">{p.slice(1, -1)}</code>;
+        if (p.startsWith("`")) return <code key={i} className="bg-panel px-[5px] py-[1px] font-mono text-[0.88em]">{p.slice(1, -1)}</code>;
         if (p.startsWith("**") || p.startsWith("__")) return <strong key={i} className="font-semibold"><Inline text={p.slice(2, -2)} caseId={caseId} /></strong>;
         if (p.startsWith("*") || p.startsWith("_")) return <em key={i}><Inline text={p.slice(1, -1)} caseId={caseId} /></em>;
         if (p.startsWith("[")) {
@@ -115,8 +115,8 @@ export default function Markdown({ text, caseId }: { text: string; caseId?: stri
         switch (b.t) {
           case "h":
             return b.level <= 2
-              ? <h3 key={i} className="mb-2 mt-6 text-[1.18em] font-semibold leading-snug first:mt-0"><Inline text={b.text} caseId={caseId} /></h3>
-              : <h4 key={i} className="mb-1.5 mt-5 text-[1.05em] font-semibold leading-snug first:mt-0"><Inline text={b.text} caseId={caseId} /></h4>;
+              ? <h3 key={i} className="mb-2 mt-6 text-[1.18em] font-medium leading-snug first:mt-0"><Inline text={b.text} caseId={caseId} /></h3>
+              : <h4 key={i} className="mb-1.5 mt-5 text-[1.05em] font-medium leading-snug first:mt-0"><Inline text={b.text} caseId={caseId} /></h4>;
           case "p":
             return <p key={i} className="mb-4 last:mb-0">{b.lines.map((l, k) => <Fragment key={k}>{k > 0 && <br />}<Inline text={l} caseId={caseId} /></Fragment>)}</p>;
           case "list": {
@@ -138,9 +138,9 @@ export default function Markdown({ text, caseId }: { text: string; caseId?: stri
           }
           case "table":
             return (
-              <div key={i} className="mb-4 overflow-x-auto rounded-xl border border-line last:mb-0">
+              <div key={i} className="mb-4 overflow-x-auto border border-line last:mb-0">
                 <table className="w-full border-collapse text-[0.92em]">
-                  <thead><tr className="bg-panel/60">{b.head.map((h, k) => <th key={k} className="whitespace-nowrap border-b border-line px-3.5 py-2.5 text-left font-semibold"><Inline text={h} caseId={caseId} /></th>)}</tr></thead>
+                  <thead><tr className="bg-panel/60">{b.head.map((h, k) => <th key={k} className="whitespace-nowrap border-b border-line px-3.5 py-2.5 text-left font-medium"><Inline text={h} caseId={caseId} /></th>)}</tr></thead>
                   <tbody>{b.rows.map((r, k) => <tr key={k} className="border-b border-line last:border-0">{b.head.map((_, j) => <td key={j} className="px-3.5 py-2.5 align-top"><Inline text={r[j] ?? ""} caseId={caseId} /></td>)}</tr>)}</tbody>
                 </table>
               </div>
@@ -148,7 +148,7 @@ export default function Markdown({ text, caseId }: { text: string; caseId?: stri
           case "quote":
             return <blockquote key={i} className="mb-4 border-l-2 border-edge pl-4 text-muted last:mb-0">{b.lines.map((l, k) => <Fragment key={k}>{k > 0 && <br />}<Inline text={l} caseId={caseId} /></Fragment>)}</blockquote>;
           case "code":
-            return <pre key={i} className="mb-4 overflow-x-auto rounded-xl bg-panel px-4 py-3 font-mono text-[0.86em] leading-relaxed last:mb-0">{b.text}</pre>;
+            return <pre key={i} className="mb-4 overflow-x-auto bg-panel px-4 py-3 font-mono text-[0.86em] leading-relaxed last:mb-0">{b.text}</pre>;
           case "hr":
             return <hr key={i} className="my-5 border-line" />;
         }

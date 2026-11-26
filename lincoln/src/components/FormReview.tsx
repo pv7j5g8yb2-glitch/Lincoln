@@ -20,12 +20,12 @@ export default function FormReview({ formId, caseId, layout, answers }: { formId
     f.kind === "check" ? (
       <input type="checkbox" checked={/^yes$/i.test(valueOf(f.name))} onChange={(e) => set(f.name, e.target.checked ? "yes" : "")} className="h-4 w-4 accent-[var(--color-ink)]" />
     ) : f.kind === "choice" ? (
-      <select value={valueOf(f.name)} onChange={(e) => set(f.name, e.target.value)} className="h-8 w-full rounded-md border border-line bg-card px-2 text-[13px] outline-none focus:border-edge">
+      <select value={valueOf(f.name)} onChange={(e) => set(f.name, e.target.value)} className="h-8 w-full border border-line bg-card px-2 text-[13px] outline-none focus:border-edge">
         <option value="" />
         {f.options?.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
     ) : (
-      <input value={valueOf(f.name)} onChange={(e) => set(f.name, e.target.value)} className="h-8 w-full rounded-md border border-transparent bg-transparent px-2 text-[13px] outline-none transition hover:border-line focus:border-edge focus:bg-card" />
+      <input value={valueOf(f.name)} onChange={(e) => set(f.name, e.target.value)} className="h-8 w-full border border-transparent bg-transparent px-2 text-[13px] outline-none transition hover:border-line focus:border-edge focus:bg-card" />
     );
 
   const source = (s: string) => {
@@ -60,8 +60,8 @@ export default function FormReview({ formId, caseId, layout, answers }: { formId
       )}
       {changed && (
         <div className="sticky bottom-24 mt-4 flex gap-2 md:bottom-4">
-          <button disabled={pending} onClick={() => start(async () => { await saveFormAnswers(formId, Object.entries(edits).map(([name, value]) => ({ name, value }))); setEdits({}); })} className="h-9 rounded-lg bg-ink px-4 text-[13px] font-medium text-canvas transition hover:opacity-90 disabled:opacity-40">Save</button>
-          <button disabled={pending} onClick={() => setEdits({})} className="h-9 rounded-lg border border-line bg-card px-3.5 text-[13px] font-medium transition hover:bg-panel">Cancel</button>
+          <button disabled={pending} onClick={() => start(async () => { await saveFormAnswers(formId, Object.entries(edits).map(([name, value]) => ({ name, value }))); setEdits({}); })} className="h-9 bg-ink px-4 text-[13px] font-medium text-canvas transition hover:opacity-90 disabled:opacity-40">Save</button>
+          <button disabled={pending} onClick={() => setEdits({})} className="h-9 border border-line bg-card px-3.5 text-[13px] font-medium transition hover:bg-panel">Cancel</button>
         </div>
       )}
     </div>

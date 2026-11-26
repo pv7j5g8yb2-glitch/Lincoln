@@ -10,8 +10,8 @@ import { READABLE } from "@/lib/accept";
 type Up = { id: string; item: string; name: string; warn?: string };
 type Saved = { step: string; matter: string | null; answers: Record<string, string>; session: string | null; files: Up[] };
 
-const field = "w-full rounded-xl bg-white px-4 py-3.5 font-sans text-[16px] ring-1 ring-[#e2dfd8] outline-none transition placeholder:text-[#b1ada5] focus:ring-2 focus:ring-[#161614]";
-const pill = (on: boolean) => `rounded-full px-4 py-2.5 font-sans text-[15px] transition ${on ? "bg-[#161614] text-white" : "bg-white ring-1 ring-[#e2dfd8] hover:ring-[#b9b5ad]"}`;
+const field = "w-full bg-card px-4 py-3.5 font-sans text-[16px] ring-1 ring-edge outline-none transition placeholder:text-faint focus:ring-2 focus:ring-ink";
+const pill = (on: boolean) => `px-4 py-2.5 font-sans text-[15px] transition ${on ? "bg-ink text-canvas" : "bg-card ring-1 ring-edge hover:ring-faint"}`;
 
 /** A quick look at a photo before it is sent: too small or too blurry to read is caught on the phone. */
 async function checkPhoto(file: File): Promise<string | undefined> {
@@ -109,8 +109,8 @@ export default function IntakeFlow({ token, firm, fixed, name, matters, more = f
   // Plain render functions, not components, so a field keeps its focus while the client types.
   const input = (f: Field) => (
     <div key={f.id} className="flex flex-col gap-2">
-      <span className="font-sans text-[14.5px] font-medium">{f.label}{f.optional && <span className="font-normal text-[#a09d96]"> · optional</span>}</span>
-      {f.hint && <span className="-mt-1 font-sans text-[13px] text-[#8a867f]">{f.hint}</span>}
+      <span className="font-sans text-[14.5px] font-medium">{f.label}{f.optional && <span className="font-normal text-faint"> · optional</span>}</span>
+      {f.hint && <span className="-mt-1 font-sans text-[13px] text-faint">{f.hint}</span>}
       {f.kind === "choice" ? (
         <div className="flex flex-wrap gap-2">{f.options!.map((o) => <button key={o} type="button" onClick={() => set(f.id, o)} className={pill(s.answers[f.id] === o)}>{o}</button>)}</div>
       ) : f.kind === "long" ? (
@@ -123,81 +123,81 @@ export default function IntakeFlow({ token, firm, fixed, name, matters, more = f
 
   const nav = (onNext: () => void, back?: string, label = "Continue") => (
     <div className="mt-10 flex items-center gap-3">
-      <button type="button" onClick={onNext} disabled={sending || !!busy} className="rounded-full bg-[#161614] px-7 py-3.5 font-sans text-[15.5px] font-medium text-white transition hover:opacity-85 disabled:opacity-50">{label}</button>
-      {back && <button type="button" onClick={() => go(back)} className="rounded-full px-4 py-3.5 font-sans text-[15.5px] text-[#6b6862] transition hover:text-[#161614]">Back</button>}
+      <button type="button" onClick={onNext} disabled={sending || !!busy} className="bg-ink px-7 py-3.5 font-sans text-[15.5px] font-medium text-canvas transition hover:opacity-85 disabled:opacity-50">{label}</button>
+      {back && <button type="button" onClick={() => go(back)} className="px-4 py-3.5 font-sans text-[15.5px] text-muted transition hover:text-ink">Back</button>}
     </div>
   );
 
   return (
-    <div className="min-h-dvh bg-[#faf9f6] font-serif text-[#161614] antialiased selection:bg-[#efe6d6]">
+    <div className="min-h-dvh bg-canvas font-serif text-ink antialiased selection:bg-panel">
       <header className="mx-auto max-w-[620px] px-5 pt-6 md:pt-10">
-        <p className="font-sans text-[12.5px] font-medium uppercase tracking-[0.16em] text-[#8a867f]">{firm}</p>
-        {!sent && <div className="mt-4 h-[3px] w-full overflow-hidden rounded-full bg-[#ebe9e4]"><div className="h-full rounded-full bg-[#161614] transition-[width] duration-500" style={{ width: `${((at + 1) / steps.length) * 100}%` }} /></div>}
+        <p className="font-sans text-[12.5px] font-medium uppercase tracking-[0.16em] text-faint">{firm}</p>
+        {!sent && <div className="mt-4 h-[3px] w-full overflow-hidden bg-line"><div className="h-full bg-ink transition-[width] duration-500" style={{ width: `${((at + 1) / steps.length) * 100}%` }} /></div>}
       </header>
 
       <main className="mx-auto max-w-[620px] px-5 pb-24 pt-10">
         {sent ? (
           <div>
-            <h1 className="text-[40px] font-semibold leading-[1.05] tracking-[-0.03em]">Thank you.</h1>
-            <p className="mt-4 text-[18px] leading-[1.6] text-[#6b6862]">Everything was sent to {firm}. They will be in touch if anything else is needed.</p>
-            {tracked && <a href={`/intake/${token}`} className="mt-9 inline-block rounded-[10px] bg-[#161614] px-6 py-3.5 font-sans text-[15.5px] font-medium text-white transition hover:opacity-85">Your case</a>}
+            <h1 className="text-[40px] font-light leading-[1.05] tracking-[-0.02em]">Thank you.</h1>
+            <p className="mt-4 text-[18px] leading-[1.6] text-muted">Everything was sent to {firm}. They will be in touch if anything else is needed.</p>
+            {tracked && <a href={`/intake/${token}`} className="mt-9 inline-block bg-ink px-6 py-3.5 font-sans text-[15.5px] font-medium text-canvas transition hover:opacity-85">Your case</a>}
           </div>
         ) : s.step === "matter" ? (
           <>
-            {group && <button type="button" onClick={() => setGroup(null)} className="mb-5 font-sans text-[14.5px] text-[#6b6862] transition hover:text-[#161614]">← All topics</button>}
-            <h1 className="text-[34px] font-semibold leading-[1.08] tracking-[-0.03em] md:text-[40px]">{group ?? "What do you need help with?"}</h1>
+            {group && <button type="button" onClick={() => setGroup(null)} className="mb-5 font-sans text-[14.5px] text-muted transition hover:text-ink">← All topics</button>}
+            <h1 className="text-[34px] font-light leading-[1.08] tracking-[-0.02em] md:text-[40px]">{group ?? "What do you need help with?"}</h1>
             <div className="mt-8 flex flex-col gap-2.5">
               {group
                 ? matters.filter((m) => m.group === group).map((m) => (
-                  <button key={m.id} type="button" onClick={() => { setS((o) => ({ ...o, matter: m.id })); go("about"); }} className={`rounded-2xl px-5 py-4 text-left font-sans text-[16px] transition ${s.matter === m.id ? "bg-[#161614] text-white" : "bg-white ring-1 ring-[#e2dfd8] hover:ring-[#b9b5ad]"}`}>{m.label}</button>
+                  <button key={m.id} type="button" onClick={() => { setS((o) => ({ ...o, matter: m.id })); go("about"); }} className={`px-5 py-4 text-left font-sans text-[16px] transition ${s.matter === m.id ? "bg-ink text-canvas" : "bg-card ring-1 ring-edge hover:ring-faint"}`}>{m.label}</button>
                 ))
                 : GROUPS.map((g) => (
-                  <button key={g} type="button" onClick={() => { setGroup(g); window.scrollTo({ top: 0 }); }} className="flex items-center justify-between gap-3 rounded-2xl bg-white px-5 py-4 text-left font-sans text-[16px] ring-1 ring-[#e2dfd8] transition hover:ring-[#b9b5ad]">
-                    <span>{g}</span><span className="text-[#b1ada5]">›</span>
+                  <button key={g} type="button" onClick={() => { setGroup(g); window.scrollTo({ top: 0 }); }} className="flex items-center justify-between gap-3 bg-card px-5 py-4 text-left font-sans text-[16px] ring-1 ring-edge transition hover:ring-faint">
+                    <span>{g}</span><span className="text-faint">›</span>
                   </button>
                 ))}
             </div>
           </>
         ) : s.step === "about" ? (
           <>
-            <h1 className="text-[34px] font-semibold leading-[1.08] tracking-[-0.03em] md:text-[40px]">About you</h1>
+            <h1 className="text-[34px] font-light leading-[1.08] tracking-[-0.02em] md:text-[40px]">About you</h1>
             <div className="mt-8 flex flex-col gap-6">{ABOUT.map(input)}</div>
-            {error && <p className="mt-6 font-sans text-[14.5px] text-[#9b2c24]">{error}</p>}
+            {error && <p className="mt-6 font-sans text-[14.5px] text-risk">{error}</p>}
             {nav(() => next(ABOUT, "case"), fixed ? undefined : "matter")}
           </>
         ) : s.step === "case" && matter ? (
           <>
-            <h1 className="text-[34px] font-semibold leading-[1.08] tracking-[-0.03em] md:text-[40px]">{matter.label}</h1>
+            <h1 className="text-[34px] font-light leading-[1.08] tracking-[-0.02em] md:text-[40px]">{matter.label}</h1>
             <div className="mt-8 flex flex-col gap-6">{matter.questions.map(input)}</div>
-            {error && <p className="mt-6 font-sans text-[14.5px] text-[#9b2c24]">{error}</p>}
+            {error && <p className="mt-6 font-sans text-[14.5px] text-risk">{error}</p>}
             {nav(() => next(matter.questions, "documents"), "about")}
           </>
         ) : s.step === "documents" && matter ? (
           <>
-            {more && <a href={`/intake/${token}`} className="mb-5 inline-block font-sans text-[14.5px] text-[#6b6862] transition hover:text-[#161614]">← Your case</a>}
-            <h1 className="text-[34px] font-semibold leading-[1.08] tracking-[-0.03em] md:text-[40px]">{more ? "More documents" : "Your documents"}</h1>
-            <p className="mt-3 text-[17px] leading-[1.6] text-[#6b6862]">A clear photo of each page, or a PDF.</p>
+            {more && <a href={`/intake/${token}`} className="mb-5 inline-block font-sans text-[14.5px] text-muted transition hover:text-ink">← Your case</a>}
+            <h1 className="text-[34px] font-light leading-[1.08] tracking-[-0.02em] md:text-[40px]">{more ? "More documents" : "Your documents"}</h1>
+            <p className="mt-3 text-[17px] leading-[1.6] text-muted">A clear photo of each page, or a PDF.</p>
             <input ref={pick} type="file" accept={`image/*,${READABLE}`} multiple className="hidden" onChange={(e) => void upload(e.target.files)} />
             <div className="mt-8 flex flex-col">
               {matter.documents.map((d, i) => {
                 const mine = s.files.filter((f) => f.item === d.id);
                 return (
-                  <div key={d.id} className={`py-5 ${i ? "border-t border-[#ebe9e4]" : ""}`}>
+                  <div key={d.id} className={`py-5 ${i ? "border-t border-line" : ""}`}>
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
-                        <p className="font-sans text-[15.5px] font-medium">{d.label}{d.optional && <span className="font-normal text-[#a09d96]"> · optional</span>}</p>
-                        {d.hint && <p className="mt-0.5 font-sans text-[13px] text-[#8a867f]">{d.hint}</p>}
+                        <p className="font-sans text-[15.5px] font-medium">{d.label}{d.optional && <span className="font-normal text-faint"> · optional</span>}</p>
+                        {d.hint && <p className="mt-0.5 font-sans text-[13px] text-faint">{d.hint}</p>}
                       </div>
-                      <button type="button" disabled={!!busy} onClick={() => { target.current = d.id; pick.current?.click(); }} className="shrink-0 rounded-full bg-white px-4 py-2 font-sans text-[14px] font-medium ring-1 ring-[#e2dfd8] transition hover:ring-[#b9b5ad] disabled:opacity-50">
+                      <button type="button" disabled={!!busy} onClick={() => { target.current = d.id; pick.current?.click(); }} className="shrink-0 bg-card px-4 py-2 font-sans text-[14px] font-medium ring-1 ring-edge transition hover:ring-faint disabled:opacity-50">
                         {busy === d.id ? "Adding" : mine.length ? "Add more" : "Add"}
                       </button>
                     </div>
                     {mine.length > 0 && (
                       <ul className="mt-3 flex flex-col gap-2">
                         {mine.map((f) => (
-                          <li key={f.id} className="rounded-xl bg-white px-4 py-3 font-sans text-[14px] ring-1 ring-[#ebe9e4]">
-                            <div className="flex items-center justify-between gap-3"><span className="min-w-0 truncate">{f.name}</span><button type="button" onClick={() => void remove(f.id)} className="shrink-0 text-[13px] text-[#8a867f] hover:text-[#161614]">Remove</button></div>
-                            {f.warn && <p className="mt-1.5 text-[13px] text-[#9b6a1f]">{f.warn} <button type="button" onClick={() => { void remove(f.id); target.current = f.item; pick.current?.click(); }} className="font-medium underline underline-offset-2">Take another</button></p>}
+                          <li key={f.id} className="bg-card px-4 py-3 font-sans text-[14px] ring-1 ring-line">
+                            <div className="flex items-center justify-between gap-3"><span className="min-w-0 truncate">{f.name}</span><button type="button" onClick={() => void remove(f.id)} className="shrink-0 text-[13px] text-faint hover:text-ink">Remove</button></div>
+                            {f.warn && <p className="mt-1.5 text-[13px] text-risk">{f.warn} <button type="button" onClick={() => { void remove(f.id); target.current = f.item; pick.current?.click(); }} className="font-medium underline underline-offset-2">Take another</button></p>}
                           </li>
                         ))}
                       </ul>
@@ -206,21 +206,21 @@ export default function IntakeFlow({ token, firm, fixed, name, matters, more = f
                 );
               })}
             </div>
-            {error && <p className="mt-6 font-sans text-[14.5px] text-[#9b2c24]">{error}</p>}
+            {error && <p className="mt-6 font-sans text-[14.5px] text-risk">{error}</p>}
             {more ? nav(() => { if (!s.files.length) { setError("Add a document first."); return; } void send(); }, undefined, sending ? "Sending" : "Send") : nav(() => go("review"), "case")}
           </>
         ) : s.step === "review" && matter ? (
           <>
-            <h1 className="text-[34px] font-semibold leading-[1.08] tracking-[-0.03em] md:text-[40px]">Check and send</h1>
+            <h1 className="text-[34px] font-light leading-[1.08] tracking-[-0.02em] md:text-[40px]">Check and send</h1>
             <div className="mt-8 flex flex-col">
               {[["Matter", matter.label], ["Name", s.answers.name ?? ""], ["Email", s.answers.email ?? ""], ["Documents", `${s.files.length}`]].map(([a, b], i) => (
-                <div key={a} className={`flex justify-between gap-4 py-4 font-sans text-[15px] ${i ? "border-t border-[#ebe9e4]" : ""}`}><span className="text-[#8a867f]">{a}</span><span className="text-right">{b}</span></div>
+                <div key={a} className={`flex justify-between gap-4 py-4 font-sans text-[15px] ${i ? "border-t border-line" : ""}`}><span className="text-faint">{a}</span><span className="text-right">{b}</span></div>
               ))}
             </div>
             {matter.documents.filter((d) => !d.optional && !s.files.some((f) => f.item === d.id)).length > 0 && (
-              <p className="mt-5 font-sans text-[14px] leading-[1.6] text-[#8a867f]">Not added yet: {matter.documents.filter((d) => !d.optional && !s.files.some((f) => f.item === d.id)).map((d) => d.label).join("; ")}. The firm may ask you for them.</p>
+              <p className="mt-5 font-sans text-[14px] leading-[1.6] text-faint">Not added yet: {matter.documents.filter((d) => !d.optional && !s.files.some((f) => f.item === d.id)).map((d) => d.label).join("; ")}. The firm may ask you for them.</p>
             )}
-            {error && <p className="mt-6 font-sans text-[14.5px] text-[#9b2c24]">{error}</p>}
+            {error && <p className="mt-6 font-sans text-[14.5px] text-risk">{error}</p>}
             {nav(() => void send(), "documents", sending ? "Sending" : "Send")}
           </>
         ) : null}

@@ -75,7 +75,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       <div className="grid gap-8 md:grid-cols-[180px_1fr]">
         <nav className="edge-fade flex gap-1 overflow-x-auto pr-6 md:flex-col md:pr-0">
           {TABS.map(([k, t]) => (
-            <Link key={k} href={`/settings?tab=${k}`} scroll={false} className={clsx("whitespace-nowrap rounded-lg px-3 py-[7px] text-[13px] transition", tab === k ? "bg-ink/[0.06] font-medium text-ink" : "text-muted hover:text-ink")}>{t}</Link>
+            <Link key={k} href={`/settings?tab=${k}`} scroll={false} className={clsx("whitespace-nowrap px-3 py-[7px] text-[13px] transition", tab === k ? "bg-ink/[0.06] font-medium text-ink" : "text-muted hover:text-ink")}>{t}</Link>
           ))}
         </nav>
         <div className="min-w-0 max-w-[620px]">
@@ -130,7 +130,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 {codes ? (
                   <>
                     <p className="mb-3 text-[13px]">Recovery codes</p>
-                    <div className="mb-2 grid grid-cols-2 gap-1.5 rounded-lg bg-side p-3 font-mono text-[13px] sm:grid-cols-4">{codes.split("-").map((c) => <span key={c}>{c}</span>)}</div>
+                    <div className="mb-2 grid grid-cols-2 gap-1.5 bg-side p-3 font-mono text-[13px] sm:grid-cols-4">{codes.split("-").map((c) => <span key={c}>{c}</span>)}</div>
                     <p className="text-[12px] text-faint">Shown once.</p>
                   </>
                 ) : twoStep.on ? (
@@ -143,7 +143,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                   <form action={confirmTwoStep} className="flex flex-col gap-3">
                     
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={qr} alt="QR code for the authenticator app" width={180} height={180} className="rounded-lg border border-line" />
+                    <img src={qr} alt="QR code for the authenticator app" width={180} height={180} className="border border-line" />
                     <p className="break-all font-mono text-[12px] text-faint">{secretText}</p>
                     <div className="flex gap-2"><input name="code" required inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="123456" className={clsx(field, "w-[160px]")} /><button className={btn.primary}>Turn on</button></div>
                   </form>
@@ -282,7 +282,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 <p className="text-[13px] text-muted">Cannot be undone.</p>
                 <input name="confirm" required placeholder={`Type ${firm.name}`} className={clsx(field, "max-w-[360px]")} />
                 <input name="password" type="password" required autoComplete="current-password" placeholder="Password" className={clsx(field, "max-w-[360px]")} />
-                <div><button className="inline-flex h-9 items-center rounded-lg border border-risk/40 px-3.5 text-[13px] font-medium text-risk transition hover:bg-risk-bg">Delete everything</button></div>
+                <div><button className="inline-flex h-9 items-center border border-risk/40 px-3.5 text-[13px] font-medium text-risk transition hover:bg-risk-bg">Delete everything</button></div>
               </form>
             </section>
           )}

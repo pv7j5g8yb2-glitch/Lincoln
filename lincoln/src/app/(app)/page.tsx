@@ -33,7 +33,7 @@ export default async function Home() {
                       <span className="flex items-baseline gap-2"><span className="truncate text-[14.5px] font-medium">{c.client}</span><span className="shrink-0 text-[12.5px] text-faint">{c.type_code}</span></span>
                       <span className="mt-0.5 block truncate text-[13px] text-muted">{r.text}</span>
                     </span>
-                    {review.has(r.case_id) ? <span className="shrink-0 rounded-full bg-panel px-2.5 py-1 text-[11.5px] font-medium">For review</span> : <span className="hidden shrink-0 text-[12px] text-faint sm:block">{ago(r.at)}</span>}
+                    {review.has(r.case_id) ? <span className="shrink-0 bg-panel px-2.5 py-1 text-[11.5px] font-medium">For review</span> : <span className="hidden shrink-0 text-[12px] text-faint sm:block">{ago(r.at)}</span>}
                     <ChevronRight size={15} className="shrink-0 text-faint transition group-hover:text-ink" />
                   </Link>
                 </li>

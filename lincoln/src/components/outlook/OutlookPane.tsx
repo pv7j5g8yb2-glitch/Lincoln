@@ -129,8 +129,8 @@ function Case({ api, mail }: { api: (b: Record<string, unknown>) => Promise<any>
   const c = found.case;
   return (
     <div>
-      <a href={`${app}/cases/${c.id}`} target="_blank" rel="noreferrer" className="block rounded-xl border border-line bg-card p-3.5 transition hover:border-edge">
-        <span className="block text-[15px] font-semibold leading-snug">{c.client}</span>
+      <a href={`${app}/cases/${c.id}`} target="_blank" rel="noreferrer" className="block border border-line bg-card p-3.5 transition hover:border-edge">
+        <span className="block text-[15px] font-medium leading-snug">{c.client}</span>
         <span className="mt-0.5 block text-[12.5px] text-muted">{c.type} · {c.stage}</span>
       </a>
       {(found.drafts ?? []).map((d) => <Reply key={d.id} api={api} draft={d} onDone={load} />)}
@@ -158,7 +158,7 @@ function Reply({ api, draft, onDone }: { api: (b: Record<string, unknown>) => Pr
     } catch (e) { notify(e instanceof Error ? e.message : "Failed"); } finally { setBusy(false); }
   };
   return (
-    <section className="mt-5 rounded-xl border border-line bg-card">
+    <section className="mt-5 border border-line bg-card">
       <div className="border-b border-line px-3.5 py-2.5 text-[12.5px]">
         <span className="text-faint">To </span>{draft.party}
         <span className="mt-0.5 block truncate font-medium">{draft.subject}</span>

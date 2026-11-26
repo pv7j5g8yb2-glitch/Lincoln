@@ -12,7 +12,7 @@ import { wordConnected } from "@/lib/word";
 export function Logo({ name, size = 28 }: { name: string; size?: number }) {
   const file = LOGO_FILE[name];
   return (
-    <span className="flex shrink-0 items-center justify-center rounded-[9px] border border-line bg-card dark:bg-white" style={{ width: size + 8, height: size + 8 }}>
+    <span className="flex shrink-0 items-center justify-center border border-line bg-card dark:bg-white" style={{ width: size + 8, height: size + 8 }}>
       {file
         ? // eslint-disable-next-line @next/next/no-img-element
           <img src={`/logos/${file}`} alt="" width={Math.round(size * 0.8)} height={Math.round(size * 0.8)} className="object-contain" style={{ width: Math.round(size * 0.8), height: Math.round(size * 0.8) }} />
@@ -53,7 +53,7 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
           {PROVIDERS.map((p) => {
             const c = conns.find((x) => x.provider === p.id);
             return (
-              <div key={p.id} className="rounded-2xl border border-line bg-card p-5">
+              <div key={p.id} className="border border-line bg-card p-5">
                 <div className="flex items-center gap-3">
                   <Logo name={p.name} size={26} />
                   <span className="min-w-0 flex-1">
@@ -70,7 +70,7 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
                 </div>
                 <div className={clsx("mt-4 gap-2", p.services.length === 6 ? "grid w-fit grid-cols-3" : "flex flex-wrap")}>
                   {p.services.map((s) => (
-                    <span key={s} className={clsx("flex items-center gap-1.5 rounded-full border px-2 py-1 text-[12px]", c ? "border-line text-ink" : "border-line text-muted")}>
+                    <span key={s} className={clsx("flex items-center gap-1.5 border px-2 py-1 text-[12px]", c ? "border-line text-ink" : "border-line text-muted")}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={`/logos/${LOGO_FILE[s]}`} alt="" width={14} height={14} className="h-[14px] w-[14px] object-contain" />{s}
                     </span>
@@ -78,7 +78,7 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
                 </div>
                 {c && p.id === "microsoft" && channels.length > 0 && (
                   <form action={setTeamsChannel} className="mt-4 flex items-center gap-2">
-                    <select name="channel" defaultValue={settingsOf(c).teams ? `${settingsOf(c).teams!.teamId}|${settingsOf(c).teams!.channelId}|${settingsOf(c).teams!.name}` : ""} className="h-8 min-w-0 flex-1 rounded-lg border border-line bg-card px-2 text-[12.5px] outline-none focus:border-ink">
+                    <select name="channel" defaultValue={settingsOf(c).teams ? `${settingsOf(c).teams!.teamId}|${settingsOf(c).teams!.channelId}|${settingsOf(c).teams!.name}` : ""} className="h-8 min-w-0 flex-1 border border-line bg-card px-2 text-[12.5px] outline-none focus:border-ink">
                       <option value="">Teams off</option>
                       {channels.map((ch) => <option key={ch.channelId} value={`${ch.teamId}|${ch.channelId}|${ch.name}`}>{ch.name}</option>)}
                     </select>
@@ -87,7 +87,7 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
                 )}
                 {c && p.id === "google" && (canReadChat(c) ? (
                   <form action={setChatSpace} className="mt-4 flex items-center gap-2">
-                    <select name="space" defaultValue={settingsOf(c).gchat ? `${settingsOf(c).gchat!.space}|${settingsOf(c).gchat!.name}` : ""} className="h-8 min-w-0 flex-1 rounded-lg border border-line bg-card px-2 text-[12.5px] outline-none focus:border-ink">
+                    <select name="space" defaultValue={settingsOf(c).gchat ? `${settingsOf(c).gchat!.space}|${settingsOf(c).gchat!.name}` : ""} className="h-8 min-w-0 flex-1 border border-line bg-card px-2 text-[12.5px] outline-none focus:border-ink">
                       <option value="">Google Chat off</option>
                       {spaces.map((x) => <option key={x.space} value={`${x.space}|${x.name}`}>{x.name}</option>)}
                     </select>
@@ -102,11 +102,11 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
               </div>
             );
           })}
-          <div className="rounded-2xl border border-line bg-card p-5">
+          <div className="border border-line bg-card p-5">
             <div className="mb-4 flex items-center gap-3"><Logo name="Word" size={26} /><span className="text-[14px] font-medium">Word add-in</span></div>
             <WordConnect connected={Boolean(wordConnected(user.id))} />
           </div>
-          <div className="rounded-2xl border border-line bg-card p-5">
+          <div className="border border-line bg-card p-5">
             <div className="mb-4 flex items-center gap-3"><Logo name="Outlook" size={26} /><span className="text-[14px] font-medium">Outlook add-in</span></div>
             <WordConnect app="outlook" connected={Boolean(wordConnected(user.id, "outlook"))} />
           </div>

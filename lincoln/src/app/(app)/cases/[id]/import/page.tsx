@@ -29,7 +29,7 @@ export default async function ImportPage({ params, searchParams }: { params: Pro
           <form className="relative mb-5 max-w-[360px]">
             <input type="hidden" name="from" value={from} />
             <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" />
-            <input name="q" defaultValue={q} placeholder="Search PDFs" className="h-9 w-full rounded-lg border border-line bg-card pl-8 pr-3 text-[13px] outline-none focus:border-ink" />
+            <input name="q" defaultValue={q} placeholder="Search PDFs" className="h-9 w-full border border-line bg-card pl-8 pr-3 text-[13px] outline-none focus:border-ink" />
           </form>
           {error && <p className="mb-4 text-[13px] text-risk">The file is not a PDF under 25 MB.</p>}
           {failed && <p className="mb-4 text-[13px] text-risk">{failed}</p>}

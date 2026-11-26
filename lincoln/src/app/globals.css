@@ -2,20 +2,21 @@
 
 /* One ink, one paper, greys between. Red appears only on an error. */
 @theme {
-  --color-ink: #161614;
-  --color-paper: #f2f0ed;
+  /* The website's palette (2026-11-26): pure black and white, neutral greys, no warm tints. */
+  --color-ink: #000000;
+  --color-paper: #f4f4f4;
   --color-canvas: #ffffff;
-  --color-side: #f8f7f5;
-  --color-panel: #f4f3f0;
+  --color-side: #fafafa;
+  --color-panel: #f4f4f4;
   --color-card: #ffffff;
-  --color-edge: #d3cfc8;
-  --color-line: #ebe9e4;
-  --color-muted: #6b6862;
-  --color-faint: #a09d96;
-  --color-ok: #161614;
-  --color-ok-bg: #f4f3f0;
-  --color-warn: #161614;
-  --color-warn-bg: #f4f3f0;
+  --color-edge: #d4d4d4;
+  --color-line: #e8e8e8;
+  --color-muted: #666666;
+  --color-faint: #a3a3a3;
+  --color-ok: #000000;
+  --color-ok-bg: #f4f4f4;
+  --color-warn: #000000;
+  --color-warn-bg: #f4f4f4;
   --color-risk: #9b2c24;
   --color-risk-bg: #f8eceb;
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -25,20 +26,21 @@
 /* Dark when the device is dark. Every colour in the app comes from these tokens. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-ink: #f1f1ef;
-    --color-paper: #161616;
-    --color-canvas: #0e0e0e;
-    --color-side: #131313;
-    --color-panel: #1d1d1d;
-    --color-card: #171717;
-    --color-edge: #3b3b3a;
-    --color-line: #262625;
-    --color-muted: #a3a29e;
-    --color-faint: #6f6e6b;
-    --color-ok: #f1f1ef;
-    --color-ok-bg: #1d1d1d;
-    --color-warn: #f1f1ef;
-    --color-warn-bg: #1d1d1d;
+    /* Pitch black like uselincoln.com; greys are white at the website's opacities (60, 45, 12 percent). */
+    --color-ink: #ffffff;
+    --color-paper: #141414;
+    --color-canvas: #000000;
+    --color-side: #000000;
+    --color-panel: #111111;
+    --color-card: #0a0a0a;
+    --color-edge: #333333;
+    --color-line: #1f1f1f;
+    --color-muted: #999999;
+    --color-faint: #737373;
+    --color-ok: #ffffff;
+    --color-ok-bg: #111111;
+    --color-warn: #ffffff;
+    --color-warn-bg: #111111;
     --color-risk: #ff8a7e;
     --color-risk-bg: #2b1614;
     color-scheme: dark;
@@ -68,8 +70,8 @@ body {
 }
 .wordmark {
   font-family: var(--font-serif);
-  font-weight: 600;
-  letter-spacing: -0.022em;
+  font-weight: 500;
+  letter-spacing: -0.005em;
 }
 button,
 a,
@@ -83,7 +85,7 @@ button:not(:disabled),
 :focus-visible {
   outline: 2px solid var(--color-ink);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 0;
 }
 input:focus-visible,
 textarea:focus-visible,
@@ -182,7 +184,7 @@ select:focus-visible {
 :root {
   --glass-bg: rgba(255, 255, 255, 0.72);
   --glass-edge: rgba(0, 0, 0, 0.075);
-  --glass-shade: rgba(30, 25, 20, 0.16);
+  --glass-shade: rgba(0, 0, 0, 0.16);
   --glass-sel: rgba(0, 0, 0, 0.065);
   --glass-press: rgba(0, 0, 0, 0.1);
   --glass-hi: rgba(255, 255, 255, 0.9);
@@ -190,13 +192,13 @@ select:focus-visible {
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --glass-bg: rgba(30, 30, 30, 0.62);
+    --glass-bg: rgba(24, 24, 24, 0.62);
     --glass-edge: rgba(255, 255, 255, 0.1);
     --glass-shade: rgba(0, 0, 0, 0.55);
     --glass-sel: rgba(255, 255, 255, 0.1);
     --glass-press: rgba(255, 255, 255, 0.16);
     --glass-hi: rgba(255, 255, 255, 0.14);
-    --glass-sheet: rgba(34, 34, 34, 0.8);
+    --glass-sheet: rgba(24, 24, 24, 0.82);
   }
 }
 .lg-bar {

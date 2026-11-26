@@ -17,7 +17,7 @@ export default function Greeting({ name }: { name: string }) {
     return () => clearInterval(t);
   }, []);
   return (
-    <h1 className={`text-center font-serif text-[32px] font-semibold leading-tight tracking-[-0.025em] transition-opacity duration-500 md:text-[40px] ${part ? "opacity-100" : "opacity-0"}`}>
+    <h1 className={`text-center font-serif text-[32px] font-light leading-tight tracking-[-0.02em] transition-opacity duration-500 md:text-[40px] ${part ? "opacity-100" : "opacity-0"}`}>
       Good {part ?? "morning"}, {name}
     </h1>
   );

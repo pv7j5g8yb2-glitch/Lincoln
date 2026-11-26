@@ -21,12 +21,12 @@ function Box({ password, done }: { password: boolean; done: (r: Result) => void 
   const ok = () => { if (password && !value) { input.current?.focus(); return; } done(password ? { password: value } : {}); };
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-6 backdrop-blur-[2px]" onMouseDown={(e) => { if (e.target === e.currentTarget) done(false); }}>
-      <form role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" onSubmit={(e) => { e.preventDefault(); ok(); }} className="rise w-full max-w-[300px] rounded-2xl border border-line bg-card p-5 text-ink shadow-[0_24px_60px_-20px_rgba(0,0,0,0.45)]">
-        <h2 id="confirm-title" className="text-center text-[17px] font-semibold">Are you sure?</h2>
-        {password && <input ref={input} type="password" value={value} onChange={(e) => setValue(e.target.value)} autoComplete="current-password" placeholder="Password" className="mt-4 h-11 w-full rounded-xl border border-line bg-canvas px-3 text-[15px] outline-none transition placeholder:text-faint focus:border-ink" />}
+      <form role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" onSubmit={(e) => { e.preventDefault(); ok(); }} className="rise w-full max-w-[300px] border border-line bg-card p-5 text-ink shadow-[0_24px_60px_-20px_rgba(0,0,0,0.45)]">
+        <h2 id="confirm-title" className="text-center text-[17px] font-medium">Are you sure?</h2>
+        {password && <input ref={input} type="password" value={value} onChange={(e) => setValue(e.target.value)} autoComplete="current-password" placeholder="Password" className="mt-4 h-11 w-full border border-line bg-canvas px-3 text-[15px] outline-none transition placeholder:text-faint focus:border-ink" />}
         <div className="mt-5 grid grid-cols-2 gap-2.5">
-          <button ref={yes} type="submit" className="h-11 rounded-xl bg-ink text-[15px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98]">Yes</button>
-          <button type="button" onClick={() => done(false)} className="h-11 rounded-xl bg-[#d92d20] text-[15px] font-medium text-white transition hover:opacity-90 active:scale-[0.98]">No</button>
+          <button ref={yes} type="submit" className="h-11 bg-ink text-[15px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98]">Yes</button>
+          <button type="button" onClick={() => done(false)} className="h-11 bg-[#d92d20] text-[15px] font-medium text-white transition hover:opacity-90 active:scale-[0.98]">No</button>
         </div>
       </form>
     </div>
