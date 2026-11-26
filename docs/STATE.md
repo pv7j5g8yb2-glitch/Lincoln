@@ -801,3 +801,10 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
   deadlines raised and Teams posts (nothing to approve), Other messages and Strategy (always attorney approval, as the
   site promises). Open: Approval for filing mail and opening new cases needs Lincoln to hold the email and its files
   until approved; not built yet.
+* Landing close (2026-11-26, Ismael: "a human face hologram in particles", creative choice left to Claude): the filing
+  pages are replaced by a human head in points of light (`scene="face"` in `lincoln/src/components/landing/Points.tsx`).
+  The head is sculpted from blended solids (a signed distance field), points sit mostly on level contour lines like a
+  hologram scan, lit by a soft key light with a bright rim and a faint far side, turning slowly between three quarter
+  views (always showing the face) with a band of light running down it, on a faint projector ring. Same rules as the
+  hero: moves on its own, only a cursor or finger on the head disturbs it. Drawing now sets only each point's opacity
+  (one colour per frame): on a 4x slowed phone the head runs at about 51 fps and the hero at 60 (was 49).

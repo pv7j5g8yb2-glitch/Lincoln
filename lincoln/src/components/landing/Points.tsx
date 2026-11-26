@@ -9,9 +9,9 @@ import { useEffect, useRef } from "react";
 // finger on the shape itself (it parts them; a tap there sends a ripple): not scrolling, not a touch elsewhere on the
 // page. Anyone who asks for less motion gets the finished scene, still.
 
-export type Scene = "word" | "packet";
+export type Scene = "word" | "packet" | "face";
 
-type P3 = { x: number; y: number; z: number; k: number }; // k: 0 shape, 1 ground, 2 dust
+type P3 = { x: number; y: number; z: number; k: number; nx?: number; ny?: number; nz?: number }; // k: 0 shape, 1 ground, 2 dust; n: surface normal (the face)
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 
@@ -61,6 +61,72 @@ function packet(dense: number): P3[] {
   return o;
 }
 
+// A human head, sculpted from simple solids blended together (a signed distance field), facing -z. Units: about 1.4 tall
+// from the neck to the crown. Points are placed on its surface, most of them along level contour lines like a hologram
+// scan, each with its surface direction so the light can model the face as it turns.
+const len = (x: number, y: number, z: number) => Math.sqrt(x * x + y * y + z * z);
+const smin = (a: number, b: number, k: number) => { const h = Math.max(k - Math.abs(a - b), 0) / k; return Math.min(a, b) - h * h * k * 0.25; };
+const smax = (a: number, b: number, k: number) => -smin(-a, -b, k);
+const ell = (x: number, y: number, z: number, cx: number, cy: number, cz: number, rx: number, ry: number, rz: number) => {
+  const px = x - cx, py = y - cy, pz = z - cz, k0 = len(px / rx, py / ry, pz / rz), k1 = len(px / (rx * rx), py / (ry * ry), pz / (rz * rz));
+  return k1 ? (k0 * (k0 - 1)) / k1 : -Math.min(rx, ry, rz);
+};
+const cap = (x: number, y: number, z: number, ax: number, ay: number, az: number, bx: number, by: number, bz: number, r: number) => {
+  const pax = x - ax, pay = y - ay, paz = z - az, bax = bx - ax, bay = by - ay, baz = bz - az;
+  const h = Math.max(0, Math.min(1, (pax * bax + pay * bay + paz * baz) / (bax * bax + bay * bay + baz * baz)));
+  return len(pax - bax * h, pay - bay * h, paz - baz * h) - r;
+};
+function head(x: number, y: number, z: number) {
+  const ax = Math.abs(x); // the face is symmetric
+  let d = ell(x, y, z, 0, 0.16, 0.1, 0.33, 0.4, 0.4); // skull
+  d = smin(d, ell(x, y, z, 0, 0.2, -0.17, 0.22, 0.2, 0.14), 0.1); // forehead
+  d = smin(d, ell(x, y, z, 0, -0.08, -0.04, 0.27, 0.32, 0.27), 0.12); // face
+  d = smin(d, ell(x, y, z, 0, -0.29, -0.07, 0.215, 0.12, 0.22), 0.1); // jaw
+  d = smin(d, ell(x, y, z, 0, -0.2, -0.215, 0.115, 0.095, 0.11), 0.08); // around the mouth
+  d = smin(d, ell(x, y, z, 0, -0.395, -0.22, 0.085, 0.055, 0.07), 0.07); // chin
+  d = smin(d, ell(ax, y, z, 0.165, -0.03, -0.19, 0.09, 0.075, 0.085), 0.07); // cheekbones
+  d = smin(d, cap(ax, y, z, 0, 0.105, -0.315, 0.15, 0.095, -0.27, 0.04), 0.06); // brow
+  d = smax(d, -ell(ax, y, z, 0.1, 0.045, -0.33, 0.058, 0.04, 0.06), 0.035); // eye sockets
+  d = smin(d, ell(ax, y, z, 0.1, 0.04, -0.268, 0.042, 0.03, 0.04), 0.03); // eyes
+  d = smin(d, cap(x, y, z, 0, 0.07, -0.31, 0, -0.085, -0.422, 0.024), 0.04); // bridge of the nose
+  d = smin(d, ell(x, y, z, 0, -0.1, -0.425, 0.036, 0.033, 0.036), 0.025); // tip
+  d = smin(d, ell(ax, y, z, 0.038, -0.125, -0.385, 0.03, 0.024, 0.03), 0.025); // nostrils
+  d = smin(d, cap(ax, y, z, 0, -0.198, -0.335, 0.06, -0.208, -0.31, 0.016), 0.04); // upper lip
+  d = smin(d, cap(ax, y, z, 0, -0.243, -0.328, 0.05, -0.24, -0.306, 0.019), 0.04); // lower lip
+  d = smax(d, -cap(ax, y, z, 0, -0.221, -0.37, 0.064, -0.224, -0.315, 0.006), 0.01); // the line between the lips
+  d = smin(d, ell(ax, y, z, 0.315, 0.01, 0.1, 0.03, 0.09, 0.055), 0.035); // ears
+  d = smin(d, cap(x, y, z, 0, -0.28, 0.08, 0, -0.78, 0.12, 0.155), 0.09); // neck
+  return Math.max(d, -0.8 - y); // the neck ends cleanly
+}
+function face(dense: number): P3[] {
+  const o: P3[] = [], e = 0.002;
+  const grad = (x: number, y: number, z: number) => {
+    const gx = head(x + e, y, z) - head(x - e, y, z), gy = head(x, y + e, z) - head(x, y - e, z), gz = head(x, y, z + e) - head(x, y, z - e), l = len(gx, gy, gz) || 1;
+    return [gx / l, gy / l, gz / l];
+  };
+  const n = Math.round(6600 * Math.max(dense, 0.72)), step = 0.02; // a phone gets enough points to keep the face
+  for (let tries = 0; o.length < n && tries < n * 6; tries++) {
+    // Close to half the points go to the face itself, so its features hold up as it turns.
+    const onFace = Math.random() < 0.45;
+    let x = onFace ? rand(-0.26, 0.26) : rand(-0.42, 0.42), y = onFace ? rand(-0.44, 0.22) : rand(-0.8, 0.58), z = onFace ? rand(-0.46, -0.12) : rand(-0.5, 0.52);
+    // Most points sit on level contour lines; the rest are free, so the surface still reads between the lines.
+    const line = Math.random() < 0.62;
+    if (line) y = Math.round(y / step) * step;
+    for (let i = 0; i < 10; i++) {
+      const d = head(x, y, z), [gx, gy, gz] = grad(x, y, z);
+      if (line) { const l = Math.hypot(gx, gz) || 1; x -= (d * gx) / l; z -= (d * gz) / l; } else { x -= d * gx; y -= d * gy; z -= d * gz; }
+    }
+    if (Math.abs(head(x, y, z)) > 0.004 || y < -0.79) continue;
+    const [nx, ny, nz] = grad(x, y, z);
+    o.push({ x, y, z, k: 0, nx, ny, nz });
+  }
+  // The projector it stands on: a faint ring of light, and a few motes rising from it.
+  for (let i = 0; i < Math.round(420 * dense); i++) { const a = Math.random() * Math.PI * 2, r = 0.42 + rand(-0.012, 0.012); o.push({ x: Math.cos(a) * r, y: -0.93, z: Math.sin(a) * r, k: 1 }); }
+  for (let i = 0; i < Math.round(120 * dense); i++) { const a = Math.random() * Math.PI * 2, r = rand(0, 0.4); o.push({ x: Math.cos(a) * r, y: rand(-0.95, 0.7), z: Math.sin(a) * r, k: 2 }); }
+  for (let i = 0; i < Math.round(80 * dense); i++) o.push({ x: rand(-1.3, 1.3), y: rand(-0.9, 0.8), z: rand(-0.6, 0.6), k: 2 });
+  return o;
+}
+
 export default function Points({ scene, className = "" }: { scene: Scene; className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -89,7 +155,7 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
     const build = () => {
       size();
       const dense = Math.min(1, (w * lh) / (1440 * 900)) * (touch ? 0.75 : 1) + 0.25;
-      pts = (scene === "word" ? word(dense) : packet(dense)).map((p) => {
+      pts = (scene === "word" ? word(dense) : scene === "face" ? face(dense) : packet(dense)).map((p) => {
         const ang = Math.random() * Math.PI * 2;
         return { ...p, sx: rand(-0.2, 1.2) * w, sy: rand(-0.3, 1.3) * lh, vx: 0, vy: 0, tw: Math.random() * Math.PI * 2, delay: p.k === 2 ? 0 : Math.random() * 1.6 + (p.k === 1 ? 0.4 : 0), dir: [Math.cos(ang), Math.sin(ang)], a: p.k === 0 ? rand(0.45, 1) : p.k === 1 ? rand(0.18, 0.45) : rand(0.12, 0.35), f1: rand(1.1, 2.6), f2: rand(1.1, 2.6), p1: rand(0, 6.28), p2: rand(0, 6.28) };
       });
@@ -100,17 +166,24 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
       if (!started) started = now;
       const t = now / 1000, life = (now - started) / 1000;
       // The word spans most of a phone's width and about two thirds of a laptop's, never wider than 1100 pixels.
-      const sc = scene === "word" ? Math.min(w * (w < 768 ? 0.88 : 0.72), 1100) : Math.min(w * (touch ? 0.86 : 0.5), lh * 0.8);
-      const cx = w * 0.5, cy = lh * 0.4;
+      const F = scene === "face";
+      // The head stands in the upper part of the closing section, clear of the line and the button under it.
+      const sc = scene === "word" ? Math.min(w * (w < 768 ? 0.88 : 0.72), 1100) : F ? Math.min(lh * (w < 768 ? 0.3 : 0.36), w * (w < 768 ? 0.5 : 0.42)) : Math.min(w * (touch ? 0.86 : 0.5), lh * 0.8);
+      const cx = w * 0.5, cy = F ? lh * (w < 768 ? 0.31 : 0.36) + Math.sin(t * 0.5) * sc * 0.015 : lh * 0.4;
       const on = pointer.x > -9000 && inside(pointer.x, pointer.y);
       // Always turning a little on its own (gently for the word, so it stays easy to read).
       const sway = scene === "word" ? (w < 768 ? 0.42 : 0.6) : 1;
       // A band of light sweeps across the shape every few seconds, like a hologram prototype in a film.
       const scan = cx + (((t * 0.22) % 1.5) - 0.75) * sc * 1.4, band = sc * 0.06;
-      const turn = (scene === "word" ? 0 : 0.35) + sway * (0.26 * Math.sin(t * 0.32) + 0.1 * Math.sin(t * 0.12 + 1.3));
+      // The head's band of light runs down it, crown to neck, like a hologram being drawn.
+      const scanY = cy + (((t * 0.16) % 1.7) - 0.75) * sc * 1.9;
+      // The head turns slowly from one three quarter view through the front to the other, always showing the face.
+      const turn = F ? 0.78 * Math.sin(t * 0.16) + 0.1 * Math.sin(t * 0.41 + 0.7) : (scene === "word" ? 0 : 0.35) + sway * (0.26 * Math.sin(t * 0.32) + 0.1 * Math.sin(t * 0.12 + 1.3));
       let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
-      const cos = Math.cos(turn), sin = Math.sin(turn), tilt = (scene === "word" ? 0.06 : 0.12) + 0.04 * Math.sin(t * 0.17), ct = Math.cos(tilt), st = Math.sin(tilt);
+      const cos = Math.cos(turn), sin = Math.sin(turn), tilt = (scene === "word" ? 0.06 : F ? 0.04 : 0.12) + (F ? 0.05 : 0.04) * Math.sin(t * 0.17), ct = Math.cos(tilt), st = Math.sin(tilt);
       g.clearRect(0, 0, w, h);
+      // One colour for every point; each point sets only its own opacity, which is far cheaper than a colour per point.
+      g.fillStyle = "#fff";
       for (let i = ripples.length - 1; i >= 0; i--) if (t - ripples[i].t > 1.6) ripples.splice(i, 1);
       for (const p of pts) {
         let y = p.y;
@@ -121,11 +194,11 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
         const f = 2.4 / (2.4 + z2);
         let tx = cx + x1 * f * sc, ty = cy - y2 * f * sc;
         // A slow wave runs through the shape, so it visibly breathes.
-        if (p.k === 0) ty += Math.sin(p.x * 9 - t * 1.7) * sc * 0.006 + Math.sin(p.x * 3.1 + t * 1.1) * sc * 0.004;
+        if (p.k === 0 && !F) ty += Math.sin(p.x * 9 - t * 1.7) * sc * 0.006 + Math.sin(p.x * 3.1 + t * 1.1) * sc * 0.004;
         if (p.k === 0) { if (tx < bx0) bx0 = tx; if (tx > bx1) bx1 = tx; if (ty < by0) by0 = ty; if (ty > by1) by1 = ty; }
         // Every point drifts on its own small path all the time, so the whole shape is alive even when nothing touches it.
         // The drift scales with the shape, so small letters on a phone stay sharp.
-        const amp = (p.k === 2 ? 7 : p.k === 1 ? 2.2 : scene === "word" ? Math.max(0.9, sc * 0.0032) : 3.2) * f;
+        const amp = (p.k === 2 ? 7 : p.k === 1 ? 2.2 : scene === "word" ? Math.max(0.9, sc * 0.0032) : F ? Math.max(0.5, sc * 0.0016) : 3.2) * f;
         tx += Math.sin(t * p.f1 + p.p1) * amp; ty += Math.cos(t * p.f2 + p.p2) * amp;
         const live = life > p.delay || still;
         if (still) { p.sx = tx; p.sy = ty; }
@@ -141,13 +214,22 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
         }
         p.vx = (p.vx + ax) * 0.8; p.vy = (p.vy + ay) * 0.8; p.sx += p.vx; p.sy += p.vy;
         const twinkle = 0.62 + 0.38 * Math.sin(t * (2.2 + (p.tw % 1.8)) + p.tw);
-        const lit = p.k === 0 ? Math.exp(-(((p.sx - scan) / band) ** 2)) : 0;
-        const alpha = Math.min(1, p.a * twinkle * Math.min(1, f * 0.95) * (live ? 1 : 0.35) * (1 + lens * 0.8 + lit * 0.9));
+        const lit = p.k === 0 ? Math.exp(-((((F ? p.sy - scanY : p.sx - scan)) / band) ** 2)) : 0;
+        // The face is modelled by light: a soft key light from the front left, a bright rim at the edges, and the far
+        // side of the head left faint, so it reads as a solid, see-through form.
+        let shade = 1;
+        if (F && p.nx !== undefined) {
+          const nx1 = p.nx * cos + p.nz! * sin, nz1 = -p.nx * sin + p.nz! * cos, ny2 = p.ny! * ct - nz1 * st, nz2 = p.ny! * st + nz1 * ct;
+          const facing = -nz2, diff = Math.max(0, nx1 * -0.45 + ny2 * 0.45 + nz2 * -0.77), rim = (1 - Math.abs(facing)) ** 2;
+          shade = (0.06 + 1.15 * diff ** 1.5 + 0.38 * rim) * (facing < 0 ? 0.14 : 1);
+        }
+        const alpha = Math.min(1, p.a * (F && p.k === 0 ? 0.55 + 0.45 * twinkle : twinkle) * shade * Math.min(1, f * 0.95) * (live ? 1 : 0.35) * (1 + lens * 0.8 + lit * 0.9));
         if (alpha < 0.02) continue;
-        const s = (p.k === 0 ? (scene === "word" && w < 768 ? 1.05 : 1.25) : 1) * f * (p.tw > 5.9 ? 1.8 : 1) * (1 + lens * 1.8 + lit * 0.5);
-        g.fillStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
+        const s = (p.k === 0 ? (F ? (w < 768 ? 0.95 : 1.1) * (shade > 0.75 ? 1.25 : 1) : scene === "word" && w < 768 ? 1.05 : 1.25) : 1) * f * (p.tw > 5.9 ? 1.8 : 1) * (1 + lens * 1.8 + lit * 0.5);
+        g.globalAlpha = alpha;
         g.fillRect(p.sx, p.sy, s, s);
       }
+      g.globalAlpha = 1;
       if (bx1 > bx0) { area.x0 = bx0; area.y0 = by0; area.x1 = bx1; area.y1 = by1; }
       if (!still && visible) raf = requestAnimationFrame(frame);
     };
@@ -158,7 +240,7 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
     const onLeave = () => { pointer.x = pointer.y = -9999; };
     const onDown = (e: PointerEvent) => { const b = c.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top; if (!inside(x, y)) return; ripples.push({ x, y, t: performance.now() / 1000 }); };
     const wake = () => { if (!raf && visible) raf = requestAnimationFrame(frame); };
-    const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible && !started && scene === "packet") started = 0; wake(); }, { threshold: 0 });
+    const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible && !started && scene !== "word") started = 0; wake(); }, { threshold: 0 });
     const onResize = () => { size(); wake(); };
 
     // The word is drawn from the page's own serif, so it waits for the font.

@@ -139,9 +139,9 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Close: the filing pages form. */}
+      {/* Close: a human head forms in points of light, a hologram that slowly turns. */}
       <section className="relative isolate h-[100svh] min-h-[640px] overflow-hidden">
-        <div className="absolute inset-0 -z-10"><Points scene="packet" /></div>
+        <div role="img" aria-label="A human head drawn in points of light" className="absolute inset-0 -z-10"><Points scene="face" /></div>
         <div className="absolute inset-x-0 bottom-14 flex flex-col items-center px-5 text-center md:bottom-20">
           <In><h2 className={`${light} text-[44px] leading-[1.05] md:text-[76px]`}>Start your first case.</h2></In>
           <In delay={150}><Link href="/start" className="mt-8 inline-block bg-white px-6 py-3.5 text-[13.5px] font-medium text-black transition hover:bg-white/85">Get In Touch</Link></In>
