@@ -11,7 +11,7 @@ export const LINE = "Lincoln is the platform built to meet the standards of the 
 export const SUMMARY = "Lincoln is legal AI for US immigration law firms. It reads the firm's email and client files, opens and works each case, fills the forms, drafts petitions, support letters and RFE responses cited to the evidence and the law, collects documents from clients, keeps every deadline, and works inside Word and Google Docs. Nothing is filed or sent without an attorney's approval.";
 
 /** Official profiles. Only ones that exist; add LinkedIn, Crunchbase and the rest as each one is created. */
-export const PROFILES = ["https://instagram.com/lincoln.app"];
+export const PROFILES = ["https://www.instagram.com/lincoln.hq"];
 
 /** Public pages Google may list. Terms and Privacy join once the company's legal name and address are filled in. */
 export const PUBLIC_PAGES = [{ path: "/", priority: 1 }, { path: "/start", priority: 0.6 }];

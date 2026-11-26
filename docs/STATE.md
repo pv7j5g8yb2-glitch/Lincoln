@@ -770,3 +770,6 @@ from the repo the same day. History is in git up to commit `341cf65`.
 ## Logo (2026-11-25)
 
 The L and the Lincoln wordmark are set in Literata 500, the landing page's serif, white on pure black (#000000). Every favicon, app icon, notification badge, sign in mark and the link preview image (og.png) use them. Masters (SVG, large PNG, transparent white and black, a 1080 profile photo) are in `docs/brand/`. Drawn by `lincoln/.work/logo.py` and rendered by `lincoln/.work/render-logo.cjs` (local only, not in the repo).
+* Instagram (2026-11-26): the handle is @lincoln.hq (https://www.instagram.com/lincoln.hq), listed in PROFILES in
+  `lincoln/src/lib/seo/site.ts`. Google Search Console: uselincoln.com verified as a Domain property, sitemap submitted
+  and indexing requested on 2026-11-26 (the live test passed; Google's stored copy still showed the old noindex).
