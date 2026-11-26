@@ -1228,3 +1228,15 @@ Company claims, from the founder; Legora valued $675M then, $80M Series B (Iconi
 * What this means: "autonomous" alone no longer sets Lincoln apart. What still does: immigration work out of the box
   (USCIS forms, rulebooks per case type, evidence and deadlines) with no setup, starting from the firm's own email, for
   small and mid size immigration firms that the large firm products do not target.
+
+## What Google's AI Mode says about Lincoln (Ismael's session, 2026-11-26, first look after indexing opened)
+* Reads uselincoln.com correctly: immigration paperwork automation, email to case, forms, petitions, RFEs, client
+  documents, deadlines, attorney approval, encryption, no training. Only when given the link: "used lincoln" alone
+  returned used Lincoln cars, and "Lincoln AI" returns Land of Lincoln Legal Aid and Lincoln's Inn.
+* "No public footprint": no founder, funding, directory listing or review found. Calls Lincoln vertical, not a direct
+  Harvey or Legora competitor, and lists Docketwise, INSZoom and LawLogix as its competitors (case software that does
+  not do the work; wrong category under CLAUDE.md's 80 percent rule).
+* Told the founder is a solo 16 year old, it raises: minors cannot bind contracts (firms' counsel and insurers need a
+  DPA and MSA signed by an adult officer), trust with older managing partners, solo founder and school load, no lawyer
+  on the team, no SOC 2. Says immigration to PI and plaintiff work is a logical path but jumping to M&A collides with
+  Harvey, Legora, CoCounsel and LexisNexis. These are the objections investors will raise; answers needed for each.
