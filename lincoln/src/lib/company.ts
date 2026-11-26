@@ -6,5 +6,6 @@ export const COMPANY = {
   address: "[Registered address]",
   contact: "[Contact email]",
   law: "[Governing law and courts]",
-  effective: "13 November 2026",
+  // The date the Terms or Privacy text last changed (shown as "Last updated"). American English.
+  updated: "November 26, 2026",
 };

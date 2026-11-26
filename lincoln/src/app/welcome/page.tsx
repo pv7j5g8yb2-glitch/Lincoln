@@ -3,6 +3,9 @@ import Landing from "@/components/landing/Landing";
 import { ALSO, LINE, NAME, PROFILES, SITE, SUMMARY } from "@/lib/seo/site";
 import "./landing.css";
 
+// Pitch black browser bar to match the page, in light and dark mode alike.
+export const viewport = { themeColor: "#000000" };
+
 // The public landing page (uselincoln.com). Open to search engines and AI search since 2026-11-25 (Ismael).
 // The link card on WhatsApp, iMessage, LinkedIn and the rest: the wordmark, the name and one short line.
 export const metadata: Metadata = {

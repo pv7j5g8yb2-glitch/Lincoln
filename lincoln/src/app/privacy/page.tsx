@@ -1,5 +1,9 @@
+import "../welcome/landing.css";
 import LegalShell, { type Clause } from "@/components/LegalShell";
 import { COMPANY as C } from "@/lib/company";
+
+// Pitch black browser bar to match the page, in light and dark mode alike.
+export const viewport = { themeColor: "#000000" };
 
 export const metadata = { title: "Privacy Policy · Lincoln" };
 
@@ -27,9 +31,9 @@ const clauses: Clause[] = [
   { h: "Individual rights", p: ["Depending on where a person lives, they may have the right to access, correct, delete, restrict or object to the use of their personal data, to receive a copy of it, and to complain to a data protection authority. Requests go to the contact above. Where the data sits in a firm's workspace, Lincoln will pass the request to that firm."] },
   { h: "International transfers", p: ["Lincoln and its providers may process data in countries other than the one where it was collected. Where the law requires, Lincoln uses approved safeguards for those transfers, such as standard contractual clauses."] },
   { h: "Who may use Lincoln", p: ["Lincoln is a tool for legal professionals and their staff. It is not intended for anyone under 18, and it is not offered to members of the public seeking legal advice."] },
-  { h: "Changes", p: ["Lincoln will post any change to this policy on this page and change the effective date. Account holders will be told by email about any change that materially affects how their data is used."] },
+  { h: "Changes", p: ["Lincoln will post any change to this policy on this page and change the \"Last updated\" date. Account holders will be told by email about any change that materially affects how their data is used."] },
 ];
 
 export default function Privacy() {
-  return <LegalShell title="Privacy Policy" intro="This policy explains what information Lincoln collects, how it is used, and the choices available to the firms and people who use the service." clauses={clauses} />;
+  return <LegalShell title="Privacy Policy" intro="This policy explains what information Lincoln collects, how it is used, and the choices available to the firms and people who use the service." clauses={clauses} other={{ href: "/terms", label: "Terms" }} />;
 }

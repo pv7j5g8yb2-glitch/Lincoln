@@ -773,3 +773,9 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
 * Instagram (2026-11-26): the handle is @lincoln.hq (https://www.instagram.com/lincoln.hq), listed in PROFILES in
   `lincoln/src/lib/seo/site.ts`. Google Search Console: uselincoln.com verified as a Domain property, sitemap submitted
   and indexing requested on 2026-11-26 (the live test passed; Google's stored copy still showed the old noindex).
+* Terms and Privacy (2026-11-26): restyled to the landing page look (pitch black, light serif title, plain sans text,
+  numbered sections with hairlines). Top left is a back arrow to Lincoln as on Get In Touch; top right shows only the
+  other legal page. "Effective" became "Last updated: November 26, 2026" (`updated` in `lincoln/src/lib/company.ts`,
+  change it whenever either text changes). The four public pages are now black edge to edge, browser bar included.
+  Placeholders for the legal name, address, contact and governing law remain until the business is registered. Next,
+  when Ismael says: the app interface in the new look.

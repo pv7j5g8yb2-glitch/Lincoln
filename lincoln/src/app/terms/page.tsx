@@ -1,5 +1,9 @@
+import "../welcome/landing.css";
 import LegalShell, { type Clause } from "@/components/LegalShell";
 import { COMPANY as C } from "@/lib/company";
+
+// Pitch black browser bar to match the page, in light and dark mode alike.
+export const viewport = { themeColor: "#000000" };
 
 export const metadata = { title: "Terms of Service · Lincoln" };
 
@@ -22,10 +26,10 @@ const clauses: Clause[] = [
   { h: "No warranty", p: ["The preview is provided as it is. To the fullest extent the law allows, Lincoln gives no warranty that the service is free of errors, that its output is accurate or complete, or that it is fit for a particular purpose. Output produced with artificial intelligence can be wrong and must be checked by a qualified person."] },
   { h: "Limit of liability", p: ["To the fullest extent the law allows, Lincoln is not liable for indirect or consequential loss, lost profits, lost data or the outcome of any legal matter, and its total liability under these terms is limited to the greater of the fees the Customer paid in the previous 12 months and 100 US dollars. Nothing in these terms limits liability that cannot be limited by law."] },
   { h: "Ending the agreement", p: ["The Customer may close its account at any time. Lincoln may suspend or close an account that breaks these terms or puts the service or other firms at risk. On closure Lincoln deletes the workspace as set out in the Privacy Policy."] },
-  { h: "Changes", p: ["Lincoln may update these terms. The new terms apply from the effective date shown on this page, and Lincoln will give account holders notice by email of any material change."] },
+  { h: "Changes", p: ["Lincoln may update these terms. Updated terms apply from the \"Last updated\" date shown on this page, and Lincoln will give account holders notice by email of any material change."] },
   { h: "Governing law and contact", p: [`These terms are governed by ${C.law}. Notices to Lincoln go to ${C.contact}, ${C.address}.`] },
 ];
 
 export default function Terms() {
-  return <LegalShell title="Terms of Service" intro="These terms govern access to and use of Lincoln." clauses={clauses} />;
+  return <LegalShell title="Terms of Service" intro="These terms govern access to and use of Lincoln." clauses={clauses} other={{ href: "/privacy", label: "Privacy" }} />;
 }
