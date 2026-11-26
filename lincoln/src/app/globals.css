@@ -389,3 +389,10 @@ select:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .mic-live i { animation: none; }
 }
+
+/* A chat box pinned to the bottom of the screen, like Claude and ChatGPT: on larger screens it starts after the
+   sidebar, or at the edge when the sidebar is closed. */
+@media (min-width: 768px) {
+  .pin-bar { left: 248px; }
+  html[data-sidebar="closed"] .pin-bar { left: 0; }
+}

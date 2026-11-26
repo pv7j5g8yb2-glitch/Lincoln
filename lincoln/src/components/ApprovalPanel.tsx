@@ -7,6 +7,7 @@ import clsx from "clsx";
 import { Check, FileText, Folder } from "lucide-react";
 import { acceptAllRecommended, answerQuestion, chooseFolder, decideApproval, saveMessage } from "@/lib/actions";
 import type { Question } from "@/lib/halasz";
+import { btn as B } from "./ui";
 
 type Props = {
   id: string;
@@ -83,11 +84,11 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message, canA
   const footer = (text: string, disabled = false) => (
     <div className="sticky bottom-0 mt-6 flex flex-wrap items-center gap-2 border-t border-line bg-card/95 py-3 backdrop-blur">
       {canApprove ? (
-        <button disabled={pending || disabled} onClick={() => decide("approved")} className="flex h-9 items-center gap-1.5 bg-ink px-4 text-[13px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98] disabled:opacity-35">
+        <button disabled={pending || disabled} onClick={() => decide("approved")} className={B.primary}>
           <Check size={14} /> {text}
         </button>
       ) : <span className="flex h-9 items-center bg-panel px-3.5 text-[13px] text-muted">For attorney approval</span>}
-      <button disabled={pending} onClick={() => decide("rejected")} className="h-9 border border-line bg-card px-3.5 text-[13px] font-medium transition hover:bg-panel disabled:opacity-40">Return</button>
+      <button disabled={pending} onClick={() => decide("rejected")} className={B.secondary}>Return</button>
       {error && <span className="text-[12.5px] text-risk">{error}</span>}
     </div>
   );
@@ -102,12 +103,12 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message, canA
             <li key={o.id} className="flex items-center gap-3 px-4 py-3">
               <Folder size={16} className="shrink-0 text-muted" />
               <a href={o.url} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate text-[14px] font-medium underline decoration-line underline-offset-4 hover:decoration-ink">{o.name}</a>
-              <button disabled={pending} onClick={() => pickOne(i)} className="h-8 shrink-0 bg-ink px-3.5 text-[12.5px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98] disabled:opacity-35">Use</button>
+              <button disabled={pending} onClick={() => pickOne(i)} className={`${B.primary} shrink-0`}>Use</button>
             </li>
           ))}
         </ul>
         <div className="mt-4 flex items-center gap-3">
-          <button disabled={pending} onClick={() => pickOne(-1)} className="h-9 border border-line bg-card px-3.5 text-[13px] font-medium transition hover:bg-panel disabled:opacity-40">Lincoln folder</button>
+          <button disabled={pending} onClick={() => pickOne(-1)} className={B.secondary}>Lincoln folder</button>
           {error && <span className="text-[12.5px] text-risk">{error}</span>}
         </div>
       </div>
@@ -124,7 +125,7 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message, canA
             <div className="h-[3px] w-24 overflow-hidden bg-line"><div className="h-full bg-ink transition-all" style={{ width: `${(done / qs.length) * 100}%` }} /></div>
             <span className="text-[12.5px] text-muted">{done} of {qs.length}</span>
           </div>
-          {done < qs.length && <button disabled={pending} onClick={() => start(() => acceptAllRecommended(id))} className="h-8 border border-line bg-card px-3 text-[12.5px] font-medium transition hover:bg-panel">Accept recommendations</button>}
+          {done < qs.length && <button disabled={pending} onClick={() => start(() => acceptAllRecommended(id))} className={B.secondary}>Accept recommendations</button>}
         </div>
         <ol className="border-t border-line">
           {qs.map((q, i) => (
@@ -174,12 +175,12 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message, canA
         <div className="sticky bottom-0 mt-6 flex flex-wrap items-center gap-2 border-t border-line bg-card/95 py-3 backdrop-blur">
           {editing ? (
             <>
-              <button disabled={pending || !body.trim()} onClick={save} className="flex h-9 items-center gap-1.5 bg-ink px-4 text-[13px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98] disabled:opacity-35"><Check size={14} /> Save</button>
+              <button disabled={pending || !body.trim()} onClick={save} className={B.primary}><Check size={14} /> Save</button>
               <button disabled={pending} onClick={cancel} className={ghost}>Cancel</button>
             </>
           ) : (
             <>
-              <button ref={btn} disabled={pending || sending !== ""} onClick={send} className="relative flex h-9 items-center justify-center gap-1.5 bg-ink px-4 text-[13px] font-medium text-canvas transition hover:opacity-90 active:scale-[0.98]">
+              <button ref={btn} disabled={pending || sending !== ""} onClick={send} className={`${B.primary} relative`}>
                 <span className={clsx("flex items-center gap-1.5", sending && "invisible")}><Check size={14} /> Approve and send</span>
                 {sending && <span className="absolute inset-0 flex items-center justify-center">{sending === "busy" ? <span aria-label="Sending" className="h-4 w-4 animate-spin rounded-full border-2 border-canvas/25 border-t-canvas" /> : "Sent!"}</span>}
               </button>

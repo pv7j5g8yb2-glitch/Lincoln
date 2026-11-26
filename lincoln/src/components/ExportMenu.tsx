@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { btn } from "./ui";
 
 export type ExportItem = { label: string; href: string; hint?: string };
 
@@ -17,7 +18,7 @@ export default function ExportMenu({ items, label = "Export" }: { items: ExportI
   }, [open]);
   return (
     <div ref={ref} className="relative">
-      <button onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex h-8 items-center gap-1.5 border border-line bg-card px-3 text-[12.5px] font-medium transition hover:bg-panel">{label} <ChevronDown size={13} /></button>
+      <button onClick={() => setOpen((v) => !v)} aria-expanded={open} className={btn.secondary}>{label} <ChevronDown size={13} /></button>
       {open && (
         <div className="rise absolute right-0 top-full z-30 mt-1 w-[260px] border border-line bg-card p-1 shadow-[0_10px_36px_-12px_rgba(22,22,20,0.28)]">
           {items.map((i) => (

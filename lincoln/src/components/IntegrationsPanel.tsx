@@ -78,7 +78,7 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
                 </div>
                 {c && p.id === "microsoft" && channels.length > 0 && (
                   <form action={setTeamsChannel} className="mt-4 flex items-center gap-2">
-                    <select name="channel" defaultValue={settingsOf(c).teams ? `${settingsOf(c).teams!.teamId}|${settingsOf(c).teams!.channelId}|${settingsOf(c).teams!.name}` : ""} className="h-8 min-w-0 flex-1 border border-line bg-card px-2 text-[12.5px] outline-none focus:border-ink">
+                    <select name="channel" defaultValue={settingsOf(c).teams ? `${settingsOf(c).teams!.teamId}|${settingsOf(c).teams!.channelId}|${settingsOf(c).teams!.name}` : ""} className="h-9 min-w-0 flex-1 border border-line bg-card px-2.5 text-[13px] outline-none focus:border-ink">
                       <option value="">Teams off</option>
                       {channels.map((ch) => <option key={ch.channelId} value={`${ch.teamId}|${ch.channelId}|${ch.name}`}>{ch.name}</option>)}
                     </select>
@@ -87,7 +87,7 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
                 )}
                 {c && p.id === "google" && (canReadChat(c) ? (
                   <form action={setChatSpace} className="mt-4 flex items-center gap-2">
-                    <select name="space" defaultValue={settingsOf(c).gchat ? `${settingsOf(c).gchat!.space}|${settingsOf(c).gchat!.name}` : ""} className="h-8 min-w-0 flex-1 border border-line bg-card px-2 text-[12.5px] outline-none focus:border-ink">
+                    <select name="space" defaultValue={settingsOf(c).gchat ? `${settingsOf(c).gchat!.space}|${settingsOf(c).gchat!.name}` : ""} className="h-9 min-w-0 flex-1 border border-line bg-card px-2.5 text-[13px] outline-none focus:border-ink">
                       <option value="">Google Chat off</option>
                       {spaces.map((x) => <option key={x.space} value={`${x.space}|${x.name}`}>{x.name}</option>)}
                     </select>
@@ -103,12 +103,10 @@ export default async function IntegrationsPanel({ user, firm, connected, error, 
             );
           })}
           <div className="border border-line bg-card p-5">
-            <div className="mb-4 flex items-center gap-3"><Logo name="Word" size={26} /><span className="text-[14px] font-medium">Word add-in</span></div>
-            <WordConnect connected={Boolean(wordConnected(user.id))} />
+            <WordConnect connected={Boolean(wordConnected(user.id))} head={<><Logo name="Word" size={26} /><span className="min-w-0 flex-1 text-[14px] font-medium">Word add-in</span></>} />
           </div>
           <div className="border border-line bg-card p-5">
-            <div className="mb-4 flex items-center gap-3"><Logo name="Outlook" size={26} /><span className="text-[14px] font-medium">Outlook add-in</span></div>
-            <WordConnect app="outlook" connected={Boolean(wordConnected(user.id, "outlook"))} />
+            <WordConnect app="outlook" connected={Boolean(wordConnected(user.id, "outlook"))} head={<><Logo name="Outlook" size={26} /><span className="min-w-0 flex-1 text-[14px] font-medium">Outlook add-in</span></>} />
           </div>
         </div>
         {problem && <p className="mt-3 text-[13px] text-risk">{problem}</p>}

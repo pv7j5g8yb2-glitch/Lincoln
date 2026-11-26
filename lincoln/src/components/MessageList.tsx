@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Message } from "@/lib/queries";
 import { ago } from "@/lib/format";
 import { sortMessage } from "@/lib/actions";
+import { btn } from "./ui";
 
 /** Case mail, newest first. A row opens to the full message. */
 export default function MessageList({ items, showCase = false, cases = [] }: { items: (Message & { client?: string | null })[]; showCase?: boolean; cases?: { id: string; client: string; type_code: string }[] }) {
@@ -34,7 +35,7 @@ export default function MessageList({ items, showCase = false, cases = [] }: { i
                     {cases.map((c) => <option key={c.id} value={c.id}>{c.client} · {c.type_code}</option>)}
                     <option value="none">Not case mail</option>
                   </select>
-                  <button className="h-9 bg-ink px-3.5 text-[13px] font-medium text-canvas transition hover:opacity-90">File</button>
+                  <button className={btn.primary}>File</button>
                 </form>
               )}
             </details>

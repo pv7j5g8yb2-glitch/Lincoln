@@ -70,7 +70,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const err = error && tab !== "integrations" ? MSG[tab]?.[error] : null;
 
   return (
-    <div className="rise">
+    <div className="rise mx-auto max-w-[832px]">
       <PageHead title="Settings" />
       <div className="grid gap-8 md:grid-cols-[180px_1fr]">
         <nav className="edge-fade flex gap-1 overflow-x-auto pr-6 md:flex-col md:pr-0">
@@ -256,7 +256,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                     {rules(firm.id, k).map((r, i) => (
                       <li key={i} className="flex items-start gap-3 border-b border-line py-2.5 text-[13px]">
                         <span className="min-w-0 flex-1 leading-relaxed">{r}</span>
-                        {admin && <form action={removeStyleRule.bind(null, k, i)}><ConfirmButton className="text-[12px] text-faint transition hover:text-ink">Remove</ConfirmButton></form>}
+                        {admin && <form action={removeStyleRule.bind(null, k, i)}><ConfirmButton className={btn.ghost}>Remove</ConfirmButton></form>}
                       </li>
                     ))}
                   </ul>

@@ -8,6 +8,7 @@ import Composer from "./Composer";
 import Markdown from "./Markdown";
 import { deleteChat, renameChat, startCase } from "@/lib/actions";
 import { confirmBox } from "./Confirm";
+import { btn } from "./ui";
 
 type M = { id?: string; role: string; content: string };
 type T = { id: string; title: string };
@@ -360,8 +361,8 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
               <div className="w-full max-w-[90%] border border-edge bg-card p-3">
                 <textarea autoFocus value={editing.text} onChange={(e) => setEditing({ index: i, text: e.target.value })} rows={Math.min(8, editing.text.split("\n").length + 1)} className="w-full resize-none bg-transparent text-[16px] leading-[1.6] outline-none md:text-[16.5px]" />
                 <div className="mt-2 flex justify-end gap-2">
-                  <button onClick={() => setEditing(null)} className="h-9 border border-line bg-card px-3.5 text-[13.5px] font-medium transition hover:bg-panel">Cancel</button>
-                  <button disabled={!editing.text.trim() || busy} onClick={() => send(editing.text, { index: i, id: m.id })} className="h-9 bg-ink px-4 text-[13.5px] font-medium text-canvas transition hover:opacity-90 disabled:opacity-40">Send</button>
+                  <button onClick={() => setEditing(null)} className={btn.secondary}>Cancel</button>
+                  <button disabled={!editing.text.trim() || busy} onClick={() => send(editing.text, { index: i, id: m.id })} className={btn.primary}>Send</button>
                 </div>
               </div>
             ) : (
@@ -389,7 +390,7 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
         ))}
         {error && <p className="text-[14px] text-risk">{error}</p>}
       </div>
-      <div className="fixed inset-x-0 bottom-0 z-10 bg-gradient-to-t from-canvas from-70% to-transparent px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-8 md:left-[248px] md:px-12">
+      <div className="pin-bar fixed inset-x-0 bottom-0 z-10 bg-gradient-to-t from-canvas from-70% to-transparent px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-8 md:px-12">
         <div className="relative mx-auto max-w-[720px]">
           {!atBottom && (
             <button onClick={() => toBottom()} aria-label="Scroll to the latest" className="absolute -top-14 left-1/2 flex h-10 w-10 -translate-x-1/2 items-center justify-center border border-line bg-card text-ink shadow-md transition hover:bg-panel">

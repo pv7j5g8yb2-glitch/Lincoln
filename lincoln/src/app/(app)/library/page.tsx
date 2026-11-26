@@ -1,5 +1,5 @@
 import { ArrowUpRight, Search } from "lucide-react";
-import { Empty, PageHead } from "@/components/ui";
+import { Empty, PageHead, search } from "@/components/ui";
 import { requireUser } from "@/lib/session";
 import { citationsIn, lawStatus, searchLaw } from "@/lib/law";
 
@@ -15,11 +15,11 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
   const status = lawStatus();
   const cited = citationsIn(q).length > 0; // a citation opens its passage at once
   return (
-    <div className="rise max-w-[760px]">
+    <div className="rise mx-auto max-w-[760px]">
       <PageHead title="Library" />
       <form action="/library" className="relative">
-        <Search size={16} strokeWidth={1.8} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-faint" />
-        <input name="q" defaultValue={q} autoComplete="off" placeholder="Search" className="h-11 w-full border border-line bg-card pl-10 pr-3 text-[14.5px] outline-none transition placeholder:text-faint focus:border-ink" />
+        <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" />
+        <input name="q" defaultValue={q} autoComplete="off" placeholder="Search" className={search} />
       </form>
 
       {!q ? (

@@ -65,7 +65,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
   const none = <Empty>No records</Empty>;
 
   return (
-    <div className="rise">
+    <div className="rise mx-auto max-w-[760px] pb-28">
       {c.processing ? <Refresher /> : null}
       <Link href="/cases" className="mb-5 inline-flex items-center gap-1 text-[12.5px] text-muted transition hover:text-ink"><ChevronLeft size={14} /> Cases</Link>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
@@ -324,9 +324,11 @@ export default async function CasePage({ params, searchParams }: { params: Promi
 
       </>}
 
+      {/* The case chat box stays at the bottom of the screen whatever the length of the page, like Claude and ChatGPT;
+          on phones it sits above the tab bar. */}
       {llmConfigured() && !c.processing && (
-        <div className="mt-12 max-w-[640px]">
-          <AskBox caseId={id} placeholder={`Ask about ${c.client}`} />
+        <div className="pin-bar fixed inset-x-0 bottom-0 z-10 bg-gradient-to-t from-canvas from-70% to-transparent px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-8 md:px-12 md:pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <div className="mx-auto max-w-[760px]"><AskBox caseId={id} placeholder={`Ask about ${c.client}`} /></div>
         </div>
       )}
     </div>

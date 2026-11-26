@@ -6,6 +6,7 @@ import ExportMenu, { type ExportItem } from "./ExportMenu";
 import { saveDraftEdit } from "@/lib/actions";
 import { notify } from "./Toaster";
 import type { Section, Seg } from "@/lib/halasz";
+import { btn } from "./ui";
 
 type Hover = { doc?: string; page: number; x: number; y: number } | null;
 
@@ -96,12 +97,12 @@ export default function DraftView({ caseId, draftId, title, subtitle, sections, 
         {editing ? (
           <>
             <button disabled={pending} onClick={() => setEditing(null)} className="h-8 px-3 text-[12.5px] font-medium text-muted transition hover:bg-panel hover:text-ink">Cancel</button>
-            <button disabled={pending} onClick={save} className="h-8 bg-ink px-3.5 text-[12.5px] font-medium text-canvas transition hover:opacity-90 disabled:opacity-50">{pending ? "Saving" : "Save"}</button>
+            <button disabled={pending} onClick={save} className={btn.primary}>{pending ? "Saving" : "Save"}</button>
           </>
         ) : (
           <>
             <button onClick={() => setFocus((v) => !v)} className={clsx("h-8 border px-3 text-[12.5px] font-medium transition", focus ? "border-ink bg-ink text-canvas" : "border-line bg-card hover:bg-panel")}>Review mode</button>
-            <button onClick={() => { setFocus(false); setEditing(sections.map((s) => ({ heading: s.heading, paras: s.paras.map(asText) }))); }} className="h-8 border border-line bg-card px-3 text-[12.5px] font-medium transition hover:bg-panel">Edit</button>
+            <button onClick={() => { setFocus(false); setEditing(sections.map((s) => ({ heading: s.heading, paras: s.paras.map(asText) }))); }} className={btn.secondary}>Edit</button>
             <ExportMenu items={exports} label="Open" />
           </>
         )}

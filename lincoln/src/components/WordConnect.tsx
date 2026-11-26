@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { disconnectWordAction, newWordCodeAction } from "@/lib/actions";
 import { notify } from "./Toaster";
@@ -13,7 +13,8 @@ const APPS = {
 };
 
 /** An Office add-in (Word or Outlook): download it, then a one time code connects it. The steps open once the file is downloaded. */
-export default function WordConnect({ connected, app = "word" }: { connected: boolean; app?: keyof typeof APPS }) {
+/** The card header (logo and name) is drawn here so Disconnect sits top right, as on the Google and Microsoft cards. */
+export default function WordConnect({ connected, app = "word", head }: { connected: boolean; app?: keyof typeof APPS; head: ReactNode }) {
   const A = APPS[app];
   const [code, setCode] = useState<string | null>(null);
   const [on, setOn] = useState(connected);
@@ -31,11 +32,14 @@ export default function WordConnect({ connected, app = "word" }: { connected: bo
   );
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center gap-3">
+        {head}
+        {on && <button disabled={pending} onClick={async () => { if (!(await confirmBox())) return; start(async () => { await disconnectWordAction(app); setOn(false); notify("Disconnected"); }); }} className={btn.ghost}>Disconnect</button>}
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         <a href={A.manifest} download onClick={() => { try { localStorage.setItem(A.key, "1"); } catch { /* fine */ } setDownloaded(true); setGuide(true); }} className={downloaded ? btn.secondary : btn.primary}>Download</a>
         {downloaded && <button disabled={pending} onClick={() => void getCode()} className={btn.primary}>{on ? "New code" : "Code"}</button>}
         {downloaded && <button onClick={() => setGuide(true)} className={btn.ghost}>Steps</button>}
-        {on && <button disabled={pending} onClick={async () => { if (!(await confirmBox())) return; start(async () => { await disconnectWordAction(app); setOn(false); notify("Disconnected"); }); }} className={btn.ghost}>Disconnect</button>}
       </div>
       {!guide && codeBox}
       {guide && (

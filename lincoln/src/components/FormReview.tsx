@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { saveFormAnswers } from "@/lib/actions";
+import { btn } from "./ui";
 
 type Field = { name: string; kind: "text" | "check" | "choice"; label: string; options?: string[] };
 type Answer = { name: string; label: string; value: string; source: string };
@@ -60,8 +61,8 @@ export default function FormReview({ formId, caseId, layout, answers }: { formId
       )}
       {changed && (
         <div className="sticky bottom-24 mt-4 flex gap-2 md:bottom-4">
-          <button disabled={pending} onClick={() => start(async () => { await saveFormAnswers(formId, Object.entries(edits).map(([name, value]) => ({ name, value }))); setEdits({}); })} className="h-9 bg-ink px-4 text-[13px] font-medium text-canvas transition hover:opacity-90 disabled:opacity-40">Save</button>
-          <button disabled={pending} onClick={() => setEdits({})} className="h-9 border border-line bg-card px-3.5 text-[13px] font-medium transition hover:bg-panel">Cancel</button>
+          <button disabled={pending} onClick={() => start(async () => { await saveFormAnswers(formId, Object.entries(edits).map(([name, value]) => ({ name, value }))); setEdits({}); })} className={btn.primary}>Save</button>
+          <button disabled={pending} onClick={() => setEdits({})} className={btn.secondary}>Cancel</button>
         </div>
       )}
     </div>

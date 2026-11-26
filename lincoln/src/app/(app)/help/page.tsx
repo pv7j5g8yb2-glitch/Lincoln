@@ -15,7 +15,7 @@ const QA: [string, string][] = [
 export default async function Help() {
   await requireUser();
   return (
-    <div className="rise max-w-[680px]">
+    <div className="rise mx-auto max-w-[680px]">
       <PageHead title="Help" />
       <dl className="border-t border-line">
         {QA.map(([q, a]) => <div key={q} className="border-b border-line py-4"><dt className="mb-0.5 text-[13.5px] font-medium">{q}</dt><dd className="text-[13.5px] leading-relaxed text-muted">{a}</dd></div>)}
