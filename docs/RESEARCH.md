@@ -1216,3 +1216,15 @@ Company claims, from the founder; Legora valued $675M then, $80M Series B (Iconi
 * ProVision (two former Goodwin lawyers and their CTO) raised a further $11m for investment fund work: side letters,
   legal obligations and investor relationships (Artificial Lawyer, 2026-11-25). Not a competitor. Shows investors
   funding narrow, practice specific legal AI built by people from that practice.
+
+## "Is there an autonomous AI for law?" (Google AI Mode answer Ismael saw, 2026-11-24; checked 2026-11-26)
+* Google's answer: no case runs unsupervised (lawyers stay accountable), but "trigger on a new case, review at the
+  end" exists today; it names Clio (Vincent), Legora, Harvey, CoCounsel, Paxton, Bernio, Hermes, Fluso, Lavern, and
+  says these need hours of setup (playbooks, templates, rules). Lincoln is not named.
+* Checked: Clio's Vincent in Clio Operate (its large firm product) runs workflows "set once" across matters, started
+  for example when a document arrives through the client portal, with lawyer confirmation; general availability was
+  announced for November 2026 (Clio's own pages, vendor claims). Bernio sells an agentic legal operating system run on
+  the firm's own servers, for corporate legal teams and firms of 20 to 499 lawyers (Legaltech Hub listing).
+* What this means: "autonomous" alone no longer sets Lincoln apart. What still does: immigration work out of the box
+  (USCIS forms, rulebooks per case type, evidence and deadlines) with no setup, starting from the firm's own email, for
+  small and mid size immigration firms that the large firm products do not target.
