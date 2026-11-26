@@ -30,4 +30,19 @@ for (const [k, b] of books) {
 }
 for (const k of Object.keys(EVIDENCE)) if (!books.has(k)) problems.push(`${k}: evidence for a rulebook that does not exist`);
 assert.deepEqual(problems, [], problems.join("\n"));
+
+// A consultation names its case type in words: that type's own rulebook must come with it (the appeal test cases all
+// opened as consultations and got none, 2026-11-26).
+const { register } = await import("node:module");
+register("./eval/loader.mjs", import.meta.url);
+const { rulebooksFor } = await import("../src/lib/rulebooks.ts");
+const got = (text) => rulebooksFor("Consultation Initial consultation", text)?.codes ?? [];
+for (const [text, want] of [
+  ["H-1B petition for a nursing assistant", "H-1B"], ["O-1A petition for an export director", "O-1A"],
+  ["EB-1A self petition, Form I-140", "EB-1A"], ["EB-2 national interest waiver for a researcher", "EB-2 NIW"],
+  ["EB-1C multinational manager", "EB-1C"], ["U visa, substantial abuse", "I-918"], ["T-1 status for a hotel worker", "I-914"],
+  ["VAWA self petition by an abused spouse", "I-360 VAWA"],
+]) assert.ok(got(text).includes(want), `${text}: expected ${want}, got ${got(text).join(", ")}`);
+assert.ok(!got("EB-2 NIW petition").includes("EB-2"), "EB-2 NIW must not also pull in EB-2");
+assert.ok(!got("VAWA cancellation of removal").includes("I-360 VAWA"), "VAWA cancellation is not the I-360");
 console.log(`all rulebook tests passed (${books.size} rulebooks, ${OFFICIAL_CODES.length} official codes)`);

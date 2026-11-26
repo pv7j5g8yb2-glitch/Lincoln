@@ -568,6 +568,10 @@ from the repo the same day. History is in git up to commit `341cf65`.
   usual consequences with both scenarios and discretion as a separate weighing, the specific regulatory test).
   Rechecked on cases 07 and 09 only: 3.5 to 5 of 5 and 1.5 to 3 of 3, false citation notes to zero. Same cases the
   fixes came from, so not independent proof. Next: rerun all ten (about $1.25, needs approval), then add new cases.
+* Full rerun after the fixes (2026-11-26, approved, $1.36): 40.5 of 45 (90%), up from 77%, still no bad failure in any
+  case. It also showed that every test case opened as "Consultation" and so got no rulebook for its own case type; fixed
+  the same day (case types named in the case now bring their rulebooks). That fix is not yet measured. Grades:
+  `lincoln/tests/aao/results/GRADES.md`.
 * `tests/aao/redraft.mts` redoes only the drafting step on a saved run (about $0.06 a case); `run.mts` now prints its
   data folder and saves which firm holds which case.
 * Left as is: every case opened as "Consultation" rather than its case type (the test email comes from a prospective

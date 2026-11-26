@@ -405,6 +405,23 @@ const CODE_RES = CODE_INDEX.map((c) => [codeRe(c.code), c] as const);
 // Work permit categories are written "(c)(8)" or "c8" on cards and notices.
 const EAD_RES = OFFICIAL_CODES.filter((c) => c.kind === "work permit").map((c) => [new RegExp(`(?:category\\s*)?${c.code.replace(/[()]/g, "\\$&")}(?![\\d(])|\\b${c.code.replace(/[()]/g, "")}\\b(?=.{0,40}(?:EAD|work permit|employment authorization))`, "i"), c] as const);
 
+// Rulebooks named by their own code in free text ("H-1B", "EB-2 NIW", "I-918"): only codes with a digit, so plain words
+// such as "Consultation" never match, and a longer code wins over the shorter one inside it ("EB-2 NIW" over "EB-2").
+const KEY_RES = Object.keys(R).filter((k) => /\d/.test(k)).map((k) => [new RegExp(`(?:^|[^A-Za-z0-9-])${k.replace(/[()/.]/g, "\\$&")}(?![A-Za-z0-9-])`), k] as const);
+// Case types usually written by name rather than by form or code.
+const ALIASES: [RegExp, string][] = [
+  [/\bVAWA\b(?! cancellation)/, "I-360 VAWA"],
+  [/national interest waiver|\bNIW\b/i, "EB-2 NIW"],
+  [/\bU visa|\bU-1\b|\bU nonimmigrant/i, "I-918"],
+  [/\bT visa|\bT-1\b|\bT nonimmigrant/i, "I-914"],
+];
+function named(text: string): string[] {
+  const found: [number, string][] = [];
+  for (const [re, k] of [...KEY_RES, ...ALIASES]) { const m = re.exec(text); if (m) found.push([m.index, k]); }
+  const keys = [...new Set(found.sort((a, b) => a[0] - b[0]).map(([, k]) => k))];
+  return keys.filter((k) => !keys.some((o) => o !== k && o.startsWith(`${k} `)));
+}
+
 /** Every rulebook a case touches: its type first, then the official codes and issues found in what is known of it
  *  (summary, issues, the request), up to a size budget. The type's own rulebook always comes first. */
 export function rulebooksFor(type: string | null | undefined, context = "", maxChars = 14000): { codes: string[]; text: string; cites: string[] } | null {
@@ -413,6 +430,9 @@ export function rulebooksFor(type: string | null | undefined, context = "", maxC
   const primary = rulebookFor(type);
   if (primary) add(primary.code);
   const hay = `${type ?? ""} ${context}`;
+  // The case types named in what is known of the case, in the order they first appear, so a consultation about an
+  // H-1B or a T visa gets that type's own tests ("Consultation" alone only covers facts, records and bars).
+  named(hay).forEach(add);
   for (const [re, c] of CODE_RES) if (re.test(hay)) c.rulebooks.forEach(add);
   for (const [re, c] of EAD_RES) if (re.test(hay)) c.rulebooks.forEach(add);
   for (const [re, k] of STACK) if (re.test(context)) add(k);
