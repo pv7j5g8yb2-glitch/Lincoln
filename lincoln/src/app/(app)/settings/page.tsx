@@ -13,7 +13,6 @@ import { requireUser } from "@/lib/session";
 import { people } from "@/lib/queries";
 import { ago } from "@/lib/format";
 import { deviceName } from "@/lib/device";
-import { accessRecord } from "@/lib/access";
 import CopyLink from "@/components/CopyLink";
 import { firmLink, linkUrl, memberLink } from "@/lib/client-intake";
 import { ROLES } from "@/lib/roles";
@@ -36,8 +35,6 @@ const RULES: [string, string, boolean][] = [
   ["Other messages", "", false],
   ["Strategy and eligibility", "", false],
 ];
-const EVENT: Record<string, string> = { sign_in: "Signed in", sign_in_failed: "Wrong password", sign_in_code_failed: "Wrong two step code", recovery_code_used: "Recovery code used", password_changed: "Password changed", password_reset_requested: "Password reset requested", password_reset: "Password reset", two_step_on: "Two step sign in turned on", two_step_off: "Two step sign in turned off", two_step_required: "Two step sign in required for the firm", two_step_optional: "Two step sign in made optional for the firm", role_changed: "Role changed", member_invited: "Invited to the firm", admin_given: "Made an admin", admin_removed: "Admin removed", connected: "Account connected", disconnected: "Account disconnected", sessions_signed_out: "Devices signed out", account_created: "Account created", firm_exported: "Firm exported" };
-const ACCESS: Record<string, string> = { case_viewed: "Opened", page_viewed: "Viewed", exported: "Exported", firm_exported: "Exported" };
 const device = deviceName;
 
 const MSG: Record<string, Record<string, string>> = {
@@ -62,7 +59,6 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const secretText = setup && me.totp_pending_enc ? openSecret(me.totp_pending_enc) : "";
   const qr = secretText ? await QRCode.toDataURL(otpauth(secretText, user.email), { margin: 1, width: 360 }) : null;
   const sessions = tab === "security" ? (d.prepare("SELECT id, ip, agent, created_at, last_seen FROM sessions WHERE user_id = ? AND created_at > ? ORDER BY last_seen DESC").all(user.id, new Date(Date.now() - SESSION_HOURS * 3600_000).toISOString()) as { id: string; ip: string | null; agent: string | null; created_at: string; last_seen: string | null }[]) : [];
-  const events = tab === "security" ? (d.prepare("SELECT id, kind, detail, ip, at FROM security_events WHERE user_id = ? ORDER BY at DESC LIMIT 12").all(user.id) as { id: string; kind: string; detail: string | null; ip: string | null; at: string }[]) : [];
   const hasPassword = Boolean((db().prepare("SELECT password_hash FROM users WHERE id = ?").get(user.id) as { password_hash: string | null }).password_hash);
   const admin = Boolean(user.admin);
   const details = d.prepare("SELECT address, phone, email FROM firms WHERE id = ?").get(firm.id) as { address: string | null; phone: string | null; email: string | null };
@@ -173,24 +169,6 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 ))}
               </div>
               {sessions.length > 1 && <form action={signOutSession} className="mt-2"><input type="hidden" name="session" value="others" /><ConfirmButton className={btn.ghost}>Sign out all other devices</ConfirmButton></form>}
-
-              {events.length > 0 && <h2 className="mb-1 mt-12 text-[14px] font-medium">Security activity</h2>}
-              <div className={events.length ? "border-t border-line" : undefined}>
-                {events.map((e) => (
-                  <Row key={e.id} className="py-2.5"><span className="flex-1 text-[13px]">{EVENT[e.kind] ?? e.kind}{e.detail ? <span className="text-faint"> · {e.detail}</span> : null}</span><span className="shrink-0 text-[12px] text-faint">{e.ip ? `${e.ip} · ` : ""}{ago(e.at)}</span></Row>
-                ))}
-              </div>
-
-              {admin && !firm.demo && accessRecord(firm.id).length > 0 && (
-                <>
-                  <h2 className="mb-1 mt-12 text-[14px] font-medium">Access record</h2>
-                  <div className="border-t border-line">
-                    {accessRecord(firm.id).map((e, i) => (
-                      <Row key={i} className="py-2.5"><span className="min-w-0 flex-1 truncate text-[13px]">{e.name ?? "Unknown"}<span className="text-faint"> · {ACCESS[e.action] ?? e.action} {e.label}</span></span><span className="shrink-0 text-[12px] text-faint">{ago(e.at)}</span></Row>
-                    ))}
-                  </div>
-                </>
-              )}
 
             </>
           )}

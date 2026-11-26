@@ -786,3 +786,5 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
   the wordmark at weight 500 like the website; no semibold except bold text in chat replies. The client intake pages
   now use the same tokens (they had their own warm paper colours) and follow the device's light or dark setting.
   Word exports use neutral black and greys. The app still follows the device's light or dark setting.
+* Settings (2026-11-26, Ismael): the Security activity and Access record lists are gone from the interface. Both are
+  still recorded (sign ins, who opened or exported what) and are in the full firm export, as the Privacy Policy says.
