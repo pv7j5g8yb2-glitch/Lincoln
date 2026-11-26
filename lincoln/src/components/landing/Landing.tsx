@@ -64,7 +64,7 @@ export default function Landing() {
 
   return (
     <div className="landing-root min-h-dvh overflow-x-clip bg-black font-sans text-white antialiased selection:bg-white/20">
-      <header inert={!past} className={`fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-md transition-[transform,opacity] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] ${past ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-full opacity-0"}`}>
+      <header inert={!past} className={`fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/70 backdrop-blur-md transition-[transform,opacity] md:bg-black/90 md:backdrop-blur-xl duration-500 ease-[cubic-bezier(.2,.8,.2,1)] ${past ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-full opacity-0"}`}>
         <nav className="mx-auto flex h-16 max-w-[1320px] items-center justify-between px-5 md:h-20 md:px-10">
           <Link href="/" className="font-serif text-[22px] font-medium tracking-[-0.005em]">Lincoln</Link>
           <Link href="/start" className="bg-white px-4 py-2 text-[12.5px] font-medium text-black transition hover:bg-white/85">Get In Touch</Link>
