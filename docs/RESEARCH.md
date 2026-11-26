@@ -1240,3 +1240,10 @@ Company claims, from the founder; Legora valued $675M then, $80M Series B (Iconi
   DPA and MSA signed by an adult officer), trust with older managing partners, solo founder and school load, no lawyer
   on the team, no SOC 2. Says immigration to PI and plaintiff work is a logical path but jumping to M&A collides with
   Harvey, Legora, CoCounsel and LexisNexis. These are the objections investors will raise; answers needed for each.
+
+## Design references (Ismael, 2026-11-26): for UI work and product videos
+* https://www.brandguidelines.net (brand guideline examples)
+* https://www.deck.gallery (pitch deck examples)
+* https://recent.design/websites (website design gallery)
+* https://studio.motionsites.ai and https://motionsites.ai (motion websites and product video references)
+Look at these before redesigning the app interface, making a deck or a product video.
