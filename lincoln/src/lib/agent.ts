@@ -346,6 +346,28 @@ export async function approveAndSend(firmId: string, approvalId: string, approve
   return { sent: true };
 }
 
+/** The firm's Automation choice for a rule (Settings, Automation): Automatic unless the firm chose Approval. */
+export function automatic(firmId: string, rule: "reminders" | "calendar") {
+  const v = db().prepare("SELECT value FROM kv WHERE firm_id = ? AND key = ?").get(firmId, `auto:${rule}`) as { value: string } | undefined;
+  return v?.value !== "approval";
+}
+
+/** A case date approved in Review goes into that attorney's calendar. */
+export async function addApprovedDate(firmId: string, p: { mailboxId: string; dateId: string }) {
+  const d = db();
+  const c = d.prepare("SELECT * FROM mailboxes WHERE id = ? AND firm_id = ?").get(p.mailboxId, firmId) as Connection | undefined;
+  const t = d.prepare("SELECT t.id, t.label, t.date, t.source, k.client, k.type_code, k.id AS case_id FROM dates t JOIN cases k ON k.id = t.case_id WHERE t.id = ? AND t.firm_id = ?").get(p.dateId, firmId) as { id: string; label: string; date: string; source: string | null; client: string; type_code: string; case_id: string } | undefined;
+  if (!c || !t) return { error: "No calendar connected" };
+  try {
+    await addEvent(c, { title: `${t.client}: ${t.label}`, date: t.date, details: `${t.type_code} case. ${t.source ? `Source: ${t.source}. ` : ""}Added by Lincoln.` });
+  } catch {
+    return { error: "Not added" };
+  }
+  d.prepare("INSERT OR IGNORE INTO kv (firm_id, key, value) VALUES (?, ?, '1')").run(firmId, `cal:${c.id}:${t.id}`);
+  log(firmId, t.case_id, "date", `Added to ${c.provider === "google" ? "Google Calendar" : "Outlook Calendar"}: ${t.label}, ${t.date}.`, 2);
+  return { ok: true as const };
+}
+
 /** Routine work on a timer: new mail, reminders for missing documents, approaching deadlines. */
 export async function tick() {
   const d = db();
@@ -398,7 +420,7 @@ export async function tick() {
     const body = await reminderText(m);
     const mid = uid();
     d.prepare("INSERT INTO messages (id, firm_id, case_id, direction, party, party_role, subject, body, at, state, lincoln_note, email, thread_id, mailbox_id) VALUES (?, ?, ?, 'out', ?, 'Client', ?, ?, ?, 'needs_approval', 'Reminder under the firm rule: 3 days without a reply.', ?, ?, ?)").run(mid, m.firm_id, m.case_id, m.party, `Re: ${m.subject.replace(/^(re|fwd?):\s*/i, "")}`.slice(0, 200), body, now(), m.email, m.thread_id, m.mailbox_id);
-    const sent = await deliver(m.firm_id, mid, { id: "", name: "the firm's reminder rule" });
+    const sent = automatic(m.firm_id, "reminders") ? await deliver(m.firm_id, mid, { id: "", name: "the firm's reminder rule" }) : false;
     if (!sent) {
       d.prepare("UPDATE messages SET state = 'needs_approval' WHERE id = ?").run(mid);
       const attorney = d.prepare("SELECT attorney_id FROM cases WHERE id = ?").get(m.case_id) as { attorney_id: string };
@@ -412,6 +434,13 @@ export async function tick() {
     const due = d.prepare(`SELECT t.id, t.label, t.date, t.source, k.client, k.type_code, k.id AS case_id FROM dates t JOIN cases k ON k.id = t.case_id
       WHERE t.firm_id = ? AND k.attorney_id = ? AND t.date >= date('now') AND NOT EXISTS (SELECT 1 FROM kv WHERE kv.firm_id = t.firm_id AND kv.key = 'cal:' || ? || ':' || t.id) LIMIT 10`).all(c.firm_id, c.user_id, c.id) as { id: string; label: string; date: string; source: string | null; client: string; type_code: string; case_id: string }[];
     for (const t of due) {
+      if (!automatic(c.firm_id, "calendar")) {
+        const ask = `calask:${c.id}:${t.id}`;
+        if (d.prepare("SELECT 1 FROM kv WHERE firm_id = ? AND key = ?").get(c.firm_id, ask)) continue;
+        d.prepare("INSERT INTO kv (firm_id, key, value) VALUES (?, ?, '1')").run(c.firm_id, ask);
+        d.prepare("INSERT INTO approvals (id, firm_id, case_id, kind, title, brief, payload, status, assignee_id, created_at) VALUES (?, ?, ?, 'calendar', ?, ?, ?, 'pending', ?, ?)").run(uid(), c.firm_id, t.case_id, `Add to calendar: ${t.label}`, `${t.client}, ${t.date}`, JSON.stringify({ mailboxId: c.id, dateId: t.id, label: t.label, date: t.date, client: t.client }), c.user_id, now());
+        continue;
+      }
       try {
         await addEvent(c, { title: `${t.client}: ${t.label}`, date: t.date, details: `${t.type_code} case. ${t.source ? `Source: ${t.source}. ` : ""}Added by Lincoln.` });
         d.prepare("INSERT INTO kv (firm_id, key, value) VALUES (?, ?, '1')").run(c.firm_id, `cal:${c.id}:${t.id}`);

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { Check, FileText, Folder } from "lucide-react";
+import { CalendarDays, Check, FileText, Folder } from "lucide-react";
 import { acceptAllRecommended, answerQuestion, chooseFolder, decideApproval, saveMessage } from "@/lib/actions";
 import type { Question } from "@/lib/halasz";
 import { btn as B } from "./ui";
@@ -233,6 +233,18 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message, canA
           <span className="flex-1 text-[14px] font-medium">{payload?.docUrl ? "Open in Google Docs" : "Open in Word"}</span>
         </a>
         {footer("Done")}
+      </div>
+    );
+  }
+
+  if (kind === "calendar") {
+    return (
+      <div>
+        <div className={clsx(box, "flex items-center gap-3 px-4 py-4")}>
+          <CalendarDays size={18} className="text-muted" />
+          <span className="min-w-0 flex-1"><span className="block text-[14px] font-medium">{payload?.label}</span><span className="block text-[12.5px] text-muted">{payload?.client} · {payload?.date}</span></span>
+        </div>
+        {footer("Add to calendar")}
       </div>
     );
   }

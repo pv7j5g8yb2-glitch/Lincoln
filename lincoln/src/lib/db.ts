@@ -122,6 +122,8 @@ export function db(): Database.Database {
     }
   }
   d.exec("CREATE INDEX IF NOT EXISTS i_usage_user ON usage(user_id, at)");
+  // Two step sign in is each person's own choice (Ismael, 2026-11-26): a firm wide requirement no longer applies.
+  if ((d.prepare("PRAGMA table_info(firms)").all() as { name: string }[]).some((c) => c.name === "require_2fa")) d.exec("UPDATE firms SET require_2fa = 0 WHERE require_2fa != 0");
   // Chats became separate threads (2026-11-15): each earlier conversation becomes one thread, named after its first question.
   for (const g of d.prepare("SELECT firm_id, user_id, case_id, MIN(at) AS first, MAX(at) AS last FROM chat WHERE thread_id IS NULL GROUP BY firm_id, user_id, case_id").all() as { firm_id: string; user_id: string; case_id: string | null; first: string; last: string }[]) {
     const q = (d.prepare("SELECT content FROM chat WHERE firm_id = ? AND user_id = ? AND case_id IS ? AND thread_id IS NULL AND role = 'user' ORDER BY at LIMIT 1").get(g.firm_id, g.user_id, g.case_id) as { content: string } | undefined)?.content ?? "Chat";

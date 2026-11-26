@@ -1,6 +1,6 @@
 // Stateful stand-in for Outlook drafts, Sent Items, OneDrive and a Teams channel, plus a stand-in model.
 const http = require("http");
-const st = { drafts: {}, sent: [], files: [], teamsMsgs: [], replies: [], sendMail: 0, posts: 0, deleted: [], n: 0, gdrafts: {}, gsent: [], gdeleted: [], gfiles: [], gchat: [], gposts: [], mfolders: [], made: [] };
+const st = { events: 0, drafts: {}, sent: [], files: [], teamsMsgs: [], replies: [], sendMail: 0, posts: 0, deleted: [], n: 0, gdrafts: {}, gsent: [], gdeleted: [], gfiles: [], gchat: [], gposts: [], mfolders: [], made: [] };
 const jwt = (c) => ["e30", Buffer.from(JSON.stringify(c)).toString("base64url"), "sig"].join(".");
 http.createServer((req, res) => {
   const ch = []; req.on("data", (c) => ch.push(c)); req.on("end", () => {
@@ -42,7 +42,7 @@ http.createServer((req, res) => {
     if (m) { st.replies.push({ to: m[1], html: j().body?.content }); return send(201, { id: `r${st.replies.length}` }); }
     if (p === `${G}/me/mailFolders/inbox/messages`) return send(200, { value: [] });
     if (p === `${G}/subscriptions`) return send(201, { id: "sub1", expirationDateTime: new Date(Date.now() + 2 * 86400000).toISOString() });
-    if (p === `${G}/me/events`) return send(201, { id: "ev" });
+    if (p === `${G}/me/events`) { st.events++; return send(201, { id: "ev" }); }
     // Google: Gmail drafts, Drive, Google Chat
     const GM = "/gmail.googleapis.com/gmail/v1/users/me";
     const b64 = (t) => Buffer.from(t).toString("base64url");

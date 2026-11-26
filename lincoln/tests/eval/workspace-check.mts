@@ -141,6 +141,27 @@ fresh("m9", null);
 const r9 = await approveAndSend(F, "a_m9", { id: U, name: "Maya Okafor" });
 ok(!r9.sent && r9.reason === "No recipient address" && apr("m9") === "pending", "an email with no address is not marked sent and says why");
 
+// 8. Automation choices (Settings, Automation): Approval holds the step in Review instead of doing it.
+const { addApprovedDate } = await import("../../src/lib/agent.ts");
+d.prepare("INSERT INTO kv (firm_id, key, value) VALUES (?, 'auto:calendar', 'approval') ON CONFLICT(firm_id, key) DO UPDATE SET value = excluded.value").run(F);
+const soonDate = new Date(Date.now() + 40 * 86400000).toISOString().slice(0, 10);
+d.prepare("INSERT INTO dates (id, firm_id, case_id, label, date, kind, source) VALUES ('dt_auto', ?, ?, 'Biometrics appointment', ?, 'date', 'test')").run(F, C, soonDate);
+const ev0 = (await state()).events;
+await tick();
+const cal = d.prepare("SELECT id, payload FROM approvals WHERE firm_id = ? AND kind = 'calendar' AND status = 'pending'").all(F) as { id: string; payload: string }[];
+ok(cal.length === 1 && JSON.parse(cal[0].payload).dateId === "dt_auto" && (await state()).events === ev0, "calendar on Approval: the date waits in Review and nothing is added");
+await tick();
+ok((d.prepare("SELECT COUNT(*) AS n FROM approvals WHERE firm_id = ? AND kind = 'calendar'").get(F) as { n: number }).n === 1, "and it is asked once");
+const added = await addApprovedDate(F, JSON.parse(cal[0].payload));
+ok("ok" in added && (await state()).events === ev0 + 1, "approving it adds the date to the calendar");
+d.prepare("INSERT INTO kv (firm_id, key, value) VALUES (?, 'auto:reminders', 'approval') ON CONFLICT(firm_id, key) DO UPDATE SET value = excluded.value").run(F);
+d.prepare("INSERT INTO cases (id, firm_id, ref, client, type_code, type_name, family, stage, state, summary, attorney_id, paralegal_id, opened_at) VALUES ('c_rem', ?, '2026-1009', 'Omar Haddad', 'N-400', 'Naturalization', 'Citizenship', 'Evidence', 'moving', '', ?, NULL, ?)").run(F, U, now());
+d.prepare("INSERT INTO messages (id, firm_id, case_id, direction, party, party_role, subject, body, at, state, email, mailbox_id) VALUES ('m_old', ?, 'c_rem', 'out', 'Omar Haddad', 'Client', 'Documents we need', 'Dear Omar', ?, 'sent', 'omar@example.com', ?)").run(F, new Date(Date.now() - 4 * 86400000).toISOString(), MB);
+const sent0 = (await state()).sendMail;
+await tick();
+const rem = d.prepare("SELECT title FROM approvals WHERE firm_id = ? AND case_id = 'c_rem' AND kind = 'message' AND title LIKE 'Reminder to%' AND status = 'pending'").all(F) as { title: string }[];
+ok(rem.length === 1 && (await state()).sendMail === sent0, "reminders on Approval: the reminder waits in Review, unsent");
+
 fs.rmSync(process.env.DATA_DIR!, { recursive: true, force: true });
 console.log(fails ? `\n${fails} failed` : "\nAll passed");
 process.exit(fails ? 1 : 0);

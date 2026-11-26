@@ -63,6 +63,8 @@ export const btn = {
 export const field = "h-10 w-full border border-line bg-card px-3 text-[13.5px] outline-none transition placeholder:text-faint focus:border-ink";
 /** Every search box in the app: same height, type and icon place (the icon: Search size 14 at left-3). */
 export const search = "h-9 w-full border border-line bg-card pl-8 pr-3 text-[13px] outline-none transition placeholder:text-faint focus:border-ink";
+/** A small dropdown that sits in a row next to buttons: same height as the buttons. */
+export const choice = "h-9 shrink-0 border border-line bg-card px-2.5 text-[13px] text-ink outline-none focus:border-ink disabled:opacity-50";
 export const label = "mb-1.5 block text-[12.5px] font-medium text-muted";
 
 export const STAGES = ["Intake", "Evidence", "Strategy", "Drafting", "Review", "Filed", "Decision"];

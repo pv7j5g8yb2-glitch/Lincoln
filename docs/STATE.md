@@ -788,3 +788,16 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
   Word exports use neutral black and greys. The app still follows the device's light or dark setting.
 * Settings (2026-11-26, Ismael): the Security activity and Access record lists are gone from the interface. Both are
   still recorded (sign ins, who opened or exported what) and are in the full firm export, as the Privacy Policy says.
+* Settings (2026-11-26, Ismael): signed in devices are one line per device (latest sign in, IP, "3h ago"), Sign out ends
+  every sign in on that device; "Sign out all other devices" removed. Two step sign in is each person's own choice: the
+  firm wide requirement is gone from the screen and switched off for every firm at start. "Export data" (was Export
+  everything); Delete firm asks to type the name in quotes, no "Cannot be undone." Only admins delete the firm or remove
+  a member (new Remove per member, password asked; their sign ins, mail connections, add-ins and chats go, cases stay
+  with the firm unassigned, the record of what they did is kept); nobody can delete their own account. Times across the
+  app are short: "now", "5m ago", "6h ago", "3d ago", "3w ago", "1mo ago".
+* Automation (2026-11-26): Client reminders and Dates added to the calendar each have a dropdown, Automatic or Approval
+  (admins choose; kv `auto:reminders`, `auto:calendar`). Approval puts the reminder or the date in Review, which
+  notifies the device; approving a date adds it to the calendar. Tested in tests/eval/workspace-check.mts. Fixed:
+  deadlines raised and Teams posts (nothing to approve), Other messages and Strategy (always attorney approval, as the
+  site promises). Open: Approval for filing mail and opening new cases needs Lincoln to hold the email and its files
+  until approved; not built yet.

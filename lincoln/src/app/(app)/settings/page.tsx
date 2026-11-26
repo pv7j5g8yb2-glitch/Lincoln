@@ -3,14 +3,14 @@ import { NotificationSwitch } from "@/components/Notifications";
 import clsx from "clsx";
 import AvatarField from "@/components/AvatarField";
 import { Avatar, PageHead, btn, field, label } from "@/components/ui";
-import { changePassword, confirmTwoStep, deleteFirm, disableTwoStep, setTwoStepRequired, signOutSession, startTwoStep, updateFirm, updateProfile, removeStyleRule } from "@/lib/actions";
+import { changePassword, confirmTwoStep, deleteFirm, removeMember, disableTwoStep, signOutSession, startTwoStep, updateFirm, updateProfile, removeStyleRule } from "@/lib/actions";
 import { db } from "@/lib/db";
 import QRCode from "qrcode";
 import { otpauth } from "@/lib/totp";
 import { open as openSecret } from "@/lib/secret";
 import { SESSION_HOURS } from "@/lib/session";
 import { requireUser } from "@/lib/session";
-import { people } from "@/lib/queries";
+import { kv, people } from "@/lib/queries";
 import { ago } from "@/lib/format";
 import { deviceName } from "@/lib/device";
 import CopyLink from "@/components/CopyLink";
@@ -22,25 +22,29 @@ import { inviteUrl, pendingInvites } from "@/lib/invites";
 import RoleSelect from "@/components/RoleSelect";
 import { rules } from "@/lib/memory";
 import { ConfirmButton } from "@/components/Confirm";
+import AutoSelect from "@/components/AutoSelect";
 
 const TABS: [string, string][] = [["profile", "Profile"], ["security", "Security"], ["firm", "Firm"], ["automation", "Automation"]];
 
-const RULES: [string, string, boolean][] = [
-  ["Reading and filing case mail", "", true],
-  ["Opening new cases", "", true],
-  ["Client reminders after 3 days", "", true],
-  ["Deadlines raised 14 days before", "", true],
-  ["Dates added to the calendar", "", true],
-  ["Review items posted to Teams", "", true],
-  ["Other messages", "", false],
-  ["Strategy and eligibility", "", false],
+// Automation (Ismael, 2026-11-26): a rule with a key is the firm's choice, Automatic or Approval, and changes what
+// Lincoln does. The others are fixed: raising dates and posting to Teams have nothing to approve, and emails and legal
+// judgement always wait for an attorney, as uselincoln.com promises.
+const RULES: [string, "reminders" | "calendar" | null, boolean][] = [
+  ["Reading and filing case mail", null, true],
+  ["Opening new cases", null, true],
+  ["Client reminders after 3 days", "reminders", true],
+  ["Deadlines raised 14 days before", null, true],
+  ["Dates added to the calendar", "calendar", true],
+  ["Review items posted to Teams", null, true],
+  ["Other messages", null, false],
+  ["Strategy and eligibility", null, false],
 ];
 const device = deviceName;
 
 const MSG: Record<string, Record<string, string>> = {
   profile: { name: "Name required.", sample: "Not available in the sample workspace." },
   security: { limited: "Too many attempts. Try again in 15 minutes.", sample: "Not available in the sample workspace.", current: "Wrong password.", nopassword: "Set a password first.", password: "10 characters min.", code: "Wrong code.", breached: "This password appears in known data breaches.", required: "The firm requires two step sign in.", admin: "Administrators only.", selffirst: "Turn on two step sign in for this account first." },
-  firm: { invite: "A valid email and a role are needed.", member: "This email already has an account.", limited: "Too many invites. Try again later.", "1": "Administrators only.", sample: "Not available in the sample workspace.", delete: "Name or password did not match.", export: "Wrong password.", password: "Wrong password.", nopassword: "Set a password in Security first." },
+  firm: { current: "Wrong password.", invite: "A valid email and a role are needed.", member: "This email already has an account.", limited: "Too many invites. Try again later.", "1": "Administrators only.", sample: "Not available in the sample workspace.", delete: "Name or password did not match.", export: "Wrong password.", password: "Wrong password.", nopassword: "Set a password in Security first." },
 };
 
 function Row({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -59,6 +63,14 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const secretText = setup && me.totp_pending_enc ? openSecret(me.totp_pending_enc) : "";
   const qr = secretText ? await QRCode.toDataURL(otpauth(secretText, user.email), { margin: 1, width: 360 }) : null;
   const sessions = tab === "security" ? (d.prepare("SELECT id, ip, agent, created_at, last_seen FROM sessions WHERE user_id = ? AND created_at > ? ORDER BY last_seen DESC").all(user.id, new Date(Date.now() - SESSION_HOURS * 3600_000).toISOString()) as { id: string; ip: string | null; agent: string | null; created_at: string; last_seen: string | null }[]) : [];
+  const devices: { name: string; ip: string | null; last: string; mine: boolean; ids: string[] }[] = [];
+  for (const x of sessions) {
+    const name = device(x.agent);
+    const at = x.last_seen ?? x.created_at;
+    const g = devices.find((y) => y.name === name);
+    if (!g) devices.push({ name, ip: x.ip, last: at, mine: x.id === sessionId, ids: [x.id] });
+    else { g.ids.push(x.id); g.mine ||= x.id === sessionId; if (at > g.last) { g.last = at; g.ip = x.ip; } }
+  }
   const hasPassword = Boolean((db().prepare("SELECT password_hash FROM users WHERE id = ?").get(user.id) as { password_hash: string | null }).password_hash);
   const admin = Boolean(user.admin);
   const details = d.prepare("SELECT address, phone, email FROM firms WHERE id = ?").get(firm.id) as { address: string | null; phone: string | null; email: string | null };
@@ -151,25 +163,15 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 )}
               </div>
 
-              {admin && !firm.demo && (
-                <form action={setTwoStepRequired} className="mt-3 flex items-center justify-between gap-4 border-b border-line pb-3">
-                  <input type="hidden" name="on" value={firm.require_2fa ? "0" : "1"} />
-                  <span className="text-[13px]">Required for everyone in the firm<span className="text-faint"> · {firm.require_2fa ? "On" : "Off"}</span></span>
-                  <ConfirmButton password={Boolean(firm.require_2fa)} className={btn.ghost}>{firm.require_2fa ? "Turn off" : "Turn on"}</ConfirmButton>
-                </form>
-              )}
-
               <h2 className="mb-1 mt-12 text-[14px] font-medium">Signed in devices</h2>
               <div className="border-t border-line">
-                {sessions.map((x) => (
-                  <Row key={x.id}>
-                    <span className="min-w-0 flex-1"><span className="block truncate text-[13px]">{device(x.agent)}{x.id === sessionId ? <span className="text-faint"> · this device</span> : null}</span><span className="block text-[12px] text-faint">{x.ip ? `${x.ip} · ` : ""}{ago(x.last_seen ?? x.created_at)}</span></span>
-                    {x.id !== sessionId && <form action={signOutSession}><input type="hidden" name="session" value={x.id} /><ConfirmButton className={btn.ghost}>Sign out</ConfirmButton></form>}
+                {devices.map((x) => (
+                  <Row key={x.name}>
+                    <span className="min-w-0 flex-1"><span className="block truncate text-[13px]">{x.name}{x.mine ? <span className="text-faint"> · this device</span> : null}</span><span className="block text-[12px] text-faint">{x.ip ? `${x.ip} · ` : ""}{ago(x.last)}</span></span>
+                    {!x.mine && <form action={signOutSession}><input type="hidden" name="session" value={x.ids.join(",")} /><ConfirmButton className={btn.ghost}>Sign out</ConfirmButton></form>}
                   </Row>
                 ))}
               </div>
-              {sessions.length > 1 && <form action={signOutSession} className="mt-2"><input type="hidden" name="session" value="others" /><ConfirmButton className={btn.ghost}>Sign out all other devices</ConfirmButton></form>}
-
             </>
           )}
 
@@ -197,7 +199,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                     <Avatar initials={p.initials} src={p.avatar} size={28} />
                     <span className="min-w-0 flex-1"><span className="block truncate text-[13px]">{p.name}{p.id === user.id ? <span className="text-faint"> (this account)</span> : null}</span><span className="block truncate text-[12px] text-faint">{p.email}</span></span>
                     {admin && !firm.demo ? (
-                      <><RoleSelect userId={p.id} role={p.role} roles={ROLES} /><AdminSwitch userId={p.id} on={Boolean(p.admin)} /></>
+                      <><RoleSelect userId={p.id} role={p.role} roles={ROLES} /><AdminSwitch userId={p.id} on={Boolean(p.admin)} />{p.id !== user.id ? <form action={removeMember}><input type="hidden" name="user" value={p.id} /><ConfirmButton password className={btn.ghost}>Remove</ConfirmButton></form> : <span className="w-[68px]" />}</>
                     ) : <span className="hidden text-[12.5px] text-muted sm:block">{p.role}{p.admin ? " · Admin" : ""}</span>}
                   </Row>
                 ))}
@@ -245,7 +247,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
 
           {tab === "firm" && admin && !firm.demo && (
             <section className="mt-12">
-              <h2 className="mb-1 text-[14px] font-medium">Export everything</h2>
+              <h2 className="mb-1 text-[14px] font-medium">Export data</h2>
               <form action="/api/firm-export" method="post" className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
                 <input name="password" type="password" required autoComplete="current-password" placeholder="Password" className={clsx(field, "max-w-[260px]")} />
                 <button className={btn.secondary}>Download</button>
@@ -257,8 +259,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             <section className="mt-12">
               <h2 className="mb-1 text-[14px] font-medium">Delete firm</h2>
               <form action={deleteFirm} className="flex flex-col gap-3 border-t border-line pt-3">
-                <p className="text-[13px] text-muted">Cannot be undone.</p>
-                <input name="confirm" required placeholder={`Type ${firm.name}`} className={clsx(field, "max-w-[360px]")} />
+                <input name="confirm" required placeholder={`Type "${firm.name}"`} className={clsx(field, "max-w-[360px]")} />
                 <input name="password" type="password" required autoComplete="current-password" placeholder="Password" className={clsx(field, "max-w-[360px]")} />
                 <div><button className="inline-flex h-9 items-center border border-risk/40 px-3.5 text-[13px] font-medium text-risk transition hover:bg-risk-bg">Delete everything</button></div>
               </form>
@@ -267,10 +268,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
 
           {tab === "automation" && (
             <div className="border-t border-line">
-              {RULES.map(([t, , auto]) => (
+              {RULES.map(([t, rule, auto]) => (
                 <Row key={t}>
                   <span className="min-w-0 flex-1 text-[13px]">{t}</span>
-                  <span className={clsx("text-[12.5px]", auto ? "text-muted" : "font-medium")}>{auto ? "Automatic" : "Approval"}</span>
+                  {rule
+                    ? <AutoSelect rule={rule} value={kv(firm.id, `auto:${rule}`) === "approval" ? "approval" : "auto"} disabled={!admin || Boolean(firm.demo)} />
+                    : <span className={clsx("text-[13px]", auto ? "text-muted" : "font-medium")}>{auto ? "Automatic" : "Approval"}</span>}
                 </Row>
               ))}
             </div>

@@ -31,16 +31,18 @@ export function inDays(isoDate: string) {
   if (n < 70) return `in ${Math.round(n / 7)} weeks`;
   return `in ${Math.round(n / 30)} months`;
 }
+/** How long ago, short like the rest of the app: "now", "5m ago", "6h ago", "3d ago", "3w ago", "1mo ago", "2y ago". */
 export function ago(iso: string) {
   const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
-  if (m < 1) return "just now";
-  if (m < 60) return `${m} min ago`;
+  if (m < 1) return "now";
+  if (m < 60) return `${m}m ago`;
   const h = Math.round(m / 60);
-  if (h < 24) return `${h} h ago`;
+  if (h < 24) return `${h}h ago`;
   const d = Math.round(h / 24);
-  if (d === 1) return "yesterday";
-  if (d < 14) return `${d} days ago`;
-  return shortDate(iso);
+  if (d < 7) return `${d}d ago`;
+  if (d < 30) return `${Math.round(d / 7)}w ago`;
+  if (d < 365) return `${Math.max(1, Math.round(d / 30))}mo ago`;
+  return `${Math.round(d / 365)}y ago`;
 }
 export function hours(min: number) {
   if (min < 60) return `${min} min`;

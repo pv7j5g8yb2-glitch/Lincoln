@@ -321,6 +321,12 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
     return r.sent ? { ok: true as const, sent: true } : { error: `Not sent. ${r.reason}.` };
   }
 
+  // An approved date goes into the calendar before the item closes; if it cannot, it stays in Review.
+  if (a.kind === "calendar" && decision === "approved" && !firm.demo) {
+    const r = await (await import("./agent")).addApprovedDate(F, payload);
+    if ("error" in r) { const e = r.error ?? "Not added"; if (!quiet) await toast(e); return { error: e }; }
+  }
+
   const tx = d.transaction(() => {
     // A returned email is never sent.
     if (a.kind === "message" && payload.messageId) {
@@ -367,6 +373,8 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
       d.prepare("UPDATE drafts SET status = 'approved', updated_at = ? WHERE firm_id = ? AND id = ?").run(now(), F, payload.draftId);
       log(F, a.case_id, user.name, "decide", `Approved: ${a.title}.`);
       if (firm.demo) d.prepare("UPDATE cases SET summary = 'Support letter approved. The consultation and the passport renewal are still open.', waiting_on = 'Peer group: advisory opinion' WHERE firm_id = ? AND id = ?").run(F, a.case_id);
+    } else if (a.kind === "calendar" && decision === "approved") {
+      log(F, a.case_id, user.name, "decide", `Approved: ${a.title}.`);
     } else if (a.kind === "redline" && decision === "approved") {
       log(F, a.case_id, user.name, "decide", `Reviewed: ${a.title}.`);
     } else if (a.kind === "packet" && decision === "approved") {
@@ -772,9 +780,12 @@ export async function signOutSession(form: FormData) {
   if (target === "others") {
     db().prepare("DELETE FROM sessions WHERE user_id = ? AND id != ?").run(user.id, sessionId);
     db().prepare("DELETE FROM push_subs WHERE user_id = ? AND (session IS NULL OR session != ?)").run(user.id, sessionId);
-  } else if (target !== sessionId) {
-    db().prepare("DELETE FROM sessions WHERE user_id = ? AND id = ?").run(user.id, target);
-    db().prepare("DELETE FROM push_subs WHERE user_id = ? AND session = ?").run(user.id, target);
+  } else {
+    // One device can hold several sign ins: all of them end together, never this one.
+    for (const id of target.split(",").map((x) => x.trim()).filter((x) => x && x !== sessionId).slice(0, 50)) {
+      db().prepare("DELETE FROM sessions WHERE user_id = ? AND id = ?").run(user.id, id);
+      db().prepare("DELETE FROM push_subs WHERE user_id = ? AND session = ?").run(user.id, id);
+    }
   }
   await securityEvent(firm.id, user.id, "sessions_signed_out", target === "others" ? "all other devices" : "one device");
   await toast("Signed out");
@@ -793,6 +804,46 @@ export async function setTwoStepRequired(form: FormData) {
   await securityEvent(firm.id, user.id, on ? "two_step_required" : "two_step_optional");
   await toast("Saved");
   redirect("/settings?tab=security");
+}
+
+/**
+ * An administrator removes a member from the firm (Ismael, 2026-11-26: only admins delete a firm or a member; nobody
+ * deletes their own account). Their sign ins, mail connections, add-ins and chats go; the cases stay with the firm,
+ * unassigned from them, and the record of what they did is kept. The password is asked again.
+ */
+export async function removeMember(form: FormData) {
+  const { user, firm } = await requireUser();
+  if (firm.demo || !user.admin) redirect("/settings?tab=firm&error=1");
+  const pw = passwordCheck(user.id, form.get("confirm_password"));
+  if (pw !== "ok") redirect(`/settings?tab=firm&error=${pw === "none" ? "nopassword" : "current"}`);
+  const target = String(form.get("user") ?? "");
+  const d = db();
+  const m = d.prepare("SELECT id, name FROM users WHERE id = ? AND firm_id = ?").get(target, firm.id) as { id: string; name: string } | undefined;
+  if (!m || m.id === user.id) redirect("/settings?tab=firm");
+  const conns = d.prepare("SELECT provider, refresh_enc FROM mailboxes WHERE user_id = ?").all(m.id) as { provider: string; refresh_enc: string }[];
+  for (const c of conns) await revokeAccess(c.provider, c.refresh_enc);
+  d.transaction(() => {
+    for (const t of ["sessions", "push_subs", "password_resets", "addin_codes", "addin_tokens", "chat", "chat_threads", "mailboxes", "identities", "login_challenges", "known_devices"]) d.prepare(`DELETE FROM ${t} WHERE user_id = ?`).run(m.id);
+    d.prepare("UPDATE cases SET attorney_id = NULL WHERE firm_id = ? AND attorney_id = ?").run(firm.id, m.id);
+    d.prepare("UPDATE cases SET paralegal_id = NULL WHERE firm_id = ? AND paralegal_id = ?").run(firm.id, m.id);
+    d.prepare("UPDATE approvals SET assignee_id = NULL WHERE firm_id = ? AND assignee_id = ?").run(firm.id, m.id);
+    d.prepare("DELETE FROM users WHERE id = ? AND firm_id = ?").run(m.id, firm.id);
+  })();
+  await securityEvent(firm.id, user.id, "member_removed", m.name);
+  await toast("Removed");
+  revalidatePath("/settings");
+  redirect("/settings?tab=firm");
+}
+
+/** An administrator chooses Automatic or Approval for a rule on the Automation page. */
+export async function setAutomation(rule: string, value: string) {
+  const { user, firm } = await requireUser();
+  if (firm.demo) return { error: "Not available in the sample workspace." };
+  if (!user.admin) return { error: "Administrators only." };
+  if (!["reminders", "calendar"].includes(rule) || !["auto", "approval"].includes(value)) return { error: "Not changed" };
+  setKv(firm.id, `auto:${rule}`, value);
+  revalidatePath("/settings");
+  return { ok: true as const };
 }
 
 /** Permanently deletes the firm: every case, file, message, connection and account. Administrators only. */
