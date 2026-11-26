@@ -8,8 +8,8 @@ export function GET(req: Request) {
   const open = hostOf(req.headers) === MAIN_HOST || hostOf(req.headers) === `www.${MAIN_HOST}`;
   const body = open
     ? [
-        "User-agent: *", "Allow: /", "Disallow: /terms", "Disallow: /privacy", "",
-        ...AI.flatMap((a) => [`User-agent: ${a}`, "Allow: /", ""]),
+        // A crawler named in its own group ignores the "*" group, so each group repeats the pages kept out.
+        ...["*", ...AI].flatMap((a) => [`User-agent: ${a}`, "Allow: /", "Disallow: /terms", "Disallow: /privacy", ""]),
         `Sitemap: ${SITE}/sitemap.xml`, "",
       ].join("\n")
     : "User-agent: *\nDisallow: /\n";
