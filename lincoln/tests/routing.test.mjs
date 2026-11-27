@@ -87,7 +87,7 @@ d.prepare("UPDATE cases SET stage = 'Approved' WHERE id = 'c_omar'").run();
 ex = R.existingClient(F, { name: "Omar Haddad", email: "omar@haddad.org", typeCode: "N-400" });
 ok(ex.addTo === null && ex.sameClient.includes("c_omar"), "a closed case is not reopened: a new case for the same person");
 R.flagSameName(F, "c_f0", ["c_lucia"]);
-ok(d.prepare("SELECT COUNT(*) AS n FROM issues WHERE case_id = 'c_f0' AND title = 'Same name as another client'").get().n === 1, "a possible duplicate is raised as a quiet issue");
+ok(d.prepare("SELECT COUNT(*) AS n FROM approvals WHERE case_id = 'c_f0' AND kind = 'same_person' AND status = 'pending'").get().n === 1, "a possible duplicate is asked about once in Review: Same person?");
 
 // Learning from a filed message.
 R.learnFrom(F, "c_acme1", { from: "priya.nair@gmail.com", text: "My receipt is WAC2612345678." });
@@ -119,6 +119,90 @@ ok(d.prepare("SELECT COUNT(*) AS n FROM activity WHERE case_id = 'c_omar' AND te
 d.prepare("INSERT INTO read_jobs (id, firm_id, case_id, files, opts, pages_before, tries, created_at) VALUES ('job_dead', ?, 'c_acme1', 1, '{}', 0, 2, ?)").run(F, new Date().toISOString());
 resumeReads();
 ok(/two attempts/.test(d.prepare("SELECT note FROM cases WHERE id = 'c_acme1'").get().note ?? "") && !d.prepare("SELECT 1 FROM read_jobs WHERE id = 'job_dead'").get(), "a read that keeps failing stops after two tries and says so on the case");
+
+// Families: an address or phone shared under another name is a relative, never the same person.
+const M = await import("../src/lib/merge.ts");
+const { savePage, loadPage, pagesDir } = await import("../src/lib/storage.ts");
+addCase("c_karim", "Karim Haddad", "N-400", "haddadfamily@gmail.com", 50);
+ex = R.existingClient(F, { name: "Layla Haddad", email: "haddadfamily@gmail.com", typeCode: "N-400" });
+ok(ex.addTo === null && ex.household.includes("c_karim"), "a wife writing from the family's Gmail about her own N-400 gets her own case, linked as family, not added to her husband's");
+addCase("c_wei", "Wei Chen", "H-1B", "hr@acme-robotics.com", 40);
+ex = R.existingClient(F, { name: "Priya Patel", email: "hr@acme-robotics.com", typeCode: "H-1B" });
+ok(ex.addTo === null && !ex.household.length, "an employer's HR address shared by two employees ties nobody together");
+ex = R.existingClient(F, { name: "Karim Haddad", email: "haddadfamily@gmail.com", typeCode: "N-400" });
+ok(ex.addTo === "c_karim", "the same person from the family address is still the same person");
+
+// A number written in a family's email belongs to the relative it is already on.
+R.learn(F, "c_karim", "receipt", "IOE0900000001");
+addCase("c_layla", "Layla Haddad", "N-400", null, 20);
+R.learnFrom(F, "c_layla", { text: "My husband's receipt is IOE0900000001." });
+ok(!d.prepare("SELECT 1 FROM case_keys WHERE case_id = 'c_layla' AND value = 'IOE0900000001'").get(), "a relative's receipt number in an email is not learned on the wrong person's case");
+
+// Merging: proof arrives later that two cases are one person and one matter.
+const jpeg = (t) => Buffer.from(`page ${t}`);
+addCase("c_ana1", "Ana Lima", "I-485", "ana@gmail.com", 30);
+addCase("c_ana2", "Ana Lima", "I-485", "ana.lima@work.com", 2);
+for (let i = 1; i <= 3; i++) savePage(F, "c_ana1", i, jpeg(`a${i}`));
+for (let i = 1; i <= 2; i++) savePage(F, "c_ana2", i, jpeg(`b${i}`));
+d.prepare("UPDATE cases SET pages = 3 WHERE id = 'c_ana1'").run();
+d.prepare("UPDATE cases SET pages = 2 WHERE id = 'c_ana2'").run();
+d.prepare("INSERT INTO documents (id, firm_id, case_id, n, title, kind, page_from, page_to, status) VALUES ('d_a1', ?, 'c_ana1', 1, 'Passport', 'Identity', 1, 3, 'ok'), ('d_b1', ?, 'c_ana2', 1, 'Birth certificate', 'Civil', 1, 2, 'ok')").run(F, F);
+d.prepare("INSERT INTO criteria (id, firm_id, case_id, n, code, name, citation, recommendation, strength, summary, weakness, evidence) VALUES ('k_a', ?, 'c_ana1', 1, 'A', 'Admissibility', 'INA 212', 'more', 'Moderate', 's', 'w', ?), ('k_b', ?, 'c_ana2', 1, 'A', 'Admissibility', 'INA 212', 'claim', 'Strong', 's2', 'w2', ?)").run(F, JSON.stringify([{ page: 2, grade: 3 }]), F, JSON.stringify([{ page: 1, grade: 5 }]));
+d.prepare("INSERT INTO issues (id, firm_id, case_id, kind, severity, title, detail, sources, status, created_at) VALUES ('i_b', ?, 'c_ana2', 'risk', 'low', 'Name spelled two ways', 'p. 2 spells it Anna.', ?, 'open', ?)").run(F, JSON.stringify([1, 2]), at(1));
+d.prepare("INSERT INTO drafts (id, firm_id, case_id, title, kind, status, version, content, updated_at) VALUES ('dr_b', ?, 'c_ana2', 'Cover letter', 'letter', 'for_review', 1, ?, ?)").run(F, JSON.stringify({ sections: [{ paras: ["She was born in Lisbon (p. 1) and entered in 2019 (pp. 1-2)."] }] }), at(1));
+d.prepare("INSERT INTO messages (id, firm_id, case_id, direction, party, subject, body, at, state, email) VALUES ('m_b', ?, 'c_ana2', 'in', 'Ana Lima', 'Docs', 'x', ?, 'filed', 'ana.lima@work.com')").run(F, at(1));
+R.learn(F, "c_ana1", "anumber", "201234567");
+R.learn(F, "c_ana2", "anumber", "201234567");
+const kept = M.reconcile(F, "c_ana2");
+const ana = d.prepare("SELECT pages FROM cases WHERE id = 'c_ana1'").get();
+ok(kept === "c_ana1" && !d.prepare("SELECT 1 FROM cases WHERE id = 'c_ana2'").get() && ana.pages === 5, "the same A-Number on two cases of the same name and matter merges them into the older case");
+ok(d.prepare("SELECT n, page_from, page_to FROM documents WHERE id = 'd_b1'").get().page_from === 4 && d.prepare("SELECT n FROM documents WHERE id = 'd_b1'").get().n === 2 && String(loadPage(F, "c_ana1", 4)) === "page b1", "the merged case's pages follow the kept case's, with the documents renumbered");
+ok(JSON.parse(d.prepare("SELECT content FROM drafts WHERE id = 'dr_b'").get().content).sections[0].paras[0] === "She was born in Lisbon (p. 4) and entered in 2019 (pp. 4-5).", "every citation in a draft is renumbered to the pages it now cites");
+ok(JSON.stringify(JSON.parse(d.prepare("SELECT sources FROM issues WHERE id = 'i_b'").get().sources)) === "[4,5]" && d.prepare("SELECT detail FROM issues WHERE id = 'i_b'").get().detail === "p. 5 spells it Anna.", "issues point at the right pages after the merge");
+const crit = d.prepare("SELECT recommendation, evidence FROM criteria WHERE case_id = 'c_ana1'").all();
+ok(crit.length === 1 && crit[0].recommendation === "claim" && JSON.stringify(JSON.parse(crit[0].evidence).map((e) => e.page)) === "[2,4]", "evidence for the same requirement becomes one row, graded by the stronger");
+ok(d.prepare("SELECT case_id FROM messages WHERE id = 'm_b'").get().case_id === "c_ana1" && R.route(F, { from: "ana.lima@work.com" }).likely?.caseId === "c_ana1" && d.prepare("SELECT 1 FROM case_keys WHERE case_id = 'c_ana1' AND kind = 'anumber'").get() && !fs.existsSync(pagesDir("c_ana2")), "mail and identifiers move with it, and the old case's files are gone");
+ok(d.prepare("SELECT COUNT(*) AS n FROM activity WHERE case_id = 'c_ana1' AND text LIKE 'Merged with%the same A-Number%'").get().n === 1, "the merge is recorded on the case, with the proof");
+
+// Not while a case is reading: the merge waits, then happens.
+addCase("c_ben1", "Ben Okoro", "I-130", null, 25);
+addCase("c_ben2", "Ben Okoro", "I-130", null, 1);
+d.prepare("UPDATE cases SET processing = 1 WHERE id = 'c_ben2'").run();
+R.learn(F, "c_ben1", "person", R.personKey("Ben Okoro", "1990-04-02"));
+R.learn(F, "c_ben2", "person", R.personKey("Ben Okoro", "1990-04-02"));
+ok(M.reconcile(F, "c_ben2") === "c_ben2" && d.prepare("SELECT 1 FROM cases WHERE id = 'c_ben2'").get(), "a case still reading files is never merged mid read");
+d.prepare("UPDATE cases SET processing = 0 WHERE id = 'c_ben2'").run();
+M.finishMerges();
+ok(!d.prepare("SELECT 1 FROM cases WHERE id = 'c_ben2'").get() && d.prepare("SELECT 1 FROM cases WHERE id = 'c_ben1'").get(), "and the merge goes ahead once the reading is done");
+
+// The same person, another matter: linked, never merged. Another name: asked, never merged.
+addCase("c_tom1", "Tom Silva", "H-1B", null, 60);
+addCase("c_tom2", "Tom Silva", "I-140", null, 3);
+R.learn(F, "c_tom1", "anumber", "209999999"); R.learn(F, "c_tom2", "anumber", "209999999");
+M.reconcile(F, "c_tom2");
+ok(d.prepare("SELECT 1 FROM cases WHERE id = 'c_tom2'").get() && M.linksOf(F, "c_tom2").some((l) => l.id === "c_tom1" && l.kind === "same_person"), "the same person with another matter keeps two cases, linked as the same client");
+addCase("c_mary1", "Mary Jones", "I-485", null, 70);
+addCase("c_mary2", "Mary Smith", "I-485", null, 4);
+R.learn(F, "c_mary1", "anumber", "208888888"); R.learn(F, "c_mary2", "anumber", "208888888");
+M.reconcile(F, "c_mary2");
+ok(d.prepare("SELECT 1 FROM cases WHERE id = 'c_mary1'").get() && d.prepare("SELECT 1 FROM cases WHERE id = 'c_mary2'").get() && d.prepare("SELECT 1 FROM approvals WHERE case_id = 'c_mary2' AND kind = 'same_person' AND brief LIKE 'Same A-Number%'").get(), "the same A-Number under another name (a married name) is asked about, never merged by itself");
+M.link(F, "c_mary2", "c_mary1", "different");
+d.prepare("DELETE FROM approvals WHERE case_id = 'c_mary2'").run();
+R.flagSameName(F, "c_mary2", ["c_mary1"]);
+ok(!d.prepare("SELECT 1 FROM approvals WHERE case_id = 'c_mary2'").get() && !M.reconcile(F, "c_mary2").startsWith("x") && !d.prepare("SELECT 1 FROM approvals WHERE case_id = 'c_mary2'").get(), "once a person says they are different people, Lincoln never asks again");
+
+// A family: each document reaches the case of everyone whose application needs it, once.
+addCase("c_rosa", "Rosa Lima", "I-485", null, 10);
+addCase("c_leo", "Leo Lima", "I-485", null, 10);
+M.link(F, "c_rosa", "c_leo", "family");
+for (let i = 1; i <= 2; i++) savePage(F, "c_rosa", i, jpeg(`r${i}`));
+d.prepare("UPDATE cases SET pages = 2 WHERE id = 'c_rosa'").run();
+d.prepare("INSERT INTO documents (id, firm_id, case_id, n, title, kind, page_from, page_to, doc_date, status) VALUES ('d_r1', ?, 'c_rosa', 1, 'Birth certificate of Leo Lima', 'Civil', 1, 2, '2012-05-01', 'ok')").run(F);
+M.copyDocuments(F, "c_rosa", "c_leo", [1]);
+M.copyDocuments(F, "c_rosa", "c_leo", [1]);
+const leo = d.prepare("SELECT n, page_from, page_to FROM documents WHERE case_id = 'c_leo'").all();
+ok(leo.length === 1 && leo[0].page_from === 1 && leo[0].page_to === 2 && String(loadPage(F, "c_leo", 2)) === "page r2" && d.prepare("SELECT pages FROM cases WHERE id = 'c_leo'").get().pages === 2, "a child's document placed in the child's case, with its pages, once");
+ok(JSON.stringify(M.familyOf(F, "c_leo").sort()) === JSON.stringify(["c_leo", "c_rosa"]), "the family is found from any member's case");
 
 fs.rmSync(process.env.DATA_DIR, { recursive: true, force: true });
 assert.equal(fails, 0, `${fails} routing checks failed`);

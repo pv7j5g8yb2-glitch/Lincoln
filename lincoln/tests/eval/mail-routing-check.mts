@@ -31,6 +31,7 @@ Object.assign(process.env, { DATA_DIR: fs.mkdtempSync(path.join(os.tmpdir(), "li
 const { db, uid } = await import("../../src/lib/db.ts");
 const { handleInbound, resumeMail } = await import("../../src/lib/agent.ts");
 const { seal } = await import("../../src/lib/secret.ts");
+const { familyOf } = await import("../../src/lib/merge.ts");
 const d = db();
 let fails = 0;
 const ok = (c: unknown, what: string) => { console.log(`${c ? "ok  " : "FAIL"} ${what}`); if (!c) fails++; };
@@ -72,7 +73,7 @@ answer = { ...base, kind: "new_case", case_id: null, new_case: { client: "Lucia 
 await handleInbound(F, mail({ from: "lreyes1985@yahoo.com", fromName: "Lucia Reyes", subject: "New case", text: "I want to petition for my husband." }), null);
 const fresh = last().case_id;
 ok(cases() === n0 + 1 && fresh !== "c_lucia", "a different person with the same name gets her own case");
-ok((d.prepare("SELECT COUNT(*) AS n FROM issues WHERE case_id = ? AND title = 'Same name as another client'").get(fresh) as { n: number }).n === 1, "and the possible duplicate is flagged for a person to check");
+ok((d.prepare("SELECT COUNT(*) AS n FROM approvals WHERE case_id = ? AND kind = 'same_person'").get(fresh) as { n: number }).n === 1, "and the possible duplicate is flagged for a person to check");
 
 answer = { ...base, kind: "new_case", case_id: null, new_case: { client: "Omar Haddad", counterpart: null, type_code: "I-131", type_name: "Travel document" } };
 await handleInbound(F, mail({ from: "omar@haddad.org", fromName: "Omar Haddad", subject: "Travel", text: "I also need a travel document." }), null);
@@ -113,7 +114,34 @@ ok(g.case_id !== "c_lucia" && !d.prepare("SELECT 1 FROM messages WHERE firm_id =
 answer = { ...base, kind: "new_case", case_id: null, new_case: { client: "Lucia Reyes", counterpart: null, type_code: "I-130", type_name: "Relative petition" } };
 await handleInbound(G, mail({ from: "lucia@gmail.com", fromName: "Lucia Reyes", subject: "More", text: "Another document." }), null);
 const g2 = d.prepare("SELECT case_id FROM messages WHERE firm_id = ? ORDER BY rowid DESC LIMIT 1").get(G) as { case_id: string | null };
-ok(g2.case_id === "c_g_lucia" && !(d.prepare("SELECT COUNT(*) AS n FROM issues WHERE firm_id = ? AND title = 'Same name as another client'").get(G) as { n: number }).n, "and the same client at another firm is matched only to that firm's own case, never flagged against the first firm's");
+ok(g2.case_id === "c_g_lucia" && !(d.prepare("SELECT COUNT(*) AS n FROM approvals WHERE firm_id = ? AND kind = 'same_person'").get(G) as { n: number }).n, "and the same client at another firm is matched only to that firm's own case, never flagged against the first firm's");
+
+// A family writes once for three people: a case each, linked, all with the same attorney.
+const fresh3 = () => (d.prepare("SELECT id, client, attorney_id FROM cases WHERE firm_id = ? ORDER BY rowid DESC LIMIT 3").all(F) as { id: string; client: string; attorney_id: string }[]);
+const before3 = cases();
+answer = { ...base, kind: "new_case", case_id: null, new_case: { client: "Rosa Mendes", counterpart: "Paulo Mendes", type_code: "I-485", type_name: "Adjustment of status", family: [{ client: "Ines Mendes", type_code: "I-485", relation: "child" }, { client: "Tiago Mendes", type_code: "I-485", relation: "child" }] } };
+await handleInbound(F, mail({ from: "mendesfamily@gmail.com", fromName: "Rosa Mendes", threadId: "thr-fam", subject: "Green cards for me and my children", text: "My husband is a US citizen. We need green cards for me, Ines and Tiago." }), null);
+const three = fresh3();
+const rosa = three.find((c) => c.client === "Rosa Mendes")!, ines = three.find((c) => c.client === "Ines Mendes")!;
+ok(cases() === before3 + 3 && three.every((c) => c.attorney_id === "u_m"), "one email for a family opens a case for each person, with the same attorney");
+ok(JSON.stringify(familyOf(F, rosa.id).sort()) === JSON.stringify(three.map((c) => c.id).sort()), "and the three cases are linked as one family");
+ok(last().case_id === rosa.id, "the email itself is in the main applicant's case");
+
+// A reply in the family's thread about one child goes to that child's case; one about everyone stays with the main case.
+answer = { ...base, kind: "case_update", case_id: ines.id, new_case: null };
+await handleInbound(F, mail({ from: "mendesfamily@gmail.com", fromName: "Rosa Mendes", threadId: "thr-fam", subject: "Re: Green cards", text: "Here is Ines's school record." }), null);
+ok(last().case_id === ines.id, "a reply in the family's thread about one child is filed to that child's case");
+answer = { ...base, kind: "case_update", case_id: "c_lucia", new_case: null };
+await handleInbound(F, mail({ from: "mendesfamily@gmail.com", fromName: "Rosa Mendes", threadId: "thr-fam", subject: "Re: Green cards", text: "Thanks." }), null);
+ok(last().case_id === rosa.id, "a case outside the family is never used for the family's thread: it stays with the main case");
+
+// A wife writes from the shared Gmail about her own N-400 while her husband has one: two cases, linked, never one.
+addCase("c_karim", "Karim Haddad", "N-400", "haddads@gmail.com", 40);
+answer = { ...base, kind: "new_case", case_id: null, new_case: { client: "Layla Haddad", counterpart: null, type_code: "N-400", type_name: "Naturalization" } };
+const b4 = cases();
+await handleInbound(F, mail({ from: "haddads@gmail.com", fromName: "Haddad Family", subject: "Citizenship for me too", text: "I am Layla, Karim's wife. I would also like to apply for citizenship." }), null);
+const layla = last().case_id!;
+ok(cases() === b4 + 1 && layla !== "c_karim" && familyOf(F, layla).includes("c_karim"), "a wife on the family's address gets her own case, linked to her husband's");
 
 // A deploy restarts the server while two emails are in flight: one half read, one claimed but not yet read. After the
 // restart both are fetched again and each is filed exactly once.

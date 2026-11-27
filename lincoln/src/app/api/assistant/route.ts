@@ -33,6 +33,8 @@ const TOOLS: Tool[] = [
   { name: "search_files", description: "Search the user's own Google Drive, OneDrive or SharePoint (only files they can already open) for documents by name: an old filing, a passport scan, an approval notice, a CV, a saved email.", input_schema: { type: "object", properties: { query: { type: "string" } }, required: ["query"] } },
   { name: "add_to_case", description: "Read a file found with search_files, or the attachments of an email found with search_mail, into a case's file.", input_schema: { type: "object", properties: { case_id: { type: "string" }, file_id: { type: "string" }, email_id: { type: "string" } }, required: ["case_id"] } },
   { name: "mark_up", description: "Mark up a Google Doc for a case as the responsible attorney would: corrections against the case record as suggestions and comments, in a copy in the client's folder that opens in Google Docs. Takes the Doc's link.", input_schema: { type: "object", properties: { case_id: { type: "string" }, link: { type: "string" } }, required: ["case_id", "link"] } },
+  { name: "merge_cases", description: "Two cases that are the same person. The same matter becomes one case (pages, documents, evidence, drafts, mail and dates together; the older case is kept); another matter for the same person is linked as the same client. Only when the user says they are the same person.", input_schema: { type: "object", properties: { case_id: { type: "string" }, other_case_id: { type: "string" } }, required: ["case_id", "other_case_id"] } },
+  { name: "link_family", description: "Link two cases of one family (one case per person), so the family's mail and shared documents reach each person's case.", input_schema: { type: "object", properties: { case_id: { type: "string" }, other_case_id: { type: "string" } }, required: ["case_id", "other_case_id"] } },
   { name: "resolve_issue", description: "Mark an open issue on a case as resolved, with the reason.", input_schema: { type: "object", properties: { issue_id: { type: "string" }, resolution: { type: "string" } }, required: ["issue_id", "resolution"] } },
 ];
 
@@ -196,6 +198,16 @@ export async function POST(req: Request) {
       changed.any = true;
       return `Reading ${files.length} file${files.length === 1 ? "" : "s"} into the case now. Link: /cases/${x.id}`;
     }
+    if (name === "merge_cases" || name === "link_family") {
+      const a = own(input.case_id), b = own(input.other_case_id);
+      if (a.id === b.id) return "That is the same case.";
+      const m = await import("@/lib/merge");
+      changed.any = true;
+      if (name === "link_family") { m.link(F, a.id, b.id, "family"); return `Linked ${a.client} and ${b.client} as one family.`; }
+      if (!m.sameMatter(a, b)) { m.link(F, a.id, b.id, "same_person"); return `Linked as the same client: ${a.type_code} and ${b.type_code} are different matters, so they stay two cases.`; }
+      const kept = m.mergeCases(F, a.id, b.id, `${s!.user.name} said they are the same person`, s!.user.name);
+      return kept ? `Merged into ${kept === a.id ? a.ref : b.ref}.` : "One of the cases is still reading files; the merge follows as soon as it finishes.";
+    }
     if (name === "resolve_issue") {
       const r = d.prepare("UPDATE issues SET status = 'resolved', resolution = ?, resolved_at = ? WHERE firm_id = ? AND id = ? AND status = 'open'").run(`${String(input.resolution).slice(0, 300)} (${s!.user.name})`, new Date().toISOString(), F, String(input.issue_id));
       changed.any = r.changes > 0;
@@ -221,7 +233,8 @@ What Lincoln does, so you can describe it accurately when asked:
 - Approved emails are sent from the attorney's own mailbox. One reminder goes out, under the firm's rule, when a client has not replied in 3 days. Dates within 14 days are raised as issues.
 - Checks every case on its own: a second reading looks for bars (status violations, prior denials or removals, misrepresentation, criminal history, unauthorized work, the J-1 home residency rule), missing items and conflicting facts; passport and I-94 dates and the H-1B six year limit are calculated in code, not by the model; every cited sentence in a draft is checked against its page.
 - Drafts any document from the file with every fact cited to its page. Drafts open in Word or Google Docs; case lists and exhibit indexes export to Excel or Google Sheets; a case summary deck exports to PowerPoint or Google Slides. Client files can be imported from Google Drive, OneDrive or SharePoint. Case dates are added to the attorney's Google or Outlook calendar. Items for review can be posted to a Teams channel.
-- In this conversation you can use tools: find and read cases, open cases, draft documents, prepare emails for approval, add dates, resolve issues, search the law library, search the user's own connected mail and files and read what is found into a case, and mark up a Google Doc from its link. Use them rather than telling the user to do it.
+- One case per person and matter: the same person writing from another address, phone or name is recognised and kept in one case; when proof arrives later (the same A-Number, or name with date of birth) two cases of the same person and matter are merged on their own, and when Lincoln is not sure it asks in Review. A family applying together gets a case per person, linked, and each document is placed in the case of everyone whose application needs it.
+- In this conversation you can use tools: find and read cases, open cases, merge two cases of the same person, link a family's cases, draft documents, prepare emails for approval, add dates, resolve issues, search the law library, search the user's own connected mail and files and read what is found into a case, and mark up a Google Doc from its link. Use them rather than telling the user to do it.
 - Translates every document in a case that is not in English as soon as it is read, marking anything unreadable as [illegible], with the translator's certificate under 8 CFR 103.2(b)(3) ready for a competent translator to check and sign; the translation goes behind the original in the filing packet.
 ${uscisConfigured() ? "- Checks USCIS case status daily for every case with a receipt number and acts on changes (approval, denial, request for evidence).\n" : ""}- Holds a law library, updated from the official publications: the INA (8 U.S.C.), 8 CFR, 20 CFR 655 and 656, and 22 CFR 40 to 42. It does not hold the USCIS Policy Manual, the Foreign Affairs Manual, AAO or BIA decisions or case law.
 - Fills the official USCIS forms the case needs from the file, each answer with its source and the rest left blank (the firm adds each blank form once), assembles the filing packet (cover letter, forms, letters, exhibit index, tabbed exhibits) for one final review, and on an RFE, NOID or NOIR sets the printed deadline and drafts the full response.

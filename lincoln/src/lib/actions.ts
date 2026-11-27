@@ -8,7 +8,9 @@ import { hashPassword, initialsOf, limited, newToken, sha, validEmail, validPass
 import { mailConfigured as systemMailConfigured, sendSystemMail } from "./mailer";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { db, resetDemo, uid } from "./db";
+import fs from "node:fs";
+import path from "node:path";
+import { dataDir, db, resetDemo, uid } from "./db";
 import { COOKIE, MFA_COOKIE, requireUser } from "./session";
 import { clientIp, securityEvent } from "./audit";
 import { beginChallenge, createSession } from "./login";
@@ -319,6 +321,33 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
     if (!quiet) await toast(r.sent ? "Sent" : "Not sent");
     revalidatePath("/", "layout");
     return r.sent ? { ok: true as const, sent: true } : { error: `Not sent. ${r.reason}.` };
+  }
+
+  // Two cases that may be one person: the same matter becomes one case, another matter is linked as the same client;
+  // different people are never asked about again.
+  if (a.kind === "same_person") {
+    const m = await import("./merge");
+    if (decision === "approved") {
+      const here = d.prepare("SELECT type_code FROM cases WHERE firm_id = ? AND id = ?").get(F, a.case_id) as { type_code: string } | undefined;
+      const other = d.prepare("SELECT type_code FROM cases WHERE firm_id = ? AND id = ?").get(F, String(payload.otherId)) as { type_code: string } | undefined;
+      if (!here || !other) return { error: "Not found" };
+      d.prepare("UPDATE approvals SET status = 'approved', decided_at = ?, decided_by = ? WHERE id = ?").run(now(), user.id, a.id);
+      if (m.sameMatter(here, other)) {
+        const kept = m.mergeCases(F, a.case_id, String(payload.otherId), `${user.name} confirmed they are the same person`, user.name);
+        if (!quiet) await toast(kept ? "Merged" : "Merging");
+      } else {
+        m.link(F, a.case_id, String(payload.otherId), "same_person");
+        log(F, a.case_id, user.name, "decide", "Linked as the same client.");
+        if (!quiet) await toast("Linked");
+      }
+    } else {
+      m.link(F, a.case_id, String(payload.otherId), "different");
+      d.prepare("UPDATE approvals SET status = 'rejected', decided_at = ?, decided_by = ? WHERE id = ?").run(now(), user.id, a.id);
+      d.prepare("UPDATE issues SET status = 'resolved', resolution = 'Different people.', resolved_at = ? WHERE firm_id = ? AND case_id = ? AND title = 'Same name as another client' AND status = 'open'").run(now(), F, a.case_id);
+      if (!quiet) await toast("Saved");
+    }
+    revalidatePath("/", "layout");
+    return { ok: true as const };
   }
 
   // An approved date goes into the calendar before the item closes; if it cannot, it stays in Review.
@@ -856,9 +885,10 @@ export async function deleteFirm(form: FormData) {
   const conns = d.prepare("SELECT provider, refresh_enc FROM mailboxes WHERE firm_id = ?").all(firm.id) as { provider: string; refresh_enc: string }[];
   for (const c of conns) await revokeAccess(c.provider, c.refresh_enc);
   const caseIds = (d.prepare("SELECT id FROM cases WHERE firm_id = ?").all(firm.id) as { id: string }[]).map((c) => c.id);
+  const jobs = d.prepare("SELECT id FROM read_jobs WHERE firm_id = ?").all(firm.id) as { id: string }[];
   forgetFirmSessions(firm.id);
   d.transaction(() => {
-    for (const t of ["redlines", "case_status", "memory_edits", "addin_codes", "addin_tokens", "invites", "intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "security_events", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "rfe_points", "criteria", "documents", "cases", "kv"]) d.prepare(`DELETE FROM ${t} WHERE firm_id = ?`).run(firm.id);
+    for (const t of ["redlines", "case_status", "memory_edits", "addin_codes", "addin_tokens", "invites", "intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "security_events", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "rfe_points", "criteria", "documents", "cases", "kv", "usage", "access_log", "case_keys", "case_links", "inbound_firm_seen", "read_jobs"]) d.prepare(`DELETE FROM ${t} WHERE firm_id = ?`).run(firm.id);
     d.prepare("DELETE FROM inbound_seen WHERE mailbox_id IN (SELECT id FROM mailboxes WHERE firm_id = ?)").run(firm.id);
     d.prepare("DELETE FROM mailboxes WHERE firm_id = ?").run(firm.id);
     d.prepare("DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE firm_id = ?)").run(firm.id);
@@ -868,6 +898,8 @@ export async function deleteFirm(form: FormData) {
     d.prepare("DELETE FROM firms WHERE id = ?").run(firm.id);
   })();
   for (const id of caseIds) deleteCaseFiles(id);
+  // Files kept for a reading in progress go too.
+  for (const j of jobs) fs.rmSync(path.join(dataDir(), "jobs", j.id.replace(/[^\w-]/g, "")), { recursive: true, force: true });
   forgetFirmKey(firm.id);
   (await cookies()).delete(COOKIE);
   redirect("/signin?deleted=1");

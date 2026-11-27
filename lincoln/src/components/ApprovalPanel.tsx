@@ -8,6 +8,7 @@ import { CalendarDays, Check, FileText, Folder } from "lucide-react";
 import { acceptAllRecommended, answerQuestion, chooseFolder, decideApproval, saveMessage } from "@/lib/actions";
 import type { Question } from "@/lib/halasz";
 import { btn as B } from "./ui";
+import { confirmBox } from "./Confirm";
 
 type Props = {
   id: string;
@@ -245,6 +246,28 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message, canA
           <span className="min-w-0 flex-1"><span className="block text-[14px] font-medium">{payload?.label}</span><span className="block text-[12.5px] text-muted">{payload?.client} · {payload?.date}</span></span>
         </div>
         {footer("Add to calendar")}
+      </div>
+    );
+  }
+
+  if (kind === "same_person") {
+    const sure = async () => { if (await confirmBox()) decide("approved"); };
+    const row = (href: string, name: string, line: string) => (
+      <Link href={href} className="flex items-center gap-3 px-4 py-3.5 transition hover:bg-panel">
+        <span className="min-w-0 flex-1"><span className="block truncate text-[14px] font-medium">{name}</span><span className="block truncate text-[12.5px] text-muted">{line}</span></span>
+      </Link>
+    );
+    return (
+      <div>
+        <div className={clsx(box, "divide-y divide-line overflow-hidden")}>
+          {row(`/cases/${caseId}`, payload?.thisClient, payload?.thisLine)}
+          {row(`/cases/${payload?.otherId}`, payload?.otherClient, payload?.otherLine)}
+        </div>
+        <div className="sticky bottom-0 mt-6 flex flex-wrap items-center gap-2 border-t border-line bg-card/95 py-3 backdrop-blur">
+          <button disabled={pending} onClick={sure} className={B.primary}><Check size={14} /> Same person</button>
+          <button disabled={pending} onClick={() => decide("rejected")} className={B.secondary}>Different people</button>
+          {error && <span className="text-[12.5px] text-risk">{error}</span>}
+        </div>
       </div>
     );
   }

@@ -10,6 +10,7 @@ import { ABOUT, matterById, matterForCode, type Matter } from "./intake-matters"
 import { isLawyerRole } from "./roles";
 import { notify } from "./push";
 import { existingClient, flagSameName, learn, personKey } from "./routing";
+import { link as linkCases, reconcile } from "./merge";
 
 // The client intake link. A firm has one link for its website, every member has their own (cases from it are
 // theirs), and a case can have its own link, tied to that client and case type. The client answers the questions and sends documents; on Send the answers
@@ -157,12 +158,14 @@ export async function submit(link: Link, sessionId: string, matterId: string, ra
   // another address) is added to that case, never given a second one. Recognised by address, phone, A-Number, or name
   // with date of birth; a name alone is not enough and is only flagged.
   let sameName: string[] = [];
+  let household: string[] = [];
   let returning = false;
   if (!caseId) {
     const ty = typeOf(matter.code, matter.code ? null : "Client intake");
     const ex = existingClient(link.firm_id, { name: answers.name, email, phone: answers.phone, dob: answers.dob, anumber: answers.a_number, typeCode: ty.code });
     if (ex.addTo) { caseId = ex.addTo; returning = true; }
     sameName = ex.sameNameOnly;
+    household = ex.household;
   }
   if (caseId) {
     d.prepare("UPDATE cases SET client = CASE WHEN client = ? THEN ? ELSE client END, client_email = COALESCE(client_email, ?) WHERE id = ? AND firm_id = ?").run(UNNAMED, answers.name, email, caseId, link.firm_id);
@@ -180,8 +183,10 @@ export async function submit(link: Link, sessionId: string, matterId: string, ra
     d.prepare(`INSERT INTO cases (id, firm_id, ref, client, counterpart, type_code, type_name, family, stage, state, summary, attorney_id, paralegal_id, opened_at, sensitive, pages, processing, client_email)
       VALUES (?, ?, ?, ?, NULL, ?, ?, ?, 'Intake', 'moving', ?, ?, ?, ?, ?, 0, 1, ?)`).run(caseId, link.firm_id, `${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`, answers.name, ty.code, ty.name, ty.family, `Opened from the client's intake: ${matter.label.toLowerCase()}.`, attorney, paralegal, now(), ty.family === "Humanitarian" ? 1 : 0, email);
   }
-  const id = caseId;
+  let id = caseId;
   if (!link.case_id && !returning) flagSameName(link.firm_id, id, sameName);
+  // A relative at the same address or phone: a case of their own, linked to the family.
+  for (const h of household) linkCases(link.firm_id, id, h, "family");
   // A returning client's answers go to the attorney already on their case.
   if (returning) {
     const k = d.prepare("SELECT attorney_id FROM cases WHERE id = ?").get(id) as { attorney_id: string | null } | undefined;
@@ -194,6 +199,8 @@ export async function submit(link: Link, sessionId: string, matterId: string, ra
   const an = String(answers.a_number ?? "").replace(/\D/g, "");
   if (an.length === 8 || an.length === 9) learn(link.firm_id, id, "anumber", an.padStart(9, "0"));
   if (answers.other_names) for (const n of answers.other_names.split(/[,;\n]/)) learn(link.firm_id, id, "person", personKey(n, answers.dob));
+  // An A-Number or date of birth may now show a case the firm already has for this person.
+  id = reconcile(link.firm_id, id);
   // Everyone the case is for hears about it when they are away: every admin for the firm's link, the member for
   // their own link. A case link's case is already someone's and shows in their Review as it is read.
   if (!link.case_id && !returning) {

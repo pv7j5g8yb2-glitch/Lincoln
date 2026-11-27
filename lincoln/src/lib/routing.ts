@@ -94,6 +94,15 @@ export function sameName(a: string, b: string) {
   return small[0] === big[0];
 }
 
+/** Two ways of writing one name that do not contradict each other: the same name, or an initial for a first name
+ *  ("O. Haddad" and "Omar Haddad"). Used only to tell a person from a relative, never to match on a name alone. */
+export function nameFits(a: string, b: string) {
+  if (sameName(a, b)) return true;
+  const x = normName(a).split(" "), y = normName(b).split(" ");
+  if (x.length < 2 || y.length < 2 || x.at(-1) !== y.at(-1)) return false;
+  return (x[0].length === 1 && y[0].startsWith(x[0])) || (y[0].length === 1 && x[0].startsWith(y[0]));
+}
+
 /** Records something that identifies a case: an address, a phone, a receipt number, an A-Number, a person (name and
  *  date of birth) or a file already read. */
 export function learn(firmId: string, caseId: string, kind: Kind, raw: string | null | undefined) {
@@ -109,8 +118,14 @@ export const personKey = (name: string, dob: string) => (normName(name) && /^\d{
 export function learnFrom(firmId: string, caseId: string, m: { from?: string | null; text?: string; subject?: string }) {
   if (m.from && !firmAddress(firmId, normEmail(m.from))) learn(firmId, caseId, "email", m.from);
   const text = `${m.subject ?? ""}\n${m.text ?? ""}`;
-  for (const r of receiptsIn(text)) learn(firmId, caseId, "receipt", r);
-  for (const a of aNumbersIn(text)) learn(firmId, caseId, "anumber", a);
+  // A number written in an email may be a relative's (a family writes about everyone in one thread): one already on
+  // another person's case is that person's, and is not learned here.
+  const theirs = (kind: Kind, v: string) => {
+    const me = (db().prepare("SELECT client FROM cases WHERE firm_id = ? AND id = ?").get(firmId, caseId) as { client: string } | undefined)?.client ?? "";
+    return casesFor(firmId, kind, [v]).some((id) => id !== caseId && !sameName(me, (db().prepare("SELECT client FROM cases WHERE firm_id = ? AND id = ?").get(firmId, id) as { client: string } | undefined)?.client ?? ""));
+  };
+  for (const r of receiptsIn(text)) if (!theirs("receipt", r)) learn(firmId, caseId, "receipt", r);
+  for (const a of aNumbersIn(text)) if (!theirs("anumber", a)) learn(firmId, caseId, "anumber", a);
 }
 
 /** An address belonging to someone at the firm (their mail is an instruction, never a client's). */
@@ -143,6 +158,17 @@ export function casesForName(firmId: string, name: string) {
   return rows.filter((r) => sameName(r.client, name)).map((r) => r.id);
 }
 
+/** Everyone in this case's family, this case included: each person's own case. */
+export function familyOf(firmId: string, caseId: string) {
+  const d = db();
+  const seen = new Set([caseId]);
+  const queue = [caseId];
+  while (queue.length) {
+    for (const r of d.prepare("SELECT other_id FROM case_links WHERE firm_id = ? AND case_id = ? AND kind = 'family'").all(firmId, queue.shift()!) as { other_id: string }[]) if (!seen.has(r.other_id)) { seen.add(r.other_id); queue.push(r.other_id); }
+  }
+  return [...seen];
+}
+
 /** Works out which case a message, an upload or an instruction belongs to. */
 export function route(firmId: string, m: { from?: string | null; fromName?: string | null; threadId?: string | null; subject?: string; text?: string; phone?: string | null; person?: string; names?: string[] }): Route {
   const d = db();
@@ -153,8 +179,10 @@ export function route(firmId: string, m: { from?: string | null; fromName?: stri
   // Sure: the same thread, then numbers only one case has.
   let sure: Route["sure"] = null;
   if (m.threadId) {
-    const ids = (d.prepare("SELECT DISTINCT case_id FROM messages WHERE firm_id = ? AND thread_id = ? AND case_id IS NOT NULL").all(firmId, m.threadId) as { case_id: string }[]).map((r) => r.case_id);
-    sure = one(ids, "a reply in the same email thread");
+    const ids = (d.prepare("SELECT DISTINCT c.id FROM messages m JOIN cases c ON c.id = m.case_id WHERE m.firm_id = ? AND m.thread_id = ? ORDER BY c.opened_at, c.rowid").all(firmId, m.threadId) as { id: string }[]).map((r) => r.id);
+    // A family's thread runs across each person's case: it still belongs to that family, filed by the first case.
+    const fam = ids.length > 1 ? familyOf(firmId, ids[0]) : [];
+    sure = ids.length > 1 && ids.every((id) => fam.includes(id)) ? { caseId: ids[0], why: "a reply in the same email thread" } : one(ids, "a reply in the same email thread");
   }
   const receipts = receiptsIn(text);
   if (receipts.length) {
@@ -212,28 +240,53 @@ export function candidates(firmId: string, r: Route, recent = 120): Row[] {
 export function existingClient(firmId: string, p: { name?: string | null; email?: string | null; phone?: string | null; dob?: string | null; anumber?: string | null; typeCode: string }) {
   const d = db();
   const email = normEmail(p.email);
-  const strongIds = new Set<string>([
-    ...(email && !firmAddress(firmId, email) ? casesForEmail(firmId, email) : []),
-    ...casesFor(firmId, "phone", [normPhone(p.phone)].filter(Boolean)),
+  const info = (id: string) => d.prepare("SELECT id, client, type_code, stage FROM cases WHERE firm_id = ? AND id = ?").get(firmId, id) as { id: string; client: string; type_code: string; stage: string } | undefined;
+  // An A-Number or a name with date of birth is one person. An address or a phone is often a household's: it is the
+  // same person only when the names agree, and otherwise a family member, who has a case of their own.
+  const proof = [
     ...casesFor(firmId, "anumber", [String(p.anumber ?? "").replace(/\D/g, "")].filter((x) => x.length >= 8).map((x) => x.padStart(9, "0"))),
     ...(p.name && p.dob ? casesFor(firmId, "person", [personKey(p.name, p.dob)].filter(Boolean)) : []),
-  ]);
+  ];
+  // A personal mailbox (Gmail, Outlook.com) or a phone shared under another name is a household's; a company address
+  // shared under another name is an employer's, writing for several unrelated employees, and ties nobody together.
+  const personal = Boolean(email) && isFree(domainOf(email));
+  const contact = [
+    ...(email && !firmAddress(firmId, email) ? casesForEmail(firmId, email).map((id) => ({ id, home: personal })) : []),
+    ...casesFor(firmId, "phone", [normPhone(p.phone)].filter(Boolean)).map((id) => ({ id, home: true })),
+  ];
+  const named = (n: string) => normName(n).split(" ").length >= 2 && n !== "New client";
+  const household = new Set<string>();
+  const strongIds = new Set<string>(proof);
+  for (const { id, home } of contact) {
+    const c = info(id);
+    if (!c) continue;
+    if (p.name && named(p.name) && named(c.client) && !nameFits(p.name, c.client)) { if (home) household.add(id); }
+    else strongIds.add(id);
+  }
+  for (const id of strongIds) household.delete(id);
   const nameIds = p.name ? casesForName(firmId, p.name).filter((id) => !strongIds.has(id)) : [];
-  const info = (id: string) => d.prepare("SELECT id, client, type_code, stage FROM cases WHERE firm_id = ? AND id = ?").get(firmId, id) as { id: string; client: string; type_code: string; stage: string } | undefined;
   const mine = [...strongIds].map(info).filter(Boolean) as { id: string; client: string; type_code: string; stage: string }[];
   // The same matter, still open: the work goes on in that case. A consultation or an unsorted intake becomes the matter.
   const open = (s: string) => !["Approved", "Denied", "Closed", "Decision"].includes(s);
   const general = (code: string) => ["OTHER", "CONSULTATION", "UNKNOWN", "UNSPECIFIED", "INTAKE", "CLIENT INTAKE"].includes(code.trim().toUpperCase());
   const sameMatter = mine.find((c) => open(c.stage) && (c.type_code === p.typeCode || general(c.type_code) || general(p.typeCode)));
-  return { addTo: sameMatter?.id ?? null, sameClient: mine.filter((c) => c.id !== sameMatter?.id).map((c) => c.id), sameNameOnly: nameIds };
+  return { addTo: sameMatter?.id ?? null, sameClient: mine.filter((c) => c.id !== sameMatter?.id).map((c) => c.id), sameNameOnly: nameIds, household: [...household] };
 }
 
-/** A possible duplicate is raised once, as a quiet issue on the newer case, for a person to look at. */
-export function flagSameName(firmId: string, caseId: string, others: string[]) {
+/** A possible duplicate is asked about once, in Review, to the case's attorney: "Same person?". The same matter is
+ *  then merged, another matter linked; different people are never asked about again. */
+export function flagSameName(firmId: string, caseId: string, others: string[], why = "Same name, different contact details.") {
   const d = db();
-  if (!others.length) return;
-  const names = others.map((id) => d.prepare("SELECT client, type_code, ref FROM cases WHERE firm_id = ? AND id = ?").get(firmId, id) as { client: string; type_code: string; ref: string } | undefined).filter(Boolean) as { client: string; type_code: string; ref: string }[];
-  if (!names.length) return;
-  const list = names.map((n) => `${n.client} (${n.type_code}, ${n.ref})`).join("; ");
-  d.prepare("INSERT INTO issues (id, firm_id, case_id, kind, severity, title, detail, sources, status, created_at) VALUES (?, ?, ?, 'review', 'low', 'Same name as another client', ?, '[]', 'open', ?)").run(uid(), firmId, caseId, `Possibly the same person as ${list}. Different contact details, so the cases were kept apart.`, new Date().toISOString());
+  const at = new Date().toISOString();
+  const line = (c: { type_name: string; ref: string; client_email: string | null }) => [c.type_name, c.ref, c.client_email].filter(Boolean).join(" · ");
+  const me = d.prepare("SELECT client, type_name, ref, client_email, attorney_id FROM cases WHERE firm_id = ? AND id = ?").get(firmId, caseId) as { client: string; type_name: string; ref: string; client_email: string | null; attorney_id: string | null } | undefined;
+  if (!me) return;
+  for (const id of others) {
+    const o = d.prepare("SELECT id, client, type_name, ref, client_email FROM cases WHERE firm_id = ? AND id = ?").get(firmId, id) as { id: string; client: string; type_name: string; ref: string; client_email: string | null } | undefined;
+    if (!o || o.id === caseId) continue;
+    if (d.prepare("SELECT 1 FROM case_links WHERE firm_id = ? AND case_id = ? AND other_id = ?").get(firmId, caseId, o.id)) continue;
+    if (d.prepare("SELECT 1 FROM approvals WHERE firm_id = ? AND kind = 'same_person' AND status = 'pending' AND ((case_id = ? AND payload LIKE ?) OR (case_id = ? AND payload LIKE ?))").get(firmId, caseId, `%"otherId":"${o.id}"%`, o.id, `%"otherId":"${caseId}"%`)) continue;
+    d.prepare("INSERT INTO approvals (id, firm_id, case_id, kind, title, brief, payload, status, assignee_id, created_at) VALUES (?, ?, ?, 'same_person', ?, ?, ?, 'pending', ?, ?)")
+      .run(uid(), firmId, caseId, `Same person? ${me.client}`, why, JSON.stringify({ otherId: o.id, thisClient: me.client, thisLine: line(me), otherClient: o.client, otherLine: line(o) }), me.attorney_id, at);
+  }
 }

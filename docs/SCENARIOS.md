@@ -126,10 +126,32 @@ These hold for every firm, every case type and every mix of the scenarios above.
 | A firm never reaches another firm's cases | Every case, routing and mail query is limited to the firm; a case id from the model is checked against the firm's own cases; every API route checks the signed in firm or a secret token | Tested |
 | Fast at thousands of cases | Indexes on every routing lookup; about 6 ms to route an email on a firm with 5,000 cases and 50,000 emails (measured 2026-11-27) | Tested |
 
+## 10. Duplicates and merging
+
+| Scenario | How Lincoln handles it | Status |
+|---|---|---|
+| Proof arrives later that two cases are one person with one matter (the same A-Number, or name with date of birth, under the same name) | Merged on its own into the older case: pages, documents, evidence, drafts, mail, dates, issues, forms and identifiers, every page reference renumbered; recorded on the case with the proof | Tested |
+| The same proof, the same person, a different matter | Two cases, linked as the same client | Tested |
+| The same A-Number under another name (a married name) | Asked in Review, never merged on its own | Tested |
+| The same name, different contact details | Asked in Review: "Same person?" with Same person (asks Are you sure?) and Different people | Tested in the app |
+| Different people confirmed | Never asked about again | Tested |
+| A case still reading files | Merged once the reading is done | Tested |
+| An attorney says so in chat ("these two are the same person") | Merged, or linked when the matters differ | Built |
+
+## 11. Families
+
+| Scenario | How Lincoln handles it | Status |
+|---|---|---|
+| One email asks for several people (a spouse and children, each needing their own application) | A case per person, linked as one family, same attorney | Tested |
+| A reply in the family's thread about one child | Filed to that child's case | Tested |
+| A reply about the whole family | Stays with the main applicant's case; never filed outside the family | Tested |
+| A wife writes from the family's shared Gmail about her own application while her husband has the same one | Her own case, linked to his (it used to be added to his case) | Tested |
+| A company address used for several employees (HR) | Never treated as one person or one family | Tested |
+| A relative's receipt number or A-Number mentioned in the family's mail | Not learned on the wrong person's case | Tested |
+| Documents for the family in one email | Each one also placed in the case of every member whose application needs it (a child's birth certificate in the child's case; a marriage certificate or the sponsor's tax returns in each), once | Tested (placing); Built (the reading that decides) |
+| An attorney asks Lincoln to link cases as a family | Linked | Built |
+| The case page | Shows the whole family and the same client's other matters under the title | Tested in the app |
+
 ## Open (not handled yet)
 
-* **Merging two cases.** When a flagged duplicate really is the same person, the attorney cannot yet merge the cases
-  in Lincoln; they close one. A merge needs the pages, documents, drafts and history moved together.
-* **One email for several family members** (spouse and children, several forms): opened as one case today, not one
-  linked case per person.
 * **Phone calls and WhatsApp:** not read (decided). The attorney texts their intake link after a call.

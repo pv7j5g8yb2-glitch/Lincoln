@@ -8,7 +8,8 @@ import { fileKind, unreadable } from "./pdf";
 import { addEvent, canReadChat, canReadTeams, channelMessages, chatFile, chatMessages, chatPost, connectionsOf, docAsWord, downloadShared, ensurePush, googleDocIds, fetchNew, readMail, replyInChannel, send, sendDraft, settingsOf, teamsPost, updateDraft, type Connection, type Inbound } from "./integrations";
 import { isDocx, redline } from "./redline";
 import { sessionCutoff } from "./session";
-import { candidates, existingClient, firmAddress, flagSameName, learnFrom, normEmail, route } from "./routing";
+import { candidates, existingClient, firmAddress, flagSameName, learnFrom, normEmail, route, sameName as sameNameOf } from "./routing";
+import { familyOf, finishMerges, link as linkCases, reconcile } from "./merge";
 
 // The part of Lincoln that works without being asked. Every incoming email is read, matched to a case
 // or opened as a new one, its attachments are read into the record, and the next step is prepared.
@@ -23,7 +24,7 @@ type Triage = {
   kind: "new_case" | "case_update" | "government" | "other";
   certain: boolean;
   case_id: string | null;
-  new_case: { client: string; counterpart: string | null; type_code: string; type_name?: string | null } | null;
+  new_case: { client: string; counterpart: string | null; type_code: string; type_name?: string | null; family?: { client: string; type_code: string; type_name?: string | null; relation?: string | null }[] | null } | null;
   summary: string;
   dates: { label: string; date: string }[];
   reply_needed?: boolean;
@@ -59,6 +60,33 @@ function cannotOpen(firmId: string, caseId: string, names: string[]) {
   if (d.prepare("SELECT 1 FROM issues WHERE firm_id = ? AND case_id = ? AND title = ? AND status = 'open'").get(firmId, caseId, title)) return;
   d.prepare("INSERT INTO issues (id, firm_id, case_id, kind, severity, title, detail, sources, status, created_at) VALUES (?, ?, ?, 'missing', 'low', ?, ?, '[]', 'open', ?)")
     .run(uid(), firmId, caseId, title, "Password protected, damaged or in a format Lincoln cannot read. An unlocked PDF or Word copy is needed.", now());
+}
+
+type FamilyMember = { client: string; type_code: string; type_name?: string | null };
+/** The rest of a family asked for together: a case each, linked to the main case, so every person's forms, receipts
+ *  and decisions stay their own. A family member who already has that matter with the firm keeps their case. */
+export function openFamily(firmId: string, mainId: string, members: FamilyMember[], from: string) {
+  const d = db();
+  const main = d.prepare("SELECT client FROM cases WHERE firm_id = ? AND id = ?").get(firmId, mainId) as { client: string } | undefined;
+  if (!main) return [] as string[];
+  const out: string[] = [];
+  for (const m of members.filter((x) => x && String(x.client ?? "").trim()).slice(0, 8)) {
+    const mt = typeOf(String(m.type_code ?? "").trim(), m.type_name);
+    const name = String(m.client).trim().slice(0, 120);
+    if (sameNameOf(name, main.client)) continue;
+    const mx = existingClient(firmId, { name, typeCode: mt.code });
+    const mid = mx.addTo ?? "c_" + uid();
+    if (!mx.addTo) {
+      d.prepare(`INSERT INTO cases (id, firm_id, ref, client, counterpart, type_code, type_name, family, stage, state, waiting_on, summary, attorney_id, paralegal_id, opened_at, sensitive, pages, processing, client_email)
+        SELECT ?, firm_id, ?, ?, counterpart, ?, ?, ?, 'Intake', 'moving', NULL, ?, attorney_id, paralegal_id, ?, ?, 0, 0, NULL FROM cases WHERE firm_id = ? AND id = ?`)
+        .run(mid, `${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`, name, mt.code, mt.name, mt.family, `Opened with ${main.client}'s case.`, now(), mt.family === "Humanitarian" ? 1 : 0, firmId, mainId);
+      log(firmId, mid, "open", `Opened the case with ${main.client}'s, from ${from}.`, 5);
+      flagSameName(firmId, mid, mx.sameNameOnly);
+    }
+    linkCases(firmId, mainId, mid, "family");
+    out.push(mid);
+  }
+  return out;
 }
 
 export async function handleInbound(firmId: string, mail: Inbound, mailboxId: string | null) {
@@ -138,6 +166,10 @@ async function inbound(firmId: string, mail: Inbound, mailboxId: string | null) 
     }
     return;
   }
+  // A family writes about everyone in one thread: the thread names the family, not the person, so each family member's
+  // case is offered and the email goes to the one it is about.
+  const fam = r.sure?.why === "a reply in the same email thread" ? familyOf(firmId, r.sure.caseId) : [];
+  if (fam.length > 1) r.related = [...new Set([...fam, ...r.related])];
   const open = candidates(firmId, r);
   const msgId = uid();
   d.prepare("INSERT INTO messages (id, firm_id, case_id, direction, party, party_role, subject, body, at, state, lincoln_note, email, thread_id, mailbox_id, ext_id, rfc_id) VALUES (?, ?, NULL, 'in', ?, NULL, ?, ?, ?, 'reading', NULL, ?, ?, ?, ?, ?)").run(msgId, firmId, mail.fromName, mail.subject.slice(0, 300) || "(no subject)", mail.text.slice(0, 20000), now(), mail.from, mail.threadId, mailboxId, mail.id, mail.messageId ?? null);
@@ -148,7 +180,7 @@ async function inbound(firmId: string, mail: Inbound, mailboxId: string | null) 
     if (member && mail.verified) return await handleInstruction(firmId, mail, msgId, member, open);
     if (member) unverified = true;
 
-    const known = r.sure ? `Lincoln's records tie this email to case ${r.sure.caseId} (${r.sure.why}).` : r.likely ? `The sender is already a client: case ${r.likely.caseId} (${r.likely.why}). Use it unless the email is plainly about a different matter, which is then a new_case for the same person.` : r.related.length ? `Cases that may be related, listed first: ${r.related.join(", ")}.` : "";
+    const known = fam.length > 1 ? `This email is in a thread of one family, one case per person: ${fam.join(", ")}. Use the case of the person it is about; when it is about several of them or the whole family, use ${r.sure!.caseId}.` : r.sure ? `Lincoln's records tie this email to case ${r.sure.caseId} (${r.sure.why}).` : r.likely ? `The sender is already a client: case ${r.likely.caseId} (${r.likely.why}). Use it unless the email is plainly about a different matter, which is then a new_case for the same person.` : r.related.length ? `Cases that may be related, listed first: ${r.related.join(", ")}.` : "";
     const prompt = `Today is ${now().slice(0, 10)}. Firm: ${firm.name}. Attorney who receives this mail: ${owner.name}.
 Cases (id | ref | client | client email | petitioner | type | stage):
 ${open.map((c) => `${c.id} | ${c.ref} | ${c.client} | ${c.client_email ?? "-"} | ${c.counterpart ?? "-"} | ${c.type_code} | ${c.stage}`).join("\n") || "none"}
@@ -169,19 +201,20 @@ Decide what this email is and reply with one JSON object only:
 {"kind": "new_case | case_update | government | other",
  "certain": true or false: true only if there is no reasonable doubt about kind and case,
  "case_id": "id of the matching open case, or null if none or if more than one could match",
- "new_case": {"client": "full name of the person the case is for", "counterpart": "employer or petitioner, or null", "type_code": "the matching code from the list, or a short code of your own if none fits", "type_name": "plain name of the matter, for example Asylum or Cancellation of removal"} or null,
+ "new_case": {"client": "full name of the person the case is for", "counterpart": "employer or petitioner, or null", "type_code": "the matching code from the list, or a short code of your own if none fits", "type_name": "plain name of the matter, for example Asylum or Cancellation of removal", "family": [{"client": "full name", "type_code": "", "type_name": "", "relation": "spouse, child, parent or sibling"}]} or null,
  "summary": "one sentence for the case log",
  "dates": [{"label": "", "date": "YYYY-MM-DD"}],
  "reply_needed": true if the sender is a client or prospective client who should get a short reply or acknowledgement from ${owner.name}, else false,
  "reply_point": "what that reply needs to cover, in a few words, or null"}
-Rules: new_case only when someone asks the firm to take on an immigration matter or sends documents for a matter the firm has not opened. case_update when it concerns an open case (match by sender address, name or reference). government for USCIS, DOL or State Department notices. other for anything not about a case, with no reply. Dates only for deadlines, expiries, appointments or interviews stated in the email.`;
+Rules: new_case only when someone asks the firm to take on an immigration matter or sends documents for a matter the firm has not opened. One case per person: when several people each need an application of their own (a spouse and children applying with the client), new_case is the main applicant and every other person goes in family with their own type; family is [] otherwise. Never put in family someone who only signs or sponsors (a petitioner, a sponsor, an employer). case_update when it concerns an open case (match by sender address, name or reference). government for USCIS, DOL or State Department notices. other for anything not about a case, with no reply. Dates only for deadlines, expiries, appointments or interviews stated in the email.`;
     // Sorting is simple and runs on every email, so the light model does it; the reply, which a client
     // reads, is written by the main model.
     const t = parseJson<Triage>(await chat([{ role: "system", content: "You are Lincoln, case software in a US immigration law firm. You sort incoming mail for the attorneys. You never give legal advice to the public and never invent facts. Reply with JSON only." }, { role: "user", content: prompt }], { maxTokens: 1500, light: true }));
 
     // A reply in a case's own thread, or a notice with a case's receipt number, belongs to that case whatever the model
     // makes of it: never dropped, never a second case.
-    if (r.sure) { t.case_id = r.sure.caseId; if (t.kind === "other" || t.kind === "new_case") t.kind = "case_update"; }
+    if (r.sure && !(fam.length > 1 && t.case_id && fam.includes(t.case_id))) { t.case_id = r.sure.caseId; if (t.kind === "other" || t.kind === "new_case") t.kind = "case_update"; }
+    else if (r.sure && (t.kind === "other" || t.kind === "new_case")) t.kind = "case_update";
     if (t.kind === "other" && t.certain === true && !unverified) {
       // Clearly not work: nothing about it is kept.
       d.prepare("DELETE FROM messages WHERE id = ?").run(msgId);
@@ -203,12 +236,15 @@ Rules: new_case only when someone asks the firm to take on an immigration matter
     let caseId = t.case_id;
     let opened = false;
     let sameName: string[] = [];
+    let household: string[] = [];
+    const members = t.kind === "new_case" ? t.new_case?.family ?? [] : [];
     if (t.kind === "new_case") {
       const code = String(t.new_case?.type_code ?? "").trim();
       const ty = typeOf(code, t.new_case?.type_name);
       // The same person with the same matter already has a case: this email goes there, not into a second one.
       const ex = existingClient(firmId, { name: t.new_case?.client ?? mail.fromName, email: mail.from, typeCode: ty.code });
       sameName = ex.sameNameOnly;
+      household = ex.household;
       if (ex.addTo) { caseId = ex.addTo; t.kind = "case_update"; }
     }
     if (t.kind === "new_case") {
@@ -225,9 +261,15 @@ Rules: new_case only when someone asks the firm to take on an immigration matter
       log(firmId, caseId, "file", `Filed an email from ${mail.fromName}: ${t.summary}`, 4);
       d.prepare("UPDATE cases SET client_email = COALESCE(client_email, ?) WHERE firm_id = ? AND id = ? AND ? = 'case_update'").run(mail.from, firmId, caseId, t.kind);
     }
+    // The rest of the family: a case each, linked, so every person's forms, receipts and decisions stay their own. A
+    // family member already a client with that matter keeps their case. Anyone else at the same address is family too.
+    for (const id of household) linkCases(firmId, caseId!, id, "family");
+    openFamily(firmId, caseId!, members, `an email from ${mail.fromName}`);
     d.prepare("UPDATE messages SET case_id = ?, state = 'filed', party_role = ?, lincoln_note = ? WHERE id = ?").run(caseId, t.kind === "government" ? "Government" : "Client", String(t.summary ?? "").slice(0, 400), msgId);
     // What this email tells Lincoln about the case, for the next one: the sender's address, receipt numbers, A-Numbers.
     learnFrom(firmId, caseId!, { from: t.kind === "government" ? null : mail.from, subject: mail.subject, text: mail.text });
+    // New proof (an A-Number, a receipt number) may show this is a case Lincoln already has for the same person.
+    caseId = reconcile(firmId, caseId!);
 
     const insDate = d.prepare("INSERT INTO dates (id, firm_id, case_id, label, date, kind, source) VALUES (?, ?, ?, ?, ?, 'date', ?)");
     for (const x of (t.dates ?? []).filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x.date)).slice(0, 10)) insDate.run(uid(), firmId, caseId, String(x.label).slice(0, 120), x.date, `Email from ${mail.fromName}`);
@@ -321,10 +363,10 @@ Open cases (id | ref | client | client email | petitioner | type):
 ${open.map((c) => `${c.id} | ${c.ref} | ${c.client} | ${c.client_email ?? "-"} | ${c.counterpart ?? "-"} | ${c.type_code}`).join("\n") || "none"}
 Case types: ${CODES}.
 ${body}
-If the instruction is about a new matter, give new_case. Leave the client empty if no name is given; it is taken from the files.
+If the instruction is about a new matter, give new_case. Leave the client empty if no name is given; it is taken from the files. One case per person: when several people each need an application of their own (a spouse and children), new_case is the main applicant and every other person goes in family with their own type; otherwise family is [].
 Reply with one JSON object only:
 {"case_id": "the open case this is about, or null",
- "new_case": {"client": "", "counterpart": null, "type_code": "the matching code from the case types, or a short code of your own if none fits", "type_name": "plain name of the matter", "client_email": null} or null,
+ "new_case": {"client": "", "counterpart": null, "type_code": "the matching code from the case types, or a short code of your own if none fits", "type_name": "plain name of the matter", "client_email": null, "family": [{"client": "full name", "type_code": "", "type_name": ""}]} or null,
  "summary": "one sentence for the case log",
  "draft": "what to draft, in one sentence, or null if no document is asked for",
  "due": "YYYY-MM-DD if a deadline for the work is given, else null",
@@ -344,11 +386,13 @@ Reply with one JSON object only:
   // A receipt number or A-Number in the instruction settles it; so does a client who already has this matter.
   if (!caseId && r.sure && !t.new_case) caseId = r.sure.caseId;
   let sameName: string[] = [];
+  let household: string[] = [];
   if (!caseId && t.new_case) {
     const ty = typeOf(String(t.new_case.type_code ?? "").trim(), t.new_case.type_name);
     const ex = existingClient(firmId, { name: t.new_case.client, email: t.new_case.client_email ?? quoted, typeCode: ty.code });
     if (ex.addTo) caseId = ex.addTo;
     sameName = ex.sameNameOnly;
+    household = ex.household;
   }
   if (!caseId && (t.new_case || files.length || words.length)) {
     const code = String(t.new_case?.type_code ?? "").trim();
@@ -362,8 +406,10 @@ Reply with one JSON object only:
     flagSameName(firmId, caseId, sameName);
   }
   if (!caseId) return { caseId: null, summary, work: Promise.resolve() };
-  const id = caseId;
-  learnFrom(firmId, id, { from: quoted, subject: input.subject, text: input.text });
+  for (const h of household) linkCases(firmId, caseId, h, "family");
+  if (t.new_case?.family?.length) openFamily(firmId, caseId, t.new_case.family, `${member.name}'s request`);
+  learnFrom(firmId, caseId, { from: quoted, subject: input.subject, text: input.text });
+  const id = reconcile(firmId, caseId);
   log(firmId, id, "file", `Took an instruction from ${member.name}: ${summary}`, 3);
   if (skipped.length) cannotOpen(firmId, id, skipped);
   const insDate = d.prepare("INSERT INTO dates (id, firm_id, case_id, label, date, kind, source) VALUES (?, ?, ?, ?, ?, 'target', ?)");
@@ -478,6 +524,8 @@ export async function addApprovedDate(firmId: string, p: { mailboxId: string; da
 /** Routine work on a timer: new mail, reminders for missing documents, approaching deadlines. */
 export async function tick() {
   const d = db();
+  // Merges and shared family documents that waited for a reading to finish.
+  try { finishMerges(); } catch (e) { console.error("Merges:", e instanceof Error ? e.message : "failed"); }
   // Safety sweep: instant notifications can be missed (a restart, a lapsed subscription).
   for (const c of d.prepare("SELECT * FROM mailboxes").all() as Connection[]) {
     try { await ensurePush(c); } catch (e) { d.prepare("UPDATE mailboxes SET last_error = ? WHERE id = ?").run(`Instant delivery: ${e instanceof Error ? e.message : "error"}`.slice(0, 200), c.id); }

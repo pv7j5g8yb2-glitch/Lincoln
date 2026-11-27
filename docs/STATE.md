@@ -830,7 +830,11 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
   filled the link got two cases; a model's made up case id is never used; the same file twice is read once. New table
   `case_keys`, filled from existing cases at start. Catalogue of scenarios and status: `docs/SCENARIOS.md`. Tests:
   `tests/routing.test.mjs` (in npm test) and `tests/eval/mail-routing-check.mts` (whole emails, scripted model).
-  Open: merging two cases, one email for several family members as linked cases.
+  Merging and families built 2026-11-27 (sections 10 and 11 of `docs/SCENARIOS.md`, `lincoln/src/lib/merge.ts`): Lincoln
+  merges on its own only on proof (A-Number, name with date of birth) with the same name and matter; otherwise "Same
+  person?" in Review. A family gets a case per person, linked (`case_links`); a shared Gmail or phone under another name
+  is a relative, never the same person (this was a real bug: a wife's same type application went into her husband's
+  case). Family readings say whose application needs each document, and it is copied to those cases.
 * Reliability at scale (2026-11-27, Ismael: "make sure Lincoln is exquisitely organized and keeps executing at a
   genuine top tier level"): held as guarantees, not scenario by scenario (section 9 of `docs/SCENARIOS.md`). One email
   in several of the firm's mailboxes is worked once (Message-ID, `inbound_firm_seen`). Out of office replies are noted

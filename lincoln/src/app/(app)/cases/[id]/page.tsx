@@ -27,6 +27,7 @@ import EvidenceGrid from "@/components/EvidenceGrid";
 import { translationsOf } from "@/lib/translate";
 import { statusOf } from "@/lib/uscis";
 import { isLawyerRole } from "@/lib/roles";
+import { linksOf } from "@/lib/merge";
 import { caseLink, linkUrl } from "@/lib/client-intake";
 
 const DOC_STATUS: Record<string, string> = { ok: "Usable", weak: "Low weight", excluded: "Excluded", draft: "Unsigned draft", duplicate: "Duplicate", superseded: "Superseded", needs_translation: "Translation required" };
@@ -64,6 +65,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
   const tabs = all.filter((t) => t[3] || t[0] === tab);
   const none = <Empty>No records</Empty>;
 
+  const links = linksOf(firm.id, id);
   return (
     <div className="rise mx-auto max-w-[760px] pb-28">
       {c.processing ? <Refresher /> : null}
@@ -74,6 +76,15 @@ export default async function CasePage({ params, searchParams }: { params: Promi
           <p className="mt-1.5 text-[13px] text-muted">
             {c.type_code}{c.counterpart ? ` · ${c.counterpart}` : ""} · {c.stage}{c.receipt ? ` · ${c.receipt}` : ""}{uscis?.text ? <span title={uscis.detail ?? undefined}> · {uscis.text}</span> : null}{c.sensitive ? " · Restricted" : ""}
           </p>
+          {(["family", "same_person"] as const).map((k) => {
+            const ls = links.filter((l) => l.kind === k);
+            return ls.length ? (
+              <p key={k} className="mt-1 text-[13px] text-muted">
+                {k === "family" ? "Family" : "Same client"}:{" "}
+                {ls.map((l, i) => <span key={l.id}>{i ? " · " : ""}<Link href={`/cases/${l.id}`} className="text-ink underline decoration-line underline-offset-4 hover:decoration-ink">{k === "family" ? l.client : l.ref}</Link> {l.type_code}</span>)}
+              </p>
+            ) : null;
+          })}
         </div>
         <div className="flex items-center gap-3">
           {!firm.demo && <AssignMenu caseId={id} attorney={c.attorney_id} paralegal={c.paralegal_id} people={people(firm.id).map((p) => ({ id: p.id, name: p.name, initials: p.initials, lawyer: isLawyerRole(p.role) }))} canEdit={Boolean(user.admin) || c.attorney_id === user.id} />}
