@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { FORM_ORDER, QUESTIONS, type Question } from "@/lib/enquiry";
 
-// The Get In Touch page, one question at a time. Built for finishing: it opens on the easiest question, single answers
-// move on by themselves the moment they are tapped, a thin line at the top shows how far along it is, and the name,
+// The Get In Touch page, one question at a time. Built for finishing: it opens on the easiest question, a tap selects
+// and Next moves on (Enter too), a thin line at the top shows how far along it is, and the name,
 // email and firm come last ("Where should we send your quote?"), once the firm is invested. Answers survive a refresh.
 // A person replies by email with a quote. Same look as the landing page; American English.
 
@@ -27,7 +27,6 @@ export default function StartForm() {
   const [state, setState] = useState<"idle" | "sending" | "done">("idle");
   const [error, setError] = useState("");
   const [picked, setPicked] = useState<string | null>(null);
-  const timer = useRef<number | null>(null);
   const first = useRef<HTMLInputElement>(null);
 
   // Restore what was answered before a refresh (this browser only).
@@ -41,7 +40,6 @@ export default function StartForm() {
     if (state === "done") return;
     try { sessionStorage.setItem(KEY, JSON.stringify({ step, v, c: { ...c, website: "" } })); } catch { /* fine without it */ }
   }, [step, v, c, state]);
-  useEffect(() => () => { if (timer.current) window.clearTimeout(timer.current); }, []);
   useEffect(() => { if (step === LAST) window.setTimeout(() => first.current?.focus({ preventScroll: true }), 350); }, [step]);
 
   const go = (n: number) => { setError(""); setPicked(null); setDir(n > step ? 1 : -1); setStep(n); window.scrollTo({ top: 0 }); };
@@ -52,11 +50,9 @@ export default function StartForm() {
   const pick = (o: string) => {
     if (!q) return;
     if (q.multi) { setV((x) => { const list = (x[q.id] as string[] | undefined) ?? []; return { ...x, [q.id]: list.includes(o) ? list.filter((y) => y !== o) : [...list, o] }; }); return; }
-    // A single answer moves on by itself, after a beat so the choice is seen.
+    // A choice only selects; Next moves on, the same on every question (Ismael, 2026-11-27).
     setV((x) => ({ ...x, [q.id]: o }));
     setPicked(o);
-    if (timer.current) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => go(step + 1), 260);
   };
 
   async function send() {
@@ -142,12 +138,10 @@ export default function StartForm() {
                   );
                 })}
               </div>
-              {(q.multi || answered(step)) && (
-                <button type="button" onClick={() => go(step + 1)} disabled={!answered(step)}
-                  className="mt-8 flex h-14 w-full items-center justify-center bg-white text-[14.5px] font-medium text-black transition disabled:opacity-30 md:w-auto md:px-10 [@media(hover:hover)]:enabled:hover:bg-white/85">
-                  Next
-                </button>
-              )}
+              <button type="button" onClick={() => go(step + 1)} disabled={!answered(step)}
+                className="mt-8 flex h-14 w-full items-center justify-center bg-white text-[14.5px] font-medium text-black transition disabled:opacity-30 md:w-auto md:px-10 [@media(hover:hover)]:enabled:hover:bg-white/85">
+                Next
+              </button>
             </>
           ) : (
             <form onSubmit={(e) => { e.preventDefault(); void send(); }} noValidate>
