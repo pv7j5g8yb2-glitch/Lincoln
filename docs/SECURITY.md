@@ -12,7 +12,8 @@ Added 2026-11-14:
 * Every key is derived from one master key for its own purpose (database, sealing), never reused.
 * Administrators can require two step sign in for the whole firm; an account without it can then reach
   only the screen that sets it up, in pages, actions and API routes alike.
-* A session ends after 2 hours without use, inside its 12 hour limit.
+* A sign in lasts 30 days from its last use (Ismael, 2026-11-27, like Claude and Gmail, so notifications open straight
+  into Lincoln); signing out or removing the device in Settings ends it at once. Ended sign ins lose their notifications.
 * A sign in from a device the account has not used before is emailed to the account.
 * New passwords are checked against known data breaches (Have I Been Pwned, k-anonymity: only five
   characters of the password's hash leave the server).
@@ -41,7 +42,7 @@ From before:
   already has a password account is never taken over. Microsoft accounts never rely on the mail attribute.
 * Two step sign in with any authenticator app, with eight one time recovery codes; a code cannot be used
   twice; five tries per sign in (tested).
-* Session cookie: httpOnly, SameSite Lax, Secure and the __Host- prefix in production, 12 hours.
+* Session cookie: httpOnly, SameSite Lax, Secure and the __Host- prefix in production; the cookie is kept up to 400 days and the server ends the sign in after 30 days without use.
 * Signed in devices are listed and can be signed out one by one or all at once; a password change signs
   out every other device.
 * A security record of sign ins, failures, two step changes, recovery code use, connections and device

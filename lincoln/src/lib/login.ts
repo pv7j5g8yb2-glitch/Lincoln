@@ -1,7 +1,7 @@
 import { cookies, headers } from "next/headers";
 import { db } from "./db";
 import { newToken, sha } from "./passwords";
-import { COOKIE, MFA_COOKIE, SESSION_HOURS } from "./session";
+import { COOKIE, MFA_COOKIE } from "./session";
 import { clientIp } from "./audit";
 import { deviceName } from "./device";
 import { mailConfigured, sendSystemMail } from "./mailer";
@@ -17,7 +17,8 @@ export async function createSession(userId: string) {
   const ip = await clientIp();
   const d = db();
   d.prepare("INSERT INTO sessions (id, user_id, created_at, ip, agent, last_seen) VALUES (?, ?, ?, ?, ?, ?)").run(sha(token), userId, at, ip, agent, at);
-  (await cookies()).set(COOKIE, token, cookieOpts(60 * 60 * SESSION_HOURS));
+  // The cookie lives as long as browsers allow (400 days); the server ends the sign in after 30 days without use.
+  (await cookies()).set(COOKIE, token, cookieOpts(400 * 86400));
   // A sign in from a device this account has not used before is reported to the account's email.
   const device = deviceName(agent);
   const seenBefore = d.prepare("SELECT COUNT(*) AS n FROM known_devices WHERE user_id = ?").get(userId) as { n: number };

@@ -12,9 +12,12 @@ export type Viewer = { id: string; admin: boolean };
 // for this exact host, for the whole site, and no subdomain can set or overwrite it.
 export const COOKIE = process.env.NODE_ENV === "production" ? "__Host-lincoln_session" : "lincoln_session";
 export const MFA_COOKIE = process.env.NODE_ENV === "production" ? "__Host-lincoln_mfa" : "lincoln_mfa";
-export const SESSION_HOURS = 12;
-/** A session left untouched this long ends, even inside its 12 hours. */
-export const IDLE_HOURS = 2;
+/** Signed in stays signed in, like Claude, ChatGPT and Gmail (Ismael, 2026-11-27): a sign in lasts 30 days from its
+ *  last use, so anyone who opens Lincoln at least once a month never sees the sign in page, and notifications always
+ *  open straight into Lincoln. Signing out, or removing a device in Settings, ends it at once. */
+export const SESSION_DAYS = 30;
+/** Sign ins last used before this have ended. */
+export const sessionCutoff = () => new Date(Date.now() - SESSION_DAYS * 86400_000).toISOString();
 
 /** Admin is a permission of its own, given by another admin; it is not a job title. */
 export const viewer = (u: { id: string; admin: number }): Viewer => ({ id: u.id, admin: Boolean(u.admin) });
@@ -24,7 +27,7 @@ export async function currentUser(): Promise<{ user: User; firm: Firm; sessionId
   if (!sid) return null;
   const d = db();
   const hashed = sha(sid);
-  const row = d.prepare("SELECT u.id, u.firm_id, u.name, u.email, u.role, u.initials, u.avatar, u.admin, u.setup_at, u.totp_enc IS NOT NULL AS two FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.id = ? AND s.created_at > ? AND (s.last_seen IS NULL OR s.last_seen > ?)").get(hashed, new Date(Date.now() - SESSION_HOURS * 3600_000).toISOString(), new Date(Date.now() - IDLE_HOURS * 3600_000).toISOString()) as (User & { two: number }) | undefined;
+  const row = d.prepare("SELECT u.id, u.firm_id, u.name, u.email, u.role, u.initials, u.avatar, u.admin, u.setup_at, u.totp_enc IS NOT NULL AS two FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.id = ? AND COALESCE(s.last_seen, s.created_at) > ?").get(hashed, sessionCutoff()) as (User & { two: number }) | undefined;
   if (!row) return null;
   const { two, ...user } = row;
   const firm = d.prepare("SELECT id, name, demo, require_2fa FROM firms WHERE id = ?").get(user.firm_id) as Firm;

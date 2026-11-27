@@ -133,7 +133,8 @@ export function db(): Database.Database {
   }
   // The old outbox kept reset links in readable form; nothing may keep them.
   d.exec("DELETE FROM outbox");
-  d.exec(`DELETE FROM sessions WHERE created_at < '${new Date(Date.now() - 24 * 3600_000).toISOString()}'`);
+  // Sign ins last 30 days from their last use (session.ts, SESSION_DAYS); only those past that are cleared at start.
+  d.exec(`DELETE FROM sessions WHERE COALESCE(last_seen, created_at) < '${new Date(Date.now() - 30 * 86400_000).toISOString()}'`);
   // A server restart ends any background reading; do not leave cases marked as in progress.
   d.exec("UPDATE cases SET processing = 0, note = 'Reading was interrupted. Upload the file again.' WHERE processing = 1");
   const n = d.prepare("SELECT COUNT(*) AS n FROM firms").get() as { n: number };

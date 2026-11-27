@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import QRCode from "qrcode";
 import { otpauth } from "@/lib/totp";
 import { open as openSecret } from "@/lib/secret";
-import { SESSION_HOURS } from "@/lib/session";
+import { sessionCutoff } from "@/lib/session";
 import { requireUser } from "@/lib/session";
 import { kv, people } from "@/lib/queries";
 import { ago } from "@/lib/format";
@@ -62,7 +62,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const twoStep = { on: Boolean(me.totp_enc), left: (JSON.parse(me.recovery ?? "[]") as string[]).length };
   const secretText = setup && me.totp_pending_enc ? openSecret(me.totp_pending_enc) : "";
   const qr = secretText ? await QRCode.toDataURL(otpauth(secretText, user.email), { margin: 1, width: 360 }) : null;
-  const sessions = tab === "security" ? (d.prepare("SELECT id, ip, agent, created_at, last_seen FROM sessions WHERE user_id = ? AND created_at > ? ORDER BY last_seen DESC").all(user.id, new Date(Date.now() - SESSION_HOURS * 3600_000).toISOString()) as { id: string; ip: string | null; agent: string | null; created_at: string; last_seen: string | null }[]) : [];
+  const sessions = tab === "security" ? (d.prepare("SELECT id, ip, agent, created_at, last_seen FROM sessions WHERE user_id = ? AND COALESCE(last_seen, created_at) > ? ORDER BY last_seen DESC").all(user.id, sessionCutoff()) as { id: string; ip: string | null; agent: string | null; created_at: string; last_seen: string | null }[]) : [];
   const devices: { name: string; ip: string | null; last: string; mine: boolean; ids: string[] }[] = [];
   for (const x of sessions) {
     const name = device(x.agent);

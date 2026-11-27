@@ -300,7 +300,7 @@ from the repo the same day. History is in git up to commit `341cf65`.
 * Who the parent or guardian owner is, and how payments and contracts are held.
 * Which immigration lawyer will advise (nobody yet).
 * Which model providers and what data agreements.
-* Security (2026-11-14): every free item of the security minimum is built and tested (17 of 17): whole database encryption, firm wide two step, 2 hour idle sign out, new device emails, breached password check, access record, daily model budget ($5 default, LLM_DAILY_BUDGET_USD), full firm export, breach plan (`docs/BREACH-PLAN.md`). Still open and paid or outside the code: off server backups, zero retention agreement with Anthropic, an independent security review, Google's CASA assessment, a lawyer reviewed data agreement. See `docs/SECURITY.md`.
+* Security (2026-11-14): every free item of the security minimum is built and tested (17 of 17): whole database encryption, firm wide two step (removed 2026-11-26), 2 hour idle sign out (replaced 2026-11-27 by 30 days from last use), new device emails, breached password check, access record, daily model budget ($5 default, LLM_DAILY_BUDGET_USD), full firm export, breach plan (`docs/BREACH-PLAN.md`). Still open and paid or outside the code: off server backups, zero retention agreement with Anthropic, an independent security review, Google's CASA assessment, a lawyer reviewed data agreement. See `docs/SECURITY.md`.
 * Domain (Ismael, 2026-11-14): uselincoln.com for the landing page, app.uselincoln.com for the app, as Harvey and Legora split it. lincoln.ai only later, once revenue can comfortably pay for it. Not bought yet (a parent buys it).
 * Funding odds and first raise (Claude's advice, 2026-11-14 evening, not decided): with no live test, no lawyer grading, no
   firm using it, a 15 year old solo non lawyer founder, institutional pre-seed in the next 6 months is about 1 to 3 percent
@@ -810,3 +810,9 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
   (one colour per frame): on a 4x slowed phone the head runs at about 51 fps and the hero at 60 (was 49).
   2026-11-27 (Ismael: neck "like a giraffe", "less creepy"): short neck, smaller skull, fuller cheeks, shallow eye
   sockets, smaller nose, softer mostly frontal light, and the head drawn bigger (desktop 0.44 of the section height).
+* Sign in (2026-11-27, Ismael: "most convenient and proven reliable"): a sign in lasts 30 days from its last use, like
+  Claude and Gmail; the 2 hour idle and 12 hour limits are gone, and so is the start-up clean-up that signed out anyone
+  signed in more than 24 hours on every deploy (that was why people were signed out so often). The cookie is kept up
+  to 400 days; the server decides. Ended sign ins lose their notifications. Privacy Policy updated (Last updated
+  November 27, 2026). Tested: a 5 day old sign in used 3 hours ago stays in, one unused for 31 days goes to sign in,
+  both before and after a restart.

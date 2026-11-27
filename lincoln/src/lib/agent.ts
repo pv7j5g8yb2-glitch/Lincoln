@@ -7,6 +7,7 @@ import { UNNAMED, applyDateRules, draftForCase, processCase } from "./intake";
 import { fileKind, unreadable } from "./pdf";
 import { addEvent, canReadChat, canReadTeams, channelMessages, chatFile, chatMessages, chatPost, connectionsOf, docAsWord, downloadShared, ensurePush, googleDocIds, fetchNew, replyInChannel, send, sendDraft, settingsOf, teamsPost, updateDraft, type Connection, type Inbound } from "./integrations";
 import { isDocx, redline } from "./redline";
+import { sessionCutoff } from "./session";
 
 // The part of Lincoln that works without being asked. Every incoming email is read, matched to a case
 // or opened as a new one, its attachments are read into the record, and the next step is prepared.
@@ -386,7 +387,9 @@ export async function tick() {
   }
 
   // Housekeeping: expired sign ins, challenges and reset links are removed.
-  d.prepare("DELETE FROM sessions WHERE created_at < ?").run(new Date(Date.now() - 24 * 3600_000).toISOString());
+  d.prepare("DELETE FROM sessions WHERE COALESCE(last_seen, created_at) < ?").run(sessionCutoff());
+  // A device whose sign in has ended gets no more notifications.
+  d.prepare("DELETE FROM push_subs WHERE session IS NOT NULL AND session NOT IN (SELECT id FROM sessions)").run();
   d.prepare("DELETE FROM login_challenges WHERE expires_at < ?").run(now());
   d.prepare("DELETE FROM password_resets WHERE expires_at < ?").run(new Date(Date.now() - 24 * 3600_000).toISOString());
 
