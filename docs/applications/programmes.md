@@ -39,7 +39,7 @@ From web search, mostly third party directories that often disagree. Check each 
 |---|---|---|---|---|---|
 | Entrepreneur First | London | about 6 months | rolling | about £80k to £120k | about 8% to 10% |
 | Seedcamp | London | not a cohort | rolling | up to about €75k pre seed, €200k seed (sources differ) | varies |
-| Antler UK | London | 8 weeks plus | rolling | about £210k | about 8.5% to 10% |
+| Antler UK (2026-11-27: AI is about 95% of its portfolio; existing teams can get a faster decision without the team forming part; full time, in person, right to work in the UK needed, which Irish citizens have; no age rule found, check the FAQ or applications@antler.co before applying; Europe cheques €100k to €200k for 8.5% to 11%, a low valuation next to YC) | London | 8 weeks plus | rolling | about £210k | about 8.5% to 10% |
 | Techstars London | London | 3 months | dates conflict | about $220k | about 5% to 6% |
 | Founders Factory | London | ? | ? | about £30k | about 4% to 7% |
 | Zinc, Conception X, Carbon13 | London | varies | varies | varies | ? |
