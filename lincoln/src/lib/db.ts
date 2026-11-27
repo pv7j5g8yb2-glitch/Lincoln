@@ -110,6 +110,10 @@ export function db(): Database.Database {
   d.exec("CREATE TABLE IF NOT EXISTS intake_sessions (id TEXT PRIMARY KEY, token TEXT NOT NULL, firm_id TEXT NOT NULL, case_id TEXT, files TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)");
   d.exec("CREATE TABLE IF NOT EXISTS invites (token_hash TEXT PRIMARY KEY, firm_id TEXT NOT NULL, email TEXT NOT NULL, role TEXT, admin INTEGER NOT NULL DEFAULT 0, invited_by TEXT, created_at TEXT NOT NULL, expires_at TEXT NOT NULL, used_at TEXT)");
   d.exec("CREATE TABLE IF NOT EXISTS enquiries (id TEXT PRIMARY KEY, at TEXT NOT NULL, name TEXT NOT NULL, email TEXT NOT NULL, firm TEXT NOT NULL, answers TEXT NOT NULL, ip TEXT)");
+  // What identifies each case (routing.ts): addresses, phones, receipt numbers, A-Numbers, a person's name and date of
+  // birth, and files already read. Filled once from what the firm already has.
+  d.exec("CREATE TABLE IF NOT EXISTS case_keys (firm_id TEXT NOT NULL, case_id TEXT NOT NULL, kind TEXT NOT NULL, value TEXT NOT NULL, at TEXT NOT NULL, PRIMARY KEY (firm_id, kind, value, case_id))");
+  d.exec("CREATE INDEX IF NOT EXISTS i_case_keys_case ON case_keys(case_id)");
   d.exec("CREATE TABLE IF NOT EXISTS known_devices (user_id TEXT NOT NULL, device TEXT NOT NULL, first_seen TEXT NOT NULL, PRIMARY KEY (user_id, device))");
   for (const [table, col, type] of [["users", "avatar", "TEXT"], ["users", "setup_at", "TEXT"], ["addin_tokens", "app", "TEXT"], ["cases", "processing", "INTEGER NOT NULL DEFAULT 0"], ["cases", "note", "TEXT"], ["chat", "case_id", "TEXT"], ["cases", "client_email", "TEXT"], ["messages", "email", "TEXT"], ["messages", "thread_id", "TEXT"], ["messages", "mailbox_id", "TEXT"], ["mailboxes", "settings", "TEXT"], ["users", "totp_enc", "TEXT"], ["users", "totp_pending_enc", "TEXT"], ["users", "totp_last_step", "INTEGER"], ["users", "recovery", "TEXT"], ["sessions", "ip", "TEXT"], ["sessions", "agent", "TEXT"], ["sessions", "last_seen", "TEXT"], ["firms", "key_enc", "TEXT"], ["firms", "require_2fa", "INTEGER NOT NULL DEFAULT 0"], ["issues", "rule", "TEXT"], ["firms", "address", "TEXT"], ["firms", "phone", "TEXT"], ["firms", "email", "TEXT"], ["users", "bar_number", "TEXT"], ["users", "bar_state", "TEXT"], ["cases", "receipt", "TEXT"], ["forms", "batch", "TEXT"], ["usage", "user_id", "TEXT"], ["chat", "thread_id", "TEXT"], ["intake_links", "user_id", "TEXT"], ["users", "admin", "INTEGER NOT NULL DEFAULT 0"], ["messages", "ext_id", "TEXT"], ["messages", "draft_ref", "TEXT"], ["messages", "draft_box", "TEXT"], ["messages", "draft_at", "TEXT"]]) {
     const cols = d.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
@@ -122,6 +126,15 @@ export function db(): Database.Database {
     }
   }
   d.exec("CREATE INDEX IF NOT EXISTS i_usage_user ON usage(user_id, at)");
+  if (!d.prepare("SELECT 1 FROM kv WHERE firm_id = '_system' AND key = 'case_keys_v1'").get()) {
+    const at = new Date().toISOString();
+    const ins = d.prepare("INSERT OR IGNORE INTO case_keys (firm_id, case_id, kind, value, at) VALUES (?, ?, ?, ?, ?)");
+    for (const c of d.prepare("SELECT id, firm_id, client_email, receipt FROM cases").all() as { id: string; firm_id: string; client_email: string | null; receipt: string | null }[]) {
+      if (c.client_email) ins.run(c.firm_id, c.id, "email", c.client_email.trim().toLowerCase(), at);
+      if (c.receipt) ins.run(c.firm_id, c.id, "receipt", c.receipt.replace(/[\s-]/g, "").toUpperCase(), at);
+    }
+    d.prepare("INSERT OR IGNORE INTO kv (firm_id, key, value) VALUES ('_system', 'case_keys_v1', '1')").run();
+  }
   // Two step sign in is each person's own choice (Ismael, 2026-11-26): a firm wide requirement no longer applies.
   if ((d.prepare("PRAGMA table_info(firms)").all() as { name: string }[]).some((c) => c.name === "require_2fa")) d.exec("UPDATE firms SET require_2fa = 0 WHERE require_2fa != 0");
   // Chats became separate threads (2026-11-15): each earlier conversation becomes one thread, named after its first question.

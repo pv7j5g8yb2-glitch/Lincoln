@@ -820,3 +820,14 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
   Profile, Copy) from their own phone; when it is filled, Lincoln opens the case. The sales rep teaches this at
   onboarding. Lincoln will not send texts itself, now or later: it cannot know what each call was about, and copying
   the link takes seconds.
+* Routing (2026-11-27, Ismael: "ready for 500+ scenarios at scale"): every way in (email, reply, agency notice,
+  forwarded email, typed or emailed instruction, Teams or Google Chat request, intake link) now goes through
+  `lincoln/src/lib/routing.ts` before anything is opened or filed. Sure matches (same thread, receipt number,
+  A-Number) are filed whatever the model says; likely matches (address, phone, name with date of birth) are offered
+  first; a name alone is never merged, only flagged. A guard before any new case adds the same person's same open
+  matter to their existing case. Every case is searched (the old "most recent 200" would have opened duplicates past
+  200 cases). Fixed on the way: the intake link always opened a new case, so a client who emailed first and then
+  filled the link got two cases; a model's made up case id is never used; the same file twice is read once. New table
+  `case_keys`, filled from existing cases at start. Catalogue of scenarios and status: `docs/SCENARIOS.md`. Tests:
+  `tests/routing.test.mjs` (in npm test) and `tests/eval/mail-routing-check.mts` (whole emails, scripted model).
+  Open: merging two cases, one email for several family members as linked cases, auto replies and bounces.

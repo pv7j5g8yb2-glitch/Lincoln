@@ -10,6 +10,8 @@ import { loadPage, removePagesAfter, savePage } from "./storage";
 import { citationsIn, lawText } from "./law";
 import { rulebookFor, rulebooksFor } from "./rulebooks";
 import { firmStyle, precedentFor } from "./memory";
+import { learn } from "./routing";
+import { createHash } from "node:crypto";
 
 // Live intake: a client file goes in, Lincoln reads every page and writes the case record:
 // documents, issues, dates, requirements and a first request to the client for attorney approval.
@@ -179,8 +181,22 @@ export function processCase(firmId: string, caseId: string, files: Uint8Array[],
   return run;
 }
 
-async function readCase(firmId: string, caseId: string, files: Uint8Array[], opts: { append?: boolean; fromClient?: boolean }) {
+async function readCase(firmId: string, caseId: string, all: Uint8Array[], opts: { append?: boolean; fromClient?: boolean }) {
   const d = db();
+  // A file already read into this case (sent again in a reply, forwarded, uploaded twice) is not read or added twice.
+  const seen = new Set<string>();
+  const hashes: string[] = [];
+  const files = all.filter((f) => {
+    const h = createHash("sha256").update(f).digest("hex");
+    if (seen.has(h) || d.prepare("SELECT 1 FROM case_keys WHERE firm_id = ? AND case_id = ? AND kind = 'file' AND value = ?").get(firmId, caseId, h)) return false;
+    seen.add(h); hashes.push(h); return true;
+  });
+  if (all.length && !files.length) {
+    const skipped = all.length;
+    d.prepare("UPDATE cases SET processing = 0 WHERE firm_id = ? AND id = ?").run(firmId, caseId);
+    d.prepare("INSERT INTO activity (id, firm_id, case_id, at, actor, kind, text, minutes) VALUES (?, ?, ?, ?, 'Lincoln', 'file', ?, 0)").run(uid(), firmId, caseId, new Date().toISOString(), `${skipped === 1 ? "A file" : `${skipped} files`} already in the case arrived again; not added twice.`);
+    return;
+  }
   d.prepare("UPDATE cases SET processing = 1 WHERE firm_id = ? AND id = ?").run(firmId, caseId);
   let before: number | null = null;
   try {
@@ -191,6 +207,7 @@ async function readCase(firmId: string, caseId: string, files: Uint8Array[], opt
     const start = append ? c.pages + 1 : 1;
     const added = await renderFiles(files, (k, jpeg) => savePage(firmId, caseId, k, jpeg), start);
     if (added === 0) throw new Error("The case has reached its page limit.");
+    for (const h of hashes) learn(firmId, caseId, "file", h);
     const n = start - 1 + added;
     d.prepare("UPDATE cases SET pages = ? WHERE firm_id = ? AND id = ?").run(n, firmId, caseId);
     const pages = Array.from({ length: added }, (_, i) => ({ n: start + i, jpeg: loadPage(firmId, caseId, start + i)! }));
@@ -611,6 +628,8 @@ async function actOnNotice(firmId: string, caseId: string, n: NonNullable<Readin
   }
   const receipt = String(n.receipt_number ?? "").replace(/\s/g, "").toUpperCase();
   if (/^[A-Z]{3}\d{10}$/.test(receipt) && !c.receipt) d.prepare("UPDATE cases SET receipt = ? WHERE firm_id = ? AND id = ?").run(receipt, firmId, caseId);
+  // Every receipt number on the case is remembered (a family case has several), so a later notice finds its case.
+  if (/^[A-Z]{3}\d{10}$/.test(receipt)) learn(firmId, caseId, "receipt", receipt);
 
   if (NOTICES[kind]) {
     const label = NOTICES[kind];

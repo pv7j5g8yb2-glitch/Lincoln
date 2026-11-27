@@ -9,6 +9,7 @@ import { typeOf } from "./library";
 import { ABOUT, matterById, matterForCode, type Matter } from "./intake-matters";
 import { isLawyerRole } from "./roles";
 import { notify } from "./push";
+import { existingClient, flagSameName, learn, personKey } from "./routing";
 
 // The client intake link. A firm has one link for its website, every member has their own (cases from it are
 // theirs), and a case can have its own link, tied to that client and case type. The client answers the questions and sends documents; on Send the answers
@@ -152,6 +153,17 @@ export async function submit(link: Link, sessionId: string, matterId: string, ra
   const d = db();
   const email = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(answers.email) ? answers.email.toLowerCase() : null;
   let caseId = link.case_id;
+  // Someone who already has this matter with the firm (they emailed first, or filled a link twice, or wrote from
+  // another address) is added to that case, never given a second one. Recognised by address, phone, A-Number, or name
+  // with date of birth; a name alone is not enough and is only flagged.
+  let sameName: string[] = [];
+  let returning = false;
+  if (!caseId) {
+    const ty = typeOf(matter.code, matter.code ? null : "Client intake");
+    const ex = existingClient(link.firm_id, { name: answers.name, email, phone: answers.phone, dob: answers.dob, anumber: answers.a_number, typeCode: ty.code });
+    if (ex.addTo) { caseId = ex.addTo; returning = true; }
+    sameName = ex.sameNameOnly;
+  }
   if (caseId) {
     d.prepare("UPDATE cases SET client = CASE WHEN client = ? THEN ? ELSE client END, client_email = COALESCE(client_email, ?) WHERE id = ? AND firm_id = ?").run(UNNAMED, answers.name, email, caseId, link.firm_id);
   } else {
@@ -169,9 +181,22 @@ export async function submit(link: Link, sessionId: string, matterId: string, ra
       VALUES (?, ?, ?, ?, NULL, ?, ?, ?, 'Intake', 'moving', ?, ?, ?, ?, ?, 0, 1, ?)`).run(caseId, link.firm_id, `${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`, answers.name, ty.code, ty.name, ty.family, `Opened from the client's intake: ${matter.label.toLowerCase()}.`, attorney, paralegal, now(), ty.family === "Humanitarian" ? 1 : 0, email);
   }
   const id = caseId;
+  if (!link.case_id && !returning) flagSameName(link.firm_id, id, sameName);
+  // A returning client's answers go to the attorney already on their case.
+  if (returning) {
+    const k = d.prepare("SELECT attorney_id FROM cases WHERE id = ?").get(id) as { attorney_id: string | null } | undefined;
+    if (k?.attorney_id) notify(k.attorney_id, { title: answers.name, body: `Sent the intake questionnaire. Added to the existing case.`, url: `/cases/${id}`, tag: `intake:${id}` });
+  }
+  // What identifies this client from now on, whichever way they get in touch next.
+  learn(link.firm_id, id, "email", email);
+  learn(link.firm_id, id, "phone", answers.phone);
+  learn(link.firm_id, id, "person", personKey(answers.name, answers.dob));
+  const an = String(answers.a_number ?? "").replace(/\D/g, "");
+  if (an.length === 8 || an.length === 9) learn(link.firm_id, id, "anumber", an.padStart(9, "0"));
+  if (answers.other_names) for (const n of answers.other_names.split(/[,;\n]/)) learn(link.firm_id, id, "person", personKey(n, answers.dob));
   // Everyone the case is for hears about it when they are away: every admin for the firm's link, the member for
   // their own link. A case link's case is already someone's and shows in their Review as it is read.
-  if (!link.case_id) {
+  if (!link.case_id && !returning) {
     const to = link.user_id ? [link.user_id] : (d.prepare("SELECT id FROM users WHERE firm_id = ? AND admin = 1").all(link.firm_id) as { id: string }[]).map((u) => u.id);
     for (const u of to) notify(u, { title: "New client", body: `${answers.name}. ${matter.label}.`, url: `/cases/${id}`, tag: `intake:${id}` });
   }
