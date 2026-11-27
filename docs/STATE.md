@@ -816,3 +816,7 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
   to 400 days; the server decides. Ended sign ins lose their notifications. Privacy Policy updated (Last updated
   November 27, 2026). Tested: a 5 day old sign in used 3 hours ago stays in, one unused for 31 days goes to sign in,
   both before and after a restart.
+* Phone enquiries (Ismael, 2026-11-27): after a call, the attorney texts the client their own intake link (Settings,
+  Profile, Copy) from their own phone; when it is filled, Lincoln opens the case. The sales rep teaches this at
+  onboarding. Lincoln will not send texts itself, now or later: it cannot know what each call was about, and copying
+  the link takes seconds.
