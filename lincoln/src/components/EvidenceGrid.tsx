@@ -11,7 +11,7 @@ const TONE: Record<string, string> = { met: "text-ink", claim: "text-ink", parti
 export default function EvidenceGrid({ caseId, rows, docs }: { caseId: string; rows: GridRow[]; docs: { n: number; title: string }[] }) {
   const used = docs.filter((d) => rows.some((r) => r.ev.some((e) => e.doc === d.n)));
   return (
-    <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
+    <div className="edge-fade -mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
       <table className="w-max min-w-full border-separate border-spacing-0 text-left">
         <thead>
           <tr>

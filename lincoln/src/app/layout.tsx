@@ -4,7 +4,7 @@ import "@fontsource-variable/literata";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Lincoln",
+  title: { default: "Lincoln", template: "%s · Lincoln" },
   applicationName: "Lincoln",
   appleWebApp: { capable: true, title: "Lincoln", statusBarStyle: "default" },
   robots: { index: false, follow: false },

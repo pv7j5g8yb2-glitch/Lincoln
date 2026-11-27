@@ -36,7 +36,7 @@ export default function AvatarField({ initials, current }: { initials: string; c
     <div className="flex items-center gap-4">
       <Avatar initials={initials} src={preview} size={64} />
       <input type="hidden" name="avatar" value={value} />
-      <input ref={input} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
+      <input ref={input} type="file" aria-label="Photo" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
       <div className="flex flex-col gap-1">
         <div className="flex gap-2">
           <button type="button" onClick={() => input.current?.click()} className={btn.secondary}>Upload photo</button>

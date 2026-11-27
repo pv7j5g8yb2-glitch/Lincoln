@@ -9,6 +9,8 @@ import { approvalById, approvalsPage, messageById } from "@/lib/queries";
 import { ago, inDays } from "@/lib/format";
 import { packetPlan } from "@/lib/packet";
 
+export const metadata = { title: "Review" };
+
 const PAGE = 100;
 
 export default async function Review({ searchParams }: { searchParams: Promise<{ id?: string; n?: string }> }) {

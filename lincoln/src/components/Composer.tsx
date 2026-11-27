@@ -97,12 +97,13 @@ export default function Composer({ value, onChange, onSend, onStop, busy, placeh
         {attach && (
           <>
             <button type="button" onClick={() => picker.current?.click()} aria-label="Add files" className={`${iconBtn} md:order-1`}><Plus size={18} strokeWidth={1.8} /></button>
-            <input ref={picker} type="file" multiple accept={accept} className="hidden" onChange={(e) => { setFiles([...files, ...Array.from(e.target.files ?? [])].slice(0, 40)); e.target.value = ""; }} />
+            <input ref={picker} type="file" aria-label="Attach files" multiple accept={accept} className="hidden" onChange={(e) => { setFiles([...files, ...Array.from(e.target.files ?? [])].slice(0, 40)); e.target.value = ""; }} />
           </>
         )}
         <span className="hidden md:order-2 md:block md:flex-1" />
         <textarea
           ref={ref}
+          aria-label={placeholder}
           rows={1}
           value={value}
           autoFocus={autoFocus}

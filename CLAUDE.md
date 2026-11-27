@@ -268,6 +268,11 @@ build` before every push to the session branch; Render deploys from it. A grep f
 
 ## How to work
 
+* **Built for the biggest firm, not the demo (2026-11-27).** Anything that grows with a firm (cases, mail, Review,
+  activity) is filtered, paged and counted in the database, never loaded whole into a page, a dropdown or a prompt;
+  every lookup has an index. Check new screens against a firm of 5,000 cases and 50,000 emails before calling them done
+  (the Inbox once took 193 seconds there). Errors a person sees are a few plain words, never a service's own message.
+
 * Test before saying it works. Look at the real output, not only that tests pass.
 * Run the cheap test before the big build. The plan is in `docs/TEST-PLAN.md`.
 * Do not build anything Ismael has not asked for. Say what you think and wait.

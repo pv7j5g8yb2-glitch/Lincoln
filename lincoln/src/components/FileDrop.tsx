@@ -28,7 +28,7 @@ export default function FileDrop() {
       }}
       className={clsx(" border border-dashed transition", over ? "border-ink bg-side" : "border-edge")}
     >
-      <input ref={input} type="file" name="file" multiple accept={READABLE} className="hidden" onChange={(e) => set(e.target.files)} />
+      <input ref={input} type="file" name="file" aria-label="Add files" multiple accept={READABLE} className="hidden" onChange={(e) => set(e.target.files)} />
       {file ? (
         <div className="flex items-center gap-3 px-3.5 py-3">
           <FileText size={16} className="shrink-0 text-muted" />

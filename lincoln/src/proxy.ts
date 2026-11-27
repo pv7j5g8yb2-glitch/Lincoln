@@ -6,6 +6,7 @@ import { NextResponse, type NextRequest } from "next/server";
 const APP = "https://app.uselincoln.com";
 const MAIN = "uselincoln.com";
 const PUBLIC = new Set(["/terms", "/privacy", "/start"]);
+const APP_ROUTES = new Set(["signin", "signup", "forgot", "reset", "join", "intake", "setup", "ops", "word", "outlook", "cases", "approvals", "assistant", "help", "inbox", "integrations", "library", "settings"]);
 
 export function proxy(req: NextRequest) {
   const host = (req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "").split(",")[0].split(":")[0].trim().toLowerCase();
@@ -16,7 +17,10 @@ export function proxy(req: NextRequest) {
   if (pathname === "/") return NextResponse.rewrite(new URL(`/welcome${search}`, req.url));
   if (pathname === "/welcome") return NextResponse.redirect(`https://${MAIN}/${search}`, 308);
   if (PUBLIC.has(pathname)) return NextResponse.next();
-  return NextResponse.redirect(`${APP}${pathname}${search}`, 308);
+  // Addresses of the app (a sign in link, an invitation, a client's intake link) go to the app; anything else is a
+  // page that does not exist and shows Page not found here, never the app's sign in.
+  if (APP_ROUTES.has(pathname.split("/")[1] ?? "")) return NextResponse.redirect(`${APP}${pathname}${search}`, 308);
+  return NextResponse.next();
 }
 
 export const config = {

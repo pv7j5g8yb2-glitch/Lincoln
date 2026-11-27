@@ -4,6 +4,8 @@ import AuthShell, { Notice, SocialButtons, field, fieldLabel, submit } from "@/c
 import { signIn } from "@/lib/actions";
 import { currentUser } from "@/lib/session";
 
+export const metadata = { title: "Sign in" };
+
 export const dynamic = "force-dynamic";
 const ERR: Record<string, string> = {
   invalid: "Email or password is incorrect.",

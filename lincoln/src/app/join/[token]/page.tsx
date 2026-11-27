@@ -9,6 +9,8 @@ import { currentUser } from "@/lib/session";
 export const dynamic = "force-dynamic";
 const ERR: Record<string, string> = { fields: "Name and role are required.", password: "The password needs at least 10 characters.", exists: "An account with this email already exists.", breached: "This password appears in known data breaches. Choose another.", limited: "Too many attempts. Try again later.", expired: "This invite has expired or was already used." };
 
+export const metadata = { title: "Join" };
+
 export default async function Join({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ error?: string }> }) {
   if (await currentUser()) redirect("/");
   const { token } = await params;

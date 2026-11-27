@@ -847,3 +847,14 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
   most. A failed email waits in the Inbox as Not sorted instead of being filed to nothing. One unreadable email no
   longer drops the rest of its batch. Firm isolation audited: every API route checks the firm or a secret token.
   Indexes on every routing lookup: about 6 ms an email at 5,000 cases and 50,000 emails.
+* Full audit (2026-11-27, Ismael: "make sure Lincoln's entire infrastructure end to end is impeccable"), four passes:
+  (1) every word in the product: no dashes or "you" in the app, raw model and network errors replaced by plain ones,
+  American spelling in prompts; (2) scale, on a firm of 5,000 cases, 50,000 emails and 2,000 Review items: the Inbox
+  took 193 seconds and 363 MB (a dropdown of every case on every unsorted email), Cases 7.6 MB, Review 1.6 MB, the
+  assistant sent every Review item with each question; now paged in the database with Show more, a case search for
+  unsorted mail, counted badges, indexes on every case table; every page 20 to 240 ms; (3) every screen on desktop
+  and phone, light and dark, full, big and empty firms: phone tables rebuilt, empty Cases page without Export or
+  Search, a designed Page not found and error page, a title on every tab, every field labelled; (4) public site and
+  security: a mistyped uselincoln.com address now shows Page not found instead of the app's sign in, every outgoing
+  link (intake, invite, password reset) uses one address that can never be empty, headers checked, 110 pages crawled
+  with no broken links, in-memory stores bounded.

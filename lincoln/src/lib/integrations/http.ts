@@ -16,5 +16,7 @@ export async function json<T>(res: Response, what: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-export const appUrl = () => (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+/** The app's own address, for links that leave it (sign in returns, intake links, invitations). Never empty: a link
+ *  without it would go nowhere once texted or emailed. */
+export const appUrl = () => (process.env.APP_URL || (process.env.NODE_ENV === "production" ? "https://app.uselincoln.com" : "http://localhost:3000")).replace(/\/$/, "");
 export const callback = (provider: string) => `${appUrl()}/api/connect/${provider}/callback`;

@@ -34,6 +34,12 @@ const DOC_STATUS: Record<string, string> = { ok: "Usable", weak: "Low weight", e
 const KIND: Record<string, string> = { date: "Date", conflict: "Conflict", missing: "Missing", risk: "Risk", bar: "Bar" };
 const pageLink = "text-muted underline decoration-line underline-offset-4 transition hover:text-ink hover:decoration-ink";
 
+/** The tab shows the client's name, as the page does. */
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { firm, viewer } = await requireUser();
+  return { title: caseById(firm.id, (await params).id, viewer)?.client ?? "Case" };
+}
+
 export default async function CasePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; draft?: string }> }) {
   const { user, firm, viewer } = await requireUser();
   const { id } = await params;
@@ -214,8 +220,8 @@ export default async function CasePage({ params, searchParams }: { params: Promi
         <>
           <p className="mb-3 text-[12.5px] text-faint">{c.pages} pages · {docs.length} documents</p>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-[13px]">
-              <thead><tr className="border-b border-line text-left text-[12px] text-faint"><th className="w-9 py-2 font-normal">No.</th><th className="px-3 font-normal">Document</th><th className="px-3 font-normal">Pages</th><th className="px-3 font-normal">Source</th><th className="py-2 pl-3 font-normal">Assessment</th></tr></thead>
+            <table className="w-full text-[13px]">
+              <thead><tr className="border-b border-line text-left text-[12px] text-faint"><th className="w-9 py-2 font-normal">No.</th><th className="px-3 font-normal">Document</th><th className="hidden px-3 font-normal sm:table-cell">Pages</th><th className="hidden px-3 font-normal sm:table-cell">Source</th><th className="hidden py-2 pl-3 font-normal sm:table-cell">Assessment</th></tr></thead>
               <tbody>
                 {docs.map((d) => (
                   <tr key={d.id} className="border-b border-line align-top">
@@ -223,10 +229,11 @@ export default async function CasePage({ params, searchParams }: { params: Promi
                     <td className="max-w-[440px] px-3 py-3">
                       <div className="font-medium">{d.title}</div>
                       {d.note && <p className="mt-0.5 text-[12.5px] leading-relaxed text-muted">{d.note}</p>}
+                      <p className="mt-1 text-[12px] text-faint sm:hidden">{[d.page_from ? (d.page_from === d.page_to || !d.page_to ? `p. ${d.page_from}` : `pp. ${d.page_from} to ${d.page_to}`) : null, d.source, translated.has(d.n) ? (translated.get(d.n)!.status === "approved" ? "Translated" : "Translation for review") : DOC_STATUS[d.status] ?? d.status].filter(Boolean).join(" · ")}</p>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-3">{d.page_from ? <a href={`/api/pages/${id}/${d.page_from}`} target="_blank" className={pageLink}>{d.page_from === d.page_to || !d.page_to ? d.page_from : `${d.page_from} to ${d.page_to}`}</a> : null}</td>
-                    <td className="whitespace-nowrap px-3 py-3 text-muted">{d.source}{d.language && d.language !== "English" ? <span className="block text-[12px] text-faint">{d.language}</span> : null}</td>
-                    <td className={clsx("whitespace-nowrap py-3 pl-3", d.status === "ok" || translated.get(d.n)?.status === "approved" ? "text-muted" : "font-medium")}>
+                    <td className="hidden whitespace-nowrap px-3 py-3 sm:table-cell">{d.page_from ? <a href={`/api/pages/${id}/${d.page_from}`} target="_blank" className={pageLink}>{d.page_from === d.page_to || !d.page_to ? d.page_from : `${d.page_from} to ${d.page_to}`}</a> : null}</td>
+                    <td className="hidden whitespace-nowrap px-3 py-3 text-muted sm:table-cell">{d.source}{d.language && d.language !== "English" ? <span className="block text-[12px] text-faint">{d.language}</span> : null}</td>
+                    <td className={clsx("hidden whitespace-nowrap py-3 pl-3 sm:table-cell", d.status === "ok" || translated.get(d.n)?.status === "approved" ? "text-muted" : "font-medium")}>
                       {translated.has(d.n) ? <Link href={`/cases/${id}?tab=drafts&draft=${translated.get(d.n)!.id}`} scroll={false} className={pageLink}>{translated.get(d.n)!.status === "approved" ? "Translated" : "Translation for review"}</Link> : DOC_STATUS[d.status] ?? d.status}
                     </td>
                   </tr>

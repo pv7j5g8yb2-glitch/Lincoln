@@ -3,7 +3,7 @@ import Script from "next/script";
 import Toaster from "@/components/Toaster";
 import WordPane from "@/components/word/WordPane";
 
-export const metadata: Metadata = { title: "Lincoln", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: { absolute: "Lincoln" }, robots: { index: false, follow: false } };
 
 // The Word add-in's task pane. Office.js replaces the browser's history functions with null; they are kept here
 // first and put back once it has loaded, so the page keeps working.

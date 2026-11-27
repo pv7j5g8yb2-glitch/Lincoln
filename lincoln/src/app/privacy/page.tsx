@@ -5,7 +5,7 @@ import { COMPANY as C } from "@/lib/company";
 // Pitch black browser bar to match the page, in light and dark mode alike.
 export const viewport = { themeColor: "#000000" };
 
-export const metadata = { title: "Privacy Policy · Lincoln" };
+export const metadata = { title: "Privacy Policy" };
 
 const clauses: Clause[] = [
   { h: "Who is responsible", p: [`Lincoln is operated by ${C.legalName}, ${C.address} ("Lincoln"). Questions and requests about personal data go to ${C.contact}.`,

@@ -13,7 +13,7 @@ import { requireUser } from "@/lib/session";
 // For Lincoln's own staff only (LINCOLN_OPS_EMAILS): set up a firm for the person who contacted us. They get an
 // admin invite; everyone else at their firm is invited by them.
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Set up a firm · Lincoln", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Set up a firm", robots: { index: false, follow: false } };
 
 export default async function Ops({ searchParams }: { searchParams: Promise<{ invite?: string; firm?: string; error?: string }> }) {
   const { user } = await requireUser();

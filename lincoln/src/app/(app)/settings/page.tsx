@@ -24,6 +24,8 @@ import { rules } from "@/lib/memory";
 import { ConfirmButton } from "@/components/Confirm";
 import AutoSelect from "@/components/AutoSelect";
 
+export const metadata = { title: "Settings" };
+
 const TABS: [string, string][] = [["profile", "Profile"], ["security", "Security"], ["firm", "Firm"], ["automation", "Automation"]];
 
 // Automation (Ismael, 2026-11-26): a rule with a key is the firm's choice, Automatic or Approval, and changes what
@@ -213,7 +215,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               {admin && !firm.demo && (
                 <form action={inviteMember} className="mt-5 flex flex-wrap items-center gap-2">
                   <input name="email" type="email" required placeholder="Email" className={clsx(field, "!w-auto min-w-[200px] flex-1")} />
-                  <select name="role" defaultValue="Attorney" className={clsx(field, "!w-[180px]")}>{ROLES.map((r) => <option key={r} value={r}>{r}</option>)}</select>
+                  <select name="role" defaultValue="Attorney" aria-label="Role" className={clsx(field, "!w-[180px]")}>{ROLES.map((r) => <option key={r} value={r}>{r}</option>)}</select>
                   <label className="flex items-center gap-2 px-1 text-[13px] text-muted"><input type="checkbox" name="admin" className="h-4 w-4 accent-ink" /> Admin</label>
                   <ConfirmButton askIf="admin" passwordIf="admin" className={btn.primary}>Invite</ConfirmButton>
                 </form>

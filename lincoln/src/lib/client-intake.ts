@@ -20,7 +20,8 @@ export type Link = { token: string; firm_id: string; case_id: string | null; use
 
 const now = () => new Date().toISOString();
 const newToken = () => crypto.randomBytes(18).toString("base64url");
-export const appUrl = () => (process.env.APP_URL ?? "").replace(/\/$/, "");
+export { appUrl } from "./integrations/http";
+import { appUrl } from "./integrations/http";
 export const linkUrl = (token: string) => `${appUrl()}/intake/${token}`;
 
 /** The firm's own link, made the first time it is asked for. */

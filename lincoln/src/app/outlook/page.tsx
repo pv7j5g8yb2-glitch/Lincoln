@@ -3,7 +3,7 @@ import Script from "next/script";
 import Toaster from "@/components/Toaster";
 import OutlookPane from "@/components/outlook/OutlookPane";
 
-export const metadata: Metadata = { title: "Lincoln", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: { absolute: "Lincoln" }, robots: { index: false, follow: false } };
 
 // The Outlook add-in's pane. Office.js replaces the browser's history functions with null; they are kept first and
 // put back once it has loaded, as in the Word pane.

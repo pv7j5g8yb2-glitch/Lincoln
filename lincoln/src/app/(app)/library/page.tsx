@@ -3,6 +3,8 @@ import { Empty, PageHead, search } from "@/components/ui";
 import { requireUser } from "@/lib/session";
 import { citationsIn, lawStatus, searchLaw } from "@/lib/law";
 
+export const metadata = { title: "Library" };
+
 // The law library: the INA and the immigration regulations as officially published, searched by citation or words.
 
 const marked = (s: string) => s.split(/(\u0002[^\u0003]*\u0003)/).map((p, i) => p.startsWith("\u0002") ? <mark key={i} className="bg-panel px-0.5 font-medium text-ink">{p.slice(1, -1)}</mark> : p);

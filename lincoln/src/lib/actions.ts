@@ -31,6 +31,7 @@ import { newSecret as newTotpSecret } from "./totp";
 import { seal as sealSecret } from "./secret";
 import { deleteCaseFiles, forgetFirmKey } from "./storage";
 import { toast } from "./toast";
+import { appUrl } from "./integrations/http";
 
 const now = () => new Date().toISOString();
 const day = (n: number) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
@@ -214,7 +215,7 @@ export async function requestReset(form: FormData) {
   if (u) {
     const token = newToken();
     db().prepare("INSERT INTO password_resets (token_hash, user_id, expires_at) VALUES (?, ?, ?)").run(sha(token), u.id, new Date(Date.now() + 3600_000).toISOString());
-    const link = `${(process.env.APP_URL ?? "").replace(/\/$/, "")}/reset/${token}`;
+    const link = `${appUrl()}/reset/${token}`;
     const firm = (db().prepare("SELECT firm_id FROM users WHERE id = ?").get(u.id) as { firm_id: string }).firm_id;
     await securityEvent(firm, u.id, "password_reset_requested");
     if (systemMailConfigured()) {

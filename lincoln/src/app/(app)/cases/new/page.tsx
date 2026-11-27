@@ -1,6 +1,8 @@
 import CaseComposer from "@/components/CaseComposer";
 import { requireUser } from "@/lib/session";
 
+export const metadata = { title: "New case" };
+
 const ERRORS: Record<string, string> = {
   size: "25 MB max.",
   type: "PDFs, photos, scans, Word, Excel, text and email files only.",

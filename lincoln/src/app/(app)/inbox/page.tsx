@@ -5,6 +5,8 @@ import { requireUser } from "@/lib/session";
 import { caseById, inboxPage } from "@/lib/queries";
 import { route } from "@/lib/routing";
 
+export const metadata = { title: "Inbox" };
+
 const PAGE = 100;
 
 export default async function InboxPage({ searchParams }: { searchParams: Promise<{ n?: string }> }) {

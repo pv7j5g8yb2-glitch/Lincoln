@@ -5,6 +5,8 @@ import PasswordInput from "@/components/PasswordInput";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = { title: "New password" };
+
 export default async function Reset({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ error?: string }> }) {
   const { token } = await params;
   const { error } = await searchParams;

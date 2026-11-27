@@ -1,6 +1,7 @@
 import { db, uid } from "./db";
 import { hashPassword, initialsOf, newToken, sha } from "./auth";
 import { ROLES } from "./roles";
+import { appUrl } from "./integrations/http";
 
 // Nobody signs up on their own. Lincoln sets up each firm with an invite for the person who contacted us, who
 // becomes its admin; that admin invites everyone else and decides who else is an admin. An invite is a link that
@@ -10,7 +11,7 @@ export type Invite = { token_hash: string; firm_id: string; firm: string; email:
 
 const DAYS = 14;
 const now = () => new Date().toISOString();
-export const inviteUrl = (token: string) => `${(process.env.APP_URL ?? "").replace(/\/$/, "")}/join/${token}`;
+export const inviteUrl = (token: string) => `${appUrl()}/join/${token}`;
 
 export function createInvite(firmId: string, email: string, opts: { role?: string | null; admin?: boolean; by?: string | null } = {}) {
   const token = newToken();

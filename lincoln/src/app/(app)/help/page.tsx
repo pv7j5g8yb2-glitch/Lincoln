@@ -2,6 +2,8 @@ import Link from "next/link";
 import { PageHead } from "@/components/ui";
 import { requireUser } from "@/lib/session";
 
+export const metadata = { title: "Help" };
+
 const QA: [string, string][] = [
   ["How Lincoln works", "Lincoln watches the connected mailbox and acts on new case work: it opens the case, reads every document, and drafts the replies, forms and letters. Everything it prepares waits in Review."],
   ["Review", "Every email, letter, form and filing packet waits for approval. Approve and send sends an email from the firm's own mailbox; Edit changes it first. Filings and legal drafts are approved by an attorney."],

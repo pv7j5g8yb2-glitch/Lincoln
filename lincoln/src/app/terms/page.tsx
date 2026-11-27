@@ -5,7 +5,7 @@ import { COMPANY as C } from "@/lib/company";
 // Pitch black browser bar to match the page, in light and dark mode alike.
 export const viewport = { themeColor: "#000000" };
 
-export const metadata = { title: "Terms of Service · Lincoln" };
+export const metadata = { title: "Terms of Service" };
 
 const clauses: Clause[] = [
   { h: "The agreement", p: [`These terms are an agreement between ${C.legalName} ("Lincoln") and the law firm or organization that opens an account (the "Customer"). The person who creates the account confirms that they are at least 18 and are authorized to accept these terms for the Customer.`] },

@@ -10,6 +10,7 @@ import { isDocx, redline } from "./redline";
 import { sessionCutoff } from "./session";
 import { candidates, existingClient, firmAddress, flagSameName, learnFrom, normEmail, route, sameName as sameNameOf } from "./routing";
 import { familyOf, finishMerges, link as linkCases, reconcile, settleDuplicates } from "./merge";
+import { appUrl } from "./integrations/http";
 
 // The part of Lincoln that works without being asked. Every incoming email is read, matched to a case
 // or opened as a new one, its attachments are read into the record, and the next step is prepared.
@@ -615,7 +616,7 @@ export async function tick() {
       const fresh = d.prepare("SELECT a.id, a.title, a.created_at, k.client FROM approvals a JOIN cases k ON k.id = a.case_id WHERE a.firm_id = ? AND a.status = 'pending' AND a.created_at > ? ORDER BY a.created_at LIMIT 10").all(c.firm_id, since) as { id: string; title: string; created_at: string; client: string }[];
       for (const a of fresh) {
         try {
-          const link = `${(process.env.APP_URL ?? "").replace(/\/$/, "")}/approvals?id=${a.id}`;
+          const link = `${appUrl()}/approvals?id=${a.id}`;
           const posted = await teamsPost(c, ch.teamId, ch.channelId, `<b>For review:</b> ${a.title.replace(/</g, "&lt;")} (${a.client.replace(/</g, "&lt;")}). <a href="${link}">Open in Lincoln</a>`);
           if (posted) d.prepare("INSERT OR IGNORE INTO kv (firm_id, key, value) VALUES (?, ?, '1')").run(c.firm_id, `teamsmine:${posted}`);
           d.prepare("INSERT INTO kv (firm_id, key, value) VALUES (?, ?, ?) ON CONFLICT(firm_id, key) DO UPDATE SET value = excluded.value").run(c.firm_id, `teams:${c.id}`, a.created_at);
@@ -635,7 +636,7 @@ export async function tick() {
       const fresh = d.prepare("SELECT a.id, a.title, a.created_at, k.client FROM approvals a JOIN cases k ON k.id = a.case_id WHERE a.firm_id = ? AND a.status = 'pending' AND a.created_at > ? ORDER BY a.created_at LIMIT 10").all(c.firm_id, since) as { id: string; title: string; created_at: string; client: string }[];
       for (const a of fresh) {
         try {
-          const posted = await chatPost(c, sp.space, `*For review:* ${a.title} (${a.client}). <${(process.env.APP_URL ?? "").replace(/\/$/, "")}/approvals?id=${a.id}|Open in Lincoln>`);
+          const posted = await chatPost(c, sp.space, `*For review:* ${a.title} (${a.client}). <${appUrl()}/approvals?id=${a.id}|Open in Lincoln>`);
           if (posted) d.prepare("INSERT OR IGNORE INTO kv (firm_id, key, value) VALUES (?, ?, '1')").run(c.firm_id, `teamsmine:${posted}`);
           d.prepare("INSERT INTO kv (firm_id, key, value) VALUES (?, ?, ?) ON CONFLICT(firm_id, key) DO UPDATE SET value = excluded.value").run(c.firm_id, `teams:${c.id}`, a.created_at);
         } catch (e) {
@@ -689,7 +690,7 @@ async function channelRequests(c: Connection, chan: Chan) {
   let list: ChanMsg[];
   try { list = await chan.list(since); }
   catch (e) { d.prepare("UPDATE mailboxes SET last_error = ? WHERE id = ?").run(`${c.provider === "google" ? "Google Chat" : "Teams"}: ${e instanceof Error ? e.message : "error"}`.slice(0, 200), c.id); return; }
-  const app = (process.env.APP_URL ?? "").replace(/\/$/, "");
+  const app = appUrl();
   for (const m of list.filter((x) => x.at > since).sort((a, b) => a.at.localeCompare(b.at))) {
     save(m.at);
     if (d.prepare("SELECT 1 FROM kv WHERE firm_id = ? AND key = ?").get(c.firm_id, `teamsmine:${m.id}`)) continue;

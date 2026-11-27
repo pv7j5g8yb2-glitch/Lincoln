@@ -12,7 +12,7 @@ export default function CopyLink({ url, label = "Client link", inline = false }:
   if (!inline) return <button type="button" onClick={() => void copy()} className={btn.secondary}><Link2 size={14} /> {label}</button>;
   return (
     <div className="flex gap-2">
-      <input readOnly value={url} onFocus={(e) => e.currentTarget.select()} className={`${field} min-w-0 flex-1 text-muted`} />
+      <input readOnly value={url} aria-label="Link" onFocus={(e) => e.currentTarget.select()} className={`${field} min-w-0 flex-1 text-muted`} />
       <button type="button" onClick={() => void copy()} className={btn.secondary}>Copy</button>
     </div>
   );

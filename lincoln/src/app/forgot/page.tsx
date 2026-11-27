@@ -2,6 +2,8 @@ import Link from "next/link";
 import AuthShell, { Notice, field, submit } from "@/components/AuthShell";
 import { requestReset } from "@/lib/actions";
 
+export const metadata = { title: "Reset password" };
+
 export const dynamic = "force-dynamic";
 const ERR: Record<string, string> = { limited: "Too many requests. Try again later.", expired: "Link expired." };
 
