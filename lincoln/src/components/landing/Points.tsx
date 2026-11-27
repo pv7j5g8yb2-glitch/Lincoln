@@ -78,25 +78,25 @@ const cap = (x: number, y: number, z: number, ax: number, ay: number, az: number
 };
 function head(x: number, y: number, z: number) {
   const ax = Math.abs(x); // the face is symmetric
-  let d = ell(x, y, z, 0, 0.16, 0.1, 0.33, 0.4, 0.4); // skull
-  d = smin(d, ell(x, y, z, 0, 0.2, -0.17, 0.22, 0.2, 0.14), 0.1); // forehead
-  d = smin(d, ell(x, y, z, 0, -0.08, -0.04, 0.27, 0.32, 0.27), 0.12); // face
+  let d = ell(x, y, z, 0, 0.13, 0.08, 0.33, 0.37, 0.39); // skull
+  d = smin(d, ell(x, y, z, 0, 0.17, -0.17, 0.23, 0.19, 0.14), 0.1); // forehead
+  d = smin(d, ell(x, y, z, 0, -0.08, -0.04, 0.28, 0.32, 0.27), 0.12); // face
   d = smin(d, ell(x, y, z, 0, -0.29, -0.07, 0.215, 0.12, 0.22), 0.1); // jaw
   d = smin(d, ell(x, y, z, 0, -0.2, -0.215, 0.115, 0.095, 0.11), 0.08); // around the mouth
   d = smin(d, ell(x, y, z, 0, -0.395, -0.22, 0.085, 0.055, 0.07), 0.07); // chin
-  d = smin(d, ell(ax, y, z, 0.165, -0.03, -0.19, 0.09, 0.075, 0.085), 0.07); // cheekbones
+  d = smin(d, ell(ax, y, z, 0.16, -0.05, -0.18, 0.1, 0.09, 0.095), 0.07); // full cheeks
   d = smin(d, cap(ax, y, z, 0, 0.105, -0.315, 0.15, 0.095, -0.27, 0.04), 0.06); // brow
-  d = smax(d, -ell(ax, y, z, 0.1, 0.045, -0.33, 0.058, 0.04, 0.06), 0.035); // eye sockets
-  d = smin(d, ell(ax, y, z, 0.1, 0.04, -0.268, 0.042, 0.03, 0.04), 0.03); // eyes
-  d = smin(d, cap(x, y, z, 0, 0.07, -0.31, 0, -0.085, -0.422, 0.024), 0.04); // bridge of the nose
-  d = smin(d, ell(x, y, z, 0, -0.1, -0.425, 0.036, 0.033, 0.036), 0.025); // tip
-  d = smin(d, ell(ax, y, z, 0.038, -0.125, -0.385, 0.03, 0.024, 0.03), 0.025); // nostrils
+  d = smax(d, -ell(ax, y, z, 0.1, 0.045, -0.325, 0.052, 0.033, 0.048), 0.035); // eye sockets, shallow
+  d = smin(d, ell(ax, y, z, 0.1, 0.04, -0.275, 0.042, 0.028, 0.04), 0.03); // eyes
+  d = smin(d, cap(x, y, z, 0, 0.07, -0.31, 0, -0.08, -0.405, 0.024), 0.04); // bridge of the nose
+  d = smin(d, ell(x, y, z, 0, -0.095, -0.405, 0.036, 0.032, 0.034), 0.025); // tip
+  d = smin(d, ell(ax, y, z, 0.036, -0.115, -0.37, 0.03, 0.022, 0.028), 0.025); // nostrils
   d = smin(d, cap(ax, y, z, 0, -0.198, -0.335, 0.06, -0.208, -0.31, 0.016), 0.04); // upper lip
   d = smin(d, cap(ax, y, z, 0, -0.243, -0.328, 0.05, -0.24, -0.306, 0.019), 0.04); // lower lip
   d = smax(d, -cap(ax, y, z, 0, -0.221, -0.37, 0.064, -0.224, -0.315, 0.006), 0.01); // the line between the lips
   d = smin(d, ell(ax, y, z, 0.315, 0.01, 0.1, 0.03, 0.09, 0.055), 0.035); // ears
-  d = smin(d, cap(x, y, z, 0, -0.28, 0.08, 0, -0.78, 0.12, 0.155), 0.09); // neck
-  return Math.max(d, -0.8 - y); // the neck ends cleanly
+  d = smin(d, cap(x, y, z, 0, -0.28, 0.08, 0, -0.62, 0.11, 0.15), 0.09); // neck, short
+  return Math.max(d, -0.6 - y); // the neck ends cleanly
 }
 function face(dense: number): P3[] {
   const o: P3[] = [], e = 0.002;
@@ -108,7 +108,7 @@ function face(dense: number): P3[] {
   for (let tries = 0; o.length < n && tries < n * 6; tries++) {
     // Close to half the points go to the face itself, so its features hold up as it turns.
     const onFace = Math.random() < 0.45;
-    let x = onFace ? rand(-0.26, 0.26) : rand(-0.42, 0.42), y = onFace ? rand(-0.44, 0.22) : rand(-0.8, 0.58), z = onFace ? rand(-0.46, -0.12) : rand(-0.5, 0.52);
+    let x = onFace ? rand(-0.26, 0.26) : rand(-0.42, 0.42), y = onFace ? rand(-0.44, 0.22) : rand(-0.6, 0.52), z = onFace ? rand(-0.46, -0.12) : rand(-0.5, 0.52);
     // Most points sit on level contour lines; the rest are free, so the surface still reads between the lines.
     const line = Math.random() < 0.62;
     if (line) y = Math.round(y / step) * step;
@@ -116,13 +116,13 @@ function face(dense: number): P3[] {
       const d = head(x, y, z), [gx, gy, gz] = grad(x, y, z);
       if (line) { const l = Math.hypot(gx, gz) || 1; x -= (d * gx) / l; z -= (d * gz) / l; } else { x -= d * gx; y -= d * gy; z -= d * gz; }
     }
-    if (Math.abs(head(x, y, z)) > 0.004 || y < -0.79) continue;
+    if (Math.abs(head(x, y, z)) > 0.004 || y < -0.59) continue;
     const [nx, ny, nz] = grad(x, y, z);
     o.push({ x, y, z, k: 0, nx, ny, nz });
   }
   // The projector it stands on: a faint ring of light, and a few motes rising from it.
-  for (let i = 0; i < Math.round(420 * dense); i++) { const a = Math.random() * Math.PI * 2, r = 0.42 + rand(-0.012, 0.012); o.push({ x: Math.cos(a) * r, y: -0.93, z: Math.sin(a) * r, k: 1 }); }
-  for (let i = 0; i < Math.round(120 * dense); i++) { const a = Math.random() * Math.PI * 2, r = rand(0, 0.4); o.push({ x: Math.cos(a) * r, y: rand(-0.95, 0.7), z: Math.sin(a) * r, k: 2 }); }
+  for (let i = 0; i < Math.round(420 * dense); i++) { const a = Math.random() * Math.PI * 2, r = 0.42 + rand(-0.012, 0.012); o.push({ x: Math.cos(a) * r, y: -0.66, z: Math.sin(a) * r, k: 1 }); }
+  for (let i = 0; i < Math.round(120 * dense); i++) { const a = Math.random() * Math.PI * 2, r = rand(0, 0.4); o.push({ x: Math.cos(a) * r, y: rand(-0.7, 0.6), z: Math.sin(a) * r, k: 2 }); }
   for (let i = 0; i < Math.round(80 * dense); i++) o.push({ x: rand(-1.3, 1.3), y: rand(-0.9, 0.8), z: rand(-0.6, 0.6), k: 2 });
   return o;
 }
@@ -168,8 +168,8 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
       // The word spans most of a phone's width and about two thirds of a laptop's, never wider than 1100 pixels.
       const F = scene === "face";
       // The head stands in the upper part of the closing section, clear of the line and the button under it.
-      const sc = scene === "word" ? Math.min(w * (w < 768 ? 0.88 : 0.72), 1100) : F ? Math.min(lh * (w < 768 ? 0.3 : 0.36), w * (w < 768 ? 0.5 : 0.42)) : Math.min(w * (touch ? 0.86 : 0.5), lh * 0.8);
-      const cx = w * 0.5, cy = F ? lh * (w < 768 ? 0.31 : 0.36) + Math.sin(t * 0.5) * sc * 0.015 : lh * 0.4;
+      const sc = scene === "word" ? Math.min(w * (w < 768 ? 0.88 : 0.72), 1100) : F ? Math.min(lh * (w < 768 ? 0.36 : 0.44), w * (w < 768 ? 0.6 : 0.5)) : Math.min(w * (touch ? 0.86 : 0.5), lh * 0.8);
+      const cx = w * 0.5, cy = F ? lh * (w < 768 ? 0.32 : 0.37) + Math.sin(t * 0.5) * sc * 0.015 : lh * 0.4;
       const on = pointer.x > -9000 && inside(pointer.x, pointer.y);
       // Always turning a little on its own (gently for the word, so it stays easy to read).
       const sway = scene === "word" ? (w < 768 ? 0.42 : 0.6) : 1;
@@ -220,8 +220,8 @@ export default function Points({ scene, className = "" }: { scene: Scene; classN
         let shade = 1;
         if (F && p.nx !== undefined) {
           const nx1 = p.nx * cos + p.nz! * sin, nz1 = -p.nx * sin + p.nz! * cos, ny2 = p.ny! * ct - nz1 * st, nz2 = p.ny! * st + nz1 * ct;
-          const facing = -nz2, diff = Math.max(0, nx1 * -0.45 + ny2 * 0.45 + nz2 * -0.77), rim = (1 - Math.abs(facing)) ** 2;
-          shade = (0.06 + 1.15 * diff ** 1.5 + 0.38 * rim) * (facing < 0 ? 0.14 : 1);
+          const facing = -nz2, diff = Math.max(0, nx1 * -0.38 + ny2 * 0.4 + nz2 * -0.83), rim = (1 - Math.abs(facing)) ** 2;
+          shade = (0.12 + 1.05 * diff ** 1.35 + 0.32 * rim) * (facing < 0 ? 0.14 : 1);
         }
         const alpha = Math.min(1, p.a * (F && p.k === 0 ? 0.55 + 0.45 * twinkle : twinkle) * shade * Math.min(1, f * 0.95) * (live ? 1 : 0.35) * (1 + lens * 0.8 + lit * 0.9));
         if (alpha < 0.02) continue;

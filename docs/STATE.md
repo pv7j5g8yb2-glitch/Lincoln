@@ -808,3 +808,5 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
   views (always showing the face) with a band of light running down it, on a faint projector ring. Same rules as the
   hero: moves on its own, only a cursor or finger on the head disturbs it. Drawing now sets only each point's opacity
   (one colour per frame): on a 4x slowed phone the head runs at about 51 fps and the hero at 60 (was 49).
+  2026-11-27 (Ismael: neck "like a giraffe", "less creepy"): short neck, smaller skull, fuller cheeks, shallow eye
+  sockets, smaller nose, softer mostly frontal light, and the head drawn bigger (desktop 0.44 of the section height).
