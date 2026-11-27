@@ -1247,3 +1247,15 @@ Company claims, from the founder; Legora valued $675M then, $80M Series B (Iconi
 * https://recent.design/websites (website design gallery)
 * https://studio.motionsites.ai and https://motionsites.ai (motion websites and product video references)
 Look at these before redesigning the app interface, making a deck or a product video.
+
+## Anthropic, "Labor market impacts of AI" (5 March 2026; seen as an Instagram carousel 2026-11-27)
+* Real report: anthropic.com/research/labor-market-impacts. Measures what share of each occupation's tasks LLMs could
+  do in theory against what people actually use them for (observed coverage). Legal is among the most exposed in
+  theory, and actual use is a fraction of it. The report puts the gap down partly to legal constraints, model limits,
+  the need for additional software tools, and humans still having to review the work. No systematic rise in
+  unemployment for exposed workers since late 2022; some sign that hiring of younger workers has slowed.
+* For Lincoln: a "why now" for investors. The gap in law is tools and review workflow, which is what Lincoln builds
+  (the work done inside the firm's own mail and documents, every output approved by an attorney).
+* Careful: the "Legal 70% exposed, 1.4M jobs" bar chart in the carousel is a third party chart (@willmhawkins, BLS
+  2024 with Eloundou et al. 2023 exposure), not Anthropic's own figure, and the carousel's headline ("jobs that will
+  be affected by AI in 2027") is not what the report says. Quote only from the report itself.
