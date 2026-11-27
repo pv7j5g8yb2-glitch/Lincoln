@@ -103,3 +103,16 @@ Nobody can be hired until there is funding, and any contract goes through the co
   Ismael asked about SOC 2 and ISO pricing; call booked with Marcelus and a Deel compliance colleague on Monday
   30 November 2026, 1:30pm PST (9:30pm Irish time), invite sent to Ismael's work email. Marcelus is starting a founder
   network and offered to add Ismael. Told he is 15 (16 in January); Marcelus said that is not a problem.
+
+## Attorney to grade Lincoln's accuracy
+
+### Raisa Cohen: first choice (LinkedIn connection of Ismael's, 2026-11-27)
+- Retired US Immigration Judge (DOJ, New York, Feb 2016 to Dec 2024): asylum, withholding, cancellation of removal,
+  waivers and adjustment of status. Before that Assistant Chief Counsel at DHS/ICE (2009 to 2014, removal proceedings)
+  and a partner at Cohen & Cohen Law Group. JD St. John's (2007, CALI award, Immigrants' Rights Clinic).
+- Now Principal of Cohen Immigration Law Group, P.C., Queens, New York (since Feb 2025). Consults other attorneys on
+  litigation strategy, removal defense and difficult cases (paid consulting is a service she offers). Posted about 3
+  weeks before 2026-11-27 that the firm is hiring attorneys, paralegals and legal clerks: a growing firm.
+- Why her: a judge's eye on whether Lincoln's legal analysis holds up, from someone who decided these cases. Fits the
+  accuracy plan (an immigration attorney grades the test set) and the Z Fellows one month target. Approach only as a
+  paid consulting request with finished work to judge, never a sales pitch (CLAUDE.md, no cold outreach to buyers).
