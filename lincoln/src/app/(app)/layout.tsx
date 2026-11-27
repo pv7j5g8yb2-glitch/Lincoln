@@ -6,7 +6,7 @@ import Notifications from "@/components/Notifications";
 import { cookies } from "next/headers";
 import { TOAST_COOKIE } from "@/lib/toast";
 import { requireUser } from "@/lib/session";
-import { kv, pendingApprovals, recentCases } from "@/lib/queries";
+import { kv, pendingCount, recentCases } from "@/lib/queries";
 import { EVENTS } from "@/lib/demo-events";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // The first time in, setup comes first and cannot be skipped: Lincoln works from the firm's mail and files.
   if (!firm.demo && !user.setup_at) redirect("/setup");
   const step = Number(kv(firm.id, "demo_step") ?? "0");
-  const review = pendingApprovals(firm.id, viewer).length;
+  const review = pendingCount(firm.id, viewer);
   const notice = (await cookies()).get(TOAST_COOKIE)?.value ?? null;
   return (
     <div className="min-h-dvh">

@@ -4,12 +4,12 @@ import { db, uid } from "@/lib/db";
 import { apiUser, viewer } from "@/lib/session";
 import { flightFor, flights, type Flight } from "@/lib/inflight";
 import { notify, preview } from "@/lib/push";
-import { caseById, caseDates, caseDrafts, cases, chatThread, threadMessages, criteria, documents, issues, pendingApprovals, upcomingDates } from "@/lib/queries";
+import { approvalsPage, caseById, caseDates, caseDrafts, casesPage, chatThread, criteria, documents, issues, pendingCount, threadMessages, upcomingDates } from "@/lib/queries";
 import { lawForModel } from "@/lib/law";
 import { RULEBOOK_CODES, rulebooksFor } from "@/lib/rulebooks";
 import { firmStyle } from "@/lib/memory";
 import { uscisConfigured } from "@/lib/uscis";
-import { chat, forCase, llmConfigured, runAgent, type Tool } from "@/lib/llm";
+import { chat, forCase, llmConfigured, runAgent, type Tool, plainError } from "@/lib/llm";
 import { typeOf } from "@/lib/library";
 import { FORM_TITLES, hasTemplate } from "@/lib/forms";
 import { prepareForms } from "@/lib/fill";
@@ -75,9 +75,8 @@ export async function POST(req: Request) {
 
   async function handle(name: string, input: Record<string, unknown>): Promise<string> {
     if (name === "find_cases") {
-      const q = String(input.query ?? "").toLowerCase();
-      const rows = cases(F, V).filter((x) => !q || [x.client, x.counterpart, x.type_code, x.type_name, x.ref, x.stage].some((v) => (v ?? "").toLowerCase().includes(q)));
-      return rows.slice(0, 40).map((x) => `${x.id} | ${x.client}${x.counterpart ? ` / ${x.counterpart}` : ""} | ${x.type_code} | ${x.stage} | waiting on ${x.waiting_on ?? "nobody"} | ${x.summary}`).join("\n") || "No cases.";
+      const { rows, more } = casesPage(F, V, { q: String(input.query ?? "").slice(0, 100), limit: 40 });
+      return (more ? "The first 40 matches; a narrower query finds the rest.\n" : "") + rows.map((x) => `${x.id} | ${x.client}${x.counterpart ? ` / ${x.counterpart}` : ""} | ${x.type_code} | ${x.stage} | waiting on ${x.waiting_on ?? "nobody"} | ${x.summary}`).join("\n") || "No cases.";
     }
     if (name === "get_case") {
       const x = own(input.case_id);
@@ -218,7 +217,8 @@ export async function POST(req: Request) {
 
   const overview = [
     `Today is ${today}.`,
-    `Cases: ${cases(F, V).length}. For review: ${pendingApprovals(F, V).map((a) => `${a.title} (${a.client})`).join("; ") || "none"}.`,
+    // Counted, and only the first items named: a firm with thousands of cases never sends them all with every question.
+    `Cases: ${(db().prepare("SELECT COUNT(*) AS n FROM cases WHERE firm_id = ?").get(F) as { n: number }).n}. For review: ${pendingCount(F, V)}${pendingCount(F, V) ? `, first ${approvalsPage(F, V, 15).rows.map((a) => `${a.title} (${a.client})`).join("; ")}` : ""}.`,
     `Next dates: ${upcomingDates(F, 8, V).map((t) => `${t.date} ${t.label} (${t.client})`).join("; ") || "none"}.`,
     c ? `This conversation is about case ${c.id}, ${c.client} (${c.type_code}). Use get_case for its record.` : "",
     // The case's own rulebooks, and those its open issues raise, so answers about it apply the same tests as its drafts.
@@ -233,7 +233,7 @@ What Lincoln does, so you can describe it accurately when asked:
 - Approved emails are sent from the attorney's own mailbox. One reminder goes out, under the firm's rule, when a client has not replied in 3 days. Dates within 14 days are raised as issues.
 - Checks every case on its own: a second reading looks for bars (status violations, prior denials or removals, misrepresentation, criminal history, unauthorized work, the J-1 home residency rule), missing items and conflicting facts; passport and I-94 dates and the H-1B six year limit are calculated in code, not by the model; every cited sentence in a draft is checked against its page.
 - Drafts any document from the file with every fact cited to its page. Drafts open in Word or Google Docs; case lists and exhibit indexes export to Excel or Google Sheets; a case summary deck exports to PowerPoint or Google Slides. Client files can be imported from Google Drive, OneDrive or SharePoint. Case dates are added to the attorney's Google or Outlook calendar. Items for review can be posted to a Teams channel.
-- One case per person and matter: the same person writing from another address, phone or name is recognised and kept in one case; when proof arrives later (the same A-Number, or name with date of birth) two cases of the same person and matter are merged on their own, and when Lincoln is not sure it asks in Review. A family applying together gets a case per person, linked, and each document is placed in the case of everyone whose application needs it.
+- One case per person and matter: the same person writing from another address, phone or name is recognized and kept in one case; when proof arrives later (the same A-Number, or name with date of birth) two cases of the same person and matter are merged on their own, and when Lincoln is not sure it asks in Review. A family applying together gets a case per person, linked, and each document is placed in the case of everyone whose application needs it.
 - In this conversation you can use tools: find and read cases, open cases, merge two cases of the same person, link a family's cases, draft documents, prepare emails for approval, add dates, resolve issues, search the law library, search the user's own connected mail and files and read what is found into a case, and mark up a Google Doc from its link. Use them rather than telling the user to do it.
 - Translates every document in a case that is not in English as soon as it is read, marking anything unreadable as [illegible], with the translator's certificate under 8 CFR 103.2(b)(3) ready for a competent translator to check and sign; the translation goes behind the original in the filing packet.
 ${uscisConfigured() ? "- Checks USCIS case status daily for every case with a receipt number and acts on changes (approval, denial, request for evidence).\n" : ""}- Holds a law library, updated from the official publications: the INA (8 U.S.C.), 8 CFR, 20 CFR 655 and 656, and 22 CFR 40 to 42. It does not hold the USCIS Policy Manual, the Foreign Affairs Manual, AAO or BIA decisions or case law.
@@ -290,7 +290,8 @@ ${overview}`;
         // A question that got no reply is taken back, and so is a chat that only held it.
         d.prepare("DELETE FROM chat WHERE id = ?").run(userMsg);
         if (created) d.prepare("DELETE FROM chat_threads WHERE id = ?").run(id);
-        send({ error: e instanceof Error ? e.message : "The model could not be reached." });
+        console.error("Assistant failed:", e instanceof Error ? e.message : e);
+        send({ error: plainError(e) });
       }
       try { ctl.close(); } catch { /* closed */ }
     },

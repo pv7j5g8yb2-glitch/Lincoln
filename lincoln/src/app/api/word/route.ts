@@ -7,7 +7,7 @@ import { checkDocument } from "@/lib/intake";
 import { checkCite, citationMatches, searchLaw } from "@/lib/law";
 import { llmConfigured } from "@/lib/llm";
 import { packetPlan } from "@/lib/packet";
-import { caseById, caseDrafts, cases, draftById } from "@/lib/queries";
+import { caseById, caseDrafts, casesPage, draftById, findCases } from "@/lib/queries";
 import { viewer } from "@/lib/session";
 import { draftBlocks, endWord, redeemWordCode, wordUser } from "@/lib/word";
 
@@ -22,7 +22,12 @@ export async function GET(req: Request) {
   const F = s.firm.id, V = viewer(s.user);
   const op = q.get("op");
   if (op === "me") return NextResponse.json({ name: s.user.name, firm: s.firm.name });
-  if (op === "cases") return NextResponse.json(cases(F, V).map((c) => ({ id: c.id, client: c.client, type: c.type_code })));
+  if (op === "cases") {
+    const term = (q.get("q") ?? "").slice(0, 80);
+    const last = caseById(F, q.get("last") ?? "", V);
+    const rows = term ? findCases(F, V, term, 30) : casesPage(F, V, { limit: 50 }).rows;
+    return NextResponse.json([...(last && !term && !rows.some((c) => c.id === last.id) ? [last] : []), ...rows].map((c) => ({ id: c.id, client: c.client, type: c.type_code })));
+  }
   if (op === "drafts") {
     const c = caseById(F, q.get("case") ?? "", V);
     if (!c) return no("Not found", 404);

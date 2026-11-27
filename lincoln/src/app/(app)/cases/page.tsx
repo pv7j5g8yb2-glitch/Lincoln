@@ -2,17 +2,19 @@ import Link from "next/link";
 import { Lock, Plus, Search } from "lucide-react";
 import { Empty, PageHead, btn, search } from "@/components/ui";
 import { requireUser } from "@/lib/session";
-import { cases } from "@/lib/queries";
+import { casesPage } from "@/lib/queries";
 import { shortDate } from "@/lib/format";
 import ExportMenu from "@/components/ExportMenu";
 import { exportItems } from "@/lib/exports";
 
-export default async function Cases({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+const PAGE = 100;
+
+export default async function Cases({ searchParams }: { searchParams: Promise<{ q?: string; n?: string }> }) {
   const { user, firm, viewer } = await requireUser();
-  const { q = "" } = await searchParams;
-  const term = q.trim().toLowerCase();
-  const all = cases(firm.id, viewer);
-  const rows = term ? all.filter((c) => [c.client, c.counterpart, c.type_code, c.type_name, c.ref, c.stage].some((v) => (v ?? "").toLowerCase().includes(term))) : all;
+  const { q = "", n } = await searchParams;
+  const term = q.trim().slice(0, 100);
+  const limit = Math.min(Math.max(Number(n) || PAGE, PAGE), 5000);
+  const { rows, more } = casesPage(firm.id, viewer, { q: term, limit });
 
   return (
     <div className="rise">
@@ -57,6 +59,11 @@ export default async function Cases({ searchParams }: { searchParams: Promise<{ 
               ))}
             </tbody>
           </table>
+          {more && (
+            <div className="mt-6 flex justify-center">
+              <Link href={`/cases?${new URLSearchParams({ ...(term ? { q: term } : {}), n: String(limit + PAGE) })}`} scroll={false} className={btn.secondary}>Show more</Link>
+            </div>
+          )}
         </div>
       )}
     </div>

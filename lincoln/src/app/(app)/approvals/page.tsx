@@ -2,17 +2,20 @@ import Link from "next/link";
 import clsx from "clsx";
 import { ChevronLeft } from "lucide-react";
 import ApprovalPanel from "@/components/ApprovalPanel";
-import { Empty, PageHead } from "@/components/ui";
+import { Empty, PageHead, btn } from "@/components/ui";
 import { requireUser } from "@/lib/session";
 import { FILING_APPROVALS, isLawyerRole } from "@/lib/roles";
-import { approvalById, messageById, pendingApprovals } from "@/lib/queries";
+import { approvalById, approvalsPage, messageById } from "@/lib/queries";
 import { ago, inDays } from "@/lib/format";
 import { packetPlan } from "@/lib/packet";
 
-export default async function Review({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
+const PAGE = 100;
+
+export default async function Review({ searchParams }: { searchParams: Promise<{ id?: string; n?: string }> }) {
   const { user, firm, viewer } = await requireUser();
-  const { id } = await searchParams;
-  const pending = pendingApprovals(firm.id, viewer);
+  const { id, n } = await searchParams;
+  const limit = Math.min(Math.max(Number(n) || PAGE, PAGE), 5000);
+  const { rows: pending, more } = approvalsPage(firm.id, viewer, limit);
   const picked = id ? approvalById(firm.id, id, viewer) : undefined;
   const sel = picked && picked.status === "pending" ? picked : pending[0];
   const payload = sel ? (sel.kind === "packet" ? packetPlan(firm.id, sel.case_id) : JSON.parse(sel.payload)) : null;
@@ -28,13 +31,14 @@ export default async function Review({ searchParams }: { searchParams: Promise<{
           <ul className={clsx("flex-col border-t border-line", id ? "hidden lg:flex" : "flex")}>
             {pending.map((a) => (
               <li key={a.id} data-row={a.id} className="border-b border-line">
-                <Link href={`/approvals?id=${a.id}`} scroll={false} className={clsx("relative block py-3 pl-3 pr-2 transition hover:bg-side", sel?.id === a.id && "bg-side")}>
+                <Link href={`/approvals?id=${a.id}${limit > PAGE ? `&n=${limit}` : ""}`} scroll={false} className={clsx("relative block py-3 pl-3 pr-2 transition hover:bg-side", sel?.id === a.id && "bg-side")}>
                   {sel?.id === a.id && <span className="absolute inset-y-2 left-0 w-[2px] bg-ink" />}
                   <div className="text-[13.5px] font-medium leading-snug">{a.title}</div>
                   <div className="mt-0.5 truncate text-[12px] text-muted">{a.client}{a.due ? ` · due ${inDays(a.due)}` : ""}</div>
                 </Link>
               </li>
             ))}
+            {more && <li className="flex justify-center py-4"><Link href={`/approvals?n=${limit + PAGE}${id ? `&id=${id}` : ""}`} scroll={false} className={btn.secondary}>Show more</Link></li>}
           </ul>
           {sel && (
             <div key={sel.id} data-item className={clsx("item-in min-w-0 max-w-[760px]", !id && "hidden lg:block")}>

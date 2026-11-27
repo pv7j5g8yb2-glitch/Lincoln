@@ -53,6 +53,7 @@ export async function GET(req: Request) {
     db().prepare("INSERT INTO activity (id, firm_id, case_id, at, actor, kind, text, minutes) VALUES (?, ?, ?, ?, 'Lincoln', 'file', ?, 2)").run(uid(), F, caseId, new Date().toISOString(), `Saved "${name}" to ${app}.`);
     return NextResponse.redirect(link);
   } catch (e) {
-    return new Response(`The file could not be saved: ${e instanceof Error ? e.message : "error"}`, { status: 502 });
+    console.error("Export failed:", e instanceof Error ? e.message : e);
+    return new Response("Not saved. Try again.", { status: 502 });
   }
 }

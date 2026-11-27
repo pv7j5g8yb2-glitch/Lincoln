@@ -1,11 +1,10 @@
 import Link from "next/link";
 import type { Message } from "@/lib/queries";
 import { ago } from "@/lib/format";
-import { sortMessage } from "@/lib/actions";
-import { btn } from "./ui";
+import CasePicker from "./CasePicker";
 
 /** Case mail, newest first. A row opens to the full message. */
-export default function MessageList({ items, showCase = false, cases = [] }: { items: (Message & { client?: string | null })[]; showCase?: boolean; cases?: { id: string; client: string; type_code: string }[] }) {
+export default function MessageList({ items, showCase = false, suggest = {} }: { items: (Message & { client?: string | null })[]; showCase?: boolean; suggest?: Record<string, { id: string; client: string; type_code: string; ref: string }[]> }) {
   return (
     <ul className="border-t border-line">
       {items.map((m) => {
@@ -27,17 +26,7 @@ export default function MessageList({ items, showCase = false, cases = [] }: { i
               </summary>
               {m.lincoln_note && <p className="mb-3 max-w-[720px] text-[12.5px] text-muted">{m.lincoln_note}</p>}
               <p className="mb-4 max-w-[720px] whitespace-pre-line text-[13.5px] leading-relaxed">{m.body}</p>
-              {m.state === "unsure" && cases.length > 0 && (
-                <form action={sortMessage} className="mb-4 flex max-w-[480px] gap-2">
-                  <input type="hidden" name="message" value={m.id} />
-                  <select name="case" required defaultValue="" aria-label="Case" className="h-9 min-w-0 flex-1 border border-line bg-card px-2.5 text-[13px] outline-none focus:border-edge">
-                    <option value="" disabled>Choose a case</option>
-                    {cases.map((c) => <option key={c.id} value={c.id}>{c.client} · {c.type_code}</option>)}
-                    <option value="none">Not case mail</option>
-                  </select>
-                  <button className={btn.primary}>File</button>
-                </form>
-              )}
+              {m.state === "unsure" && <CasePicker messageId={m.id} suggested={suggest[m.id] ?? []} />}
             </details>
           </li>
         );

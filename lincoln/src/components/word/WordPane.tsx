@@ -51,10 +51,10 @@ export default function WordPane() {
   useEffect(() => { try { setToken(localStorage.getItem(KEY)); } catch { /* none */ } setLoaded(true); }, []);
 
   const api = useCallback(async (path: string, body?: unknown) => {
-    const res = await fetch(`/api/word${path}`, { method: body ? "POST" : "GET", headers: { Authorization: `Bearer ${token}`, ...(body ? { "Content-Type": "application/json" } : {}) }, body: body ? JSON.stringify(body) : undefined });
+    const res = await fetch(`/api/word${path}`, { method: body ? "POST" : "GET", headers: { Authorization: `Bearer ${token}`, ...(body ? { "Content-Type": "application/json" } : {}) }, body: body ? JSON.stringify(body) : undefined }).catch(() => { throw new Error("No connection"); });
     if (res.status === 401) { try { localStorage.removeItem(KEY); } catch { /* fine */ } setToken(null); throw new Error("Not connected"); }
     const out = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(out.error ?? "Failed");
+    if (!res.ok) throw new Error(out.error ?? "Not done. Try again.");
     return out;
   }, [token]);
 
@@ -106,12 +106,23 @@ function Main({ api }: { api: (path: string, body?: unknown) => Promise<any> }) 
   const [cases, setCases] = useState<Case[]>([]);
   const [caseId, setCaseId] = useState("");
   const [tab, setTab] = useState<"drafts" | "check" | "library">("drafts");
+  const [q, setQ] = useState("");
+  // The case last used and the most recent ones; any other is found by typing, so a large firm loads only a few.
   useEffect(() => {
-    api("?op=cases").then((c: Case[]) => { setCases(c); try { const last = localStorage.getItem("lincoln_word_case"); setCaseId(c.find((x) => x.id === last)?.id ?? c[0]?.id ?? ""); } catch { setCaseId(c[0]?.id ?? ""); } }).catch(() => undefined);
-  }, [api]);
+    let last = "";
+    try { last = localStorage.getItem("lincoln_word_case") ?? ""; } catch { /* none */ }
+    const t = setTimeout(() => {
+      api(`?op=cases&last=${encodeURIComponent(last)}&q=${encodeURIComponent(q.trim())}`).then((c: Case[]) => {
+        setCases(c);
+        setCaseId((cur) => (c.some((x) => x.id === cur) ? cur : c.find((x) => x.id === last)?.id ?? c[0]?.id ?? ""));
+      }).catch(() => undefined);
+    }, q ? 200 : 0);
+    return () => clearTimeout(t);
+  }, [api, q]);
   const pick = (id: string) => { setCaseId(id); try { localStorage.setItem("lincoln_word_case", id); } catch { /* fine */ } };
   return (
     <div>
+      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a case" aria-label="Find a case" className={`${field} mb-2`} />
       <select value={caseId} onChange={(e) => pick(e.target.value)} className={field} aria-label="Case">
         {cases.length === 0 && <option value="">No cases</option>}
         {cases.map((c) => <option key={c.id} value={c.id}>{c.client} · {c.type}</option>)}

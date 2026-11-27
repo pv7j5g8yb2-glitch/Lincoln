@@ -54,7 +54,7 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message, canA
         const r = await decideApproval(id, d);
         if (r && "error" in r) setError(r.error ?? null);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "The action failed. Nothing was changed.");
+        setError("Not saved. Try again.");
       }
     });
 
@@ -77,7 +77,7 @@ export default function ApprovalPanel({ id, caseId, kind, payload, message, canA
       await Promise.all([item, row].flatMap((el) => (el ? el.getAnimations().map((a) => a.finished.catch(() => {})) : [])));
       start(() => router.refresh());
     } catch (e) {
-      setError(e instanceof Error ? e.message : "The action failed. Nothing was changed.");
+      setError("Not saved. Try again.");
       setSending("");
     }
   };

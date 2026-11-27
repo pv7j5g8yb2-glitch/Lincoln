@@ -356,6 +356,7 @@ export async function decideApproval(approvalId: string, decision: "approved" | 
     if ("error" in r) { const e = r.error ?? "Not added"; if (!quiet) await toast(e); return { error: e }; }
   }
 
+  if (a.kind === "decisions" && decision === "approved" && (payload.questions as Question[]).some((q) => !q.answer)) return { error: "Answer every decision first." };
   const tx = d.transaction(() => {
     // A returned email is never sent.
     if (a.kind === "message" && payload.messageId) {
@@ -1008,3 +1009,10 @@ export async function refillForms(caseId: string) {
   revalidatePath(`/cases/${caseId}`);
 }
 
+
+/** Cases matching what is typed in a case picker: the closest few, never the whole firm. */
+export async function pickCases(q: string) {
+  const { firm, viewer } = await requireUser();
+  const { findCases } = await import("./queries");
+  return findCases(firm.id, viewer, String(q ?? "").slice(0, 80)).map((c) => ({ id: c.id, client: c.client, type_code: c.type_code, ref: c.ref }));
+}

@@ -18,7 +18,7 @@ export default async function ImportPage({ params, searchParams }: { params: Pro
   let hits: FileHit[] = [];
   let failed: string | null = null;
   if (conn) {
-    try { hits = await searchFiles(conn, q.trim().slice(0, 100)); } catch (e) { failed = e instanceof Error ? e.message : "Search failed"; }
+    try { hits = await searchFiles(conn, q.trim().slice(0, 100)); } catch (e) { console.error("File search failed:", e instanceof Error ? e.message : e); failed = "Search failed"; }
   }
   return (
     <div className="rise mx-auto max-w-[720px]">

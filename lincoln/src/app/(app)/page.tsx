@@ -3,18 +3,27 @@ import { ChevronRight } from "lucide-react";
 import Greeting from "@/components/Greeting";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
-import { cases, pendingApprovals } from "@/lib/queries";
+import { caseById } from "@/lib/queries";
 import { ago } from "@/lib/format";
 
 export default async function Home() {
   const { user, firm, viewer } = await requireUser();
   // The cases Lincoln has worked on most recently, each with the last thing it did.
-  const allowed = new Map(cases(firm.id, viewer).map((c) => [c.id, c]));
+  // Lincoln's latest entries, newest first, read through the activity index; only those cases are then looked up.
+  const rows = db().prepare("SELECT case_id, text, at FROM activity WHERE firm_id = ? AND actor = 'Lincoln' AND case_id IS NOT NULL ORDER BY at DESC LIMIT 200").all(firm.id) as { case_id: string; text: string; at: string }[];
+  const latest = rows.filter((r, i) => rows.findIndex((x) => x.case_id === r.case_id) === i);
+  const allowed = new Map<string, NonNullable<ReturnType<typeof caseById>>>();
+  const recent: typeof latest = [];
+  for (const r of latest) {
+    if (recent.length === 5) break;
+    const c = caseById(firm.id, r.case_id, viewer);
+    if (c) { allowed.set(c.id, c); recent.push(r); }
+  }
   const review = new Map<string, string>();
-  for (const a of pendingApprovals(firm.id, viewer)) if (!review.has(a.case_id)) review.set(a.case_id, a.id);
-  const rows = db().prepare(`SELECT a.case_id, a.text, a.at FROM activity a JOIN (SELECT case_id, MAX(at) AS at FROM activity WHERE firm_id = ? AND actor = 'Lincoln' AND case_id IS NOT NULL GROUP BY case_id) l ON l.case_id = a.case_id AND l.at = a.at
-    WHERE a.firm_id = ? AND a.actor = 'Lincoln' ORDER BY a.at DESC LIMIT 40`).all(firm.id, firm.id) as { case_id: string; text: string; at: string }[];
-  const recent = rows.filter((r) => allowed.has(r.case_id)).filter((r, i, all) => all.findIndex((x) => x.case_id === r.case_id) === i).slice(0, 5);
+  for (const r of recent) {
+    const a = db().prepare("SELECT id FROM approvals WHERE firm_id = ? AND case_id = ? AND status = 'pending' ORDER BY due, created_at LIMIT 1").get(firm.id, r.case_id) as { id: string } | undefined;
+    if (a) review.set(r.case_id, a.id);
+  }
   const first = user.name.split(/\s+/)[0] || user.name;
 
   return (

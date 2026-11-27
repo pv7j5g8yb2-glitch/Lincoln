@@ -4,6 +4,14 @@ import { db, uid } from "./db";
 // One place for every model call, over Anthropic's Messages API (directly, or through a relay that
 // speaks it). The key lives on the server and is never sent to the browser or written to the repo.
 
+/** What a person in the firm sees when the model fails: a few words, never the service's own error. */
+export function plainError(e: unknown) {
+  const m = e instanceof Error ? e.message : "";
+  if (/budget|usage limit/i.test(m)) return "Usage limit reached.";
+  if (/ 429|overloaded| 5\d\d/i.test(m)) return "Lincoln is busy. Try again in a minute.";
+  return "Lincoln could not answer. Try again.";
+}
+
 export const llmConfigured = () => Boolean(process.env.LLM_API_KEY && process.env.LLM_BASE_URL && process.env.LLM_MODEL);
 
 export type Msg = { role: "system" | "user" | "assistant"; content: string };

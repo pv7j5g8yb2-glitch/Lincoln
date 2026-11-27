@@ -10,7 +10,7 @@ export type Issue = { id: string; case_id: string; kind: string; severity: strin
 export type DateRow = { id: string; case_id: string; label: string; date: string; kind: string; source: string | null; client?: string };
 export type Activity = { id: string; case_id: string | null; at: string; actor: string; kind: string; text: string; minutes: number; client?: string | null };
 export type Approval = { id: string; case_id: string; kind: string; title: string; brief: string; least_sure: string | null; if_wrong: string | null; payload: string; status: string; assignee_id: string; created_at: string; decided_at: string | null; decided_by: string | null; due: string | null; client?: string; type_code?: string };
-export type Message = { id: string; case_id: string | null; direction: string; party: string; party_role: string | null; subject: string; body: string; at: string; state: string; lincoln_note: string | null; email?: string | null; client?: string | null };
+export type Message = { id: string; case_id: string | null; direction: string; party: string; party_role: string | null; subject: string; body: string; at: string; state: string; lincoln_note: string | null; email?: string | null; thread_id?: string | null; client?: string | null };
 export type Draft = { id: string; case_id: string; title: string; kind: string; status: string; version: number; content: string; updated_at: string };
 export type Person = { id: string; name: string; email: string; role: string; initials: string; avatar: string | null; admin: number };
 
@@ -28,6 +28,46 @@ const one = <T>(sql: string, ...a: unknown[]) => db().prepare(sql).get(...a) as 
 
 export const people = (firm: string) => all<Person>("SELECT id, name, email, role, initials, avatar, admin FROM users WHERE firm_id = ? ORDER BY rowid", firm);
 export const cases = (firm: string, v?: Viewer) => visible(all<Case>("SELECT * FROM cases WHERE firm_id = ? ORDER BY CASE state WHEN 'needs_you' THEN 0 WHEN 'moving' THEN 1 WHEN 'waiting' THEN 2 ELSE 3 END, opened_at DESC", firm), hiddenCases(firm, v), "id");
+// Paged lists, for firms with thousands of cases and emails: the database filters, orders and limits, so a page only
+// ever carries the rows on screen. Restricted cases are left out in the query itself.
+const notHidden = (firm: string, v: Viewer | undefined, col: string) => { const h = [...hiddenCases(firm, v)]; return { sql: h.length ? ` AND ${col} NOT IN (SELECT value FROM json_each(?))` : "", args: h.length ? [JSON.stringify(h)] : [] }; };
+const ORDER_CASES = "ORDER BY CASE state WHEN 'needs_you' THEN 0 WHEN 'moving' THEN 1 WHEN 'waiting' THEN 2 ELSE 3 END, opened_at DESC";
+/** One page of the firm's cases, searched across client, petitioner, type, reference and stage. */
+export function casesPage(firm: string, v: Viewer | undefined, o: { q?: string; limit: number }) {
+  const h = notHidden(firm, v, "id");
+  const term = (o.q ?? "").trim();
+  const like = term ? " AND (client LIKE ? OR counterpart LIKE ? OR type_code LIKE ? OR type_name LIKE ? OR ref LIKE ? OR stage LIKE ? OR client_email LIKE ?)" : "";
+  const args = term ? Array(7).fill(`%${term.replace(/[%_]/g, (m) => `\\${m}`)}%`) : [];
+  const where = `WHERE firm_id = ?${h.sql}${like.replace(/LIKE \?/g, "LIKE ? ESCAPE '\\'")}`;
+  const rows = all<Case>(`SELECT * FROM cases ${where} ${ORDER_CASES} LIMIT ?`, firm, ...h.args, ...args, o.limit + 1);
+  return { rows: rows.slice(0, o.limit), more: rows.length > o.limit };
+}
+/** Cases whose client, reference or type matches, for picking a case: the closest few. */
+export function findCases(firm: string, v: Viewer | undefined, q: string, limit = 8) {
+  const term = q.trim();
+  if (!term) return [] as Case[];
+  const h = notHidden(firm, v, "id");
+  const like = `%${term.replace(/[%_]/g, (m) => `\\${m}`)}%`;
+  return all<Case>(`SELECT * FROM cases WHERE firm_id = ?${h.sql} AND (client LIKE ? ESCAPE '\\' OR ref LIKE ? ESCAPE '\\' OR client_email LIKE ? ESCAPE '\\') ORDER BY CASE WHEN client LIKE ? ESCAPE '\\' THEN 0 ELSE 1 END, opened_at DESC LIMIT ?`, firm, ...h.args, like, like, like, `${term.replace(/[%_]/g, (m) => `\\${m}`)}%`, limit);
+}
+/** Pending Review items: one page, and the count for the badge without loading them. */
+export function approvalsPage(firm: string, v: Viewer | undefined, limit: number) {
+  const h = notHidden(firm, v, "a.case_id");
+  const rows = all<Approval>(`SELECT a.*, c.client, c.type_code FROM approvals a JOIN cases c ON c.id = a.case_id WHERE a.firm_id = ? AND a.status = 'pending'${h.sql} ORDER BY a.due, a.created_at LIMIT ?`, firm, ...h.args, limit + 1);
+  return { rows: rows.slice(0, limit), more: rows.length > limit };
+}
+export function pendingCount(firm: string, v?: Viewer) {
+  const h = notHidden(firm, v, "case_id");
+  return (one<{ n: number }>(`SELECT COUNT(*) AS n FROM approvals WHERE firm_id = ? AND status = 'pending'${h.sql}`, firm, ...h.args)?.n ?? 0);
+}
+/** The Inbox: everything not sorted first, then the newest mail, one page at a time. */
+export function inboxPage(firm: string, v: Viewer | undefined, limit: number) {
+  const h = notHidden(firm, v, "m.case_id");
+  const hid = h.sql ? ` AND (m.case_id IS NULL OR m.case_id NOT IN (SELECT value FROM json_each(?)))` : "";
+  const unsorted = all<Message>(`SELECT m.*, c.client FROM messages m LEFT JOIN cases c ON c.id = m.case_id WHERE m.firm_id = ? AND m.state = 'unsure'${hid} ORDER BY m.at DESC LIMIT 200`, firm, ...h.args);
+  const rows = all<Message>(`SELECT m.*, c.client FROM messages m LEFT JOIN cases c ON c.id = m.case_id WHERE m.firm_id = ? AND m.state != 'unsure'${hid} ORDER BY m.at DESC LIMIT ?`, firm, ...h.args, limit + 1);
+  return { unsorted, rows: rows.slice(0, limit), more: rows.length > limit };
+}
 export const recentCases = (firm: string, limit = 6, v?: Viewer) => visible(all<Case>("SELECT * FROM cases WHERE firm_id = ? ORDER BY opened_at DESC LIMIT ?", firm, limit), hiddenCases(firm, v), "id");
 export const caseById = (firm: string, id: string, v?: Viewer) => {
   const c = one<Case>("SELECT * FROM cases WHERE firm_id = ? AND id = ?", firm, id);

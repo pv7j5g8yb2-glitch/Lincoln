@@ -56,10 +56,10 @@ export default function OutlookPane() {
   const [loaded, setLoaded] = useState(false);
   useEffect(() => { try { setToken(localStorage.getItem(KEY)); } catch { /* none */ } setLoaded(true); }, []);
   const api = useCallback(async (body: Record<string, unknown>) => {
-    const res = await fetch("/api/outlook", { method: "POST", headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify(body) });
+    const res = await fetch("/api/outlook", { method: "POST", headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify(body) }).catch(() => { throw new Error("No connection"); });
     if (res.status === 401) { try { localStorage.removeItem(KEY); } catch { /* fine */ } setToken(null); throw new Error("Not connected"); }
     const out = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(out.error ?? "Failed");
+    if (!res.ok) throw new Error(out.error ?? "Not done. Try again.");
     return out;
   }, [token]);
   const mail = useMail(Boolean(outlook && token));
@@ -155,7 +155,7 @@ function Reply({ api, draft, onDone }: { api: (b: Record<string, unknown>) => Pr
     try {
       const r = await api({ op, messageId: draft.id, subject: draft.subject, body: text });
       if (op === "save") { setEditing(false); notify("Saved"); } else if (r.sent === false) notify(r.error ?? "Not sent"); else { notify("Sent"); onDone(); }
-    } catch (e) { notify(e instanceof Error ? e.message : "Failed"); } finally { setBusy(false); }
+    } catch (e) { notify(e instanceof Error ? e.message : "Not done. Try again."); } finally { setBusy(false); }
   };
   return (
     <section className="mt-5 border border-line bg-card">

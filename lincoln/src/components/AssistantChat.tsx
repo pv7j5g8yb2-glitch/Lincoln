@@ -207,7 +207,7 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
     });
     try {
       const res = await fetch("/api/assistant", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, caseId: scope?.id, threadId, editFrom: editFrom?.id }), signal: ctl.signal });
-      if (!res.ok || !res.body) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? "The request failed.");
+      if (!res.ok || !res.body) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? "Lincoln could not answer. Try again.");
       const reader = res.body.getReader();
       const dec = new TextDecoder();
       let buf = "";
@@ -251,7 +251,7 @@ export default function AssistantChat({ thread, threads: initialThreads, initial
         if (!written) setMsgs((m) => m.slice(0, -1));
       } else {
         setMsgs((m) => (m[m.length - 1]?.content ? m : m.slice(0, -1)));
-        setError(e instanceof Error ? e.message : "The request failed.");
+        setError(e instanceof TypeError ? "No connection. Try again." : e instanceof Error && e.message.length < 80 ? e.message : "Lincoln could not answer. Try again.");
         // A new chat whose first question failed is not kept on the server.
         if (created && !written) {
           setThreadId(null); setTitle(null); current.current = null;
