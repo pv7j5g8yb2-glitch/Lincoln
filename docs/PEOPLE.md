@@ -91,6 +91,14 @@ Nobody can be hired until there is funding, and any contract goes through the co
 - Adam Draper, Boost VC (San Mateo): pre seed and seed, about $500k, AI among others.
 - Gloria Baeuerlein, Puzzle Ventures (Berlin): pre seed and seed, €100k to €500k, B2B software. Closest to Dublin.
 - Ben Zises, SuperAngel.Fund (NYC): $10k to $1M, SaaS and AI.
+- Added 2026-11-27 from an Everything Startups funding newsletter (newsletter claims, confirm before pitching):
+  - Patrick and John Collison and Des Traynor (Intercom): led and joined Hoplite's $5.5M (San Francisco and Dublin),
+    with YC and Paul Graham. Irish founders who back Irish founders; the strongest angel fit for a Dublin founder.
+  - The LegalTech Fund again: returning investor in Intelligent Legal Solutions' $11M Series A (London, fund side
+    letters), led by Aquiline and BlackFin, with Chicago Ventures.
+  - Irish funds active now: Gresham House Ventures, Sure Valley Ventures and Enterprise Ireland (Disseqt AI, Dublin,
+    $8M). Enterprise Ireland money is believed to need an Irish registered company: check before choosing Delaware.
+  - New funds for applied AI and vertical software: Mudita Venture Partners ($120M), R-Squared Ventures ($50M).
 - Not a fit: Canonical (crypto infrastructure). Tim Draper's Draper Associates writes larger cheques, later.
 - Already talking to: Austin Murphy, Teamworthy Ventures (Nashville). On 2026-11-19 he wrote that Teamworthy does a lot
   of legal software, its managing partner Thomas Lehrman is a Yale Law graduate who teaches at Vanderbilt, and it has
