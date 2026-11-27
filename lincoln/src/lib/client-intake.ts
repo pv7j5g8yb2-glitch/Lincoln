@@ -196,6 +196,8 @@ export async function submit(link: Link, sessionId: string, matterId: string, ra
   learn(link.firm_id, id, "email", email);
   learn(link.firm_id, id, "phone", answers.phone);
   learn(link.firm_id, id, "person", personKey(answers.name, answers.dob));
+  learn(link.firm_id, id, "dob", answers.dob);
+  learn(link.firm_id, id, "country", answers.birth_country);
   const an = String(answers.a_number ?? "").replace(/\D/g, "");
   if (an.length === 8 || an.length === 9) learn(link.firm_id, id, "anumber", an.padStart(9, "0"));
   if (answers.other_names) for (const n of answers.other_names.split(/[,;\n]/)) learn(link.firm_id, id, "person", personKey(n, answers.dob));

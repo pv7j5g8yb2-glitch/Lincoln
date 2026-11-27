@@ -87,7 +87,7 @@ d.prepare("UPDATE cases SET stage = 'Approved' WHERE id = 'c_omar'").run();
 ex = R.existingClient(F, { name: "Omar Haddad", email: "omar@haddad.org", typeCode: "N-400" });
 ok(ex.addTo === null && ex.sameClient.includes("c_omar"), "a closed case is not reopened: a new case for the same person");
 R.flagSameName(F, "c_f0", ["c_lucia"]);
-ok(d.prepare("SELECT COUNT(*) AS n FROM approvals WHERE case_id = 'c_f0' AND kind = 'same_person' AND status = 'pending'").get().n === 1, "a possible duplicate is asked about once in Review: Same person?");
+ok(d.prepare("SELECT kind FROM case_links WHERE case_id = 'c_f0' AND other_id = 'c_lucia'").get()?.kind === "maybe" && !d.prepare("SELECT 1 FROM approvals WHERE case_id = 'c_f0'").get(), "a possible duplicate is noted, not asked about straight away");
 
 // Learning from a filed message.
 R.learnFrom(F, "c_acme1", { from: "priya.nair@gmail.com", text: "My receipt is WAC2612345678." });
@@ -185,11 +185,48 @@ addCase("c_mary1", "Mary Jones", "I-485", null, 70);
 addCase("c_mary2", "Mary Smith", "I-485", null, 4);
 R.learn(F, "c_mary1", "anumber", "208888888"); R.learn(F, "c_mary2", "anumber", "208888888");
 M.reconcile(F, "c_mary2");
+M.settleDuplicates();
 ok(d.prepare("SELECT 1 FROM cases WHERE id = 'c_mary1'").get() && d.prepare("SELECT 1 FROM cases WHERE id = 'c_mary2'").get() && d.prepare("SELECT 1 FROM approvals WHERE case_id = 'c_mary2' AND kind = 'same_person' AND brief LIKE 'Same A-Number%'").get(), "the same A-Number under another name (a married name) is asked about, never merged by itself");
 M.link(F, "c_mary2", "c_mary1", "different");
 d.prepare("DELETE FROM approvals WHERE case_id = 'c_mary2'").run();
 R.flagSameName(F, "c_mary2", ["c_mary1"]);
 ok(!d.prepare("SELECT 1 FROM approvals WHERE case_id = 'c_mary2'").get() && !M.reconcile(F, "c_mary2").startsWith("x") && !d.prepare("SELECT 1 FROM approvals WHERE case_id = 'c_mary2'").get(), "once a person says they are different people, Lincoln never asks again");
+
+// Same name: what only one person has decides it, and Lincoln asks only when nothing does.
+const pair = (a, b, name, daysA, daysB) => { addCase(a, name, "I-130", null, daysA); addCase(b, name, "I-130", null, daysB); R.flagSameName(F, b, [a]); };
+const asked = (id) => Boolean(d.prepare("SELECT 1 FROM approvals WHERE case_id = ? AND kind = 'same_person' AND status = 'pending'").get(id));
+const kindOf = (a, b) => d.prepare("SELECT kind FROM case_links WHERE case_id = ? AND other_id = ?").get(a, b)?.kind;
+pair("c_jg1", "c_jg2", "Jose Gonzalez", 400, 1);
+R.learn(F, "c_jg1", "dob", "1979-02-11"); R.learn(F, "c_jg2", "dob", "1991-08-30");
+M.settleDuplicates();
+ok(kindOf("c_jg2", "c_jg1") === "different" && !asked("c_jg2") && !asked("c_jg1"), "the same name with a different date of birth: different people, nobody is asked");
+pair("c_ap1", "c_ap2", "Ahmed Patel", 400, 1);
+R.learn(F, "c_ap1", "anumber", "211111111"); R.learn(F, "c_ap2", "anumber", "222222222");
+M.settleDuplicates();
+ok(kindOf("c_ap2", "c_ap1") === "different" && !asked("c_ap2"), "a different A-Number: different people, nobody is asked");
+pair("c_kn1", "c_kn2", "Kim Nguyen", 400, 1);
+R.learn(F, "c_kn1", "country", "Vietnam"); R.learn(F, "c_kn2", "country", "South Korea");
+M.settleDuplicates();
+ok(kindOf("c_kn2", "c_kn1") === "different" && !asked("c_kn2"), "a different country of birth: different people, nobody is asked");
+pair("c_lc1", "c_lc2", "Li Chen", 400, 1);
+R.learn(F, "c_lc1", "person", R.personKey("Li Chen", "1988-03-03")); R.learn(F, "c_lc2", "person", R.personKey("Li Chen", "1988-03-03"));
+M.settleDuplicates();
+ok(!d.prepare("SELECT 1 FROM cases WHERE id = 'c_lc2'").get() && !asked("c_lc1"), "the same name and date of birth: one person, merged without asking");
+pair("c_sm1", "c_sm2", "Sara Malik", 400, 1);
+M.settleDuplicates();
+ok(kindOf("c_sm2", "c_sm1") === "maybe" && !asked("c_sm2"), "a new case Lincoln knows nothing about yet: it waits for the client's documents instead of asking");
+R.learn(F, "c_sm1", "passport", "P1234567"); R.learn(F, "c_sm2", "passport", "X7654321");
+d.prepare("UPDATE cases SET pages = 3 WHERE id = 'c_sm2'").run();
+M.settleDuplicates();
+ok(asked("c_sm2") && kindOf("c_sm2", "c_sm1") === "asked", "documents read, only different passport numbers (renewed passports differ): genuinely unsure, so asked once");
+M.settleDuplicates();
+ok(d.prepare("SELECT COUNT(*) AS n FROM approvals WHERE case_id = 'c_sm2' AND kind = 'same_person'").get().n === 1, "and never asked twice");
+R.learn(F, "c_sm1", "dob", "1970-01-01"); R.learn(F, "c_sm2", "dob", "1999-12-12");
+M.settleDuplicates();
+ok(!asked("c_sm2") && kindOf("c_sm2", "c_sm1") === "different", "a date of birth that arrives later settles it: the question is withdrawn");
+pair("c_old1", "c_old2", "Omar Farouk", 400, 4);
+M.settleDuplicates();
+ok(asked("c_old2"), "after three days with nothing to go on, the attorney is asked, so no duplicate sits unnoticed");
 
 // A family: each document reaches the case of everyone whose application needs it, once.
 addCase("c_rosa", "Rosa Lima", "I-485", null, 10);

@@ -9,7 +9,7 @@ import { addEvent, canReadChat, canReadTeams, channelMessages, chatFile, chatMes
 import { isDocx, redline } from "./redline";
 import { sessionCutoff } from "./session";
 import { candidates, existingClient, firmAddress, flagSameName, learnFrom, normEmail, route, sameName as sameNameOf } from "./routing";
-import { familyOf, finishMerges, link as linkCases, reconcile } from "./merge";
+import { familyOf, finishMerges, link as linkCases, reconcile, settleDuplicates } from "./merge";
 
 // The part of Lincoln that works without being asked. Every incoming email is read, matched to a case
 // or opened as a new one, its attachments are read into the record, and the next step is prepared.
@@ -525,7 +525,7 @@ export async function addApprovedDate(firmId: string, p: { mailboxId: string; da
 export async function tick() {
   const d = db();
   // Merges and shared family documents that waited for a reading to finish.
-  try { finishMerges(); } catch (e) { console.error("Merges:", e instanceof Error ? e.message : "failed"); }
+  try { finishMerges(); settleDuplicates(); } catch (e) { console.error("Merges:", e instanceof Error ? e.message : "failed"); }
   // Safety sweep: instant notifications can be missed (a restart, a lapsed subscription).
   for (const c of d.prepare("SELECT * FROM mailboxes").all() as Connection[]) {
     try { await ensurePush(c); } catch (e) { d.prepare("UPDATE mailboxes SET last_error = ? WHERE id = ?").run(`Instant delivery: ${e instanceof Error ? e.message : "error"}`.slice(0, 200), c.id); }

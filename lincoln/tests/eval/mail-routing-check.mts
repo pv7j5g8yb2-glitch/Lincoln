@@ -73,7 +73,7 @@ answer = { ...base, kind: "new_case", case_id: null, new_case: { client: "Lucia 
 await handleInbound(F, mail({ from: "lreyes1985@yahoo.com", fromName: "Lucia Reyes", subject: "New case", text: "I want to petition for my husband." }), null);
 const fresh = last().case_id;
 ok(cases() === n0 + 1 && fresh !== "c_lucia", "a different person with the same name gets her own case");
-ok((d.prepare("SELECT COUNT(*) AS n FROM approvals WHERE case_id = ? AND kind = 'same_person'").get(fresh) as { n: number }).n === 1, "and the possible duplicate is flagged for a person to check");
+ok((d.prepare("SELECT COUNT(*) AS n FROM case_links WHERE case_id = ? AND kind = 'maybe'").get(fresh) as { n: number }).n === 1, "and the possible duplicate is flagged for a person to check");
 
 answer = { ...base, kind: "new_case", case_id: null, new_case: { client: "Omar Haddad", counterpart: null, type_code: "I-131", type_name: "Travel document" } };
 await handleInbound(F, mail({ from: "omar@haddad.org", fromName: "Omar Haddad", subject: "Travel", text: "I also need a travel document." }), null);
@@ -114,7 +114,7 @@ ok(g.case_id !== "c_lucia" && !d.prepare("SELECT 1 FROM messages WHERE firm_id =
 answer = { ...base, kind: "new_case", case_id: null, new_case: { client: "Lucia Reyes", counterpart: null, type_code: "I-130", type_name: "Relative petition" } };
 await handleInbound(G, mail({ from: "lucia@gmail.com", fromName: "Lucia Reyes", subject: "More", text: "Another document." }), null);
 const g2 = d.prepare("SELECT case_id FROM messages WHERE firm_id = ? ORDER BY rowid DESC LIMIT 1").get(G) as { case_id: string | null };
-ok(g2.case_id === "c_g_lucia" && !(d.prepare("SELECT COUNT(*) AS n FROM approvals WHERE firm_id = ? AND kind = 'same_person'").get(G) as { n: number }).n, "and the same client at another firm is matched only to that firm's own case, never flagged against the first firm's");
+ok(g2.case_id === "c_g_lucia" && !(d.prepare("SELECT COUNT(*) AS n FROM case_links WHERE firm_id = ? AND kind = 'maybe'").get(G) as { n: number }).n, "and the same client at another firm is matched only to that firm's own case, never flagged against the first firm's");
 
 // A family writes once for three people: a case each, linked, all with the same attorney.
 const fresh3 = () => (d.prepare("SELECT id, client, attorney_id FROM cases WHERE firm_id = ? ORDER BY rowid DESC LIMIT 3").all(F) as { id: string; client: string; attorney_id: string }[]);

@@ -832,7 +832,10 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
   `tests/routing.test.mjs` (in npm test) and `tests/eval/mail-routing-check.mts` (whole emails, scripted model).
   Merging and families built 2026-11-27 (sections 10 and 11 of `docs/SCENARIOS.md`, `lincoln/src/lib/merge.ts`): Lincoln
   merges on its own only on proof (A-Number, name with date of birth) with the same name and matter; otherwise "Same
-  person?" in Review. A family gets a case per person, linked (`case_links`); a shared Gmail or phone under another name
+  person?" in Review, and only when genuinely unsure (Ismael, 2026-11-27): a different date of birth, A-Number or
+  country of birth means different people with no question; the reading now records the client's own date of birth,
+  A-Number, passport number and country of birth so this can be decided; a different passport number proves nothing
+  (renewals); Lincoln waits for the file before asking, three days at most. A family gets a case per person, linked (`case_links`); a shared Gmail or phone under another name
   is a relative, never the same person (this was a real bug: a wife's same type application went into her husband's
   case). Family readings say whose application needs each document, and it is copied to those cases.
 * Reliability at scale (2026-11-27, Ismael: "make sure Lincoln is exquisitely organized and keeps executing at a

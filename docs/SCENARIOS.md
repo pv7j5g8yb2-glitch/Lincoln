@@ -133,7 +133,11 @@ These hold for every firm, every case type and every mix of the scenarios above.
 | Proof arrives later that two cases are one person with one matter (the same A-Number, or name with date of birth, under the same name) | Merged on its own into the older case: pages, documents, evidence, drafts, mail, dates, issues, forms and identifiers, every page reference renumbered; recorded on the case with the proof | Tested |
 | The same proof, the same person, a different matter | Two cases, linked as the same client | Tested |
 | The same A-Number under another name (a married name) | Asked in Review, never merged on its own | Tested |
-| The same name, different contact details | Asked in Review: "Same person?" with Same person (asks Are you sure?) and Different people | Tested in the app |
+| The same name, a different date of birth, A-Number or country of birth | Different people: kept apart, nobody is asked | Tested |
+| The same name and date of birth, A-Number or passport number | One person: merged without asking | Tested |
+| The same name and nothing known yet | Lincoln waits for the client's documents or intake answers, then decides | Tested |
+| Still nothing settles it once the file is read (or after three days) | Asked once in Review: "Same person?" with Same person (asks Are you sure?) and Different people | Tested in the app |
+| Proof arrives after the question was asked | The question is withdrawn and the cases are merged or kept apart | Tested |
 | Different people confirmed | Never asked about again | Tested |
 | A case still reading files | Merged once the reading is done | Tested |
 | An attorney says so in chat ("these two are the same person") | Merged, or linked when the matters differ | Built |

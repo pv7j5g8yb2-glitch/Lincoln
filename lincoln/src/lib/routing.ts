@@ -12,7 +12,7 @@ import { db, uid } from "./db";
 //   related more than one case, or a name alone: offered to the model, never filed or merged on their own.
 // Every case of the firm is searched, not only the most recent ones.
 
-export type Kind = "email" | "phone" | "receipt" | "anumber" | "person" | "file";
+export type Kind = "email" | "phone" | "receipt" | "anumber" | "person" | "file" | "dob" | "passport" | "country";
 export type Route = { sure: { caseId: string; why: string } | null; likely: { caseId: string; why: string } | null; related: string[] };
 
 /** Mail services people use personally: an address on one of these says nothing about an employer. */
@@ -106,10 +106,13 @@ export function nameFits(a: string, b: string) {
 /** Records something that identifies a case: an address, a phone, a receipt number, an A-Number, a person (name and
  *  date of birth) or a file already read. */
 export function learn(firmId: string, caseId: string, kind: Kind, raw: string | null | undefined) {
-  const value = kind === "email" ? normEmail(raw) : kind === "phone" ? normPhone(raw) : String(raw ?? "").trim();
+  const value = kind === "email" ? normEmail(raw) : kind === "phone" ? normPhone(raw) : kind === "dob" ? (/^\d{4}-\d{2}-\d{2}$/.test(String(raw ?? "").trim()) ? String(raw).trim() : "")
+    : kind === "passport" ? String(raw ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/^(.{0,4})$/, "") : kind === "country" ? normName(raw) : kind === "anumber" ? anum(raw) : String(raw ?? "").trim();
   if (!value || (kind === "email" && !personalAddress(value))) return;
   db().prepare("INSERT OR IGNORE INTO case_keys (firm_id, case_id, kind, value, at) VALUES (?, ?, ?, ?, ?)").run(firmId, caseId, kind, value, new Date().toISOString());
 }
+
+const anum = (raw: string | null | undefined) => { const x = String(raw ?? "").replace(/\D/g, ""); return x.length === 8 || x.length === 9 ? x.padStart(9, "0") : ""; };
 
 /** Name and date of birth together: the person, whichever address or phone they write from. */
 export const personKey = (name: string, dob: string) => (normName(name) && /^\d{4}-\d{2}-\d{2}$/.test(dob) ? `${normName(name)}|${dob}` : "");
@@ -273,20 +276,42 @@ export function existingClient(firmId: string, p: { name?: string | null; email?
   return { addTo: sameMatter?.id ?? null, sameClient: mine.filter((c) => c.id !== sameMatter?.id).map((c) => c.id), sameNameOnly: nameIds, household: [...household] };
 }
 
-/** A possible duplicate is asked about once, in Review, to the case's attorney: "Same person?". The same matter is
- *  then merged, another matter linked; different people are never asked about again. */
+/** Two cases with the same name: are they one person? What only one person has decides it. The same A-Number,
+ *  passport number, or name with date of birth is the same person; a different date of birth, A-Number or country of
+ *  birth is a different person. A passport number that differs proves nothing (it changes at every renewal), and
+ *  contact details that differ prove nothing (people have several). Anything else is not known yet. */
+export function samePerson(firmId: string, a: string, b: string): "same" | "different" | "unknown" {
+  const d = db();
+  const keys = (id: string, kind: Kind) => new Set((d.prepare("SELECT value FROM case_keys WHERE firm_id = ? AND case_id = ? AND kind = ?").all(firmId, id, kind) as { value: string }[]).map((r) => r.value));
+  const name = (id: string) => (d.prepare("SELECT client FROM cases WHERE firm_id = ? AND id = ?").get(firmId, id) as { client: string } | undefined)?.client ?? "";
+  const share = (kind: Kind) => { const x = keys(a, kind), y = keys(b, kind); return [...x].some((v) => y.has(v)); };
+  const clash = (kind: Kind) => { const x = keys(a, kind), y = keys(b, kind); return x.size > 0 && y.size > 0 && ![...x].some((v) => y.has(v)); };
+  const names = nameFits(name(a), name(b));
+  if (names && (share("anumber") || share("passport") || share("person"))) return "same";
+  if (clash("dob") || clash("anumber") || clash("country")) return "different";
+  return "unknown";
+}
+
+/** Two cases with the same name are noted to be settled once Lincoln knows more (settleDuplicates in merge.ts): most are
+ *  settled by a date of birth or an A-Number from the documents, without asking anyone. */
 export function flagSameName(firmId: string, caseId: string, others: string[], why = "Same name, different contact details.") {
   const d = db();
   const at = new Date().toISOString();
+  for (const id of others) {
+    if (!id || id === caseId || d.prepare("SELECT 1 FROM case_links WHERE firm_id = ? AND case_id = ? AND other_id = ?").get(firmId, caseId, id)) continue;
+    const ins = d.prepare("INSERT OR IGNORE INTO case_links (firm_id, case_id, other_id, kind, at, why) VALUES (?, ?, ?, 'maybe', ?, ?)");
+    ins.run(firmId, caseId, id, at, why); ins.run(firmId, id, caseId, at, why);
+  }
+}
+
+/** Asked once, in Review, to the case's attorney, only when what Lincoln knows settles nothing: "Same person?". */
+export function askSamePerson(firmId: string, caseId: string, otherId: string, why: string) {
+  const d = db();
   const line = (c: { type_name: string; ref: string; client_email: string | null }) => [c.type_name, c.ref, c.client_email].filter(Boolean).join(" · ");
   const me = d.prepare("SELECT client, type_name, ref, client_email, attorney_id FROM cases WHERE firm_id = ? AND id = ?").get(firmId, caseId) as { client: string; type_name: string; ref: string; client_email: string | null; attorney_id: string | null } | undefined;
-  if (!me) return;
-  for (const id of others) {
-    const o = d.prepare("SELECT id, client, type_name, ref, client_email FROM cases WHERE firm_id = ? AND id = ?").get(firmId, id) as { id: string; client: string; type_name: string; ref: string; client_email: string | null } | undefined;
-    if (!o || o.id === caseId) continue;
-    if (d.prepare("SELECT 1 FROM case_links WHERE firm_id = ? AND case_id = ? AND other_id = ?").get(firmId, caseId, o.id)) continue;
-    if (d.prepare("SELECT 1 FROM approvals WHERE firm_id = ? AND kind = 'same_person' AND status = 'pending' AND ((case_id = ? AND payload LIKE ?) OR (case_id = ? AND payload LIKE ?))").get(firmId, caseId, `%"otherId":"${o.id}"%`, o.id, `%"otherId":"${caseId}"%`)) continue;
-    d.prepare("INSERT INTO approvals (id, firm_id, case_id, kind, title, brief, payload, status, assignee_id, created_at) VALUES (?, ?, ?, 'same_person', ?, ?, ?, 'pending', ?, ?)")
-      .run(uid(), firmId, caseId, `Same person? ${me.client}`, why, JSON.stringify({ otherId: o.id, thisClient: me.client, thisLine: line(me), otherClient: o.client, otherLine: line(o) }), me.attorney_id, at);
-  }
+  const o = d.prepare("SELECT id, client, type_name, ref, client_email FROM cases WHERE firm_id = ? AND id = ?").get(firmId, otherId) as { id: string; client: string; type_name: string; ref: string; client_email: string | null } | undefined;
+  if (!me || !o) return;
+  if (d.prepare("SELECT 1 FROM approvals WHERE firm_id = ? AND kind = 'same_person' AND status = 'pending' AND ((case_id = ? AND payload LIKE ?) OR (case_id = ? AND payload LIKE ?))").get(firmId, caseId, `%"otherId":"${o.id}"%`, o.id, `%"otherId":"${caseId}"%`)) return;
+  d.prepare("INSERT INTO approvals (id, firm_id, case_id, kind, title, brief, payload, status, assignee_id, created_at) VALUES (?, ?, ?, 'same_person', ?, ?, ?, 'pending', ?, ?)")
+    .run(uid(), firmId, caseId, `Same person? ${me.client}`, why, JSON.stringify({ otherId: o.id, thisClient: me.client, thisLine: line(me), otherClient: o.client, otherLine: line(o) }), me.attorney_id, new Date().toISOString());
 }

@@ -10,7 +10,7 @@ import { decrypt, encrypt, loadPage, removePagesAfter, savePage } from "./storag
 import { citationsIn, lawText } from "./law";
 import { rulebookFor, rulebooksFor } from "./rulebooks";
 import { firmStyle, precedentFor } from "./memory";
-import { learn, sameName } from "./routing";
+import { learn, personKey, sameName } from "./routing";
 import { copyDocuments, familyOf } from "./merge";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
@@ -31,6 +31,7 @@ type Reading = {
   // On a later batch of files: what each new document does for the case.
   fit?: { title: string; effect: string; requirement: string | null; note?: string }[];
   unreadable?: { page: number; what: string; reason: string }[];
+  client_ids?: { dob?: string | null; a_number?: string | null; passport?: string | null; birth_country?: string | null } | null;
   identity?: { client: string | null; petitioner: string | null; type_code: string | null; type_name?: string | null };
   notice?: { kind: string; form?: string | null; classification?: string | null; about_this_case?: boolean; receipt_number?: string | null; notice_date?: string | null; due?: string | null; points?: string[]; page?: number } | null;
 };
@@ -80,6 +81,7 @@ Read every page. Reply with one JSON object and nothing else, in this shape:
  "requirements": [{"name": "a legal or filing requirement for this case type", "citation": "", "status": "met | partial | missing", "summary": "what the file shows", "gap": "what is still needed", "evidence": [{"page": 1, "grade": 3, "note": ""}]}],
  "client_email": {"subject": "", "body": "an email from the responsible attorney to the client asking for what is missing, written to the email rules below; or null if nothing is missing"},
  "unreadable": [{"page": 1, "what": "which document or part", "reason": "blurred | glare | cut off | too small | handwriting | other"}],
+ "client_ids": {"dob": "YYYY-MM-DD", "a_number": "", "passport": "", "birth_country": ""}: the identity of ${c.client}, the person the case is for, exactly as printed on their own documents in these pages (never a relative's, a petitioner's or a sponsor's); null for anything not shown,
  "notice": {"kind": "rfe | noid | noir | receipt | biometrics | interview | approval | denial | transfer | other", "form": "the form the notice is about, e.g. I-129", "classification": "the visa class or benefit the notice is for, as printed, e.g. H1B, or null", "about_this_case": true only if the notice is about this matter and not an earlier petition or status shown as history in the file, "receipt_number": "exactly as printed, or null", "notice_date": "YYYY-MM-DD or null", "due": "the response deadline exactly as printed, YYYY-MM-DD, or null", "points": ["for an RFE, NOID or NOIR: each thing the agency asks for, one per item, in its order"], "page": 1} or null if the new pages hold no notice from USCIS, the Department of Labor, the State Department or the immigration court
 }
 ${c.fromClient ? "The file was sent by the client. If any page is unreadable, the client email must ask for a clearer photo or scan of exactly those documents, with one line on how (flat surface, good light, the whole page in frame)." : "The file was added by firm staff. Do not mention unreadable pages in the client email; they are reported to the staff separately."}
@@ -357,6 +359,16 @@ async function readCase(firmId: string, caseId: string, all: Uint8Array[], opts:
     await forCase({ firmId, caseId, purpose: "check" }, () => secondReading(firmId, caseId, `${c.type_code} ${c.type_name}`));
     d.prepare("UPDATE cases SET processing = 0 WHERE firm_id = ? AND id = ?").run(firmId, caseId);
     for (const h of hashes) learn(firmId, caseId, "file", h);
+    // Who the client is, from their own documents: what tells two people with the same name apart (settleDuplicates).
+    const ids = r.client_ids ?? {};
+    const named = d.prepare("SELECT client FROM cases WHERE firm_id = ? AND id = ?").get(firmId, caseId) as { client: string } | undefined;
+    if (named && named.client !== UNNAMED) {
+      learn(firmId, caseId, "dob", str(ids.dob, 10));
+      learn(firmId, caseId, "anumber", str(ids.a_number, 20));
+      learn(firmId, caseId, "passport", str(ids.passport, 20));
+      learn(firmId, caseId, "country", str(ids.birth_country, 60));
+      learn(firmId, caseId, "person", personKey(named.client, str(ids.dob, 10)));
+    }
     for (const to of new Set(share.map((q) => q.to))) copyDocuments(firmId, caseId, to, share.filter((q) => q.to === to).map((q) => q.n));
     // A notice from an agency is acted on straight away: deadline, receipt number, response.
     if (r.notice) await actOnNotice(firmId, caseId, r.notice).catch(() => undefined);

@@ -5,9 +5,9 @@ import { db, uid } from "./db";
 import { loadPage, pagesDir, savePage } from "./storage";
 import fs from "node:fs";
 import path from "node:path";
-import { familyOf, flagSameName, sameName } from "./routing";
+import { askSamePerson, familyOf, flagSameName, sameName, samePerson } from "./routing";
 
-export type LinkKind = "family" | "same_person" | "different";
+export type LinkKind = "family" | "same_person" | "different" | "maybe" | "asked";
 type Case = { id: string; firm_id: string; ref: string; client: string; type_code: string; type_name: string; family: string; stage: string; pages: number; processing: number; opened_at: string; client_email: string | null; receipt: string | null; counterpart: string | null; next_date: string | null; next_date_label: string | null; sensitive: number };
 
 const now = () => new Date().toISOString();
@@ -198,7 +198,7 @@ export function reconcile(firmId: string, caseId: string) {
   const c = get(firmId, caseId);
   if (!c) return caseId;
   const hits = d.prepare(`SELECT DISTINCT o.case_id AS id, o.kind FROM case_keys k JOIN case_keys o ON o.firm_id = k.firm_id AND o.kind = k.kind AND o.value = k.value AND o.case_id != k.case_id
-    WHERE k.firm_id = ? AND k.case_id = ? AND k.kind IN ('anumber', 'person', 'receipt')`).all(firmId, caseId) as { id: string; kind: string }[];
+    WHERE k.firm_id = ? AND k.case_id = ? AND k.kind IN ('anumber', 'person', 'receipt', 'passport')`).all(firmId, caseId) as { id: string; kind: string }[];
   let at = caseId;
   for (const h of hits) {
     const o = get(firmId, h.id);
@@ -212,11 +212,55 @@ export function reconcile(firmId: string, caseId: string) {
       continue;
     }
     if (sameMatter(here, o) && isOpen(here.stage) && isOpen(o.stage)) {
-      const why = h.kind === "receipt" ? "the same USCIS receipt number" : h.kind === "anumber" ? "the same A-Number" : "the same name and date of birth";
+      const why = h.kind === "receipt" ? "the same USCIS receipt number" : h.kind === "anumber" ? "the same A-Number" : h.kind === "passport" ? "the same passport number" : "the same name and date of birth";
       at = mergeCases(firmId, here.id, o.id, why) ?? at;
     } else {
       link(firmId, here.id, o.id, "same_person");
     }
   }
   return at;
+}
+
+/**
+ * Two cases with the same name, settled once Lincoln knows enough: different people (another date of birth, A-Number or
+ * country of birth) are left apart without a word; the same person (the same A-Number, passport, or name with date of
+ * birth) is merged, or linked when the matters differ. Only when the newer case's file has been read, or three days have
+ * passed, and nothing settles it, is the attorney asked. A question already asked is withdrawn when proof arrives.
+ */
+export function settleDuplicates() {
+  const d = db();
+  // Proof read from documents since the last round: the same person under the same name is merged or linked.
+  const since = new Date(Date.now() - 15 * 60_000).toISOString();
+  for (const k of d.prepare("SELECT DISTINCT k.firm_id, k.case_id FROM case_keys k JOIN cases c ON c.id = k.case_id WHERE k.kind IN ('anumber', 'passport', 'person') AND k.at > ? AND c.processing = 0").all(since) as { firm_id: string; case_id: string }[]) {
+    try { reconcile(k.firm_id, k.case_id); } catch { /* next round */ }
+  }
+  const pairs = d.prepare("SELECT firm_id, case_id, other_id, kind, why FROM case_links WHERE kind IN ('maybe', 'asked') AND case_id < other_id").all() as { firm_id: string; case_id: string; other_id: string; kind: string; why: string | null }[];
+  const busy = (id: string) => d.prepare("SELECT 1 FROM activity WHERE case_id = ? AND at > ?").get(id, new Date(Date.now() - 120_000).toISOString());
+  const withdraw = (f: string, a: string, b: string, status: string) => {
+    for (const q of d.prepare("SELECT id, payload FROM approvals WHERE firm_id = ? AND kind = 'same_person' AND status = 'pending' AND case_id IN (?, ?)").all(f, a, b) as { id: string; payload: string }[]) {
+      const other = (JSON.parse(q.payload) as { otherId?: string }).otherId;
+      if (other === a || other === b) d.prepare("UPDATE approvals SET status = ?, decided_at = ? WHERE id = ?").run(status, now(), q.id);
+    }
+  };
+  for (const p of pairs) {
+    const a = get(p.firm_id, p.case_id), b = get(p.firm_id, p.other_id);
+    if (!a || !b) { d.prepare("DELETE FROM case_links WHERE firm_id = ? AND ((case_id = ? AND other_id = ?) OR (case_id = ? AND other_id = ?))").run(p.firm_id, p.case_id, p.other_id, p.other_id, p.case_id); continue; }
+    if (a.processing || b.processing || busy(a.id) || busy(b.id)) continue;
+    const verdict = samePerson(p.firm_id, a.id, b.id);
+    if (verdict === "different") { link(p.firm_id, a.id, b.id, "different"); withdraw(p.firm_id, a.id, b.id, "rejected"); continue; }
+    if (verdict === "same") {
+      withdraw(p.firm_id, a.id, b.id, "approved");
+      const why = "the same identity documents";
+      if (sameMatter(a, b) && isOpen(a.stage) && isOpen(b.stage)) { if (!mergeCases(p.firm_id, a.id, b.id, why)) continue; }
+      else link(p.firm_id, a.id, b.id, "same_person");
+      continue;
+    }
+    if (p.kind === "asked") continue;
+    const [older, newer] = a.opened_at <= b.opened_at ? [a, b] : [b, a];
+    const known = d.prepare("SELECT 1 FROM case_keys WHERE firm_id = ? AND case_id = ? AND kind IN ('dob', 'anumber', 'passport', 'person', 'country')").get(p.firm_id, newer.id);
+    const ready = newer.pages > 0 || known || newer.opened_at < new Date(Date.now() - 3 * 86400_000).toISOString();
+    if (!ready) continue;
+    askSamePerson(p.firm_id, newer.id, older.id, p.why ?? "Same name, different contact details.");
+    d.prepare("UPDATE case_links SET kind = 'asked' WHERE firm_id = ? AND ((case_id = ? AND other_id = ?) OR (case_id = ? AND other_id = ?))").run(p.firm_id, a.id, b.id, b.id, a.id);
+  }
 }
