@@ -28,7 +28,7 @@ export const CONNECTORS: [string, string[]][] = [
 export const TRUST: [string, string][] = [
   ["Encrypted", "The database and every file, at rest."],
   ["Never used for training", "Client files are not used to train AI models."],
-  ["Two-step sign in", "Can be required for the whole firm."],
+  ["Two-step sign in", "On every account, with an authenticator app."],
   ["Yours to take", "Export or delete everything, at any time."],
 ];
 

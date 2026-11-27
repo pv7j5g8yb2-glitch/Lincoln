@@ -22,7 +22,7 @@ ${CONNECTORS.map(([who, list]) => `- ${who}: ${list.join(", ")}`).join("\n")}
 ## Privacy
 - Encrypted: the database and every file, at rest.
 - Client files are not used to train AI models.
-- Two-step sign in can be required for the whole firm.
+- Two-step sign in with an authenticator app is available on every account.
 - Firms can export or delete everything at any time.
 
 ## Contact
