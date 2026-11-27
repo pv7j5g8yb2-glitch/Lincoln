@@ -112,10 +112,12 @@ export function db(): Database.Database {
   d.exec("CREATE TABLE IF NOT EXISTS enquiries (id TEXT PRIMARY KEY, at TEXT NOT NULL, name TEXT NOT NULL, email TEXT NOT NULL, firm TEXT NOT NULL, answers TEXT NOT NULL, ip TEXT)");
   // What identifies each case (routing.ts): addresses, phones, receipt numbers, A-Numbers, a person's name and date of
   // birth, and files already read. Filled once from what the firm already has.
+  // Each email once per firm, however many of its mailboxes it reaches (agent.ts, inbound).
+  d.exec("CREATE TABLE IF NOT EXISTS inbound_firm_seen (firm_id TEXT NOT NULL, message_id TEXT NOT NULL, at TEXT NOT NULL, PRIMARY KEY (firm_id, message_id))");
   d.exec("CREATE TABLE IF NOT EXISTS case_keys (firm_id TEXT NOT NULL, case_id TEXT NOT NULL, kind TEXT NOT NULL, value TEXT NOT NULL, at TEXT NOT NULL, PRIMARY KEY (firm_id, kind, value, case_id))");
   d.exec("CREATE INDEX IF NOT EXISTS i_case_keys_case ON case_keys(case_id)");
   d.exec("CREATE TABLE IF NOT EXISTS known_devices (user_id TEXT NOT NULL, device TEXT NOT NULL, first_seen TEXT NOT NULL, PRIMARY KEY (user_id, device))");
-  for (const [table, col, type] of [["users", "avatar", "TEXT"], ["users", "setup_at", "TEXT"], ["addin_tokens", "app", "TEXT"], ["cases", "processing", "INTEGER NOT NULL DEFAULT 0"], ["cases", "note", "TEXT"], ["chat", "case_id", "TEXT"], ["cases", "client_email", "TEXT"], ["messages", "email", "TEXT"], ["messages", "thread_id", "TEXT"], ["messages", "mailbox_id", "TEXT"], ["mailboxes", "settings", "TEXT"], ["users", "totp_enc", "TEXT"], ["users", "totp_pending_enc", "TEXT"], ["users", "totp_last_step", "INTEGER"], ["users", "recovery", "TEXT"], ["sessions", "ip", "TEXT"], ["sessions", "agent", "TEXT"], ["sessions", "last_seen", "TEXT"], ["firms", "key_enc", "TEXT"], ["firms", "require_2fa", "INTEGER NOT NULL DEFAULT 0"], ["issues", "rule", "TEXT"], ["firms", "address", "TEXT"], ["firms", "phone", "TEXT"], ["firms", "email", "TEXT"], ["users", "bar_number", "TEXT"], ["users", "bar_state", "TEXT"], ["cases", "receipt", "TEXT"], ["forms", "batch", "TEXT"], ["usage", "user_id", "TEXT"], ["chat", "thread_id", "TEXT"], ["intake_links", "user_id", "TEXT"], ["users", "admin", "INTEGER NOT NULL DEFAULT 0"], ["messages", "ext_id", "TEXT"], ["messages", "draft_ref", "TEXT"], ["messages", "draft_box", "TEXT"], ["messages", "draft_at", "TEXT"]]) {
+  for (const [table, col, type] of [["users", "avatar", "TEXT"], ["users", "setup_at", "TEXT"], ["addin_tokens", "app", "TEXT"], ["cases", "processing", "INTEGER NOT NULL DEFAULT 0"], ["cases", "note", "TEXT"], ["chat", "case_id", "TEXT"], ["cases", "client_email", "TEXT"], ["messages", "email", "TEXT"], ["messages", "thread_id", "TEXT"], ["messages", "mailbox_id", "TEXT"], ["mailboxes", "settings", "TEXT"], ["users", "totp_enc", "TEXT"], ["users", "totp_pending_enc", "TEXT"], ["users", "totp_last_step", "INTEGER"], ["users", "recovery", "TEXT"], ["sessions", "ip", "TEXT"], ["sessions", "agent", "TEXT"], ["sessions", "last_seen", "TEXT"], ["firms", "key_enc", "TEXT"], ["firms", "require_2fa", "INTEGER NOT NULL DEFAULT 0"], ["issues", "rule", "TEXT"], ["firms", "address", "TEXT"], ["firms", "phone", "TEXT"], ["firms", "email", "TEXT"], ["users", "bar_number", "TEXT"], ["users", "bar_state", "TEXT"], ["drafts", "request", "TEXT"], ["inbound_seen", "done", "INTEGER NOT NULL DEFAULT 1"], ["messages", "rfc_id", "TEXT"], ["cases", "receipt", "TEXT"], ["forms", "batch", "TEXT"], ["usage", "user_id", "TEXT"], ["chat", "thread_id", "TEXT"], ["intake_links", "user_id", "TEXT"], ["users", "admin", "INTEGER NOT NULL DEFAULT 0"], ["messages", "ext_id", "TEXT"], ["messages", "draft_ref", "TEXT"], ["messages", "draft_box", "TEXT"], ["messages", "draft_at", "TEXT"]]) {
     const cols = d.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
     if (!cols.some((c) => c.name === col)) {
       d.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`);
@@ -126,6 +128,8 @@ export function db(): Database.Database {
     }
   }
   d.exec("CREATE INDEX IF NOT EXISTS i_usage_user ON usage(user_id, at)");
+  // The lookups routing does on every email and upload, kept fast at thousands of cases and messages.
+  for (const ix of ["i_msg_thread ON messages(firm_id, thread_id)", "i_msg_email ON messages(firm_id, lower(email))", "i_msg_case ON messages(case_id, direction, at)", "i_cases_email ON cases(firm_id, lower(client_email))", "i_cases_opened ON cases(firm_id, opened_at)", "i_cases_receipt ON cases(firm_id, upper(replace(receipt, ' ', '')))", "i_act_case ON activity(case_id, at)", "i_issues_case ON issues(case_id, status)", "i_dates_case ON dates(case_id, date)"]) d.exec(`CREATE INDEX IF NOT EXISTS ${ix}`);
   if (!d.prepare("SELECT 1 FROM kv WHERE firm_id = '_system' AND key = 'case_keys_v1'").get()) {
     const at = new Date().toISOString();
     const ins = d.prepare("INSERT OR IGNORE INTO case_keys (firm_id, case_id, kind, value, at) VALUES (?, ?, ?, ?, ?)");
@@ -149,7 +153,9 @@ export function db(): Database.Database {
   // Sign ins last 30 days from their last use (session.ts, SESSION_DAYS); only those past that are cleared at start.
   d.exec(`DELETE FROM sessions WHERE COALESCE(last_seen, created_at) < '${new Date(Date.now() - 30 * 86400_000).toISOString()}'`);
   // A server restart ends any background reading; do not leave cases marked as in progress.
-  d.exec("UPDATE cases SET processing = 0, note = 'Reading was interrupted. Upload the file again.' WHERE processing = 1");
+  // Reads cut off by a restart start again by themselves (intake.ts, resumeReads); only a read with no saved files is lost.
+  d.exec("CREATE TABLE IF NOT EXISTS read_jobs (id TEXT PRIMARY KEY, firm_id TEXT NOT NULL, case_id TEXT NOT NULL, files INTEGER NOT NULL, opts TEXT NOT NULL, pages_before INTEGER, tries INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL)");
+  d.exec("UPDATE cases SET processing = 0, note = 'Reading was interrupted. Upload the file again.' WHERE processing = 1 AND id NOT IN (SELECT case_id FROM read_jobs)");
   const n = d.prepare("SELECT COUNT(*) AS n FROM firms").get() as { n: number };
   if (n.n === 0) seed(d);
   ensureOwner(d);

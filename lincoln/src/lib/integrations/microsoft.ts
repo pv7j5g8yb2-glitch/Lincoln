@@ -2,7 +2,7 @@ import { db } from "../db";
 import { open, seal } from "../secret";
 import { api, callback, json } from "./http";
 import type { FolderHit, Connection, FileHit, Inbound, OfficeKind } from "./types";
-import { OFFICE_EXT, OFFICE_MIME, keepAttachment, safeAddress, settingsOf } from "./types";
+import { OFFICE_EXT, OFFICE_MIME, keepAttachment, safeAddress, settingsOf, automatic, messageIdOf } from "./types";
 import { sign } from "../secret";
 import { appUrl } from "./http";
 
@@ -87,7 +87,7 @@ export async function readMessage(c: Connection, id: string): Promise<Inbound> {
   const sameOrg = from.split("@")[1] === c.email.split("@")[1];
   const header = (n: string) => (m.internetMessageHeaders ?? []).find((h) => h.name.toLowerCase() === n)?.value ?? "";
   const bulk = Boolean(header("list-unsubscribe")) || /bulk|list|junk/i.test(header("precedence"));
-  return { bulk, verified: authn ? /dmarc=pass/i.test(authn) : sameOrg, id, threadId: m.conversationId, from, fromName: m.from?.emailAddress?.name || from, subject: m.subject ?? "", text: (m.body?.content ?? "").slice(0, 20000), attachments };
+  return { messageId: messageIdOf(header("message-id")) || undefined, auto: automatic(header, m.subject ?? "", from), bulk, verified: authn ? /dmarc=pass/i.test(authn) : sameOrg, id, threadId: m.conversationId, from, fromName: m.from?.emailAddress?.name || from, subject: m.subject ?? "", text: (m.body?.content ?? "").slice(0, 20000), attachments };
 }
 
 export async function send(c: Connection, to: string, subject: string, body: string) {

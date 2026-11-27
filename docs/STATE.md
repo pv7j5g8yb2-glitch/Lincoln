@@ -830,4 +830,13 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
   filled the link got two cases; a model's made up case id is never used; the same file twice is read once. New table
   `case_keys`, filled from existing cases at start. Catalogue of scenarios and status: `docs/SCENARIOS.md`. Tests:
   `tests/routing.test.mjs` (in npm test) and `tests/eval/mail-routing-check.mts` (whole emails, scripted model).
-  Open: merging two cases, one email for several family members as linked cases, auto replies and bounces.
+  Open: merging two cases, one email for several family members as linked cases.
+* Reliability at scale (2026-11-27, Ismael: "make sure Lincoln is exquisitely organized and keeps executing at a
+  genuine top tier level"): held as guarantees, not scenario by scenario (section 9 of `docs/SCENARIOS.md`). One email
+  in several of the firm's mailboxes is worked once (Message-ID, `inbound_firm_seen`). Out of office replies are noted
+  on the case and bounces flagged "Email not delivered" on the case of the last email sent to that address, neither
+  reaching the model. A restart loses nothing: emails half read or claimed are fetched again (`resumeMail`), file reads
+  resume from an encrypted copy (`read_jobs`, `resumeReads`), drafts are rewritten (`resumeDrafts`), each twice at
+  most. A failed email waits in the Inbox as Not sorted instead of being filed to nothing. One unreadable email no
+  longer drops the rest of its batch. Firm isolation audited: every API route checks the firm or a secret token.
+  Indexes on every routing lookup: about 6 ms an email at 5,000 cases and 50,000 emails.

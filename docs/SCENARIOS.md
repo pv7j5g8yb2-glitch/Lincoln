@@ -103,6 +103,29 @@ no test covers that exact case yet; **Open** means not handled yet.
 | Possibly case work but unclear | Kept in the Inbox as Not sorted | Built |
 | A case id the model invents | Never used; the email waits in the Inbox | Tested |
 
+## 8. Mail nobody wrote
+
+| Scenario | How Lincoln handles it | Status |
+|---|---|---|
+| An out of office or automatic reply | Noted on the case in its thread; never answered, never sent to the model, never opens a case | Tested |
+| A bounce (the firm's email to a client was not delivered) | Matched to the case of the firm's last email to that address, flagged "Email not delivered" for the attorney | Tested |
+
+## 9. Reliability at scale
+
+These hold for every firm, every case type and every mix of the scenarios above.
+
+| Guarantee | How | Status |
+|---|---|---|
+| One email copied to several of the firm's mailboxes (attorney, paralegal, shared inbox) is worked once | Its Message-ID is claimed for the firm before any work | Tested |
+| Two emails or uploads arriving at the same moment never open two cases | Every check and insert runs without a pause in between, so nothing interleaves | Built |
+| A restart or deploy never loses an email | An email half read is taken back and read again; one claimed but not yet read is fetched again; each once | Tested |
+| A restart never loses a file being read | The file is kept encrypted until the read finishes; a cut off read is taken back and run again, twice at most, then said on the case | Tested |
+| A restart never leaves a draft writing forever | It is written again, twice at most, then marked failed with "Ask for it again" | Built |
+| If one email in a batch cannot be fetched, the rest are still worked | Only that one is released for the next sweep | Built |
+| An email that still fails after three tries is never hidden | It waits in the Inbox as Not sorted, "Could not be sorted. File it by hand." | Built |
+| A firm never reaches another firm's cases | Every case, routing and mail query is limited to the firm; a case id from the model is checked against the firm's own cases; every API route checks the signed in firm or a secret token | Tested |
+| Fast at thousands of cases | Indexes on every routing lookup; about 6 ms to route an email on a firm with 5,000 cases and 50,000 emails (measured 2026-11-27) | Tested |
+
 ## Open (not handled yet)
 
 * **Merging two cases.** When a flagged duplicate really is the same person, the attorney cannot yet merge the cases
@@ -110,4 +133,3 @@ no test covers that exact case yet; **Open** means not handled yet.
 * **One email for several family members** (spouse and children, several forms): opened as one case today, not one
   linked case per person.
 * **Phone calls and WhatsApp:** not read (decided). The attorney texts their intake link after a call.
-* **Out of office replies and bounces:** treated by the model as noise; no rule of their own yet.

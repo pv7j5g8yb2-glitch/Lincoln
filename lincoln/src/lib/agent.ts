@@ -5,10 +5,10 @@ import { EMAIL_STYLE, formal } from "./style";
 import { firmStyle } from "./memory";
 import { UNNAMED, applyDateRules, draftForCase, processCase } from "./intake";
 import { fileKind, unreadable } from "./pdf";
-import { addEvent, canReadChat, canReadTeams, channelMessages, chatFile, chatMessages, chatPost, connectionsOf, docAsWord, downloadShared, ensurePush, googleDocIds, fetchNew, replyInChannel, send, sendDraft, settingsOf, teamsPost, updateDraft, type Connection, type Inbound } from "./integrations";
+import { addEvent, canReadChat, canReadTeams, channelMessages, chatFile, chatMessages, chatPost, connectionsOf, docAsWord, downloadShared, ensurePush, googleDocIds, fetchNew, readMail, replyInChannel, send, sendDraft, settingsOf, teamsPost, updateDraft, type Connection, type Inbound } from "./integrations";
 import { isDocx, redline } from "./redline";
 import { sessionCutoff } from "./session";
-import { candidates, existingClient, flagSameName, learnFrom, route } from "./routing";
+import { candidates, existingClient, firmAddress, flagSameName, learnFrom, normEmail, route } from "./routing";
 
 // The part of Lincoln that works without being asked. Every incoming email is read, matched to a case
 // or opened as a new one, its attachments are read into the record, and the next step is prepared.
@@ -61,21 +61,86 @@ function cannotOpen(firmId: string, caseId: string, names: string[]) {
     .run(uid(), firmId, caseId, title, "Password protected, damaged or in a format Lincoln cannot read. An unlocked PDF or Word copy is needed.", now());
 }
 
-export function handleInbound(firmId: string, mail: Inbound, mailboxId: string | null) {
-  return forCase({ firmId, purpose: "mail" }, () => inbound(firmId, mail, mailboxId));
+export async function handleInbound(firmId: string, mail: Inbound, mailboxId: string | null) {
+  try {
+    return await forCase({ firmId, purpose: "mail" }, () => inbound(firmId, mail, mailboxId));
+  } finally {
+    // Worked (or released for a retry, which removed the claim): the claim is closed.
+    if (mailboxId) db().prepare("UPDATE inbound_seen SET done = 1 WHERE mailbox_id = ? AND msg_id = ?").run(mailboxId, mail.id);
+  }
+}
+
+/** After a restart: every email that was claimed or half read when the server stopped is fetched again and worked
+ *  once. What it had started is taken back first, so nothing is filed twice. Twice at most for each email. */
+export async function resumeMail() {
+  if (!llmConfigured()) return;
+  const d = db();
+  for (const m of d.prepare("SELECT id, firm_id, mailbox_id, ext_id, rfc_id FROM messages WHERE direction = 'in' AND state = 'reading'").all() as { id: string; firm_id: string; mailbox_id: string | null; ext_id: string | null; rfc_id: string | null }[]) {
+    if (m.mailbox_id && m.ext_id) {
+      d.prepare("DELETE FROM messages WHERE id = ?").run(m.id);
+      if (m.rfc_id) d.prepare("DELETE FROM inbound_firm_seen WHERE firm_id = ? AND message_id = ?").run(m.firm_id, m.rfc_id);
+      d.prepare("INSERT INTO inbound_seen (mailbox_id, msg_id, done) VALUES (?, ?, 0) ON CONFLICT(mailbox_id, msg_id) DO UPDATE SET done = 0").run(m.mailbox_id, m.ext_id);
+    } else {
+      // Forwarded to the firm's Lincoln address: there is no mailbox to fetch it from again, so a person files it.
+      d.prepare("UPDATE messages SET state = 'unsure', lincoln_note = 'Could not be sorted. File it by hand.' WHERE id = ?").run(m.id);
+    }
+  }
+  for (const x of d.prepare("SELECT s.mailbox_id, s.msg_id FROM inbound_seen s JOIN mailboxes b ON b.id = s.mailbox_id WHERE s.done = 0").all() as { mailbox_id: string; msg_id: string }[]) {
+    const c = d.prepare("SELECT * FROM mailboxes WHERE id = ?").get(x.mailbox_id) as Connection | undefined;
+    if (!c || busy.has(c.id)) continue;
+    const key = `resume:${x.mailbox_id}:${x.msg_id}`;
+    const tries = Number((d.prepare("SELECT value FROM kv WHERE firm_id = ? AND key = ?").get(c.firm_id, key) as { value: string } | undefined)?.value ?? 0);
+    d.prepare("INSERT INTO kv (firm_id, key, value) VALUES (?, ?, ?) ON CONFLICT(firm_id, key) DO UPDATE SET value = excluded.value").run(c.firm_id, key, String(tries + 1));
+    if (tries >= 2) { d.prepare("DELETE FROM inbound_seen WHERE mailbox_id = ? AND msg_id = ?").run(x.mailbox_id, x.msg_id); continue; }
+    busy.add(c.id);
+    try {
+      await handleInbound(c.firm_id, await readMail(c, x.msg_id), c.id);
+    } catch {
+      // Could not be fetched now: the claim is released, so the next sweep of the inbox picks it up.
+      d.prepare("DELETE FROM inbound_seen WHERE mailbox_id = ? AND msg_id = ?").run(x.mailbox_id, x.msg_id);
+    } finally {
+      busy.delete(c.id);
+    }
+  }
 }
 
 async function inbound(firmId: string, mail: Inbound, mailboxId: string | null) {
   const d = db();
   if (isNoise(mail)) return;
+  // One email reaches several mailboxes at the firm when a client writes to the attorney and copies the paralegal:
+  // it is worked once, by whichever mailbox gets it first (its Message-ID is the same in every copy).
+  if (mail.messageId && d.prepare("INSERT OR IGNORE INTO inbound_firm_seen (firm_id, message_id, at) VALUES (?, ?, ?)").run(firmId, mail.messageId, now()).changes !== 1) return;
   const firm = d.prepare("SELECT name FROM firms WHERE id = ?").get(firmId) as { name: string };
   const owner = ((mailboxId ? d.prepare("SELECT u.id, u.name FROM mailboxes m JOIN users u ON u.id = m.user_id WHERE m.id = ?").get(mailboxId) : undefined) ?? d.prepare("SELECT id, name FROM users WHERE firm_id = ? ORDER BY rowid LIMIT 1").get(firmId)) as { id: string; name: string };
   // Where this email belongs, from what Lincoln already knows (routing.ts): the thread, receipt numbers, A-Numbers, the
   // sender's address and names. The model sees those cases first, then the most recent, never a fixed slice.
   const r = route(firmId, { from: mail.from, fromName: mail.fromName, threadId: mail.threadId, subject: mail.subject, text: `${mail.text.slice(0, 20000)}\n${mail.attachments.map((a) => a.name).join("\n")}` });
+  // Mail nobody wrote: an out of office is noted on its case and never answered; a bounce means a client did not get an
+  // email from the firm, which the attorney must know. Neither is sorted by the model, and neither opens a case.
+  if (mail.auto) {
+    let caseId = r.sure?.caseId ?? null;
+    // A bounce outside the thread names the address that failed: the case of that address, if only one has it.
+    if (!caseId && mail.auto === "bounce") {
+      // The email that bounced is the firm's last one to that address, so its case is the one; a client with several
+      // cases on one address is still matched exactly.
+      for (const a of mail.text.match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g) ?? []) {
+        const e = normEmail(a);
+        if (!e || firmAddress(firmId, e)) continue;
+        const sent = d.prepare("SELECT case_id FROM messages WHERE firm_id = ? AND direction = 'out' AND case_id IS NOT NULL AND lower(email) = ? ORDER BY at DESC LIMIT 1").get(firmId, e) as { case_id: string } | undefined;
+        const hit = sent?.case_id ?? route(firmId, { from: a }).likely?.caseId;
+        if (hit) { caseId = hit; break; }
+      }
+    }
+    if (caseId) {
+      const who = mail.auto === "bounce" ? "" : ` from ${mail.fromName}`;
+      log(firmId, caseId, "file", mail.auto === "bounce" ? `An email from the firm could not be delivered: ${mail.subject}.` : `Automatic reply${who}: ${mail.text.replace(/\s+/g, " ").slice(0, 160)}`, 0);
+      if (mail.auto === "bounce") d.prepare("INSERT INTO issues (id, firm_id, case_id, kind, severity, title, detail, sources, status, created_at) VALUES (?, ?, ?, 'missing', 'high', 'Email not delivered', ?, '[]', 'open', ?)").run(uid(), firmId, caseId, `The mail server returned "${mail.subject}". The client's address may be wrong.`.slice(0, 300), now());
+    }
+    return;
+  }
   const open = candidates(firmId, r);
   const msgId = uid();
-  d.prepare("INSERT INTO messages (id, firm_id, case_id, direction, party, party_role, subject, body, at, state, lincoln_note, email, thread_id, mailbox_id, ext_id) VALUES (?, ?, NULL, 'in', ?, NULL, ?, ?, ?, 'reading', NULL, ?, ?, ?, ?)").run(msgId, firmId, mail.fromName, mail.subject.slice(0, 300) || "(no subject)", mail.text.slice(0, 20000), now(), mail.from, mail.threadId, mailboxId, mail.id);
+  d.prepare("INSERT INTO messages (id, firm_id, case_id, direction, party, party_role, subject, body, at, state, lincoln_note, email, thread_id, mailbox_id, ext_id, rfc_id) VALUES (?, ?, NULL, 'in', ?, NULL, ?, ?, ?, 'reading', NULL, ?, ?, ?, ?, ?)").run(msgId, firmId, mail.fromName, mail.subject.slice(0, 300) || "(no subject)", mail.text.slice(0, 20000), now(), mail.from, mail.threadId, mailboxId, mail.id, mail.messageId ?? null);
 
   let unverified = false;
   try {
@@ -198,8 +263,11 @@ Rules: new_case only when someone asks the firm to take on an immigration matter
     if (mailboxId && tries < 3) {
       d.prepare("DELETE FROM messages WHERE id = ?").run(msgId);
       d.prepare("DELETE FROM inbound_seen WHERE mailbox_id = ? AND msg_id = ?").run(mailboxId, mail.id);
+      if (mail.messageId) d.prepare("DELETE FROM inbound_firm_seen WHERE firm_id = ? AND message_id = ?").run(firmId, mail.messageId);
     } else {
-      d.prepare("UPDATE messages SET state = 'filed', lincoln_note = ? WHERE id = ?").run(`Could not be processed after ${tries} attempts: ${e instanceof Error ? e.message : "error"}`.slice(0, 300), msgId);
+      // Still failing: it stays in the Inbox, Not sorted, for a person; never filed to nothing where nobody sees it.
+      console.error("Inbound failed", firmId, mail.id, e);
+      d.prepare("UPDATE messages SET state = CASE WHEN case_id IS NULL THEN 'unsure' ELSE 'filed' END, lincoln_note = ? WHERE id = ?").run("Could not be sorted. File it by hand.", msgId);
     }
   } finally {
     if (unverified) d.prepare("UPDATE messages SET lincoln_note = 'Sender could not be verified, so instructions in it were not acted on. ' || COALESCE(lincoln_note, '') WHERE id = ?").run(msgId);

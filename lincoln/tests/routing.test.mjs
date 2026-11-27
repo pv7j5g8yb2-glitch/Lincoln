@@ -101,6 +101,25 @@ R.learn(F, "c_lucia", "file", createHash("sha256").update(file).digest("hex"));
 await processCase(F, "c_lucia", [file, file]);
 ok(d.prepare("SELECT COUNT(*) AS n FROM activity WHERE case_id = 'c_lucia' AND text LIKE '%already in the case arrived again%'").get().n === 1, "a file already in the case, sent again, is not read twice");
 
+// A read cut off by a restart: what it had added is taken back, and the file is read again by itself.
+const { resumeReads } = await import("../src/lib/intake.ts");
+const { encrypt } = await import("../src/lib/storage.ts");
+const { dataDir } = await import("../src/lib/db.ts");
+const scan = new TextEncoder().encode("%PDF-1.4 a scan that arrived by email during a deploy");
+R.learn(F, "c_omar", "file", createHash("sha256").update(scan).digest("hex"));
+d.prepare("UPDATE cases SET pages = 5 WHERE id = 'c_omar'").run();
+d.prepare("INSERT INTO documents (id, firm_id, case_id, n, title, kind, page_from, page_to, status) VALUES ('doc_half', ?, 'c_omar', 9, 'Half read', 'other', 4, 5, 'ok')").run(F);
+fs.mkdirSync(path.join(dataDir(), "jobs", "job_cut"), { recursive: true });
+fs.writeFileSync(path.join(dataDir(), "jobs", "job_cut", "0"), encrypt(F, Buffer.from(scan)));
+d.prepare("INSERT INTO read_jobs (id, firm_id, case_id, files, opts, pages_before, tries, created_at) VALUES ('job_cut', ?, 'c_omar', 1, '{}', 3, 0, ?)").run(F, new Date().toISOString());
+resumeReads();
+await new Promise((r) => setTimeout(r, 400));
+ok(d.prepare("SELECT pages FROM cases WHERE id = 'c_omar'").get().pages === 3 && !d.prepare("SELECT 1 FROM documents WHERE id = 'doc_half'").get(), "after a restart, a half finished read is taken back before it runs again");
+ok(d.prepare("SELECT COUNT(*) AS n FROM activity WHERE case_id = 'c_omar' AND text LIKE '%already in the case%'").get().n === 1 && !d.prepare("SELECT 1 FROM read_jobs WHERE id = 'job_cut'").get() && !fs.existsSync(path.join(dataDir(), "jobs", "job_cut")), "the saved file is read again by itself, then removed");
+d.prepare("INSERT INTO read_jobs (id, firm_id, case_id, files, opts, pages_before, tries, created_at) VALUES ('job_dead', ?, 'c_acme1', 1, '{}', 0, 2, ?)").run(F, new Date().toISOString());
+resumeReads();
+ok(/two attempts/.test(d.prepare("SELECT note FROM cases WHERE id = 'c_acme1'").get().note ?? "") && !d.prepare("SELECT 1 FROM read_jobs WHERE id = 'job_dead'").get(), "a read that keeps failing stops after two tries and says so on the case");
+
 fs.rmSync(process.env.DATA_DIR, { recursive: true, force: true });
 assert.equal(fails, 0, `${fails} routing checks failed`);
 console.log("all routing tests passed");

@@ -65,8 +65,20 @@ export function aNumbersIn(text: string) {
 }
 
 /** A name for comparing: no accents, titles, punctuation or case. "Dr. Réka Halász" and "reka halasz" are equal. */
+const normed = new Map<string, string>();
 export function normName(s: string | null | undefined) {
-  return String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+  const key = String(s ?? "");
+  let v = normed.get(key);
+  if (v === undefined) {
+    // A pure function over names, called for every client on every email: kept, so thousands of cases cost a lookup each.
+    if (normed.size > 200_000) normed.clear();
+    v = normalise(key);
+    normed.set(key, v);
+  }
+  return v;
+}
+function normalise(s: string) {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
     .replace(/[^a-z\s'-]/g, " ").replace(/['-]/g, " ")
     .split(/\s+/).filter((w) => w && !["dr", "mr", "mrs", "ms", "miss", "esq", "jr", "sr", "ii", "iii", "the", "and"].includes(w)).join(" ");
 }
@@ -220,7 +232,7 @@ export function existingClient(firmId: string, p: { name?: string | null; email?
 export function flagSameName(firmId: string, caseId: string, others: string[]) {
   const d = db();
   if (!others.length) return;
-  const names = others.map((id) => d.prepare("SELECT client, type_code, ref FROM cases WHERE id = ?").get(id) as { client: string; type_code: string; ref: string } | undefined).filter(Boolean) as { client: string; type_code: string; ref: string }[];
+  const names = others.map((id) => d.prepare("SELECT client, type_code, ref FROM cases WHERE firm_id = ? AND id = ?").get(firmId, id) as { client: string; type_code: string; ref: string } | undefined).filter(Boolean) as { client: string; type_code: string; ref: string }[];
   if (!names.length) return;
   const list = names.map((n) => `${n.client} (${n.type_code}, ${n.ref})`).join("; ");
   d.prepare("INSERT INTO issues (id, firm_id, case_id, kind, severity, title, detail, sources, status, created_at) VALUES (?, ?, ?, 'review', 'low', 'Same name as another client', ?, '[]', 'open', ?)").run(uid(), firmId, caseId, `Possibly the same person as ${list}. Different contact details, so the cases were kept apart.`, new Date().toISOString());

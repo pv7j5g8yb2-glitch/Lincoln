@@ -1,17 +1,19 @@
 import { supportRule } from "./thresholds";
-import { db, uid } from "./db";
+import { dataDir, db, uid } from "./db";
 import { LIBRARY, typeOf } from "./library";
 import { chat, errorContext, forCase, isTestRun, parseJson, readPages, workFirm } from "./llm";
 import { DATE_KINDS, dateRules } from "./rules";
 import { EMAIL_STYLE, LEGAL_STYLE, formal } from "./style";
 import { PROCESS } from "./process";
 import { renderFiles } from "./pdf";
-import { loadPage, removePagesAfter, savePage } from "./storage";
+import { decrypt, encrypt, loadPage, removePagesAfter, savePage } from "./storage";
 import { citationsIn, lawText } from "./law";
 import { rulebookFor, rulebooksFor } from "./rulebooks";
 import { firmStyle, precedentFor } from "./memory";
 import { learn } from "./routing";
 import { createHash } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 
 // Live intake: a client file goes in, Lincoln reads every page and writes the case record:
 // documents, issues, dates, requirements and a first request to the client for attorney approval.
@@ -172,17 +174,57 @@ async function readFile(c: { client: string; type: string; firm: string; attorne
 // Reads of one case run one after another, so two files arriving together never claim the same pages.
 const reading = new Map<string, Promise<void>>();
 
-export function processCase(firmId: string, caseId: string, files: Uint8Array[], opts: { append?: boolean; fromClient?: boolean } = {}) {
+// Every read is saved (encrypted, like the pages) before it starts and removed when it ends, so a restart in the middle
+// (every deploy restarts Lincoln) never loses a file that came by email: the read starts again on its own.
+const jobDir = (id: string) => path.join(dataDir(), "jobs", id.replace(/[^\w-]/g, ""));
+function saveJob(firmId: string, caseId: string, files: Uint8Array[], opts: object) {
+  const id = uid(), dir = jobDir(id);
+  fs.mkdirSync(dir, { recursive: true });
+  files.forEach((f, i) => fs.writeFileSync(path.join(dir, String(i)), encrypt(firmId, Buffer.from(f))));
+  db().prepare("INSERT INTO read_jobs (id, firm_id, case_id, files, opts, pages_before, tries, created_at) VALUES (?, ?, ?, ?, ?, NULL, 0, ?)").run(id, firmId, caseId, files.length, JSON.stringify(opts), new Date().toISOString());
+  return id;
+}
+function dropJob(id: string) {
+  fs.rmSync(jobDir(id), { recursive: true, force: true });
+  db().prepare("DELETE FROM read_jobs WHERE id = ?").run(id);
+}
+
+/** After a restart: every read that was cut off starts again from where the case was before it (twice at most). */
+export function resumeReads() {
+  const d = db();
+  for (const j of d.prepare("SELECT * FROM read_jobs ORDER BY created_at").all() as { id: string; firm_id: string; case_id: string; files: number; opts: string; pages_before: number | null; tries: number }[]) {
+    if (!d.prepare("SELECT 1 FROM cases WHERE id = ?").get(j.case_id)) { dropJob(j.id); continue; }
+    if (j.tries >= 2) {
+      d.prepare("UPDATE cases SET processing = 0, note = 'A file could not be read after two attempts. Send it again.' WHERE id = ?").run(j.case_id);
+      dropJob(j.id);
+      continue;
+    }
+    d.prepare("UPDATE read_jobs SET tries = tries + 1 WHERE id = ?").run(j.id);
+    // Whatever the cut off read had added is taken back first, so nothing is counted twice.
+    if (j.pages_before !== null) {
+      removePagesAfter(j.case_id, j.pages_before);
+      d.prepare("UPDATE cases SET pages = ? WHERE id = ?").run(j.pages_before, j.case_id);
+      d.prepare("DELETE FROM documents WHERE case_id = ? AND page_from > ?").run(j.case_id, j.pages_before);
+    }
+    let files: Uint8Array[];
+    try { files = Array.from({ length: j.files }, (_, i) => new Uint8Array(decrypt(j.firm_id, fs.readFileSync(path.join(jobDir(j.id), String(i)))))); } catch { dropJob(j.id); continue; }
+    void processCase(j.firm_id, j.case_id, files, JSON.parse(j.opts), j.id).catch(() => undefined);
+  }
+}
+
+export function processCase(firmId: string, caseId: string, files: Uint8Array[], opts: { append?: boolean; fromClient?: boolean } = {}, jobId?: string) {
+  const job = jobId ?? saveJob(firmId, caseId, files, opts);
   const before = reading.get(caseId) ?? Promise.resolve();
-  const run = before.then(() => forCase({ firmId, caseId, purpose: "read" }, () => readCase(firmId, caseId, files, opts)));
-  const settled = run.catch(() => undefined);
+  const run = before.then(() => forCase({ firmId, caseId, purpose: "read" }, () => readCase(firmId, caseId, files, opts, job)));
+  const settled = run.catch(() => undefined).finally(() => dropJob(job));
   reading.set(caseId, settled);
   void settled.then(() => { if (reading.get(caseId) === settled) reading.delete(caseId); });
   return run;
 }
 
-async function readCase(firmId: string, caseId: string, all: Uint8Array[], opts: { append?: boolean; fromClient?: boolean }) {
+async function readCase(firmId: string, caseId: string, all: Uint8Array[], opts: { append?: boolean; fromClient?: boolean }, job?: string) {
   const d = db();
+  if (job) d.prepare("UPDATE read_jobs SET pages_before = COALESCE(pages_before, (SELECT pages FROM cases WHERE id = ?)) WHERE id = ?").run(caseId, job);
   // A file already read into this case (sent again in a reply, forwarded, uploaded twice) is not read or added twice.
   const seen = new Set<string>();
   const hashes: string[] = [];
@@ -207,7 +249,6 @@ async function readCase(firmId: string, caseId: string, all: Uint8Array[], opts:
     const start = append ? c.pages + 1 : 1;
     const added = await renderFiles(files, (k, jpeg) => savePage(firmId, caseId, k, jpeg), start);
     if (added === 0) throw new Error("The case has reached its page limit.");
-    for (const h of hashes) learn(firmId, caseId, "file", h);
     const n = start - 1 + added;
     d.prepare("UPDATE cases SET pages = ? WHERE firm_id = ? AND id = ?").run(n, firmId, caseId);
     const pages = Array.from({ length: added }, (_, i) => ({ n: start + i, jpeg: loadPage(firmId, caseId, start + i)! }));
@@ -303,6 +344,7 @@ async function readCase(firmId: string, caseId: string, all: Uint8Array[], opts:
     applyDateRules(firmId, caseId);
     await forCase({ firmId, caseId, purpose: "check" }, () => secondReading(firmId, caseId, `${c.type_code} ${c.type_name}`));
     d.prepare("UPDATE cases SET processing = 0 WHERE firm_id = ? AND id = ?").run(firmId, caseId);
+    for (const h of hashes) learn(firmId, caseId, "file", h);
     // A notice from an agency is acted on straight away: deadline, receipt number, response.
     if (r.notice) await actOnNotice(firmId, caseId, r.notice).catch(() => undefined);
     // With the file read, the forms the case needs are filled from it, and every document not in English is
@@ -326,7 +368,26 @@ const ASSESSMENT_RULES = `Rules for an assessment: the file may be a summary tha
 
 /** Drafts any document for a case from its pages and record. Every fact must carry a page reference. */
 export function draftForCase(firmId: string, caseId: string, draftId: string, request: string, review?: { assignee: string; due?: string | null }) {
+  // What was asked is kept with the draft until it is written, so a restart in the middle writes it again (resumeDrafts).
+  db().prepare("UPDATE drafts SET request = ? WHERE firm_id = ? AND id = ?").run(JSON.stringify({ request, review: review ?? null }), firmId, draftId);
   return forCase({ firmId, caseId, purpose: "draft" }, () => writeDraft(firmId, caseId, draftId, request, review));
+}
+
+/** After a restart: every draft still being written is written again (twice at most), or marked failed with the reason. */
+export function resumeDrafts() {
+  const d = db();
+  for (const x of d.prepare("SELECT id, firm_id, case_id, request FROM drafts WHERE status = 'drafting'").all() as { id: string; firm_id: string; case_id: string; request: string | null }[]) {
+    const key = `redraft:${x.id}`;
+    const tries = Number((d.prepare("SELECT value FROM kv WHERE firm_id = ? AND key = ?").get(x.firm_id, key) as { value: string } | undefined)?.value ?? 0);
+    let job: { request: string; review: { assignee: string; due?: string | null } | null } | null = null;
+    try { job = x.request ? JSON.parse(x.request) : null; } catch { job = null; }
+    if (!job || tries >= 2) {
+      d.prepare("UPDATE drafts SET status = 'failed', content = json_set(content, '$.error', 'Writing was interrupted. Ask for it again.') WHERE id = ?").run(x.id);
+      continue;
+    }
+    d.prepare("INSERT INTO kv (firm_id, key, value) VALUES (?, ?, ?) ON CONFLICT(firm_id, key) DO UPDATE SET value = excluded.value").run(x.firm_id, key, String(tries + 1));
+    void draftForCase(x.firm_id, x.case_id, x.id, job.request, job.review ?? undefined).catch(() => undefined);
+  }
 }
 
 async function writeDraft(firmId: string, caseId: string, draftId: string, request: string, review?: { assignee: string; due?: string | null }) {

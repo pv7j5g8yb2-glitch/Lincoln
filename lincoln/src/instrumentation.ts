@@ -16,6 +16,13 @@ export async function register() {
     }
   };
   setTimeout(run, 15_000);
+  // Files whose reading a restart cut off are read again, a few seconds in.
+  const { resumeReads, resumeDrafts } = await import("./lib/intake");
+  const { resumeMail } = await import("./lib/agent");
+  setTimeout(() => {
+    try { resumeReads(); resumeDrafts(); } catch (e) { console.error("Resuming work failed:", e instanceof Error ? e.message : "unknown error"); }
+    void resumeMail().catch((e) => console.error("Resuming mail failed:", e instanceof Error ? e.message : "unknown error"));
+  }, 5_000);
   // Forms filled in a batch are collected every minute, so none waits on the five minute sweep.
   const { collectForms } = await import("./lib/fill");
   setInterval(() => void collectForms().catch(() => undefined), 60_000);

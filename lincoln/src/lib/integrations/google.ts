@@ -2,7 +2,7 @@ import { db } from "../db";
 import { open, seal } from "../secret";
 import { api, callback, json } from "./http";
 import type { Connection, FileHit, FolderHit, Inbound, OfficeKind } from "./types";
-import { OFFICE_MIME, keepAttachment, safeAddress, settingsOf } from "./types";
+import { OFFICE_MIME, keepAttachment, safeAddress, settingsOf, automatic, messageIdOf } from "./types";
 
 // One Google sign in covers Gmail, Drive, Docs, Sheets, Slides and Calendar. Docs, Sheets and Slides
 // are created through Drive by converting the Word, Excel and PowerPoint files Lincoln produces.
@@ -88,7 +88,7 @@ export async function readMessage(c: Connection, id: string): Promise<Inbound> {
   await walk(m.payload);
   const authn = m.payload.headers?.filter((x) => x.name.toLowerCase() === "authentication-results").map((x) => x.value).join(" ") ?? "";
   const bulk = Boolean(h("list-unsubscribe")) || /bulk|list|junk/i.test(h("precedence"));
-  return { bulk, verified: /dmarc=pass/i.test(authn), id, threadId: m.threadId, from: email, fromName: fromRaw.replace(/<[^>]+>/, "").replace(/"/g, "").trim() || email, subject: h("subject"), text: text.slice(0, 20000), attachments };
+  return { messageId: messageIdOf(h("message-id")) || undefined, auto: automatic(h, h("subject"), email), bulk, verified: /dmarc=pass/i.test(authn), id, threadId: m.threadId, from: email, fromName: fromRaw.replace(/<[^>]+>/, "").replace(/"/g, "").trim() || email, subject: h("subject"), text: text.slice(0, 20000), attachments };
 }
 
 const header = (v: string) => (/^[\x20-\x7e]*$/.test(v) ? v : `=?UTF-8?B?${Buffer.from(v).toString("base64")}?=`);

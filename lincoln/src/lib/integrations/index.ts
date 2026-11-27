@@ -61,8 +61,9 @@ async function store(p: Provider, firmId: string, userId: string, t: Exchanged) 
 
 export async function fetchNew(c: Connection): Promise<Inbound[]> {
   const d = db();
-  // Claim each message before reading it, so a notification and the safety sweep never both work it.
-  const claim = d.prepare("INSERT OR IGNORE INTO inbound_seen (mailbox_id, msg_id) VALUES (?, ?)");
+  // Claim each message before reading it, so a notification and the safety sweep never both work it. A claim stays
+  // open (done = 0) until the email is worked, so one a restart cuts off is fetched again (resumeMail in agent.ts).
+  const claim = d.prepare("INSERT OR IGNORE INTO inbound_seen (mailbox_id, msg_id, done) VALUES (?, ?, 0)");
   const out: Inbound[] = [];
   for (const id of await P[c.provider].listInbox(c)) {
     if (out.length >= 10) break;
@@ -70,8 +71,10 @@ export async function fetchNew(c: Connection): Promise<Inbound[]> {
     try {
       out.push(await P[c.provider].readMessage(c, id));
     } catch (e) {
+      // This one is tried again by the next sweep; those already read are still worked now, never dropped.
       d.prepare("DELETE FROM inbound_seen WHERE mailbox_id = ? AND msg_id = ?").run(c.id, id);
-      throw e;
+      if (!out.length) throw e;
+      break;
     }
   }
   return out;
