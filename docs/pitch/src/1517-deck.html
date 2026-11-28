@@ -18,7 +18,7 @@ body { font-family: "Inter", sans-serif; color: var(--ink); -webkit-font-smoothi
 .kicker { font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
 .black .kicker { color: #8d8d8d; }
 .center { text-align: center; }
-h1 { font-family: "Literata", serif; font-weight: 400; font-size: 50px; line-height: 1.12; letter-spacing: -0.02em; margin-top: 16px; }
+h1 { font-family: "Literata", serif; font-weight: 400; font-size: 56px; line-height: 1.12; letter-spacing: -0.02em; margin-top: 16px; }
 .sub { font-family: "Literata", serif; font-style: italic; font-weight: 300; font-size: 28px; line-height: 1.3; color: #55524c; margin-top: 8px; }
 .black .sub { color: #a9a9a9; }
 .big { font-family: "Literata", serif; font-weight: 400; letter-spacing: -0.03em; line-height: 1; }
@@ -54,6 +54,13 @@ td { text-align: center; }
 .mock .m { color: #8b8882; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
 .pill { display: inline-block; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: #fff; color: #4a4843; }
 .btn { display: inline-block; background: var(--ink); color: #fff; font-size: 14px; font-weight: 600; padding: 9px 15px; border-radius: 6px; }
+.stat { background: #fff; color: var(--ink); border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.stat .n { font-family: "Literata", serif; font-weight: 400; letter-spacing: -0.03em; line-height: 1; }
+.stat .l { font-size: 18px; color: #5b5852; margin-top: 18px; white-space: nowrap; }
+.stat .k { font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; }
+.stat .t { font-family: "Literata", serif; font-size: 34px; line-height: 1.15; letter-spacing: -0.01em; }
+.rowc { position: absolute; left: 96px; right: 96px; display: grid; gap: 24px; }
+.hd { position: absolute; left: 0; right: 0; top: 76px; text-align: center; }
 </style>
 </head>
 <body>
@@ -83,78 +90,65 @@ td { text-align: center; }
 </section>
 
 <!-- 2 Founder -->
-<section class="slide">
-  <div class="center">
+<section class="slide" style="padding:0">
+  <div class="hd">
     <div class="kicker">Founder</div>
     <h1>Ismael Kirmi</h1>
     <div class="sub">Founder and sole engineer of Lincoln</div>
   </div>
-  <div class="row" style="top:262px;grid-template-columns:repeat(4,1fr)">
-    <div class="card" style="height:210px"><div class="big" style="font-size:64px">237</div><div class="cap gap-m">Case types supported</div></div>
-    <div class="card" style="height:210px"><div class="big" style="font-size:64px">13</div><div class="cap gap-m">Google and Microsoft integrations</div></div>
-    <div class="card" style="height:210px"><div class="big" style="font-size:64px">90%</div><div class="cap gap-m">Agreement with USCIS findings</div></div>
-    <div class="card" style="height:210px"><div class="big" style="font-size:64px">14</div><div class="cap gap-m">Immigration practice areas</div></div>
+  <div class="rowc" style="top:300px;grid-template-columns:repeat(4,1fr)">
+    <div class="stat" style="height:200px"><div class="n" style="font-size:72px">237</div><div class="l">Case types</div></div>
+    <div class="stat" style="height:200px"><div class="n" style="font-size:72px">13</div><div class="l">Integrations</div></div>
+    <div class="stat" style="height:200px"><div class="n" style="font-size:72px">90%</div><div class="l">USCIS agreement</div></div>
+    <div class="stat" style="height:200px"><div class="n" style="font-size:72px">14</div><div class="l">Practice areas</div></div>
   </div>
-  <div class="row" style="top:492px;grid-template-columns:repeat(3,1fr)">
-    <div class="card" style="height:200px"><div class="cap">Previously</div><div class="ttl gap-s">Hopkins</div><div class="p gap-s">AI content platform for real estate agents</div></div>
-    <div class="card" style="height:200px"><div class="cap">First hire</div><div class="ttl gap-s">Sales Lead</div><div class="p gap-s">Legal technology background</div></div>
-    <div class="card" style="height:200px"><div class="cap">First hire</div><div class="ttl gap-s">Immigration Counsel</div><div class="p gap-s">Sets the quality standard for every case type</div></div>
+  <div class="rowc" style="top:524px;grid-template-columns:repeat(3,1fr)">
+    <div class="stat" style="height:200px"><div class="k">Previously</div><div class="t" style="font-size:34px">Hopkins</div><div class="l">AI content platform</div></div>
+    <div class="stat" style="height:200px"><div class="k">First hire</div><div class="t" style="font-size:34px">Sales Lead</div><div class="l">Legal technology</div></div>
+    <div class="stat" style="height:200px"><div class="k">First hire</div><div class="t" style="font-size:34px">Immigration Counsel</div><div class="l">Quality standard</div></div>
   </div>
-  <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
 </section>
 
 <!-- 3 Problem -->
-<section class="slide">
-  <div class="center">
+<section class="slide" style="padding:0">
+  <div class="hd">
     <div class="kicker">The problem</div>
     <h1>Immigration casework is still done by hand.</h1>
     <div class="sub">Paralegal hours go to review, follow-up and drafting.</div>
   </div>
-  <div class="row" style="top:290px;grid-template-columns:repeat(3,1fr)">
-    <div class="card" style="height:400px">
-      <div class="mock"><div class="m">Passport</div><div class="gap-s">Expires 2 March 2027</div><div class="m gap-m">Form I-94</div><div class="gap-s">Status ends 15 January 2027</div></div>
-      <div class="ttl gap-l">Review</div><div class="p gap-s">Every document checked against every other</div>
-    </div>
-    <div class="card" style="height:400px">
-      <div class="mock"><div class="m">Outstanding</div><div class="gap-s" style="line-height:1.75">Certified translations<br>Name change record<br>Renewed passport</div></div>
-      <div class="ttl gap-l">Follow-up</div><div class="p gap-s">Missing evidence requested from the client</div>
-    </div>
-    <div class="card" style="height:400px">
-      <div class="mock"><div class="m">To prepare</div><div class="gap-s" style="line-height:1.75">Support letter<br>Form I-129<br>Client correspondence</div></div>
-      <div class="ttl gap-l">Drafting</div><div class="p gap-s">Letters, forms and filings prepared</div>
-    </div>
+  <div class="rowc" style="top:380px;grid-template-columns:repeat(3,1fr)">
+    <div class="stat" style="height:260px"><div class="k">01</div><div class="t" style="font-size:44px">Review</div><div class="l">Every document, every date</div></div>
+    <div class="stat" style="height:260px"><div class="k">02</div><div class="t" style="font-size:44px">Follow-up</div><div class="l">Missing evidence from clients</div></div>
+    <div class="stat" style="height:260px"><div class="k">03</div><div class="t" style="font-size:44px">Drafting</div><div class="l">Letters, forms and filings</div></div>
   </div>
-  <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
 </section>
 
 <!-- 4 Why now -->
-<section class="slide black">
-  <div class="center">
+<section class="slide black" style="padding:0">
+  <div class="hd">
     <div class="kicker">Why now</div>
     <h1>Legal AI spending is at a record high.</h1>
-    <div class="sub">The category is moving from assistants to agents.</div>
+    <div class="sub">The leaders are now moving to agents.</div>
   </div>
-  <div class="row" style="top:290px;grid-template-columns:repeat(3,1fr)">
-    <div class="card" style="height:400px"><div class="cap">Capital</div><div class="big gap-l" style="font-size:84px">$4.6B</div><div class="p gap-m">Invested in legal technology in 2025, a record year</div></div>
-    <div class="card" style="height:400px"><div class="cap">Adoption</div><div class="big gap-l" style="font-size:84px">$15.5B</div><div class="p gap-m">Harvey's reported valuation, with Legora at $8.8B</div></div>
-    <div class="card" style="height:400px"><div class="cap">Direction</div><div class="big gap-l" style="font-size:84px">Agents</div><div class="p gap-m">Legora and Filevine have launched agents for general practice</div></div>
+  <div class="rowc" style="top:320px;grid-template-columns:repeat(3,1fr)">
+    <div class="stat" style="height:360px"><div class="n" style="font-size:96px">$4.6B</div><div class="l">Legal tech funding in 2025</div></div>
+    <div class="stat" style="height:360px"><div class="n" style="font-size:96px">$15.5B</div><div class="l">Harvey valuation</div></div>
+    <div class="stat" style="height:360px"><div class="n" style="font-size:96px">$8.8B</div><div class="l">Legora valuation</div></div>
   </div>
-  <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
 </section>
 
 <!-- 5 Market -->
-<section class="slide">
-  <div class="center">
+<section class="slide" style="padding:0">
+  <div class="hd">
     <div class="kicker">The market</div>
     <h1>11.3 million cases pending at USCIS.</h1>
     <div class="sub">Each one is a file an immigration firm prepares.</div>
   </div>
-  <div class="row" style="top:290px;grid-template-columns:repeat(3,1fr)">
-    <div class="card" style="height:400px"><div class="cap">Attorneys</div><div class="big gap-l" style="font-size:84px">16,000+</div><div class="p gap-m">Members of AILA, the US immigration bar</div></div>
-    <div class="card" style="height:400px"><div class="cap">Caseload</div><div class="big gap-l" style="font-size:84px">11.3M</div><div class="p gap-m">Cases pending at USCIS in early 2025</div></div>
-    <div class="card" style="height:400px"><div class="cap">Labor</div><div class="big gap-l" style="font-size:84px">$29.70</div><div class="p gap-m">Median paralegal hourly wage in legal services</div></div>
+  <div class="rowc" style="top:320px;grid-template-columns:repeat(3,1fr)">
+    <div class="stat" style="height:360px"><div class="n" style="font-size:96px">11.3M</div><div class="l">Pending USCIS cases</div></div>
+    <div class="stat" style="height:360px"><div class="n" style="font-size:96px">16,000+</div><div class="l">Immigration attorneys</div></div>
+    <div class="stat" style="height:360px"><div class="n" style="font-size:96px">$29.70</div><div class="l">Paralegal hourly wage</div></div>
   </div>
-  <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
 </section>
 
 <!-- 6 Solution -->
@@ -172,45 +166,35 @@ td { text-align: center; }
 </section>
 
 <!-- 7 How it works -->
-<section class="slide">
-  <div class="center">
+<section class="slide" style="padding:0">
+  <div class="hd">
     <div class="kicker">How it works</div>
     <h1>From inbox to approval.</h1>
     <div class="sub">Four steps, with no prompting.</div>
   </div>
-  <div class="row" style="top:290px;grid-template-columns:repeat(4,1fr)">
-    <div class="card" style="height:400px"><div class="mock"><div class="m">New email</div><div class="gap-s" style="font-weight:600">Maria Lopez</div><div style="margin-top:4px">Green card for my husband</div><div class="m gap-s">3 attachments</div></div><div class="cap gap-l">01</div><div class="ttl gap-s">Intake</div><div class="p gap-s">Every email matched to its client and case</div></div>
-    <div class="card" style="height:400px"><div class="mock"><div class="m">Case opened</div><div class="gap-s" style="font-weight:600">Maria Lopez · I-130</div><div class="gap-s"><span class="pill">14 pages</span> <span class="pill">2 issues</span></div></div><div class="cap gap-l">02</div><div class="ttl gap-s">Analysis</div><div class="p gap-s">Every page read, every fact cited</div></div>
-    <div class="card" style="height:400px"><div class="mock"><div class="m">Prepared</div><div class="gap-s" style="line-height:1.75">Client email<br>Form I-130<br>Cover letter</div></div><div class="cap gap-l">03</div><div class="ttl gap-s">Drafting</div><div class="p gap-s">Letters, forms and correspondence</div></div>
-    <div class="card" style="height:400px"><div class="mock"><div class="m">For review</div><div class="gap-s" style="font-weight:600">Client email</div><div class="gap-m"><span class="btn">✓ Approve and send</span></div></div><div class="cap gap-l">04</div><div class="ttl gap-s">Approval</div><div class="p gap-s">Nothing is sent without the attorney</div></div>
+  <div class="rowc" style="top:380px;grid-template-columns:repeat(4,1fr)">
+    <div class="stat" style="height:260px"><div class="k">01</div><div class="t" style="font-size:40px">Intake</div><div class="l">Email matched to its case</div></div>
+    <div class="stat" style="height:260px"><div class="k">02</div><div class="t" style="font-size:40px">Analysis</div><div class="l">Every page read and cited</div></div>
+    <div class="stat" style="height:260px"><div class="k">03</div><div class="t" style="font-size:40px">Drafting</div><div class="l">Letters, forms and replies</div></div>
+    <div class="stat" style="height:260px"><div class="k">04</div><div class="t" style="font-size:40px">Approval</div><div class="l">The attorney signs off</div></div>
   </div>
-  <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
 </section>
 
 <!-- 8 Traction -->
-<section class="slide">
-  <div class="center">
+<section class="slide" style="padding:0">
+  <div class="hd">
     <div class="kicker">Traction</div>
     <h1>Validated against USCIS decisions.</h1>
     <div class="sub">Ten appeal decisions across ten case types.</div>
   </div>
-  <div class="row" style="top:290px;grid-template-columns:280px 1fr 300px">
-    <div class="card" style="height:400px"><div class="big" style="font-size:88px">90%</div><div class="cap gap-m">Agreement with USCIS findings</div></div>
-    <div class="card" style="height:400px;padding:34px 30px 26px;justify-content:flex-end">
-      <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:12px;align-items:end;width:100%;height:290px">
-        <div><div style="height:254px;background:var(--ink);border-radius:7px 7px 0 0"></div></div><div><div style="height:290px;background:var(--ink);border-radius:7px 7px 0 0"></div></div><div><div style="height:261px;background:var(--ink);border-radius:7px 7px 0 0"></div></div><div><div style="height:266px;background:var(--ink);border-radius:7px 7px 0 0"></div></div><div><div style="height:261px;background:var(--ink);border-radius:7px 7px 0 0"></div></div><div><div style="height:254px;background:var(--ink);border-radius:7px 7px 0 0"></div></div><div><div style="height:290px;background:var(--ink);border-radius:7px 7px 0 0"></div></div><div><div style="height:290px;background:var(--ink);border-radius:7px 7px 0 0"></div></div><div><div style="height:290px;background:var(--ink);border-radius:7px 7px 0 0"></div></div><div><div style="height:174px;background:var(--ink);border-radius:7px 7px 0 0"></div></div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:12px;width:100%;margin-top:14px;font-size:11px;font-weight:700;letter-spacing:0.08em;color:var(--muted)">
-        <div>EB-1A</div><div>O-1A</div><div>NIW</div><div>H-1B</div><div>EB-1C</div><div>I-601</div><div>I-601</div><div>U</div><div>VAWA</div><div>T</div>
-      </div>
+  <div class="rowc" style="top:320px;grid-template-columns:300px 1fr 300px">
+    <div class="stat" style="height:380px"><div class="n" style="font-size:96px">90%</div><div class="l">USCIS agreement</div></div>
+    <div class="stat" style="height:380px;padding:40px 36px 30px;justify-content:flex-end">
+      <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:14px;align-items:end;width:100%;height:240px"><div style="height:201px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:230px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:207px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:211px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:207px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:201px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:230px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:230px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:230px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:138px;background:var(--ink);border-radius:8px 8px 0 0"></div></div>
+      <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:14px;width:100%;margin-top:14px;font-size:12px;font-weight:700;letter-spacing:0.06em;color:var(--muted)"><div>EB-1A</div><div>O-1A</div><div>NIW</div><div>H-1B</div><div>EB-1C</div><div>I-601</div><div>I-601</div><div>U</div><div>VAWA</div><div>T</div></div>
     </div>
-    <div class="card" style="height:400px"><div class="cap">Next 30 days</div>
-      <div class="ttl gap-l" style="font-size:22px">Second validation set</div>
-      <div class="ttl gap-m" style="font-size:22px">Zero data retention agreements</div>
-      <div class="ttl gap-m" style="font-size:22px">Company incorporation</div>
-    </div>
+    <div class="stat" style="height:380px"><div class="k">Next 30 days</div><div class="t" style="font-size:24px;line-height:1.6">Second validation set<br>Zero data retention<br>Incorporation</div></div>
   </div>
-  <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
 </section>
 
 <!-- 9 Landscape -->
@@ -235,67 +219,63 @@ td { text-align: center; }
       <tr><td style="padding:22px 24px;text-align:left;font-size:19px;font-weight:600">Parley · CaseBlink</td><td><span class="no">✕</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="no">✕</span></td></tr>
     </table>
   </div>
-  <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
 </section>
 
 <!-- 10 Business model -->
-<section class="slide">
-  <div class="center">
+<section class="slide" style="padding:0">
+  <div class="hd">
     <div class="kicker">Business model</div>
     <h1>One price per firm, set by caseload.</h1>
     <div class="sub">All features and unlimited users on every plan.</div>
   </div>
-  <div class="row" style="top:282px;grid-template-columns:repeat(4,1fr)">
-    <div class="card" style="height:230px"><div class="cap">Under 10 cases</div><div class="big gap-m" style="font-size:58px">$1,500</div><div class="p gap-s">per month</div></div>
-    <div class="card" style="height:230px"><div class="cap">10 to 50 cases</div><div class="big gap-m" style="font-size:58px">$3,500</div><div class="p gap-s">per month</div></div>
-    <div class="card" style="height:230px"><div class="cap">51 to 100 cases</div><div class="big gap-m" style="font-size:58px">$7,500</div><div class="p gap-s">per month</div></div>
-    <div class="card" style="height:230px"><div class="cap">101 to 200 cases</div><div class="big gap-m" style="font-size:58px">$13,000</div><div class="p gap-s">per month</div></div>
+  <div class="rowc" style="top:300px;grid-template-columns:repeat(4,1fr)">
+    <div class="stat" style="height:220px"><div class="k">Under 10 cases</div><div class="t" style="font-size:56px">$1,500</div><div class="l">per month</div></div>
+    <div class="stat" style="height:220px"><div class="k">10 to 50 cases</div><div class="t" style="font-size:56px">$3,500</div><div class="l">per month</div></div>
+    <div class="stat" style="height:220px"><div class="k">51 to 100 cases</div><div class="t" style="font-size:56px">$7,500</div><div class="l">per month</div></div>
+    <div class="stat" style="height:220px"><div class="k">101 to 200 cases</div><div class="t" style="font-size:56px">$13,000</div><div class="l">per month</div></div>
   </div>
-  <div class="row" style="top:532px;grid-template-columns:repeat(3,1fr)">
-    <div class="card" style="height:150px"><div class="big" style="font-size:46px">$65+</div><div class="cap gap-m">Revenue per case</div></div>
-    <div class="card" style="height:150px"><div class="big" style="font-size:46px">$1.37</div><div class="cap gap-m">AI cost per case</div></div>
-    <div class="card" style="height:150px"><div class="big" style="font-size:46px">$29.70</div><div class="cap gap-m">Paralegal hourly wage</div></div>
+  <div class="rowc" style="top:544px;grid-template-columns:repeat(3,1fr)">
+    <div class="stat" style="height:160px"><div class="n" style="font-size:52px">$65+</div><div class="l">Revenue per case</div></div>
+    <div class="stat" style="height:160px"><div class="n" style="font-size:52px">$1.37</div><div class="l">AI cost per case</div></div>
+    <div class="stat" style="height:160px"><div class="n" style="font-size:52px">$29.70</div><div class="l">Paralegal hourly wage</div></div>
   </div>
-  <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
 </section>
 
 <!-- 11 Roadmap -->
-<section class="slide black">
-  <div class="center">
+<section class="slide black" style="padding:0">
+  <div class="hd">
     <div class="kicker">Roadmap</div>
     <h1>From product to revenue in twelve months.</h1>
   </div>
-  <div class="row" style="top:240px;grid-template-columns:repeat(4,1fr)">
-    <div class="card" style="height:440px"><div class="cap">November 2026</div><div class="ttl gap-m" style="font-size:32px">Product built</div><div class="p gap-l" style="line-height:1.9">Case engine<br>Email integration<br>Word and Outlook add-ins<br>USCIS forms</div></div>
-    <div class="card" style="height:440px"><div class="cap">Q1 2027</div><div class="ttl gap-m" style="font-size:32px">3 firms</div><div class="p gap-l" style="line-height:1.9">Security audit<br>Zero data retention<br>Firm onboarding</div></div>
-    <div class="card" style="height:440px"><div class="cap">Q2 2027</div><div class="ttl gap-m" style="font-size:32px">First revenue</div><div class="p gap-l" style="line-height:1.9">Sales Lead hired<br>AILA Annual Conference</div></div>
-    <div class="card" style="height:440px"><div class="cap">H2 2027</div><div class="ttl gap-m" style="font-size:32px">$10k to $20k MRR</div><div class="p gap-l" style="line-height:1.9">5 to 8 firms<br>Second practice area</div></div>
+  <div class="rowc" style="top:360px;grid-template-columns:repeat(4,1fr)">
+    <div class="stat" style="height:300px"><div class="k">November 2026</div><div class="t" style="font-size:30px">Product built</div><div class="l">Live and validated</div></div>
+    <div class="stat" style="height:300px"><div class="k">Q1 2027</div><div class="t" style="font-size:30px">3 firms</div><div class="l">Security audit complete</div></div>
+    <div class="stat" style="height:300px"><div class="k">Q2 2027</div><div class="t" style="font-size:30px">First revenue</div><div class="l">Sales Lead hired</div></div>
+    <div class="stat" style="height:300px"><div class="k">H2 2027</div><div class="t" style="font-size:30px">$10k to $20k MRR</div><div class="l">5 to 8 firms</div></div>
   </div>
-  <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
 </section>
 
 <!-- 12 The round -->
-<section class="slide">
-  <div class="center">
+<section class="slide" style="padding:0">
+  <div class="hd">
     <div class="kicker">The round</div>
     <h1>Raising $250k on a SAFE.</h1>
     <div class="sub">Twelve months of runway to $10k to $20k MRR.</div>
   </div>
-  <div class="row" style="top:278px;grid-template-columns:repeat(7,1fr);gap:14px">
-    <div class="card" style="height:170px;padding:18px"><div class="big" style="font-size:40px">$60k</div><div class="cap gap-m" style="font-size:11px">Sales</div></div>
-    <div class="card" style="height:170px;padding:18px"><div class="big" style="font-size:40px">$36k</div><div class="cap gap-m" style="font-size:11px">Counsel</div></div>
-    <div class="card" style="height:170px;padding:18px"><div class="big" style="font-size:40px">$31k</div><div class="cap gap-m" style="font-size:11px">Security</div></div>
-    <div class="card" style="height:170px;padding:18px"><div class="big" style="font-size:40px">$25k</div><div class="cap gap-m" style="font-size:11px">Marketing</div></div>
-    <div class="card" style="height:170px;padding:18px"><div class="big" style="font-size:40px">$18k</div><div class="cap gap-m" style="font-size:11px">Infrastructure</div></div>
-    <div class="card" style="height:170px;padding:18px"><div class="big" style="font-size:40px">$15k</div><div class="cap gap-m" style="font-size:11px">Operations</div></div>
-    <div class="card" style="height:170px;padding:18px"><div class="big" style="font-size:40px">$65k</div><div class="cap gap-m" style="font-size:11px">Reserve</div></div>
+  <div class="rowc" style="top:300px;grid-template-columns:repeat(7,1fr);gap:16px">
+    <div class="stat" style="height:190px"><div class="n" style="font-size:44px">$60k</div><div class="l" style="font-size:15px">Sales</div></div>
+    <div class="stat" style="height:190px"><div class="n" style="font-size:44px">$36k</div><div class="l" style="font-size:15px">Counsel</div></div>
+    <div class="stat" style="height:190px"><div class="n" style="font-size:44px">$31k</div><div class="l" style="font-size:15px">Security</div></div>
+    <div class="stat" style="height:190px"><div class="n" style="font-size:44px">$25k</div><div class="l" style="font-size:15px">Marketing</div></div>
+    <div class="stat" style="height:190px"><div class="n" style="font-size:44px">$18k</div><div class="l" style="font-size:15px">Infrastructure</div></div>
+    <div class="stat" style="height:190px"><div class="n" style="font-size:44px">$15k</div><div class="l" style="font-size:15px">Operations</div></div>
+    <div class="stat" style="height:190px"><div class="n" style="font-size:44px">$65k</div><div class="l" style="font-size:15px">Reserve</div></div>
   </div>
-  <div class="row" style="top:470px;grid-template-columns:repeat(3,1fr)">
-    <div class="card" style="height:214px"><div class="cap">Month 3</div><div class="ttl gap-m" style="font-size:34px">3 firms</div></div>
-    <div class="card" style="height:214px"><div class="cap">Month 6</div><div class="ttl gap-m" style="font-size:34px">First revenue</div></div>
-    <div class="card" style="height:214px"><div class="cap">Month 12</div><div class="ttl gap-m" style="font-size:34px">$10k to $20k MRR</div></div>
+  <div class="rowc" style="top:514px;grid-template-columns:repeat(3,1fr)">
+    <div class="stat" style="height:190px"><div class="k">Month 3</div><div class="t" style="font-size:40px">3 firms</div></div>
+    <div class="stat" style="height:190px"><div class="k">Month 6</div><div class="t" style="font-size:40px">First revenue</div></div>
+    <div class="stat" style="height:190px"><div class="k">Month 12</div><div class="t" style="font-size:40px">$10k to $20k MRR</div></div>
   </div>
-  <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
 </section>
 
 <!-- 13 Close -->
