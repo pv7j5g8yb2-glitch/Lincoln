@@ -59,8 +59,12 @@ NFX. Crunchbase has the most data but is mostly paid.
 ## Young founder investors (added 2026-11-28)
 * 1517 Fund (Danielle Strachman and Michael Gibson, who started the Thiel Fellowship in 2010; fund founded 2015):
   backs young founders without degrees, often teenagers. Its own site: first cheques from $50k (idea stage) to $1M,
-  average about $400k pre seed. Applications through the form on its site; third party profiles say every submission
-  is read. No age rule found anywhere; check before applying. No legal tech deals found. Best known bets: Luminar, Loom.
+  average about $400k pre seed. Invests from the idea stage to seed in software, hardware with data, deep tech and
+  biotech, "more about the who than the what". How to pitch (its FAQ, seen 2026-11-28): "Write in! We read all
+  submissions", usually a reply within a few days; the site's Get In Touch form or info@1517fund.com. Also Medici
+  Grants ($1k, no equity, 200+ a year). "Our funds are currently closed" on the site sits under the newsletter and
+  reads as a notice to people who want to invest in 1517, not to founders (my reading, not confirmed). No age rule
+  found; check before applying. No legal tech deals found. Portfolio includes Loom and Lambda.
 
 ## Pre-seed programmes with an application form (checked 2026-11-12)
 * Conviction Embed (Sarah Guo's fund; Harvey's first customer intro came through her): about eight
