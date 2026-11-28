@@ -880,3 +880,10 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
   $250k, AI and infrastructure $120k, operations $130k, reserve $300k. $1M ARR is about 25 firms at an average of $3,500
   a month. Milestones: month 3 five paying firms, month 6 SOC 2 Type I and 12 firms, month 12 $1M ARR. Claude's
   estimates, a target not a guarantee. The 1517 deck now asks for $2.5M.
+* Seed deck, final ask (Ismael, 2026-11-28): one deck for every VC and angel, no 1517 version. Raising $4M for 24
+  months, sized so missing $1M ARR by November 2027 cannot be blamed on money: engineering $1.4M (three senior
+  engineers), sales $1.1M (Head of Sales and two account executives), counsel and customer success $550k, SOC 2 Type II
+  and ISO 27001 with penetration tests and insurance $250k, marketing $350k, AI and infrastructure $150k, operations
+  $200k. 24 months because a round closing around February 2027 leaves about nine months to November 2027. Milestones:
+  Q1 2027 five firms and the round closed, Q2 2027 SOC 2 Type I and 12 firms, November 2027 $1M ARR (about 25 firms at
+  $3,500 a month). Deck `docs/pitch/Lincoln-seed-deck.pdf`, source `docs/pitch/src/deck.html`. Claude's estimates.

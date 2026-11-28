@@ -129,7 +129,7 @@ real cases"). Screenshots show the whole interface or exactly one component capt
 through the middle; phones in a real iPhone frame (Dynamic Island, status bar with 9:41, signal, Wi-Fi and battery,
 home indicator). Slide headlines are the plain section name ("Pricing", "Traction", "Competition"), never a crafted
 sentence like "One price per firm, set by caseload" (Ismael, 2026-11-28); no italic lines or small labels around them.
-Source: `docs/pitch/src/1517-deck.html`.
+Source: `docs/pitch/src/deck.html`.
 
 **Landing page (Ismael, 2026-11-16).** It must be creative with a real wow factor, more expressive than the minimal app,
 and must not look like the typical AI built site (animated product demo hero, gradients, glass cards, bento grids); he
