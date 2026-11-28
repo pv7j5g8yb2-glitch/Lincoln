@@ -868,7 +868,7 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
   on ten real USCIS appeal decisions with the caveat that the fixes came from the same ten; no revenue stated plainly.
   Form answers for 1517 were drafted in chat and edited by Ismael.
 * 1517 deck, final structure (2026-11-28, from a Cherub deck breakdown and a VC roast of a pre-seed deck): founder first
-  with proof numbers (237 case types, 13 integrations, 90% against USCIS, 14 practice areas; age left out of the deck
+  with proof numbers (237 case types, 13 integrations, 90% against USCIS, 14 immigration case categories; age left out of the deck
   so it is judged on the work), problem, why now, market, solution, how it works, traction with a "next 30 days" card to
   keep current, a yes or no competition table, pricing with unit economics ($65+ revenue a case against $1.37 of AI),
   roadmap, the round, close. Next 30 days on the traction slide (Claude's proposal, Ismael to confirm): a fresh set of
