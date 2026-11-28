@@ -873,3 +873,10 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
   keep current, a yes or no competition table, pricing with unit economics ($65+ revenue a case against $1.37 of AI),
   roadmap, the round, close. Next 30 days on the traction slide (Claude's proposal, Ismael to confirm): a fresh set of
   real USCIS decisions graded, zero retention agreements, company formed and contracts drafted.
+* Raise and target changed (Ismael, 2026-11-28): aim for $1M ARR within twelve months (VCs want millions in revenue
+  within two years for a high multiple); the $250k plan is dropped. Raising $2.5M for 18 months: engineering $650k (two
+  senior engineers at about $200k), sales $550k (Head of Sales and an account executive), immigration counsel and
+  customer success $350k, SOC 2 Type II and ISO 27001 with penetration tests and insurance $150k, marketing and events
+  $250k, AI and infrastructure $120k, operations $130k, reserve $300k. $1M ARR is about 25 firms at an average of $3,500
+  a month. Milestones: month 3 five paying firms, month 6 SOC 2 Type I and 12 firms, month 12 $1M ARR. Claude's
+  estimates, a target not a guarantee. The 1517 deck now asks for $2.5M.
