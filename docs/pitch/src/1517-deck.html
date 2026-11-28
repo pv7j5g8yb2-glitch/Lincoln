@@ -14,7 +14,7 @@ body { font-family: "Inter", sans-serif; color: #0a0a0a; -webkit-font-smoothing:
 .slide:last-child { page-break-after: auto; }
 .serif { font-family: "Literata", serif; }
 .label { font-size: 15px; color: #8a8a8a; letter-spacing: 0.01em; margin-bottom: 22px; }
-h1 { font-family: "Literata", serif; font-weight: 300; font-size: 58px; line-height: 1.08; letter-spacing: -0.025em; max-width: 1080px; }
+h1 { font-family: "Literata", serif; font-weight: 300; font-size: 52px; line-height: 1.08; letter-spacing: -0.025em; max-width: 1080px; }
 h2 { font-family: "Literata", serif; font-weight: 400; font-size: 25px; letter-spacing: -0.01em; line-height: 1.25; }
 p, li { font-size: 19px; line-height: 1.6; color: #3a3a3a; }
 .muted { color: #8a8a8a; }
@@ -44,152 +44,122 @@ ul.plain li b { color: #0a0a0a; font-weight: 500; }
 </style>
 </head>
 <body>
-
-<!-- 1. Cover -->
 <section class="slide dark" style="display:flex;flex-direction:column;justify-content:center;padding-top:0">
-  <img src="img/mark.png" style="width:72px;height:72px;margin-bottom:56px">
-  <div class="serif" style="font-size:112px;font-weight:300;letter-spacing:-0.035em;line-height:1">Lincoln</div>
-  <div class="serif" style="font-size:38px;font-weight:300;letter-spacing:-0.015em;margin-top:28px;color:#fff">Immigration cases, worked before anyone asks.</div>
-  <div style="position:absolute;left:112px;bottom:64px;font-size:15px;color:#7a7a7a">Pre-seed · Prepared for 1517 Fund · November 2026 · Confidential</div>
+  <img src="img/mark.png" style="width:64px;height:64px;margin-bottom:48px">
+  <div class="serif" style="font-size:104px;font-weight:300;letter-spacing:-0.035em;line-height:1">Lincoln</div>
+  <div style="font-size:24px;margin-top:26px;color:#9a9a9a">AI that works immigration cases for US law firms</div>
+  <div style="position:absolute;left:112px;bottom:64px;font-size:15px;color:#6a6a6a">Pre-seed · November 2026</div>
 </section>
 
-<!-- 2. Founder -->
 <section class="slide">
-  <div class="label">Founder</div>
-  <h1>Ismael Kirmi. 15, in school in Dublin. Built all of Lincoln himself.</h1>
-  <div class="cols c3" style="margin-top:72px">
-    <div class="col"><div class="num">13</div><h2>A game the whole school played</h2><p>Built a multiplayer mobile game to play with friends. It spread until nearly every student at his school played it daily.</p></div>
-    <div class="col"><div class="num">14</div><h2>Hopkins</h2><p>An AI content app for estate agents in Ireland and the UK, grown through its own Instagram audience. Dropped it for a bigger problem.</p></div>
-    <div class="col"><div class="num">15</div><h2>Lincoln</h2><p>The case engine, Gmail and Outlook, Word and Outlook add-ins, encrypted storage and USCIS form filling, designed and built alone.</p></div>
+  <h1>Founder</h1>
+  <div style="display:flex;gap:96px;margin-top:72px">
+    <div style="width:420px">
+      <div class="serif" style="font-size:40px;font-weight:300;letter-spacing:-0.02em">Ismael Kirmi</div>
+      <p style="margin-top:10px">15, Dublin</p>
+    </div>
+    <ul class="plain" style="flex:1">
+      <li><b>Lincoln</b>, built alone</li>
+      <li><b>Hopkins</b>, AI content app for estate agents, age 14</li>
+      <li><b>Multiplayer game</b> played across his school, age 13</li>
+    </ul>
   </div>
   <div class="foot"><span class="w">Lincoln</span><span>2</span></div>
 </section>
 
-<!-- 3. Problem -->
 <section class="slide">
-  <div class="label">The problem</div>
-  <h1>Every immigration case is the same three jobs, done by hand.</h1>
-  <p style="max-width:960px;margin-top:28px">Read every document and check every name and date against every other. Chase the client for what is missing. Draft letters and filings that cite the evidence page by page. A missed date can cost a client their status.</p>
-  <div class="cols c3" style="margin-top:56px">
-    <div class="col"><div class="num">11.3M</div><p>cases pending at USCIS in early 2025, the most in at least a decade.</p></div>
-    <div class="col"><div class="num">16,000+</div><p>attorneys in AILA, the US immigration bar, each with paralegals and staff.</p></div>
-    <div class="col"><div class="num">$29.70</div><p>an hour, the median paralegal wage in legal services. Attorney time costs more.</p></div>
+  <h1>Problem</h1>
+  <p style="margin-top:20px">Immigration cases are read, chased and drafted by hand.</p>
+  <div class="cols c3" style="margin-top:96px">
+    <div class="col"><div class="num">11.3M</div><p>cases pending at USCIS</p></div>
+    <div class="col"><div class="num">16,000+</div><p>US immigration attorneys</p></div>
+    <div class="col"><div class="num">$29.70</div><p>an hour, median paralegal wage</p></div>
   </div>
-  <div class="src">Sources: USCIS quarterly data as reported by the American Immigration Council (Q2 FY2025); AILA 2026 media kit; US Bureau of Labor Statistics, paralegals in legal services.</div>
+  <div class="src">USCIS data via the American Immigration Council (Q2 FY2025); AILA 2026 media kit; US Bureau of Labor Statistics.</div>
   <div class="foot"><span class="w">Lincoln</span><span>3</span></div>
 </section>
 
-<!-- 4. Today -->
 <section class="slide">
-  <div class="label">What firms use today</div>
-  <h1>Today's software waits to be asked.</h1>
-  <div class="cols c2" style="margin-top:72px">
-    <div class="col step"><h2>Case management</h2><p style="margin-top:10px">Docketwise, INSZoom, LollyLaw. They store the file and fill forms. A person still reads every page, chases the client and drafts the letters.</p></div>
-    <div class="col step"><h2>AI assistants</h2><p style="margin-top:10px">Harvey, Legora, ChatGPT. They answer when prompted. A person still has to notice the work, upload the file and ask the right question.</p></div>
+  <h1>Product</h1>
+  <div class="cols c4" style="margin-top:96px;gap:40px">
+    <div class="step"><div class="n">01</div><h2>Reads the firm's email</h2></div>
+    <div class="step"><div class="n">02</div><h2>Opens and reads the case</h2></div>
+    <div class="step"><div class="n">03</div><h2>Drafts letters, emails and USCIS forms</h2></div>
+    <div class="step"><div class="n">04</div><h2>Attorney approves</h2></div>
   </div>
-  <div class="serif" style="font-size:40px;font-weight:300;letter-spacing:-0.02em;margin-top:84px">Lincoln starts when the email arrives.</div>
   <div class="foot"><span class="w">Lincoln</span><span>4</span></div>
 </section>
 
-<!-- 5. How it works -->
+<section class="slide" style="padding:0;background:#f4f4f4">
+  <img src="img/review.png" style="position:absolute;left:193px;top:64px;width:1054px;border:1px solid #e3e3e3;box-shadow:0 30px 80px rgba(0,0,0,0.10)">
+  <div class="note" style="position:absolute;left:112px;bottom:40px">Sample workspace, made up client</div>
+</section>
+
+<section class="slide" style="padding:0;background:#f4f4f4">
+  <img src="img/case.png" style="position:absolute;left:112px;top:72px;width:980px;border:1px solid #e3e3e3;box-shadow:0 30px 80px rgba(0,0,0,0.10)">
+  <img src="img/phone-case.png" style="position:absolute;left:1060px;top:130px;width:268px;border-radius:30px;border:7px solid #111;box-shadow:0 30px 80px rgba(0,0,0,0.18)">
+  <div class="note" style="position:absolute;left:112px;bottom:40px">Sample workspace, made up client</div>
+</section>
+
 <section class="slide">
-  <div class="label">How it works</div>
-  <h1>From the inbox to a decision, without anyone starting it.</h1>
-  <div class="cols c4" style="margin-top:80px;gap:40px">
-    <div class="step"><div class="n">01</div><h2>Reads the mail</h2><p style="margin-top:10px;font-size:17.5px">Every email and intake form is matched to the right client and case, or opens a new one.</p></div>
-    <div class="step"><div class="n">02</div><h2>Reads the file</h2><p style="margin-top:10px;font-size:17.5px">Every page, scans and phone photos included. Each fact is tied to the page it came from.</p></div>
-    <div class="step"><div class="n">03</div><h2>Does the work</h2><p style="margin-top:10px;font-size:17.5px">Deadlines, missing items, client emails, letters, evidence maps and USCIS forms, drafted.</p></div>
-    <div class="step"><div class="n">04</div><h2>Asks for a decision</h2><p style="margin-top:10px;font-size:17.5px">The attorney approves, edits or returns it. Nothing leaves the firm without approval.</p></div>
+  <h1>Traction</h1>
+  <div class="cols c2" style="margin-top:80px;gap:96px">
+    <div><div class="num">90%</div><p>of USCIS's own findings on 10 real appeal decisions</p></div>
+    <div><div class="num">0</div><p>serious errors across the 10</p></div>
   </div>
-  <div class="foot"><span class="w">Lincoln</span><span>5</span></div>
-</section>
-
-<!-- 6. Product: review -->
-<section class="slide">
-  <div class="label">The product</div>
-  <h1 style="max-width:420px;font-size:50px">The attorney reads it once and sends it.</h1>
-  <p style="max-width:400px;margin-top:24px">Lincoln read the client's file, found three gaps and wrote to her about them, in the attorney's voice.</p>
-  <p class="note" style="position:absolute;left:112px;bottom:96px;max-width:360px">Sample workspace. Every client and case shown is made up.</p>
-  <img class="shot" src="img/review.png" style="left:560px;top:112px;width:768px">
-  <div class="foot"><span class="w">Lincoln</span><span>6</span></div>
-</section>
-
-<!-- 7. Product: case + phone -->
-<section class="slide">
-  <div class="label">The product</div>
-  <h1 style="max-width:420px;font-size:50px">Every case, already worked.</h1>
-  <p style="max-width:400px;margin-top:24px">Open issues with the page they came from, deadlines, and what is waiting for a decision. On a computer or a phone.</p>
-  <p class="note" style="position:absolute;left:112px;bottom:96px;max-width:360px">Sample workspace. Every client and case shown is made up.</p>
-  <img class="shot" src="img/case.png" style="left:560px;top:112px;width:700px">
-  <img class="shot" src="img/phone-case.png" style="left:1118px;top:200px;width:210px;border-radius:26px;border:6px solid #111">
+  <p class="muted" style="margin-top:72px;font-size:16px">No revenue yet. Tested on public documents and made up cases.</p>
   <div class="foot"><span class="w">Lincoln</span><span>7</span></div>
 </section>
 
-<!-- 8. Where it stands -->
 <section class="slide">
-  <div class="label">Where it stands</div>
-  <h1>Tested against USCIS's own decisions.</h1>
-  <div class="cols c2" style="margin-top:56px;gap:96px">
-    <div>
-      <div class="num">90%</div>
-      <p>of the findings USCIS itself made, on ten real appeal decisions across ten case types (40.5 of 45 points), with no serious error in any of them.</p>
-      <p class="muted" style="font-size:15px;margin-top:18px">Ten cases, and the fixes that raised the score from 77% were written from them. A fresh set of real cases is next.</p>
-    </div>
-    <ul class="plain">
-      <li><b>Built:</b> mail from Gmail and Outlook, cases opened and matched by themselves</li>
-      <li><b>Built:</b> files of any length read, issues and deadlines found, page by page</li>
-      <li><b>Built:</b> drafts with citations, USCIS forms filled, Word and Outlook add-ins</li>
-      <li><b>Built:</b> each firm's files encrypted with its own key</li>
-      <li><b>Not yet:</b> revenue. Every test so far used public documents and made up cases.</li>
-    </ul>
-  </div>
+  <h1>Competition</h1>
+  <table style="margin-top:64px">
+    <tr><td style="width:420px;color:#0a0a0a">Harvey, Legora</td><td>General legal AI, works when prompted</td></tr>
+    <tr><td style="color:#0a0a0a">Docketwise, INSZoom, LollyLaw</td><td>Immigration case management and forms</td></tr>
+    <tr><td style="color:#0a0a0a">Parley, Visalaw.ai, CaseBlink</td><td>Drafting help for single steps</td></tr>
+    <tr><td style="color:#0a0a0a;font-weight:500">Lincoln</td><td style="color:#0a0a0a;font-weight:500">Works every case type from the firm's inbox</td></tr>
+  </table>
   <div class="foot"><span class="w">Lincoln</span><span>8</span></div>
 </section>
 
-<!-- 9. Business model -->
 <section class="slide">
-  <div class="label">Business model</div>
-  <h1>Priced per firm by caseload, against the hours it saves.</h1>
-  <div class="cols c4" style="margin-top:72px;gap:40px">
-    <div class="step"><div class="num" style="font-size:52px">$1,500</div><p>a month, under 10 new cases a month</p></div>
-    <div class="step"><div class="num" style="font-size:52px">$3,500</div><p>a month, 10 to 50</p></div>
-    <div class="step"><div class="num" style="font-size:52px">$7,500</div><p>a month, 51 to 100</p></div>
-    <div class="step"><div class="num" style="font-size:52px">$13,000</div><p>a month, 101 to 200</p></div>
+  <h1>Pricing</h1>
+  <p style="margin-top:20px">Per firm, by new cases a month. Unlimited users.</p>
+  <div class="cols c4" style="margin-top:88px;gap:40px">
+    <div class="step"><div class="num" style="font-size:52px">$1,500</div><p>under 10</p></div>
+    <div class="step"><div class="num" style="font-size:52px">$3,500</div><p>10 to 50</p></div>
+    <div class="step"><div class="num" style="font-size:52px">$7,500</div><p>51 to 100</p></div>
+    <div class="step"><div class="num" style="font-size:52px">$13,000</div><p>101 to 200</p></div>
   </div>
-  <p style="margin-top:56px;max-width:1100px">Unlimited users. The AI cost of a long case in testing was $1.37. Prices are a starting guide, to be tested with the first firms. Immigration is the first market; the same engine fits any practice that runs on documents, clients and government deadlines.</p>
+  <p class="muted" style="margin-top:64px;font-size:16px">Monthly. AI cost of a long case in testing: $1.37.</p>
   <div class="foot"><span class="w">Lincoln</span><span>9</span></div>
 </section>
 
-<!-- 10. The round -->
 <section class="slide">
-  <div class="label">The round</div>
-  <h1>Raising $250k to reach $10k to $20k a month.</h1>
-  <div class="cols c2" style="margin-top:48px;gap:96px;grid-template-columns:1.15fr 1fr">
+  <h1>Raising $250k</h1>
+  <div class="cols c2" style="margin-top:56px;gap:112px">
     <table>
-      <tr><td>A part time seller to bring in firms</td><td class="r">$60k</td></tr>
-      <tr><td>A part time immigration attorney reviewing Lincoln's work</td><td class="r">$36k</td></tr>
-      <tr><td>Penetration test, insurance, customer and data contracts</td><td class="r">$31k</td></tr>
-      <tr><td>AILA conference and content, so firms find Lincoln</td><td class="r">$25k</td></tr>
-      <tr><td>AI models and hosting</td><td class="r">$18k</td></tr>
-      <tr><td>Travel to meet firms, company and accounting</td><td class="r">$15k</td></tr>
-      <tr><td>Buffer, about three months</td><td class="r">$65k</td></tr>
-      <tr class="total"><td>Twelve months, plus buffer</td><td class="r">$250k</td></tr>
+      <tr><td>Part time seller</td><td class="r">$60k</td></tr>
+      <tr><td>Part time immigration attorney</td><td class="r">$36k</td></tr>
+      <tr><td>Security audit, insurance, contracts</td><td class="r">$31k</td></tr>
+      <tr><td>AILA conference, content</td><td class="r">$25k</td></tr>
+      <tr><td>AI and hosting</td><td class="r">$18k</td></tr>
+      <tr><td>Travel, company, accounting</td><td class="r">$15k</td></tr>
+      <tr><td>Buffer</td><td class="r">$65k</td></tr>
     </table>
     <div>
-      <div class="ms"><div class="t">Months 1 to 3</div><p>Company formed, zero retention agreements with the AI providers, penetration test passed, first three firms on real cases.</p></div>
-      <div class="ms"><div class="t">Months 4 to 6</div><p>Seller in place. First paying firms.</p></div>
-      <div class="ms"><div class="t">Months 7 to 12</div><p>Five to eight paying firms: $10k to $20k a month.</p></div>
-      <p class="muted" style="font-size:14.5px">Estimates. $15k a month is, for example, three firms at $1,500 and three at $3,500.</p>
+      <div class="ms"><div class="t">Month 3</div><p>First 3 firms on real cases</p></div>
+      <div class="ms"><div class="t">Month 6</div><p>First paying firms</p></div>
+      <div class="ms"><div class="t">Month 12</div><p>5 to 8 firms, $10k to $20k MRR</p></div>
     </div>
   </div>
   <div class="foot"><span class="w">Lincoln</span><span>10</span></div>
 </section>
 
-<!-- 11. Close -->
 <section class="slide dark" style="display:flex;flex-direction:column;justify-content:center;padding-top:0">
-  <img src="img/mark.png" style="width:64px;height:64px;margin-bottom:48px">
-  <div class="serif" style="font-size:56px;font-weight:300;letter-spacing:-0.025em;line-height:1.15;color:#fff">Every case worked.<br>Every decision the attorney's.</div>
-  <div style="position:absolute;left:112px;bottom:64px;font-size:16px;color:#8a8a8a">Ismael Kirmi · uselincoln.com</div>
+  <img src="img/mark.png" style="width:64px;height:64px;margin-bottom:40px">
+  <div class="serif" style="font-size:44px;font-weight:300;letter-spacing:-0.02em;color:#fff">uselincoln.com</div>
+  <div style="font-size:18px;margin-top:14px;color:#8a8a8a">Ismael Kirmi</div>
 </section>
 
 </body>

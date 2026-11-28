@@ -859,7 +859,9 @@ The L and the Lincoln wordmark are set in Literata 500, the landing page's serif
   link (intake, invite, password reset) uses one address that can never be empty, headers checked, 110 pages crawled
   with no broken links, in-memory stores bounded.
 * 1517 Fund pre-seed deck (2026-11-28): `docs/pitch/Lincoln-pre-seed-1517.pdf`, source `docs/pitch/src/1517-deck.html`
-  (render with Playwright to PDF). 11 slides in the new look, founder slide second. Ask: $250k for twelve months plus a
+  (render with Playwright to PDF). 11 slides in the new look, founder slide second. Rebuilt the same day after
+  Ismael's rule: decks use plain section titles (Founder, Problem, Product, Traction), a few words, screenshots and
+  numbers; no taglines, no dramatic one liners, nothing that reads AI written. Ask: $250k for twelve months plus a
   three month buffer, to reach $10k to $20k MRR (five to eight firms at the quote guide): part time seller $60k, part
   time immigration attorney reviewer $36k, penetration test, insurance and contracts $31k, AILA and content $25k, models
   and hosting $18k, travel, company and accounting $15k, buffer $65k. Claude's estimates, not quotes. Proof shown: 90%
