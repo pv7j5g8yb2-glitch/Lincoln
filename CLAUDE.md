@@ -120,7 +120,10 @@ Extremely clean and visually appealing: no subheadline under every heading, noth
 few words, and a real visual on every slide (product screenshots, big numbers, a chart of real results, a positioning
 map, price cards, a funds bar and timeline). Never taglines, dramatic one liners or "line, comma, line" punchlines;
 never captions or legends under images or text, never "sample workspace" notes. Too much text and too bland are both
-rejected: find the balance. Source: `docs/pitch/src/1517-deck.html`.
+rejected: find the balance. The model Ismael chose (2026-11-28): Cherub's $4.5M pre-seed deck, every slide a designed
+composition: a small section label, a serif headline with an italic line under it, colour blocks and cards with real
+product UI inside, a "what they built, what is left, the gap" table, a roadmap, a team slide with proof, a closing slide
+with the product. Source: `docs/pitch/src/1517-deck.html`.
 
 **Landing page (Ismael, 2026-11-16).** It must be creative with a real wow factor, more expressive than the minimal app,
 and must not look like the typical AI built site (animated product demo hero, gradients, glass cards, bento grids); he
