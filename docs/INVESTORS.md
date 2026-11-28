@@ -1,7 +1,8 @@
 # Investors for legal tech and legal AI (researched 2026-11-12)
 
-Reference list. Rule since 2026-11-13 (CLAUDE.md): applying before revenue is allowed, only through each
-firm's own application form, never cold outreach, always through the parent owned company. Deal details come from press releases and aggregators (Sacra, Seedtable,
+Reference list. Rules (CLAUDE.md): applying before revenue is allowed (2026-11-13), and investors may be messaged
+directly by LinkedIn or email as well as through their forms (2026-11-16; the no cold outreach rule covers buyers, not
+investors), always through the parent owned company. Deal details come from press releases and aggregators (Sacra, Seedtable,
 CB Insights, BetaKit, SiliconANGLE, Legal.io); check a firm's own site before contacting it.
 
 ## 1. Legal tech specialists
@@ -59,10 +60,10 @@ NFX. Crunchbase has the most data but is mostly paid.
 * Conviction Embed (Sarah Guo's fund; Harvey's first customer intro came through her): about eight
   weeks, roughly twice a year, solo founders allowed; $150k or $250k on an uncapped MFN SAFE plus
   credits (sources disagree); the 6th cohort closed 23 Feb 2026, next window not found. Takes equity,
-  so the "no VC before revenue" rule applies.
+  which is allowed before revenue since 2026-11-13.
 * YC ($500k) and South Park Commons ($400k plus $600k) as above.
 
-## Application status as of 13 November 2026 (checked, mostly third party sources)
+## Application status as of 13 November 2026 (checked, mostly third party sources; recheck before acting, dates move)
 * YC: W27 closed 2 Nov 2026. No official later dates found; guesses Spring 2027 around Jan to Feb,
   Summer 2027 around May. Early Decision lets applicants apply now for a future batch. Paul Graham
   (via Fortune) said YC typically does not consider under 18s who cannot contract.
