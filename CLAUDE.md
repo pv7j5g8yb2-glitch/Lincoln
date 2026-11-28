@@ -116,9 +116,11 @@ ask how the best companies would do it, Claude, ChatGPT, Harvey and Legora above
 match that bar. Lincoln is always "Lincoln", never "it".
 Extremely clean and visually appealing: no subheadline under every heading, nothing that is not needed.
 
-**Pitch decks (Ismael, 2026-11-28).** Like real seed decks (Harvey, Legora): plain section titles (Founder, Problem,
-Product, Traction, Competition, Pricing, the raise), a few words per slide, screenshots and numbers. Never taglines,
-dramatic one liners, or "line, comma, line" punchlines; anything that reads AI written is rejected.
+**Pitch decks (Ismael, 2026-11-28).** Like real seed decks (Harvey, Legora): one plain factual headline per slide,
+few words, and a real visual on every slide (product screenshots, big numbers, a chart of real results, a positioning
+map, price cards, a funds bar and timeline). Never taglines, dramatic one liners or "line, comma, line" punchlines;
+never captions or legends under images or text, never "sample workspace" notes. Too much text and too bland are both
+rejected: find the balance. Source: `docs/pitch/src/1517-deck.html`.
 
 **Landing page (Ismael, 2026-11-16).** It must be creative with a real wow factor, more expressive than the minimal app,
 and must not look like the typical AI built site (animated product demo hero, gradients, glass cards, bento grids); he
