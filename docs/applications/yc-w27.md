@@ -68,7 +68,7 @@ One monthly price per firm, set by caseload, with unlimited users: $1,500 a mont
 
 **Have you taken any investment yet?** No
 
-**Are you currently fundraising?** Yes
+**Are you currently fundraising?** No
 
 ## Curious
 **What convinced you to apply to Y Combinator?**
