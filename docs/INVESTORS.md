@@ -56,6 +56,12 @@ Delta Partners, NDRC (Dublin accelerator).
 No single list holds every VC. Free databases that filter by sector and stage: OpenVC and Signal by
 NFX. Crunchbase has the most data but is mostly paid.
 
+## Young founder investors (added 2026-11-28)
+* 1517 Fund (Danielle Strachman and Michael Gibson, who started the Thiel Fellowship in 2010; fund founded 2015):
+  backs young founders without degrees, often teenagers. Its own site: first cheques from $50k (idea stage) to $1M,
+  average about $400k pre seed. Applications through the form on its site; third party profiles say every submission
+  is read. No age rule found anywhere; check before applying. No legal tech deals found. Best known bets: Luminar, Loom.
+
 ## Pre-seed programmes with an application form (checked 2026-11-12)
 * Conviction Embed (Sarah Guo's fund; Harvey's first customer intro came through her): about eight
   weeks, roughly twice a year, solo founders allowed; $150k or $250k on an uncapped MFN SAFE plus
