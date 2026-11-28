@@ -1,0 +1,230 @@
+              U.S. Citizenship                                       Non-Precedent Decision of the
+              and Immigration                                        Administrative Appeals Office
+              Services
+
+In Re: 34836224                                                      Date: DEC. 12, 2024
+
+Appeal of Texas Service Center Decision
+
+Form 1-140, Immigrant Petition for Alien Workers (National Interest Waiver)
+
+
+
+The Petitioner, a senior researcher in the field of artificial intelligence (Al), seeks employment-based
+second preference (EB-2) immigrant classification as a member of the professions holding an
+advanced degree, as well as a national interest waiver of the job offer requirement attached to this
+classification.   See Immigration and Nationality Act (the Act) section 203(b)(2), 8 U.S.C.
+§ 1153(b)(2).
+
+The Director of the Texas Service Center denied the petition, concluding that the record established
+that the Petitioner qualified for classification, but that he had not established that a waiver of the
+required job offer, and thus of the labor certification, would be in the national interest. The matter is
+now before us on appeal pursuant to 8 C.F.R. § 103.3.
+
+The Petitioner bears the burden of proof to demonstrate eligibility by a preponderance of the evidence.
+Matter ofChawathe, 25 l&N Dec. 369, 375-76 (AAO 2010). We review the questions in this matter
+de novo. Matter of Christo 's, Inc., 26 I&N Dec. 537, 537 n.2 (AAO 2015). Upon de novo review,
+we will dismiss the appeal.
+
+                                                      I. LAW
+
+To qualify for the underlying EB-2 visa classification, a petitioner must establish they are an advanced
+degree professional or an individual of exceptional ability in the sciences, arts, or business. Section
+203(b)(2)(A) of the Act.
+
+An advanced degree is any U.S . academic or professional degree or a foreign equivalent degree above
+that of a bachelor's degree. A U.S. bachelor's degree or foreign equivalent degree followed by five
+years of progressive experience in the specialty is the equivalent of a master's degree.
+
+Profession is defined as one of the occupations listed in section 101(a)(32) of the Act, as well as any
+occupation for which a U.S. baccalaureate degree or its foreign equivalent is the minimum requirement
+for entry into the occupation. 1 8 C.F.R. § 204.5(k)(2).
+
+1
+  Profession shall include but not be limited to architects, engineers, lawyers, physicians, surgeons, and teachers in
+elementary or secondary schools, colleges, academics, or seminaries. Section 10l(a)(32) of the Act.
+If a petitioner establishes eligibility for the underlying EB-2 classification, they must then demonstrate
+that they merit a discretionary waiver of the job offer requirement "in the national interest."
+Section 203(b )(2)(B)(i) of the Act. While neither the statute nor the pertinent regulations define the
+term "national interest," Matter of Dhanasar, 26 I&N Dec. 884, 889 (AAO 2016), provides the
+framework for adjudicating national interest waiver petitions. Dhanasar states that U.S. Citizenship
+and Immigration Services (USCIS) may, as matter of discretion, 2 grant a national interest waiver if
+the petitioner demonstrates that:
+
+      •   The proposed endeavor has both substantial merit and national importance;
+      •   The individual is well-positioned to advance their proposed endeavor; and
+      •   On balance, waiving the job offer requirement would benefit the United States.
+
+Id.
+
+                                                   II. ANALYSIS
+
+In denying the petition, the Director concluded that while the Petitioner qualifies as a member of the
+professions holding an advanced degree, he had not established that a waiver of the requirement of a
+job offer, and thus a labor certification, would be in the national interest. Specifically, the Director
+determined that the Petitioner's endeavor did not meet the Dhanasar framework's requirement for
+national importance, nor did the Petitioner establish that, on balance, waiving the job offer requirement
+would benefit the United States. 3 Based on our de novo review of the record, we agree that the
+Petitioner has not sufficiently demonstrated the national importance of his proposed endeavor under
+the first prong of the Dhanasar framework.
+
+The first prong, substantial merit and national importance, focuses on the specific endeavor that the
+individual proposes to undertake. The endeavor's merit may be demonstrated in a range of areas such
+as business, entrepreneurialism, science, technology, culture, health, or education. In determining
+whether the proposed endeavor has national importance, we consider its potential prospective impact.
+Id. at 889.
+
+On the Form 1-140, Immigrant Petition for Alien Workers, the Petitioner listed his occupation in which
+he is seeking work as "artificial intelligence scientist," and listed his current job title as a "senior
+researcher." He described his job as follows: "I develop medical AI approaches to model hidden
+early-stage disease risks from large-scale biomedical data using deep learning, CNN, LSTM,
+Transformer, RFHL and transfer learning methodologies. I serve various companies and collaborate
+with hospitals to provide medical analytics and risk assessment." In his Proposed Endeavor & Future
+Plans in the Field, the Petitioner stated as follows:
+
+                  "My proposed endeavor is to apply advanced artificial intelligence
+                  techniques, cloud computing architectures, early disease risk
+2
+  See Flores v. Garland, 72 F.4th 85, 88 (5th Cir. 2023) (joining the Ninth, Eleventh, and D.C. Circuit Courts (and Third
+in an unpublished decision) in concluding that USCIS' decision to grant or deny a national interest waiver is discretionary
+in nature).
+3
+  The Director also found that the Petitioner's proposed endeavor had substantial merit.
+
+
+                                                            2
+               assessment techniques, biomedical big data, and personalized bio-signal
+               modeling to the creation of state-of-the-art disease risk prediction tools
+               for disease detection and classification. To progress this endeavor, I
+               will utilize my extensive experience with efficient, accurate analysis and
+               evaluation ofnationally representative health data ofmillions of patients
+               for rheumatoid arthritis, type 2 diabetes, and chronic kidney disease,
+               among other types of diseases. My work will continue to be circulated
+               in the field through my peer-reviewed publications in journals and
+               conference proceedings.
+
+               I intend to pursue a position as a Senior Researcher in the United States.
+               I am most interested in pursuing this position with
+                                     My planned research topics include applying AI
+               with natural language communication and analysis of medical records
+               for early disease risk assessment, conducting brain wave analyses, and
+               analyzing gene sequence function."
+
+The Petitioner submitted peer reviewed journal articles, citing articles, letters of recommendation, his
+resume, academic records, google scholar profile and publication information, industry reports and
+articles.
+
+In determining national importance, "we look for broader implications" of the proposed endeavor and
+that "[a]n undertaking may have national importance for example, because it has national or even
+global implications within a particular field." See Dhanasar, 26 I&N Dec. at 889. In Dhanasar, we
+determined that the petitioner's teaching activities, even in a field with substantial merit in relation to
+U.S. educational interests, did not rise to the level of having national importance because they would
+not impact his field more broadly. Id. at 893.
+
+The Petitioner generally argues on appeal that he has already submitted sufficient evidence of his
+eligibility for the national interest waiver, including the national importance of his proposed endeavor.
+In support of these arguments, the Petitioner re-states the description of his endeavor and excerpts his
+previous statements in the record. For example, the Petitioner points to the academic article on the
+health effects of chronic hepatitis B published in Digestive Diseases and Science, an article on
+eliminating hepatitis B by the Centers for Disease Control and Prevention, and a commentary article
+on COVID-19's impact on the United States as evidence of the national importance of his proposed
+endeavor, and which he used to "contextualize the value of [his] proposed endeavor." He contends
+that the Director incorrectly evaluated the Petitioner's proposed endeavor and failed to consider all the
+relevant evidence.
+
+Next, the Petitioner further argues that in analyzing the first prong of the Dhanasar framework, the
+Director improperly applied "record of success" as a criterion, although this criterion is only applicable
+to the Petitioner's ability to advance the proposed endeavor under the second prong of Dhanasar.
+Specifically, the Director noted as follows: "The self-petitioner provided citations and contend that
+the citations are "notable." However, there is no evidence in the record that distinguishes the citation
+marked "notable" from other citations in the record. Without evidence to explain or clarify, such as a
+letter from the individuals that cited the self-petitioner, the reason the citations are notable, it cannot
+
+
+                                                    3
+prove that the self-petitioner's citation record is indicative of a record of success or otherwise
+demonstrate his proposed endeavor is of national importance." However, although inartful, the
+Director correctly concludes that the Petitioner did not demonstrate that his proposed endeavor is of
+national importance under prong one. Thus, we determine that this anomalous reference to "record of
+success" in the prong one discussion, is harmless error rather than an incorrect application of law or
+policy.
+
+We recognize the emerging importance of artificial intelligence research and note that the Director
+found the Petitioner's endeavor to have substantial merit. But the relevant question is not the
+importance of the field, industry, or profession in which the individual will work; instead, we focus
+on the "the specific endeavor that the foreign national proposes to undertake." Dhanasar, at 889. The
+term "endeavor" is more specific than the general occupation; a petitioner should offer details not only
+as to what the occupation normally involves, but what types of work the person proposes to undertake
+specifically within that occupation. See generally 6 USCIS Policy Manual F.5(D)(l),
+https://www.uscis.gov/policy-manual. Simply being employed in an occupation does not constitute
+an endeavor for the purposes of these proceedings. We note that the Petitioner is already employed
+by in     in Taiwan, and intends to work f o r in the United States. To the extent his current
+doctoral research and career goals constitute an endeavor, the record does not contain sufficient
+evidence describing the Petitioner's endeavor and its future potential impact. For example, two
+recommendation letters describe the Petitioner's past contributions to artificial intelligence research
+in the medical field. However, they do not adequately describe the endeavor itself: the Petitioner's
+future plans, or how they would rise to the level of national importance. Specifically, the letter of
+recommendation from Dr. broadly states the Petitioner's research" ... has involved the creation
+of tailor-made artificial intelligence and machine learning solutions for medical purposes." Simply
+going on record without supporting substantive evidence to support assertions, is not sufficient in these
+proceedings. See Matter of Treasure Craft ofCaltfornia, 14 I&N Dec. 190 (BIA 1972). While in the
+other recommendation letter Dr. I         Iasserts that the Petitioner's work has had significant impact
+on global public health processes by employing his artificial intelligence methodologies in the
+detection of rheumatoid arthritis. However, the Petitioner's knowledge, skills, and abilities relate to
+the second prong of the Dhanasar framework, which "shifts the focus from the proposed endeavor to
+the foreign national." Id. at 890. The issue here is whether the specific endeavor that he proposes to
+undertake has national importance under Dhanasar 's first prong.
+
+Although the Petitioner contends that his proposed endeavor outlines the importance of various
+national and government initiatives, such as the "Advanced Research Projects Agency for Health," to
+be launched by the Biden Administration, the matter here is not whether these initiatives, as well as
+the topics of healthcare or similarly related subjects, are nationally important. Rather, the Petitioner
+must demonstrate the national importance of his specific, proposed endeavor of providing his services
+as a researcher employed by the US office of his Taiwanese company.
+
+In Dhanasar, we noted that "we look for broader implications" of the proposed endeavor and that
+"[ a]n undertaking may have national importance for example, because it has national or even global
+implications within a particular field." Id. We also stated that "[a]n endeavor that has significant
+potential to employ U.S. workers or has other substantial positive economic effects, particularly in an
+economically depressed area, for instance, may well be understood to have national importance." Id.
+at 890. Here, the Director observed that the Petitioner had not demonstrated that the specific endeavor
+
+
+                                                   4
+he proposed had significant potential to employ U.S. workers or otherwise offered substantial positive
+economic effects on our nation. Nor did the Petitioner show that the benefits to the regional or national
+economy resulting from his proposed endeavor would reach the level of"substantial positive economic
+effects" contemplated by Dhanasar. Id at 890. A petitioner's proposed endeavor can rise to the level
+of national importance through establishing one or more of the criteria including positive economic
+effects. In any given set of facts, it is a petitioner's burden to show by a preponderance of the evidence
+(more likely than not) that the proposed endeavor is of national importance. Matter of Chawathe, 25
+I&N Dec. 369, 376 (AAO 2010). A petitioner must also support assertions with relevant, probative,
+and credible evidence. See Matter ofChawathe, 25 I&N Dec. at 376. Below, the Director determined
+that the national importance impact was limited to the Petitioner and his employer. On appeal, the
+Petitioner does not address the potential employment of US workers, but re-asserts that his proposed
+endeavor would "ultimately improve the health and well-being of the US population." He proffers
+that the prospective economic effects would result in a reduction in healthcare costs because of disease
+prevention and early treatment, and a reduction in the consumption of healthcare resources. However,
+the Petitioner has not sufficiently established that his proposed endeavor in the United States will have
+national importance under the first Dhanasar prong.
+
+Because the identified basis for denial is dispositive of the Petitioner's appeal, we decline to reach and
+hereby reserve the remaining eligibility requirements for the requested national interest waiver. See
+INS v. Bagamasbad, 429 U.S. 24, 25 (1976) (stating that agencies are not required to make "purely
+advisory findings" on issues that are unnecessary to the ultimate decision); see also Matter ofL-A-C-,
+26 I&N Dec. 516, 526 n.7 (BIA 2015) (declining to reach alternative issues on appeal where the
+applicant did not otherwise meet their burden of proof).
+
+                                          III. CONCLUSION
+
+As the Petitioner has not met the requisite first prong of the Dhanasar analytical framework, we
+conclude that he has not established he is eligible for or otherwise merits a national interest waiver as
+a matter of discretion.
+
+ORDER:         The appeal is dismissed.
+
+
+
+
+                                                    5
+

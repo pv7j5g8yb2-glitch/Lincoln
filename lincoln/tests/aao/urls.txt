@@ -1,0 +1,10 @@
+01-o1a https://www.uscis.gov/sites/default/files/err/D8%20-%20Aliens%20of%20Extraordinary%20Ability%20or%20Achievement%20%28O-1,%20O-2,%20and%20O-3%29/Decisions_Issued_in_2014/OCT142014_01D8101.pdf
+02-eb1a https://www.uscis.gov/sites/default/files/err/B2%20-%20Aliens%20with%20Extraordinary%20Ability/Decisions_Issued_in_2024/APR152024_01B2203.pdf
+03-niw https://www.uscis.gov/sites/default/files/err/B5%20-%20Members%20of%20the%20Professions%20holding%20Advanced%20Degrees%20or%20Aliens%20of%20Exceptional%20Ability/Decisions_Issued_in_2024/DEC122024_08B5203.pdf
+04-h1b https://www.uscis.gov/sites/default/files/err/D2%20-%20Temporary%20Worker%20in%20a%20Specialty%20Occupation%20or%20Fashion%20Model%20%28H-1B%29/Decisions_Issued_in_2024/DEC202024_02D2101.pdf
+05-eb1c https://www.uscis.gov/sites/default/files/err/B4%20-%20Multinational%20Managers%20and%20Executives/Decisions_Issued_in_2024/APR232024_01B4203.pdf
+06-waiver-fraud https://www.uscis.gov/sites/default/files/err/H5%20-%20Waiver%20of%20Inadmissibility%20-%20Misrepresentation%20-%20212%20%28i%29/Decisions_Issued_in_2024/DEC132024_01H5212.pdf
+07-waiver-criminal https://www.uscis.gov/sites/default/files/err/H2%20-%20Waiver%20of%20Inadmissibility%20-%20Criminal%20-%20212%20%28h%29/Decisions_Issued_in_2024/MAY212024_01H2212.pdf
+08-u-visa https://www.uscis.gov/sites/default/files/err/D14%20-%20Application%20for%20U%20Nonimmigrant%20Status/Decisions_Issued_in_2017/FEB132017_01D14101.pdf
+09-vawa https://www.uscis.gov/sites/default/files/err/B9%20-%20Battered%20Spouse%20or%20Child/Decisions_Issued_in_2025/FEB132025_03B9204.pdf
+10-t-visa https://www.uscis.gov/sites/default/files/err/D12%20-%20Application%20for%20T%20Nonimmigrant%20Status/Decisions_Issued_in_2022/DEC162022_01D12101.pdf

@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lincoln, seed</title>
+<style>
+@font-face { font-family: "Literata"; src: url("../../../lincoln/node_modules/@fontsource-variable/literata/files/literata-latin-wght-normal.woff2") format("woff2"); font-weight: 200 900; font-style: normal; }
+@font-face { font-family: "Literata"; src: url("../../../lincoln/node_modules/@fontsource-variable/literata/files/literata-latin-wght-italic.woff2") format("woff2"); font-weight: 200 900; font-style: italic; }
+@font-face { font-family: "Inter"; src: url("../../../lincoln/node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+@page { size: 1440px 810px; margin: 0; }
+:root { --ink: #0b0b0b; --cream: #f3f1ec; --line: #e2dfd8; --muted: #77746d; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Inter", sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+.slide { width: 1440px; height: 810px; position: relative; overflow: hidden; page-break-after: always; background: var(--cream); padding: 64px 80px 0; }
+.slide:last-child { page-break-after: auto; }
+.black { background: var(--ink); color: #fff; }
+.white { background: #fff; }
+.kicker { font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.black .kicker { color: #8d8d8d; }
+.center { text-align: center; }
+h1 { font-family: "Literata", serif; font-weight: 400; font-size: 56px; line-height: 1.12; letter-spacing: -0.02em; margin-top: 16px; }
+.sub { font-family: "Literata", serif; font-style: italic; font-weight: 300; font-size: 28px; line-height: 1.3; color: #55524c; margin-top: 8px; }
+.black .sub { color: #a9a9a9; }
+.big { font-family: "Literata", serif; font-weight: 400; letter-spacing: -0.03em; line-height: 1; }
+/* Cards: one colour per slide, everything centred, three clear levels of text. */
+.card { background: #fff; border-radius: 20px; color: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 28px; }
+.card .cap { font-size: 12.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.card .ttl { font-family: "Literata", serif; font-size: 28px; line-height: 1.2; letter-spacing: -0.01em; }
+.card .p { font-size: 16.5px; line-height: 1.5; color: #5b5852; max-width: 300px; }
+.gap-s { margin-top: 10px; } .gap-m { margin-top: 18px; } .gap-l { margin-top: 28px; }
+.row { position: absolute; left: 80px; right: 80px; display: grid; gap: 20px; }
+.bar-foot { position: absolute; left: 32px; right: 32px; bottom: 22px; height: 40px; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 22px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.14em; color: #8b8882; }
+.bar-foot .w { font-family: "Literata", serif; font-weight: 600; font-size: 17px; letter-spacing: 0; color: var(--ink); }
+.black .bar-foot { background: #1b1b1b; color: #777; }
+.black .bar-foot .w { color: #fff; }
+.white .bar-foot { background: var(--cream); }
+.screen { position: absolute; border-radius: 14px; overflow: hidden; box-shadow: 0 30px 90px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.10); }
+.screen img { display: block; width: 100%; }
+/* iPhone 14: 390 x 844 screen, status bar 47, home indicator area 34. Scaled with --s. */
+.iphone { position: absolute; width: calc(414px * var(--s)); height: calc(868px * var(--s)); }
+.iphone .body { width: 414px; height: 868px; transform: scale(var(--s)); transform-origin: top left; background: #1d1d1f; border-radius: 66px; padding: 12px; box-shadow: inset 0 0 0 2px #3a3a3c, 0 40px 100px rgba(0,0,0,0.45); }
+.iphone .scr { position: relative; width: 390px; height: 844px; border-radius: 54px; overflow: hidden; background: #fff; }
+.iphone .status { position: absolute; left: 0; right: 0; top: 0; height: 47px; display: flex; align-items: center; justify-content: space-between; padding: 6px 30px 0 46px; font-weight: 600; font-size: 17px; color: #000; letter-spacing: -0.01em; z-index: 2; }
+.iphone .island { position: absolute; top: 11px; left: 50%; transform: translateX(-50%); width: 126px; height: 37px; border-radius: 20px; background: #000; z-index: 3; }
+.iphone .app { position: absolute; top: 47px; left: 0; width: 390px; height: 763px; }
+.iphone .home { position: absolute; bottom: 9px; left: 50%; transform: translateX(-50%); width: 134px; height: 5px; border-radius: 3px; background: #111; }
+table { border-collapse: separate; border-spacing: 0; width: 100%; }
+td { text-align: center; }
+.yes, .no, .part { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; font-size: 15px; font-weight: 700; }
+.yes { background: var(--ink); color: #fff; }
+.no { background: #f0eee9; color: #b3afa7; }
+.part { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.mock { background: var(--cream); border-radius: 14px; padding: 18px; width: 100%; font-size: 15px; text-align: center; }
+.mock .m { color: #8b8882; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+.pill { display: inline-block; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: #fff; color: #4a4843; }
+.btn { display: inline-block; background: var(--ink); color: #fff; font-size: 14px; font-weight: 600; padding: 9px 15px; border-radius: 6px; }
+.stat { background: #fff; color: var(--ink); border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.stat .n { font-family: "Literata", serif; font-weight: 400; letter-spacing: -0.03em; line-height: 1; }
+.stat .l { font-size: 18px; color: #5b5852; margin-top: 18px; white-space: nowrap; }
+.stat .k { font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; }
+.stat .t { font-family: "Literata", serif; font-size: 34px; line-height: 1.15; letter-spacing: -0.01em; }
+.rowc { position: absolute; left: 96px; right: 96px; display: grid; gap: 24px; }
+.hd { position: absolute; left: 0; right: 0; top: 76px; text-align: center; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <g id="icons">
+      <rect x="0" y="7" width="3" height="5" rx="1" fill="#000"/><rect x="5" y="5" width="3" height="7" rx="1" fill="#000"/><rect x="10" y="2.5" width="3" height="9.5" rx="1" fill="#000"/><rect x="15" y="0" width="3" height="12" rx="1" fill="#000"/>
+      <path d="M31 3.2a9.6 9.6 0 0 1 13 0l-1.4 1.5a7.6 7.6 0 0 0-10.2 0z M33.6 6a5.8 5.8 0 0 1 7.8 0l-1.4 1.5a3.8 3.8 0 0 0-5 0z M36.3 8.8a2 2 0 0 1 2.4 0L37.5 10z" fill="#000"/>
+      <rect x="50.5" y="0.5" width="24" height="11" rx="3.3" fill="none" stroke="#000" stroke-opacity="0.4"/><rect x="52.5" y="2.5" width="20" height="7" rx="1.8" fill="#000"/><path d="M76 4v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2z" fill="#000" fill-opacity="0.45"/>
+    </g>
+  </defs>
+</svg>
+
+<!-- 1 Cover -->
+<section class="slide black" style="padding:0">
+  <div style="position:absolute;left:96px;top:50%;transform:translateY(-52%);width:640px">
+    <img src="img/mark.png" style="width:60px;height:60px;border-radius:12px;box-shadow:0 0 0 1px #2a2a2a">
+    <div class="big" style="font-size:124px;margin-top:44px">Lincoln</div>
+    <div class="sub" style="font-size:32px;margin-top:22px">Autonomous AI for immigration law firms</div>
+  </div>
+  <div class="iphone" style="--s:0.78;right:150px;top:66px"><div class="body"><div class="scr">
+    <div class="status"><span>9:41</span><svg width="78" height="13" viewBox="0 0 78 13"><use href="#icons"/></svg></div><div class="island"></div>
+    <img class="app" src="img/m-case.png"><div class="home"></div>
+  </div></div></div>
+  <div style="position:absolute;left:96px;bottom:48px;font-size:13px;letter-spacing:0.16em;font-weight:600;color:#6a6a6a">SEED · NOVEMBER 2026</div>
+</section>
+
+<!-- 2 Founder -->
+<section class="slide" style="padding:0">
+  <div class="hd">
+    <h1>Ismael Kirmi, Founder</h1>
+  </div>
+  <div class="rowc" style="top:300px;grid-template-columns:repeat(4,1fr)">
+    <div class="stat" style="height:200px"><div class="n" style="font-size:72px">237</div><div class="l">Case types</div></div>
+    <div class="stat" style="height:200px"><div class="n" style="font-size:72px">13</div><div class="l">Integrations</div></div>
+    <div class="stat" style="height:200px"><div class="n" style="font-size:72px">90%</div><div class="l">USCIS agreement</div></div>
+    <div class="stat" style="height:200px"><div class="n" style="font-size:72px">14</div><div class="l">Case categories</div></div>
+  </div>
+  <div class="rowc" style="top:524px;grid-template-columns:repeat(3,1fr)">
+    <div class="stat" style="height:200px"><div class="k">Previously</div><div class="t" style="font-size:34px">Hopkins</div><div class="l">AI content platform</div></div>
+    <div class="stat" style="height:200px"><div class="k">First hire</div><div class="t" style="font-size:34px">Head of Sales</div><div class="l">Legal technology</div></div>
+    <div class="stat" style="height:200px"><div class="k">First hire</div><div class="t" style="font-size:34px">Immigration Counsel</div><div class="l">Quality standard</div></div>
+  </div>
+</section>
+
+<!-- 3 Problem -->
+<section class="slide" style="padding:0">
+  <div class="hd">
+    <h1>Problem</h1>
+  </div>
+  <div class="rowc" style="top:380px;grid-template-columns:repeat(3,1fr)">
+    <div class="stat" style="height:260px"><div class="k">01</div><div class="t" style="font-size:44px">Review</div><div class="l">Every document, every date</div></div>
+    <div class="stat" style="height:260px"><div class="k">02</div><div class="t" style="font-size:44px">Follow-up</div><div class="l">Missing evidence from clients</div></div>
+    <div class="stat" style="height:260px"><div class="k">03</div><div class="t" style="font-size:44px">Drafting</div><div class="l">Letters, forms and filings</div></div>
+  </div>
+</section>
+
+<!-- 4 Why now -->
+<section class="slide black" style="padding:0">
+  <div class="hd">
+    <h1>Why now</h1>
+  </div>
+  <div class="rowc" style="top:320px;grid-template-columns:repeat(3,1fr)">
+    <div class="stat" style="height:360px"><div class="n" style="font-size:96px">$4.6B</div><div class="l">Legal tech funding in 2025</div></div>
+    <div class="stat" style="height:360px"><div class="n" style="font-size:96px">$15.5B</div><div class="l">Harvey valuation</div></div>
+    <div class="stat" style="height:360px"><div class="n" style="font-size:96px">$8.8B</div><div class="l">Legora valuation</div></div>
+  </div>
+</section>
+
+<!-- 5 Market -->
+<section class="slide" style="padding:0">
+  <div class="hd">
+    <h1>Market</h1>
+  </div>
+  <div class="rowc" style="top:320px;grid-template-columns:repeat(3,1fr)">
+    <div class="stat" style="height:360px"><div class="n" style="font-size:96px">11.3M</div><div class="l">Pending USCIS cases</div></div>
+    <div class="stat" style="height:360px"><div class="n" style="font-size:96px">16,000+</div><div class="l">Immigration attorneys</div></div>
+    <div class="stat" style="height:360px"><div class="n" style="font-size:96px">$29.70</div><div class="l">Paralegal hourly wage</div></div>
+  </div>
+</section>
+
+<!-- 6 Solution -->
+<section class="slide black">
+  <div class="center">
+    <h1>Solution</h1>
+  </div>
+  <div class="screen" style="left:170px;top:226px;width:840px"><img src="img/d-review.png"></div>
+  <div class="iphone" style="--s:0.58;left:990px;top:246px"><div class="body"><div class="scr">
+    <div class="status"><span>9:41</span><svg width="78" height="13" viewBox="0 0 78 13"><use href="#icons"/></svg></div><div class="island"></div>
+    <img class="app" src="img/m-review.png"><div class="home"></div>
+  </div></div></div>
+</section>
+
+<!-- 7 How it works -->
+<section class="slide" style="padding:0">
+  <div class="hd">
+    <h1>How it works</h1>
+  </div>
+  <div class="rowc" style="top:380px;grid-template-columns:repeat(4,1fr)">
+    <div class="stat" style="height:260px"><div class="k">01</div><div class="t" style="font-size:40px">Intake</div><div class="l">Email matched to its case</div></div>
+    <div class="stat" style="height:260px"><div class="k">02</div><div class="t" style="font-size:40px">Analysis</div><div class="l">Every page read and cited</div></div>
+    <div class="stat" style="height:260px"><div class="k">03</div><div class="t" style="font-size:40px">Drafting</div><div class="l">Letters, forms and replies</div></div>
+    <div class="stat" style="height:260px"><div class="k">04</div><div class="t" style="font-size:40px">Approval</div><div class="l">The attorney signs off</div></div>
+  </div>
+</section>
+
+<!-- 8 Traction -->
+<section class="slide" style="padding:0">
+  <div class="hd">
+    <h1>Traction</h1>
+  </div>
+  <div class="rowc" style="top:320px;grid-template-columns:300px 1fr 300px">
+    <div class="stat" style="height:380px"><div class="n" style="font-size:96px">90%</div><div class="l">USCIS agreement</div></div>
+    <div class="stat" style="height:380px;padding:40px 36px 30px;justify-content:flex-end">
+      <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:14px;align-items:end;width:100%;height:240px"><div style="height:201px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:230px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:207px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:211px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:207px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:201px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:230px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:230px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:230px;background:var(--ink);border-radius:8px 8px 0 0"></div><div style="height:138px;background:var(--ink);border-radius:8px 8px 0 0"></div></div>
+      <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:14px;width:100%;margin-top:14px;font-size:12px;font-weight:700;letter-spacing:0.06em;color:var(--muted)"><div>EB-1A</div><div>O-1A</div><div>NIW</div><div>H-1B</div><div>EB-1C</div><div>I-601</div><div>I-601</div><div>U</div><div>VAWA</div><div>T</div></div>
+    </div>
+    <div class="stat" style="height:380px"><div class="k">Next 30 days</div><div class="t" style="font-size:24px;line-height:1.6">Second validation set<br>Zero data retention<br>Incorporation</div></div>
+  </div>
+</section>
+
+<!-- 9 Landscape -->
+<section class="slide white">
+  <div class="center">
+    <h1>Competition</h1>
+  </div>
+  <div style="position:absolute;left:140px;right:140px;top:210px">
+    <table style="font-size:16px">
+      <tr style="background:var(--ink);color:#fff;font-size:12.5px;font-weight:700;letter-spacing:0.12em">
+        <td style="padding:18px 24px;width:300px;border-radius:14px 0 0 0"></td>
+        <td style="padding:18px 10px">AUTONOMOUS</td>
+        <td style="padding:18px 10px">BUILT FOR IMMIGRATION</td>
+        <td style="padding:18px 10px">DRAFTING</td>
+        <td style="padding:18px 10px;border-radius:0 14px 0 0">USCIS FORMS</td>
+      </tr>
+      <tr style="background:var(--cream)"><td style="padding:22px 24px;text-align:left;font-family:Literata,serif;font-size:26px;font-weight:600">Lincoln</td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td></tr>
+      <tr><td style="padding:22px 24px;text-align:left;border-bottom:1px solid var(--line);font-size:19px;font-weight:600">Harvey · Legora</td><td style="border-bottom:1px solid var(--line)"><span class="no">✕</span></td><td style="border-bottom:1px solid var(--line)"><span class="no">✕</span></td><td style="border-bottom:1px solid var(--line)"><span class="yes">✓</span></td><td style="border-bottom:1px solid var(--line)"><span class="no">✕</span></td></tr>
+      <tr><td style="padding:22px 24px;text-align:left;border-bottom:1px solid var(--line);font-size:19px;font-weight:600">Docketwise · INSZoom</td><td style="border-bottom:1px solid var(--line)"><span class="no">✕</span></td><td style="border-bottom:1px solid var(--line)"><span class="yes">✓</span></td><td style="border-bottom:1px solid var(--line)"><span class="part">~</span></td><td style="border-bottom:1px solid var(--line)"><span class="yes">✓</span></td></tr>
+      <tr><td style="padding:22px 24px;text-align:left;border-bottom:1px solid var(--line);font-size:19px;font-weight:600">Clio · Filevine</td><td style="border-bottom:1px solid var(--line)"><span class="part">~</span></td><td style="border-bottom:1px solid var(--line)"><span class="part">~</span></td><td style="border-bottom:1px solid var(--line)"><span class="part">~</span></td><td style="border-bottom:1px solid var(--line)"><span class="no">✕</span></td></tr>
+      <tr><td style="padding:22px 24px;text-align:left;font-size:19px;font-weight:600">Parley · CaseBlink</td><td><span class="no">✕</span></td><td><span class="yes">✓</span></td><td><span class="yes">✓</span></td><td><span class="no">✕</span></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 10 Business model -->
+<section class="slide" style="padding:0">
+  <div class="hd">
+    <h1>Pricing</h1>
+  </div>
+  <div class="rowc" style="top:300px;grid-template-columns:repeat(4,1fr)">
+    <div class="stat" style="height:220px"><div class="k">Under 10 cases</div><div class="t" style="font-size:56px">$1,500</div><div class="l">per month</div></div>
+    <div class="stat" style="height:220px"><div class="k">10 to 50 cases</div><div class="t" style="font-size:56px">$3,500</div><div class="l">per month</div></div>
+    <div class="stat" style="height:220px"><div class="k">51 to 100 cases</div><div class="t" style="font-size:56px">$7,500</div><div class="l">per month</div></div>
+    <div class="stat" style="height:220px"><div class="k">101 to 200 cases</div><div class="t" style="font-size:56px">$13,000</div><div class="l">per month</div></div>
+  </div>
+  <div class="rowc" style="top:544px;grid-template-columns:repeat(3,1fr)">
+    <div class="stat" style="height:160px"><div class="n" style="font-size:52px">$65+</div><div class="l">Revenue per case</div></div>
+    <div class="stat" style="height:160px"><div class="n" style="font-size:52px">$1.37</div><div class="l">AI cost per case</div></div>
+    <div class="stat" style="height:160px"><div class="n" style="font-size:52px">$29.70</div><div class="l">Paralegal hourly wage</div></div>
+  </div>
+</section>
+
+<!-- 11 Roadmap -->
+<section class="slide black" style="padding:0">
+  <div class="hd">
+    <h1>Roadmap</h1>
+  </div>
+  <div class="rowc" style="top:300px;grid-template-columns:repeat(4,1fr)">
+    <div class="stat" style="height:300px"><div class="k">November 2026</div><div class="t" style="font-size:40px">Built</div><div class="l">Validated on USCIS decisions</div></div>
+    <div class="stat" style="height:300px"><div class="k">Q1 2027</div><div class="t" style="font-size:40px">5 firms</div><div class="l">Round closed</div></div>
+    <div class="stat" style="height:300px"><div class="k">Q2 2027</div><div class="t" style="font-size:40px">12 firms</div><div class="l">SOC 2 Type I</div></div>
+    <div class="stat" style="height:300px"><div class="k">November 2027</div><div class="t" style="font-size:40px">$1M ARR</div><div class="l">25 firms</div></div>
+  </div>
+</section>
+
+<!-- 12 The round -->
+<section class="slide" style="padding:0">
+  <div class="hd">
+    <h1>Raising $4M</h1>
+  </div>
+  <div class="rowc" style="top:220px;grid-template-columns:repeat(4,1fr);gap:16px">
+    <div class="stat" style="height:120px"><div class="n" style="font-size:40px">$1.4M</div><div class="l" style="font-size:15px;margin-top:12px">Engineering</div></div>
+    <div class="stat" style="height:120px"><div class="n" style="font-size:40px">$1.1M</div><div class="l" style="font-size:15px;margin-top:12px">Sales</div></div>
+    <div class="stat" style="height:120px"><div class="n" style="font-size:40px">$550k</div><div class="l" style="font-size:15px;margin-top:12px">Counsel and success</div></div>
+    <div class="stat" style="height:120px"><div class="n" style="font-size:40px">$250k</div><div class="l" style="font-size:15px;margin-top:12px">SOC 2 and ISO 27001</div></div>
+    <div class="stat" style="height:120px"><div class="n" style="font-size:40px">$350k</div><div class="l" style="font-size:15px;margin-top:12px">Marketing</div></div>
+    <div class="stat" style="height:120px"><div class="n" style="font-size:40px">$150k</div><div class="l" style="font-size:15px;margin-top:12px">AI and infrastructure</div></div>
+    <div class="stat" style="height:120px"><div class="n" style="font-size:40px">$200k</div><div class="l" style="font-size:15px;margin-top:12px">Operations</div></div>
+    <div class="stat" style="height:120px"><div class="n" style="font-size:40px">24</div><div class="l" style="font-size:15px;margin-top:12px">Months of runway</div></div>
+  </div>
+  <div class="rowc" style="top:516px;grid-template-columns:repeat(3,1fr)">
+    <div class="stat" style="height:190px"><div class="k">Q1 2027</div><div class="t" style="font-size:40px">5 firms</div></div>
+    <div class="stat" style="height:190px"><div class="k">Q2 2027</div><div class="t" style="font-size:40px">SOC 2 Type I</div></div>
+    <div class="stat" style="height:190px"><div class="k">November 2027</div><div class="t" style="font-size:40px">$1M ARR</div></div>
+  </div>
+</section>
+
+<!-- 13 Close -->
+<section class="slide black" style="padding:0">
+  <div style="position:absolute;left:96px;top:50%;transform:translateY(-50%)">
+    <img src="img/mark.png" style="width:60px;height:60px;border-radius:12px;box-shadow:0 0 0 1px #2a2a2a">
+    <div class="big" style="font-size:112px;margin-top:40px">Lincoln</div>
+    <div style="font-size:21px;color:#a3a3a3;margin-top:30px">Ismael Kirmi, Founder</div>
+    <div style="font-size:21px;color:#a3a3a3;margin-top:8px">uselincoln.com</div>
+  </div>
+  <div class="screen" style="left:660px;top:106px;width:680px"><img src="img/c-email.png"></div>
+</section>
+
+</body>
+</html>

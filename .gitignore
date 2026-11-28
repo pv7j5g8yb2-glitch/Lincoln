@@ -2,3 +2,11 @@ node_modules/
 dist/
 .env
 *.log
+
+# Local leftovers from the earlier Hopkins and Covered builds (never committed)
+/app/
+/content/
+/reports/
+/assets/
+demo/o1-varga/runs/claude/raw/
+demo/o1-halasz/runs/*/raw/

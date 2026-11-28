@@ -1,0 +1,91 @@
+# 07-waiver-criminal-ghana (sonnet-rerun)
+Cost $0.148, 97 s
+
+## Case as Lincoln opened it
+Consultation Initial consultation and eligibility review. Prospective client consultation on I-601 waivers (212(h) and 212(i)) for a Ghanaian husband of a US citizen. The file is a single-page case summary with no records, so the case is waiting on the client for identity, criminal, immigration and hardship documents, and on attorney review. Waiting on: Alex Rivera: approve client request
+
+## Issues Lincoln raised
+* [high] No underlying records in file. The file holds only a summary. Missing: passport, I-94 and entry history, the marriage certificate, the son's birth certificate and proof of citizenship for wife and son, court dispositions for both convictions, the prior applications that produced the misrepresentation finding, the wife's affidavit, the husband's statement, the support letters, and the medical, financial, tax and country condition records.
+* [high] Criminal history and misrepresentation unconfirmed. Details of the two convictions (offenses, dates, sentences, statutes) and of the misrepresentation (which application, when, what was said) are not stated. FOIA requests (USCIS, CBP, EOIR) and certified court dispositions are needed before any advice or filing; undisclosed arrests or applications are a known trap.
+* [high] Eligibility under 212(h) depends on unstated facts. The summary says the convictions are not more than 15 years old, but gives no dates, offenses or sentences. Whether the offenses are crimes involving moral turpitude only, whether any other ground applies (for example controlled substance or aggravated felony), and whether 212(h) is available given his entry and status history cannot be determined. The attorney must decide after review of the records.
+* [high] Hardship to wife is the only focus; the wife's position on relocation is unstated. The wife has not stated whether she would remain in the US or move to Ghana, and hardship must be shown under both scenarios. Evidence on conditions in Ghana is listed only as articles, with no tie to the family's specific circumstances.
+* [medium] Hardship evidence is largely self-reported and generic. Claims of financial strain, her back pain and sciatica, and the son's ear condition rest on statements; the corroborating records are listed but not in the file. Financial hardship claims (foreclosure, second job, childcare) need figures, and the evidence mixes the son's hardship, which does not qualify as hardship under 212(h) or 212(i) except as it affects the qualifying spouse.
+* [medium] Qualifying relative for 212(i) is the spouse only. Under 212(i) the qualifying relatives are the US citizen or permanent resident spouse or parent. The son is not a qualifying relative for 212(i); for 212(h), qualifying relatives include spouse, parent, son or daughter. The summary lists both as qualifying for both waivers.
+* [medium] Underlying application and filing route not identified. The file does not say whether he is in the US or abroad, how the waiver would be filed (adjustment or consular processing), whether an I-130 exists, or his current status. Also not stated: whether he was inspected and admitted, any unlawful presence, and prior removal orders.
+* [medium] Possible cure: crimes involving moral turpitude ground, INA 212(a)(2)(A). The summary states that the convictions are not more than 15 years old and that the wife (a US citizen), the son (a US citizen) and the wife's parents are in the US. If the dates, offenses and sentences are proved, INA 212(h) may waive this ground, either on the 15-year rehabilitation basis or on extreme hardship to a qualifying relative. For 212(h) the son is also a qualifying relative, so hardship to him counts. This conflicts with the open issue that says his hardship does not count under 212(h). Certified dispositions, citizenship proof and the wife's statement on stay or relocation would 
+* [medium] Possible cure: misrepresentation ground, INA 212(a)(6)(C)(i). The wife is stated to be a US citizen and the marriage dates from 2024, so INA 212(i) may waive this ground on extreme hardship to her. 212(h) does not cover misrepresentation, so the 212(i) waiver is the only route for this ground. Proof would be the marriage certificate, her proof of citizenship, the prior application and decision containing the finding, and hardship evidence addressing both separation and relocation.
+* [medium] No evidence for the discretionary showing. The file has nothing on rehabilitation, time since the offenses, tax compliance, business records, character references or community ties of the husband. Discretion is weighed separately from hardship, and under the 15-year basis of 212(h) rehabilitation must itself be shown.
+
+## Criteria
+* Inadmissibility grounds identified and uncontested: partial. Summary states 212(a)(2)(A) and 212(a)(6)(C)(i) findings, uncontested, but no records. Weakness: Court dispositions, FOIA results and the decision or notice stating the grounds.
+* Qualifying relative who is a US citizen or permanent resident: partial. Wife and son are stated to be US citizens; marriage 2024, son born 2020. Weakness: Marriage certificate, son's birth certificate, proof of citizenship for both.
+* Extreme hardship to the qualifying relative if waiver denied: partial. Financial, medical and emotional hardship asserted for the wife if he is removed; relocation scenario not addressed. Weakness: Wife's position on separation and relocation, medical records, financial documents, Ghana country conditions tied to her situation.
+* Discretion (favorable factors): missing. Nothing on rehabilitation, time since offenses, character evidence or community ties of the husband. Weakness: Evidence of rehabilitation, tax compliance, employment and character references.
+
+## Drafts
+### Eligibility Assessment: Form I-601 Waivers under INA § 212(h) and INA § 212(i), Ghanaian Husband (for_review)
+### Summary of the File and Its Limits
+The file consists of a single page of case summary and contains no underlying documents. The summary states that the Applicant, a Ghanaian man, is inadmissible under INA § 212(a)(2)(A) for two convictions for crimes involving moral turpitude and under INA § 212(a)(6)(C)(i) for misrepresenting his criminal history, and that he does not contest either finding (p. 1). It states that he seeks waivers under INA § 212(h) and INA § 212(i) (p. 1). The qualifying relatives are described as his United States citizen wife, married in 2024, and his United States citizen son, born in 2020 (p. 1). The summary states that the convictions are not more than 15 years old and that the wife has not stated whether she would remain in the United States or move to Ghana (p. 1).
+
+The findings below weigh the evidence as the summary describes it. The originals are listed once at the end. Where the summary and the rulebook point to a conflict, it is noted.
+
+### Requirement 1: Identification of Each Ground and the Covering Waiver
+Two grounds are stated (p. 1). The crimes involving moral turpitude ground under INA § 212(a)(2)(A) is waivable under INA § 212(h). The misrepresentation ground under INA § 212(a)(6)(C)(i) is waivable only under INA § 212(i); INA § 212(h) does not reach it. Finding: met as to identification, because both grounds are conceded and each has a corresponding waiver (p. 1).
+
+The summary does not state the offenses, dates, sentences or statutes of conviction, or which application contained the misrepresentation, when, and what was said. Whether the offenses are crimes involving moral turpitude only, and whether any other ground applies (for example a controlled substance offense or an aggravated felony, which would change the analysis), cannot be determined from the file. The categorical approach to the statute of conviction applies, and the client's description of the offense is not a substitute for the record of conviction. [Attorney: decide whether to treat the grounds as conceded before the certified dispositions and FOIA results are reviewed.]
+
+### Requirement 2: Qualifying Relatives
+Under INA § 212(i), the qualifying relative is a United States citizen or lawful permanent resident spouse or parent; children do not count. The Applicant's wife is described as a United States citizen, married in 2024 (p. 1). Finding for INA § 212(i): likely met as to the wife's status, subject to proof of citizenship and the marriage. The son (p. 1) is not a qualifying relative under INA § 212(i), and hardship to him is relevant only insofar as it affects the wife.
+
+Under INA § 212(h), the qualifying relatives include a spouse, parent, son or daughter who is a United States citizen or lawful permanent resident. The wife and the son are both described as United States citizens (p. 1). Finding for INA § 212(h): likely met as to both relatives, subject to proof. The summary treats both relatives as qualifying for both waivers (p. 1); that is correct only for INA § 212(h). Hardship to the son therefore counts under INA § 212(h) but not as an independent basis under INA § 212(i). One internal note in the file states that the son's hardship does not count under INA § 212(h); that statement is incorrect on the rulebook and should be disregarded. [Attorney: confirm.]
+
+The wife's parents and sisters (p. 1) are not qualifying relatives for either waiver. The wife's retired parents live nearby and do school runs and after school care (p. 1); this is relevant only as a factor in the wife's circumstances.
+
+### Requirement 3: INA § 212(h) Alternative Basis, 15 Years and Rehabilitation
+INA § 212(h)(1)(A) permits a waiver where the activity occurred more than 15 years before the application, admission is not contrary to the national welfare, safety or security, and the applicant has been rehabilitated. The summary states that the convictions are not more than 15 years old (p. 1). That statement indicates that the 15 year basis is not available, because the activity must be more than 15 years old. Finding: not met on the summary. The waiver therefore depends on extreme hardship to a qualifying relative under INA § 212(h)(1)(B). Rehabilitation evidence is accordingly relevant to discretion, not to this basis.
+
+The summary does not state whether the offenses were violent or dangerous crimes. If they were, 8 C.F.R. § 212.7(d) requires a showing of exceptional and extremely unusual hardship, a higher standard than extreme hardship. [Attorney: determine from the dispositions whether 8 C.F.R. § 212.7(d) applies.] The summary also does not state his immigration status or manner of entry; whether INA § 212(h) is available to him on his entry and status history cannot be determined.
+
+### Requirement 4: Extreme Hardship to a Qualifying Relative
+Extreme hardship must exceed the usual consequences of removal or inadmissibility (Matter of Cervantes-Gonzalez, 22 I&N Dec. 560 (BIA 1999); Matter of Pilch, 21 I&N Dec. 627 (BIA 1996)) and is assessed individually and in the aggregate (Matter of Ige, 20 I&N Dec. 880 (BIA 1994)). Where the qualifying relative has not sworn to an intent to stay or relocate, both separation and relocation hardship must be shown, and failure on either fails the requirement.
+
+The file's evidence on separation is as follows. The wife states in her affidavit that he owns a tree care and removal business earning about $3,000 a month, that she is a mechanical engineer earning about $3,655 a month, and that together they cover the mortgage and debts (p. 1). She states that without him she would fall behind, damage her credit, need a second job and costly childcare, or face foreclosure (p. 1). She states that she has chronic back pain and sciatica, receives chiropractic care, and relies on him for caregiving and housework (p. 1). She states that her retired parents live nearby and help with school runs and after school care but are getting older (p. 1). The Applicant states that the son has a chronic ear condition that needed tubes in both ears and that the wife has debilitating back problems (p. 1).
+
+Analysis of separation: the account is plausible and consistent, but it rests on statements. Her own income of about $3,655 a month exceeds his about $3,000 a month (p. 1), and the file does not show that she could not meet the household obligations without his income, for instance through the nearby family support, which the rulebook requires be considered. The financial claims lack figures for the mortgage, debts and childcare cost. Medical claims lack records in the file. The hardship described is largely the ordinary financial and emotional consequence of separation and is presently generic. Finding: not met as presented; possibly met if the medical and financial records establish that her condition and the son's condition, in the aggregate, go beyond the usual consequences.
+
+Analysis of relocation: the file contains nothing on relocation other than articles on Ghana listed in the evidence (p. 1). The wife has not stated whether she would stay or move (p. 1). Her employment, her home, her medical care, her parents' proximity and her ties to family, community, church and friends are described (p. 1), but no evidence ties conditions in Ghana to this family, including the availability of care for the son's ear condition and her back condition. Finding: not met on the present file. Because both scenarios must be shown without a sworn statement, the hardship requirement is not met, and the case cannot succeed without it. The discretion step is not reached until it is met.
+
+Hardship to the Applicant himself is not a factor. The Applicant's statement that his presence is essential to the family's finances, health and emotions (p. 1) is relevant only as it bears on the qualifying relatives.
+
+### Requirement 5: Discretion
+Discretion is separate from hardship and weighs the grounds of inadmissibility and other adverse factors against the equities (Matter of Mendez-Moralez, 21 I&N Dec. 296 (BIA 1996)). Favorable factors described are his marriage, his United States citizen son, his business, and family ties of the wife (p. 1). The summary lists tax and employment records (p. 1). Adverse factors are two convictions for crimes involving moral turpitude and a misrepresentation about his criminal history (p. 1); the concealment of criminal history is a significant adverse factor. The file has no evidence of rehabilitation, time elapsed since the offenses, character references from persons outside the wife's family, or the Applicant's own community ties. Finding: not met on the present file; the showing is undeveloped.
+
+### Filing Route and Open Questions
+The file does not state whether the Applicant is in the United States or abroad, his current status, whether he was inspected and admitted, whether any I-130 exists, or whether any unlawful presence or prior removal order exists. These facts determine the filing route, whether INA § 212(a)(9)(B) or INA § 212(a)(9)(A) and INA § 212(a)(9)(C) issues arise, and whether Form I-212 or a waiver under INA § 212(a)(9)(B)(v) is also needed. [Attorney: obtain before advising on travel or filing.]
+
+### Overall View and Next Steps
+Prospects: uncertain, and weak on the present file. The waiver structure is sound, because INA § 212(i) covers the misrepresentation through the wife and INA § 212(h) covers the convictions through the wife and son. However, the 15 year basis is apparently unavailable (p. 1), the relocation hardship is undeveloped, the separation hardship is largely self-reported and generic, and discretion is unsupported. The INA § 212(i) waiver is indispensable because INA § 212(h) does not reach the misrepresentation, so failure on the wife's hardship defeats the application on that ground.
+
+Recommended steps: (1) obtain the Applicant's passport, I-94 and entry history; (2) file FOIA requests with USCIS, CBP and EOIR; (3) obtain certified court dispositions, charging documents, plea agreements and statutes for both convictions; (4) obtain the application and decision containing the misrepresentation finding; (5) obtain the marriage certificate, the son's birth certificate and proof of citizenship for the wife and son; (6) obtain the wife's sworn statement on whether she would stay or relocate, and develop both scenarios; (7) obtain medical records for the wife and son, with a provider letter addressing prognosis and the Applicant's role; (8) obtain mortgage, debt, tax, payroll, business and childcare cost records and a budget without his income; (9) obtain country condition evidence specific to the family, including medical care in Ghana; (10) obtain rehabilitation, character and community evidence. [Attorney: decide strategy and whether to advise before the FOIA results are received.]
+
+## Emails prepared
+* Documents needed for your waiver consultation (needs_approval)
+Dear Client,
+
+Thank you for sending your summary. Before Alex Rivera can advise on the waivers, we need to confirm your full history from official records. Please send us the following:
+
+1. Your passport and any I-94 or entry records, with a list of every time you entered or left the United States.
+2. Court records showing the outcome of each conviction, and any other arrest, even if it was dismissed.
+3. Every immigration application or petition you have filed, with any notices or decisions, including the one where the misrepresentation was found.
+4. Your marriage certificate, your son's birth certificate, and proof of US citizenship for your wife and son.
+5. Your wife's signed affidavit and your own statement, along with the support letters from her family.
+6. Medical records for your son and your wife, plus recent tax returns, pay records and mortgage and debt statements.
+7. A note from your wife on whether she would stay in the United States or move to Ghana if you could not remain.
+
+Please also tell us where you are living now and how you were last admitted to the United States.
+
+We will also request your records from the government agencies. Please do not travel or file anything with immigration until we have spoken.
+
+Best regards,
+Alex Rivera
+Rivera Immigration Law

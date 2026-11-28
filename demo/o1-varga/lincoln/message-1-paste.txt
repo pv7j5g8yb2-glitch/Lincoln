@@ -1,0 +1,427 @@
+You are preparing the evidence for an O-1A petition for a US immigration attorney, who will review
+and sign everything. You do not give legal advice and you never invent facts.
+
+Work in four passes over the next four messages. This message is pass 1: extraction only. Do not
+argue eligibility yet.
+
+For every exhibit in the case file below, produce a table of facts. One row per fact:
+* fact (short, neutral wording)
+* exact quote from the exhibit
+* exhibit letter and page
+* date of the document
+* who is speaking, and whether they are independent of the beneficiary and the petitioner
+  (independent, customer, employer or colleague, the beneficiary herself, unknown)
+* type of source (government, peer reviewed journal, professional or major trade publication with
+  stated circulation, general newspaper, internal company document, personal blog, other)
+
+Then list every case where two exhibits give different figures or facts for the same thing (money,
+headcounts, dates, counts of sites or users, titles). For each, say which document is later or more
+authoritative and why. Then list every statement that is promotional or about other people rather
+than about the beneficiary.
+
+# Case file: O-1A petition for Lena Varga (all invented, for testing only)
+
+Petitioner: Tidewell Labs, Inc. Beneficiary: Lena Varga. Classification sought: O-1A. Prepared November 2026.
+
+---
+
+# Exhibit A: Curriculum vitae of Lena Varga
+
+[Page 1]
+
+LENA VARGA
+Austin, Texas. Citizen of Hungary. Born 14 March 1994, Budapest.
+
+CURRENT ROLE
+Co-founder and Chief Technology Officer, Tidewell Labs, Inc., Austin, Texas (January 2024 to present).
+Tidewell builds software that predicts failures in grid scale battery storage systems before they
+happen.
+
+PREVIOUS ROLES
+Lead Engineer, Battery Analytics, Northfield Power Systems, Denver, Colorado (June 2019 to December 2023).
+Led a team of seven engineers building health monitoring for lithium iron phosphate battery sites.
+
+Research Assistant, Energy Systems Lab, Danube Technical University, Budapest (2016 to 2019).
+
+EDUCATION
+MSc Electrical Engineering, Danube Technical University, 2018. Thesis: "Early detection of capacity
+drift in stationary lithium cells".
+BSc Electrical Engineering, Danube Technical University, 2016.
+
+[Page 2]
+
+SELECTED AWARDS
+National Energy Innovation Prize, American Grid Storage Council, 2025.
+Builder of the Quarter, Tidewell Labs, Q2 2025.
+
+PUBLICATIONS
+Varga, L., Brandt, K. (2023). "A drift model for early fault prediction in grid storage."
+Journal of Energy Storage Analytics, 14(2), 101 to 118.
+Varga, L., Osei, P., Brandt, K. (2024). "Field validation of drift based fault prediction across 19
+utility sites." Journal of Energy Storage Analytics, 15(4), 233 to 251.
+
+PATENTS
+US Patent Application 18/552,904, "Systems and methods for predicting cell failure from capacity
+drift", published 2025 (pending).
+
+SERVICE
+Program committee reviewer, International Conference on Energy Storage Analytics (ICESA), 2025.
+Judge, Texas Climate Founders Pitch Night, 2026.
+
+MEMBERSHIPS
+Member, Society of Power Engineers (since 2017).
+
+---
+
+# Exhibit B: Employment agreement and itinerary from Tidewell Labs, Inc.
+
+[Page 1]
+
+TIDEWELL LABS, INC.
+A Delaware corporation. 1120 East Cesar Chavez Street, Suite 400, Austin, Texas 78702.
+
+EMPLOYMENT AGREEMENT (summary of key terms)
+
+Employee: Lena Varga
+Position: Chief Technology Officer
+Start of O-1 employment period: 1 March 2027
+Term: three years, ending 28 February 2030
+Base salary: USD 210,000 per year
+Equity: options over 4.0 percent of fully diluted shares, four year vesting
+Work location: Austin, Texas, with travel to customer sites listed below
+
+Duties: leads all engineering and research; owns the fault prediction platform; manages a team of
+eleven engineers; presents to utility customers and investors.
+
+Signed for the company: Sam Whitlock, Chief Executive Officer, 2 November 2026.
+
+[Page 2]
+
+ITINERARY OF EVENTS AND ACTIVITIES (March 2027 to February 2030)
+
+* Ongoing: platform development, Austin headquarters.
+* Quarterly: on site deployment reviews with customer utilities (Cascade Valley Electric, Oregon;
+  Pinecrest Municipal Utility, Arizona; Bayline Power Cooperative, Georgia).
+* 2027: launch of version 3 of the platform for sodium ion battery sites.
+* Annually: presentation at the International Conference on Energy Storage Analytics.
+
+---
+
+# Exhibit C: National Energy Innovation Prize 2025
+
+[Page 1]
+
+AMERICAN GRID STORAGE COUNCIL
+Washington, DC
+
+18 September 2025
+
+Dear Ms Varga,
+
+On behalf of the American Grid Storage Council, I am delighted to inform you that you have been
+selected as one of two recipients of the 2025 National Energy Innovation Prize, in recognition of
+your drift based fault prediction method for grid scale batteries.
+
+The prize carries an award of USD 50,000 and will be presented at our national meeting in Chicago
+on 21 October 2025.
+
+Yours sincerely,
+Dr Helen Marsh, President, American Grid Storage Council
+
+[Page 2]
+
+PRESS RELEASE: Council names 2025 National Energy Innovation Prize winners
+
+Washington, 22 October 2025. The American Grid Storage Council, the national trade association for
+the energy storage industry with more than 900 member companies, announced the two winners of its
+annual National Energy Innovation Prize.
+
+This year's prize drew 340 nominations from 31 states. Nominees were judged by an independent panel
+of nine experts drawn from national laboratories, universities and utilities, on originality,
+measured impact in the field and adoption by industry.
+
+Lena Varga, co-founder and CTO of Austin based Tidewell Labs, was recognised for a method that
+predicts battery cell failures weeks in advance by tracking small drifts in capacity. The council
+noted that the method is now used by several US utilities.
+
+Past winners of the prize, awarded since 2011, include engineers whose work now underpins most
+large storage sites in the country.
+
+---
+
+# Exhibit D: Builder of the Quarter certificate
+
+[Page 1]
+
+TIDEWELL LABS
+
+BUILDER OF THE QUARTER, Q2 2025
+
+Awarded to Lena Varga
+
+For shipping the utility dashboard two weeks ahead of schedule.
+
+Voted by the Tidewell team. Signed: Sam Whitlock, CEO.
+
+---
+
+# Exhibit E: Grid Systems Weekly feature article, with publication information
+
+[Page 1]
+
+GRID SYSTEMS WEEKLY
+12 March 2026
+
+THE ENGINEER TEACHING BATTERIES TO ASK FOR HELP
+By Marcus Hale, Senior Editor
+
+When a battery cell inside a utility storage site starts to fail, it usually gives no warning
+until it is too late. Lena Varga thinks that is the wrong way round.
+
+Varga, the Hungarian born co-founder and CTO of Tidewell Labs, spent five years studying the tiny
+drifts in capacity that appear weeks before a cell fails. Her drift model, first published in
+2023, is now running at more than 60 utility battery sites across three states.
+
+"Batteries tell you they are in trouble long before they stop," Varga said. "We just were not
+listening."
+
+Hiroshi Tanaka, vice president of grid operations at Cascade Valley Electric, said the system had
+changed how his team plans maintenance. "We fix things before they break now," he said.
+
+[Page 2]
+
+Industry analysts say the approach could save operators millions in avoided outages. The American
+Grid Storage Council gave Varga its National Energy Innovation Prize last year.
+
+ABOUT THE PUBLICATION (from the Grid Systems Weekly 2026 media kit)
+Grid Systems Weekly has been published since 1998 and covers power grids and energy storage for
+engineers and utility executives. Print and digital circulation: 48,000. Readership is mainly
+utility managers, grid engineers and energy investors in North America. The magazine has a
+full time editorial staff of 22.
+
+---
+
+# Exhibit F: The Austin Ledger business article
+
+[Page 1]
+
+THE AUSTIN LEDGER, Business section
+3 August 2025
+
+AUSTIN STARTUP RAISES $12 MILLION TO KEEP GRID BATTERIES ALIVE
+By Priya Raman
+
+Tidewell Labs, an Austin company that sells failure prediction software to utilities, has raised
+$12 million in a Series A round led by Harbor Point Ventures, the company said on Friday.
+
+Chief executive Sam Whitlock said the money would be used to hire engineers and expand into the
+south east. The company now has 18 employees and customers in Oregon, Arizona and Georgia.
+
+Whitlock co-founded the company in early 2024 with Lena Varga, who serves as chief technology
+officer. Varga previously led battery analytics at Northfield Power Systems.
+
+The funding comes as utilities race to add storage to handle peaks in demand. Texas alone added
+more battery capacity last year than any other state.
+
+---
+
+# Exhibit G: BatteryBytes blog post
+
+[Page 1]
+
+BATTERYBYTES (personal blog by Tom Rusk, battery hobbyist)
+5 May 2026
+
+Five people in batteries you should follow this year
+
+3. Lena Varga. Her drift paper is the most fun thing I have read in ages. If you run solar with a
+home battery, her ideas might help you spot a bad cell early. Tidewell is her company.
+
+(About this blog: written in my spare time. No ads, no editors, just me.)
+
+---
+
+# Exhibit H: Evidence of judging the work of others
+
+[Page 1]
+
+INTERNATIONAL CONFERENCE ON ENERGY STORAGE ANALYTICS (ICESA 2025)
+Program Committee
+
+2 April 2025
+
+Dear Ms Varga,
+
+Thank you for serving on the ICESA 2025 program committee. Our records confirm that you completed
+peer reviews of 14 submitted research papers between 10 February and 20 March 2025. ICESA 2025
+received 412 submissions and accepted 118 (an acceptance rate of 29 percent). Program committee
+members are invited on the basis of their published research in the field.
+
+Professor Anil Mehta, Program Chair, ICESA 2025
+
+[Page 2]
+
+TEXAS CLIMATE FOUNDERS PITCH NIGHT
+
+Thank you to our judges for 9 April 2026: Lena Varga (Tidewell Labs), Jordan Pike (Lone Star
+Angels), Mia Torres (city of Austin sustainability office).
+
+Twelve local climate startups pitched for a $5,000 prize. Hosted at a co-working space in East
+Austin.
+
+---
+
+# Exhibit I: Scholarly articles and citation record
+
+[Page 1]
+
+JOURNAL OF ENERGY STORAGE ANALYTICS
+A peer reviewed journal published since 2010. Impact factor (2025): 6.8.
+
+Volume 14, Issue 2 (2023), pages 101 to 118
+A drift model for early fault prediction in grid storage
+Lena Varga (Northfield Power Systems), Klaus Brandt (Danube Technical University)
+
+Abstract: We show that small, steady drifts in measured cell capacity precede most cell failures in
+stationary lithium iron phosphate systems by three to six weeks. Using data from 4,200 cells we
+build a model that flags at risk cells with 91 percent precision.
+
+[Page 2]
+
+Volume 15, Issue 4 (2024), pages 233 to 251
+Field validation of drift based fault prediction across 19 utility sites
+Lena Varga (Tidewell Labs), Patience Osei (Cascade Valley Electric), Klaus Brandt
+
+Abstract: Across 19 utility sites and 26 months, drift based prediction gave operators a median of
+24 days warning before cell failure and reduced unplanned outages by 37 percent.
+
+[Page 3]
+
+CITATION RECORD (printout from a scholarly search engine, 1 November 2026)
+"A drift model for early fault prediction in grid storage": cited by 212.
+"Field validation of drift based fault prediction across 19 utility sites": cited by 97.
+
+---
+
+# Exhibit J: Letters of support
+
+[Page 1]
+
+LETTER 1
+Professor Ruth Calloway, Chair, Department of Electrical Engineering, Midlands State Institute of
+Technology, Ohio
+10 October 2026
+
+To USCIS,
+
+I am a professor of electrical engineering with 25 years of research on battery reliability and
+more than 140 published papers. I have never worked with Ms Varga or her company, and I know her
+work only through her publications and its use in the field.
+
+Ms Varga's 2023 drift model changed how my field thinks about battery failure. Before it, most
+monitoring waited for a cell to show clear damage. Her work showed that warning signs appear weeks
+earlier, and gave a practical way to detect them. I now teach the drift model in my graduate course,
+and at least three research groups I know of have built on it. In my view it is one of the most
+important contributions to grid storage reliability of the last decade.
+
+[Page 2]
+
+LETTER 2
+Hiroshi Tanaka, Vice President, Grid Operations, Cascade Valley Electric, Oregon
+14 October 2026
+
+To USCIS,
+
+Cascade Valley Electric serves 1.1 million customers. Since 2024 we have used Tidewell's platform,
+built on Ms Varga's drift model, across 41 of our battery storage sites. In the 18 months after
+deployment, unplanned battery outages at those sites fell by 37 percent compared with the 18 months
+before. We estimate this avoided about USD 4.3 million in repair costs and lost revenue. Our
+company paid Tidewell as a customer, and I have no other relationship with Ms Varga.
+
+[Page 3]
+
+LETTER 3
+Sam Whitlock, Chief Executive Officer and co-founder, Tidewell Labs, Inc.
+2 November 2026
+
+To USCIS,
+
+I co-founded Tidewell with Lena because her research is the reason the company exists. Every
+product we sell is built on her drift model. She is the most talented engineer I have worked with,
+and Tidewell could not continue its work without her.
+
+---
+
+# Exhibit K: Society of Power Engineers membership
+
+[Page 1]
+
+SOCIETY OF POWER ENGINEERS
+Membership certificate
+
+This certifies that Lena Varga is a Member of the Society of Power Engineers, effective 1 September
+2017.
+
+[Page 2]
+
+MEMBERSHIP REQUIREMENTS (from the Society's website)
+Member grade is open to anyone holding a degree in engineering or a related field, or with three
+years of professional experience in the power industry. Annual dues: USD 140. Apply online;
+applications are normally approved within five working days.
+
+---
+
+# Exhibit L: Company records (Tidewell Labs and Northfield Power Systems)
+
+[Page 1]
+
+TIDEWELL LABS, INC.
+SERIES A TERM SHEET SUMMARY (dated 25 July 2025)
+
+Amount: USD 12,000,000
+Lead investor: Harbor Point Ventures (USD 8,000,000)
+Other investors: Ridgeline Capital (USD 3,500,000), Solace Energy Fund (USD 500,000)
+Pre money valuation: USD 38,000,000
+
+[Page 2]
+
+TIDEWELL LABS, INC.
+MINUTES OF THE BOARD OF DIRECTORS, 14 October 2025 (extract)
+
+3. Series A close. The CEO reported that the Series A closed on 30 September 2025. Solace Energy
+Fund withdrew before closing. Total raised at final close: USD 11,500,000. The board noted that
+press reports from August 2025 used the earlier figure of USD 12,000,000.
+
+4. Headcount. The company has 31 employees as of 30 September 2025.
+
+[Page 3]
+
+NORTHFIELD POWER SYSTEMS
+Letter confirming employment, 20 January 2024
+
+Lena Varga was employed by Northfield Power Systems as Lead Engineer, Battery Analytics, from June
+2019 to December 2023. She led a team of seven engineers. Her drift detection work was built into
+Northfield's monitoring product, which is installed at storage sites operated by our utility
+customers.
+
+Northfield Power Systems designs and supplies battery storage systems. It has about 600 employees.
+
+Signed, Human Resources, Northfield Power Systems
+
+---
+
+# Exhibit M: Published patent application
+
+[Page 1]
+
+UNITED STATES PATENT APPLICATION PUBLICATION
+Application number: 18/552,904
+Title: Systems and methods for predicting cell failure from capacity drift
+Inventors: Lena Varga, Klaus Brandt
+Applicant: Tidewell Labs, Inc.
+Publication date: 6 February 2025
+Status: pending examination
+
+Abstract: A method of predicting failure of a battery cell by measuring capacity over time,
+estimating a drift rate, and flagging the cell when the drift rate exceeds a learned threshold.
+

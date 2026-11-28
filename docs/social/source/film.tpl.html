@@ -1,0 +1,187 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:Lit;src:url(file://__NM__/literata/files/literata-latin-opsz-normal.woff2) format("woff2");font-weight:200 900}
+@font-face{font-family:Int;src:url(file://__NM__/inter/files/inter-latin-wght-normal.woff2) format("woff2");font-weight:100 900}
+html,body{margin:0;width:__W__px;height:__H__px;overflow:hidden;background:#000;font-family:Int;color:#161614;-webkit-font-smoothing:antialiased}
+.abs{position:absolute}
+.line{left:0;right:0;margin:0 auto;text-align:center;font-family:Lit;font-weight:600;color:#fff;letter-spacing:-0.02em;line-height:1.14;text-wrap:balance}
+.w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.14em;margin-bottom:-.14em;white-space:pre}.w>i{display:inline-block;font-style:normal}
+#frame{border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.1)}
+#app{position:absolute;left:0;top:0;width:1440px;height:900px;transform-origin:0 0}
+.cur{position:absolute;left:0;top:0;transform-origin:0 0;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+.card{background:#fff;border-radius:18px}
+.row{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid #ecebe6;font-size:18px;color:#2a2926}
+.ic{width:22px;height:22px;flex:none;position:relative}
+.spin{position:absolute;inset:2px;border-radius:50%;border:2px solid #e2e0da;border-top-color:#161614}
+.tick{position:absolute;inset:0;border-radius:50%;background:#161614;display:flex;align-items:center;justify-content:center}
+.logo{border-radius:26px;background:#fff;display:flex;align-items:center;justify-content:center}
+#mark{left:0;right:0;text-align:center;font-family:Lit;font-weight:600;color:#fff;letter-spacing:-0.02em}
+</style></head><body>
+<div id="intro0" class="abs" style="inset:0;display:flex;align-items:center;justify-content:center;opacity:0"><div class="line" style="position:static;font-size:__INTRO__px;letter-spacing:-0.035em">Introducing</div></div>
+<div id="intro" class="abs" style="inset:0;display:flex;align-items:center;justify-content:center"><div id="iword" class="line" style="position:static;font-size:__INTRO__px;letter-spacing:-0.035em">Lincoln</div></div>
+<div id="cap" class="abs line"></div>
+<div id="mont" class="abs" style="inset:0;display:flex;align-items:center;justify-content:center"><div id="mline" class="line" style="position:static;font-size:__MONT__px;max-width:88%"></div></div>
+
+<div id="mail" class="abs card" style="padding:32px 36px;box-sizing:border-box">
+  <div style="display:flex;align-items:center;gap:16px"><div style="width:50px;height:50px;border-radius:50%;background:#efe9df;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;color:#6b5a3e">RH</div>
+  <div><div style="font-size:20px;font-weight:600">Dr. Réka Halász</div><div style="font-size:15.5px;color:#8a877f">to Maria Alvarez</div></div><div style="margin-left:auto;font-size:15.5px;color:#8a877f">9:41 AM</div></div>
+  <div style="font-size:25px;font-weight:600;margin-top:24px;letter-spacing:-0.01em">Documents for my O-1</div>
+  <div style="font-family:Lit;font-size:19px;line-height:1.62;color:#4a4842;margin-top:10px">Hi Maria. Here is everything I could find in one PDF plus the salary survey from HR.</div>
+  <div style="display:inline-flex;align-items:center;gap:12px;margin-top:22px;padding:11px 17px;border-radius:12px;background:#f4f2ed;font-size:16.5px"><span style="color:#b4432c;font-weight:700;font-size:11px">PDF</span><span style="font-weight:500">Halasz documents.pdf</span><span style="color:#8a877f">52 pages</span></div>
+</div>
+<div id="work" class="abs card" style="padding:24px 28px 12px;box-sizing:border-box">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="font-family:Lit;font-weight:600;font-size:23px;letter-spacing:-0.02em">Lincoln</span><span id="wstate" style="font-size:14.5px;color:#8a877f">Working</span></div>
+  <div id="steps"></div>
+</div>
+
+<div id="frame" class="abs"><img id="app"><svg id="cursor" class="cur" viewBox="0 0 17 21"><path d="M1.2 1.2v15.6l4-3.7 2.7 6.2 2.8-1.2-2.7-6.1 5.5-.3z" fill="#fff" stroke="#111" stroke-width="1.1" stroke-linejoin="round"/></svg></div>
+
+<div id="ask" class="abs"><div style="background:#fff;border-radius:22px;padding:22px 22px 14px">
+  <div id="asktext" style="font-size:23px;min-height:32px;color:#161614"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px"><span style="font-size:26px;color:#8a877f;line-height:1">+</span><span id="asksend" style="width:36px;height:36px;border-radius:50%;background:#161614;display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 16 16"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+</div></div>
+
+<div id="owin" class="abs" style="overflow:hidden;border-radius:14px;background:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.1)">
+ <div style="width:1180px;height:738px;transform-origin:0 0;font-family:Int" id="owin_in">
+  <div style="height:44px;background:#0f6cbd;display:flex;align-items:center;gap:18px;padding:0 18px;color:#fff"><span style="font-weight:600;font-size:15px">Outlook</span><span style="flex:1;max-width:420px;height:28px;border-radius:6px;background:rgba(255,255,255,.22);font-size:13px;display:flex;align-items:center;padding:0 12px;color:rgba(255,255,255,.85)">Search</span></div>
+  <div style="display:flex;height:694px">
+   <div style="width:190px;background:#faf9f8;border-right:1px solid #edebe9;padding:14px 10px;font-size:13.5px;color:#323130">
+     <div style="padding:7px 10px;border-radius:6px;background:#e6f2fb;font-weight:600;display:flex;justify-content:space-between"><span>Inbox</span><span>3</span></div>
+     <div style="padding:7px 10px">Drafts</div><div style="padding:7px 10px">Sent Items</div><div style="padding:7px 10px">Archive</div></div>
+   <div style="width:300px;border-right:1px solid #edebe9"><div style="padding:10px 14px;border-bottom:1px solid #edebe9;background:#e6f2fb;border-left:3px solid #0f6cbd;padding-left:11px"><div style="font-size:13.5px;font-weight:600">Mariam Haddad</div><div style="font-size:12.5px;color:#605e5c;margin-top:2px">Documents for my N-400</div></div><div style="padding:10px 14px;border-bottom:1px solid #edebe9;"><div style="font-size:13.5px;font-weight:500">Kenji Watanabe</div><div style="font-size:12.5px;color:#605e5c;margin-top:2px">Re: Company documents</div></div><div style="padding:10px 14px;border-bottom:1px solid #edebe9;"><div style="font-size:13.5px;font-weight:500">Ana Ribeiro</div><div style="font-size:12.5px;color:#605e5c;margin-top:2px">Re: The joint lease</div></div><div style="padding:10px 14px;border-bottom:1px solid #edebe9;"><div style="font-size:13.5px;font-weight:500">Prof. Henrik Lindqvist</div><div style="font-size:12.5px;color:#605e5c;margin-top:2px">Re: Letter of support for Dr. Nair</div></div><div style="padding:10px 14px;border-bottom:1px solid #edebe9;"><div style="font-size:13.5px;font-weight:500">Hannah Schmidt</div><div style="font-size:12.5px;color:#605e5c;margin-top:2px">FOIA request received</div></div></div>
+   <div style="flex:1;padding:26px 30px">
+     <div style="font-size:20px;font-weight:600;color:#201f1e">Documents for my N-400</div>
+     <div style="display:flex;align-items:center;gap:12px;margin-top:16px"><div style="width:38px;height:38px;border-radius:50%;background:#e4ebe6;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;color:#3e5a4a">MH</div><div><div style="font-size:14px;font-weight:600">Mariam Haddad</div><div style="font-size:12.5px;color:#605e5c">To: Maria Alvarez</div></div><div style="margin-left:auto;font-size:12.5px;color:#605e5c">Yesterday 4:12 PM</div></div>
+     <div style="font-size:14px;line-height:1.65;color:#323130;margin-top:20px">Hi Maria<br><br>Attached are my green card and passports plus my tax returns for the last three years. Let me know if anything else is needed.<br><br>Best<br>Mariam</div>
+     <div style="margin-top:18px;display:flex;gap:8px">__ATT__</div>
+   </div>
+   <div style="width:360px;border-left:1px solid #edebe9;display:flex;flex-direction:column">
+     <div id="opane" style="position:relative;flex:1;overflow:hidden"><img id="oimg" style="position:absolute;left:0;top:0;width:380px;height:760px;transform-origin:0 0;transform:scale(.947)"><svg id="ocursor" class="cur" viewBox="0 0 17 21"><path d="M1.2 1.2v15.6l4-3.7 2.7 6.2 2.8-1.2-2.7-6.1 5.5-.3z" fill="#fff" stroke="#111" stroke-width="1.1" stroke-linejoin="round"/></svg></div></div>
+  </div></div></div>
+<div id="wwin" class="abs" style="overflow:hidden;border-radius:14px;background:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.1)">
+ <div style="width:1180px;height:738px;transform-origin:0 0;font-family:Int" id="wwin_in">
+  <div style="height:40px;background:#185abd;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13.5px;font-weight:500">Petition support letter.docx</div>
+  <div style="height:34px;background:#f3f2f1;display:flex;align-items:flex-end;gap:22px;padding:0 18px;font-size:13px;color:#323130"><span style=";padding:7px 2px">File</span><span style="border-bottom:2px solid #185abd;font-weight:600;color:#185abd;padding:7px 2px">Home</span><span style=";padding:7px 2px">Insert</span><span style=";padding:7px 2px">Layout</span><span style=";padding:7px 2px">References</span><span style=";padding:7px 2px">Review</span><span style=";padding:7px 2px">View</span></div>
+  <div style="height:46px;background:#fff;border-bottom:1px solid #e1dfdd;display:flex;align-items:center;gap:10px;padding:0 18px">
+   <span style="width:130px;height:26px;border:1px solid #c8c6c4;border-radius:4px;font-size:12.5px;display:flex;align-items:center;padding:0 8px;color:#323130">Literata</span><span style="width:44px;height:26px;border:1px solid #c8c6c4;border-radius:4px;font-size:12.5px;display:flex;align-items:center;justify-content:center">11</span>
+   <span style="font-weight:700;font-size:15px;padding:0 6px">B</span><span style="font-style:italic;font-size:15px;padding:0 6px">I</span><span style="text-decoration:underline;font-size:15px;padding:0 6px">U</span>
+   <span style="width:1px;height:24px;background:#e1dfdd;margin:0 8px"></span><span style="display:flex;gap:4px;align-items:center"><span style="width:20px;height:2px;background:#605e5c;box-shadow:0 5px 0 #605e5c,0 -5px 0 #605e5c"></span></span>
+   <span style="margin-left:auto;display:flex;align-items:center;gap:8px;padding:4px 12px;border-radius:6px;background:#eef3fb;font-size:13px;font-weight:600;color:#185abd">Lincoln</span></div>
+  <div style="display:flex;height:618px">
+   <div style="flex:1;background:#e9e8e6;overflow:hidden;display:flex;justify-content:center;padding-top:22px"><div style="width:560px;height:760px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.18);padding:46px 58px;box-sizing:border-box">
+     <div style="font-family:Lit;font-weight:600;font-size:21px">Petition support letter</div><div style="font-size:11.5px;color:#7d7a72;margin-top:4px">O-1A · Dr. Réka Halász · Corvane Therapeutics</div><div style="font-family:Lit;font-weight:600;font-size:15px;margin:16px 0 6px">Introduction</div><p style="font-family:Lit;font-size:12.6px;line-height:1.62;margin:0 0 9px;color:#222">Corvane Therapeutics, Inc. is a Delaware corporation with offices at 400 Binney Street, Cambridge, Massachusetts. Corvane petitions for O-1A classification of Dr. Réka Halász as an individual of extraordinary ability in the sciences under 8 CFR 214.2(o)(1)(ii)(A)(1).</p><p style="font-family:Lit;font-size:12.6px;line-height:1.62;margin:0 0 9px;color:#222">Corvane will employ Dr. Halász as Principal Research Scientist, Structure Prediction, reporting to its Chief Scientific Officer. She will lead the Structure Prediction group of six scientists and be responsible for the FoldSight platform. Employment begins on the later of 4 January 2027 or the date USCIS approves this petition, and continues for three years.</p><div style="font-family:Lit;font-weight:600;font-size:15px;margin:16px 0 6px">The beneficiary and the field</div><p style="font-family:Lit;font-size:12.6px;line-height:1.62;margin:0 0 9px;color:#222">Dr. Halász is a Hungarian national, born in Debrecen. She received her PhD in computational biology, summa cum laude, from Pannonia University of Sciences in Budapest on 28 June 2019. From 2019 to 2023 she was a postdoctoral researcher in the laboratory of Prof. Elena Marchetti at the Alpine Institute of Technology in Zurich.</p><p style="font-family:Lit;font-size:12.6px;line-height:1.62;margin:0 0 9px;color:#222">Corvane has employed Dr. Halász full time since 6 February 2023. Her current title is Senior Research Scientist, and she leads Corvane&#x27;s Structure Prediction group of five scientists. Corvane was founded in 2020 and had 85 employees on 1 September 2026.</p></div></div>
+   <div style="width:360px;border-left:1px solid #e1dfdd;display:flex;flex-direction:column">
+     <div id="wpane" style="position:relative;flex:1;overflow:hidden"><img id="wimg" style="position:absolute;left:0;top:0;width:380px;height:760px;transform-origin:0 0;transform:scale(.947)"><svg id="wcursor" class="cur" viewBox="0 0 17 21"><path d="M1.2 1.2v15.6l4-3.7 2.7 6.2 2.8-1.2-2.7-6.1 5.5-.3z" fill="#fff" stroke="#111" stroke-width="1.1" stroke-linejoin="round"/></svg></div></div>
+  </div></div></div>
+<div id="logos" class="abs" style="left:0;right:0;display:flex;justify-content:center;flex-wrap:wrap">__LOGOS__</div>
+<div id="outro" class="abs" style="inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+  <div class="line" style="position:static;font-size:__INTRO__px;letter-spacing:-0.035em">Lincoln</div>
+</div>
+<div id="mark" class="abs">Lincoln</div>
+<script>
+const W=__W__,H=__H__,TALL=H>W,FPS=60;
+const SEQ=__SEQ__,MK=__MARKS__,OSEQ=__OSEQ__,WSEQ=__WSEQ__;
+const $=(id)=>document.getElementById(id);
+const cl=(x)=>Math.min(1,Math.max(0,x)),eo=(x)=>1-Math.pow(1-cl(x),3),e4=(x)=>1-Math.pow(1-cl(x),4),eio=(x)=>{const t=cl(x);return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2},seg=(t,a,b)=>cl((t-a)/(b-a)),lerp=(a,b,k)=>a+(b-a)*k;
+const set=(el,o)=>Object.assign(el.style,o);
+const L=TALL?{capTop:190,cap:54,capW:900,fw:940,fh:588,fy:430,markY:H-92,mark:30,zoom:.8,mail:{x:90,y:470,w:900},work:{x:150,y:810,w:780},om:{x:60,y:520,w:560},op:{x:640,y:440,w:380,h:720},logo:132,logoY:600,gap:24,ask:860}
+               :{capTop:136,cap:48,capW:1400,fw:1180,fh:738,fy:256,markY:H-60,mark:24,zoom:.84,mail:{x:330,y:470,w:740},work:{x:1110,y:410,w:600},om:{x:330,y:420,w:780},op:{x:1160,y:300,w:370,h:650},logo:116,logoY:480,gap:26,ask:900};
+const FX=(W-L.fw)/2,K=L.fw/1440;
+set($("frame"),{left:FX+"px",top:L.fy+"px",width:L.fw+"px",height:L.fh+"px"});
+set($("cap"),{top:L.capTop+"px",fontSize:L.cap+"px",maxWidth:L.capW+"px"});
+set($("mark"),{top:L.markY+"px",fontSize:L.mark+"px"});
+for(const[id,b] of [["mail",L.mail],["work",L.work]]) set($(id),{left:b.x/L.zoom+"px",top:b.y/L.zoom+"px",width:b.w/L.zoom+"px",zoom:L.zoom});
+for(const id of ["owin","wwin"]){set($(id),{left:FX+"px",top:L.fy+"px",width:L.fw+"px",height:L.fh+"px"});$(id+"_in").style.transform="scale("+(L.fw/1180)+")";}
+set($("logos"),{top:L.logoY+"px",gap:L.gap+"px",padding:TALL?"0 70px":"0"});
+[...$("logos").children].forEach(x=>{x.style.width=x.style.height=L.logo+"px";x.firstChild.style.width=x.firstChild.style.height=(L.logo*.46)+"px";});
+set($("ask"),{width:L.ask+"px",left:(W-L.ask)/2+"px",top:(H/2-60)+"px"});
+const words=(s)=>s.split(" ").map(w=>'<span class="w"><i'+(/^\d+$/.test(w)?' data-n="'+w+'"':"")+'>'+w+' </i></span>').join("");
+const STEPS=["Read all 52 pages","Opened the case for Dr. Réka Halász","Found 11 open issues","Mapped the evidence to 8 criteria","Drafted the reply to Réka","Drafted a request to the ISCSB"];
+$("steps").innerHTML=STEPS.map(s=>'<div class="row"><div class="ic"><div class="spin"></div><div class="tick"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 6.2l2.3 2.3 4.7-4.9" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div><span>'+s+'</span></div>').join("");
+
+// The app section: the real frames play from A, one per film frame.
+const A=15.0, AN=SEQ.length, AEND=A+AN/FPS;
+const at=(k)=>A+MK[k]/FPS;
+const CAPS=[[3.5,7.6,"Lincoln connects to the tools your firm already uses."],[7.9,11.100000000000001,"A new client writes in."],[11.3,14.8,"Lincoln opens the case. No need for prompts and explanations."],
+ [A+0.3,at("review")-0.15,"By morning the work is waiting for you."],
+ [at("review")+0.1,at("review_click")+0.25,"Lincoln drafts the reply. Nothing is sent without you."],
+ [at("review_click")+0.4,at("side_click")+0.1,"Approved and sent from your own inbox."],
+ [at("overview")+0.1,at("docs_click")+0.1,"Lincoln flags the risks and shows you the page."],
+ [at("docs")+0.05,at("ev_click")+0.1,"All 37 documents read and filed."],
+ [at("ev")+0.05,at("drafts_click")+0.1,"The evidence mapped to all eight criteria."],
+ [at("drafts")+0.05,AEND-0.2,"The support letter cites the page for every fact."]];
+const O0=AEND+0.3, OP=O0+0.9, OEND=OP+OSEQ.length/FPS, WO=OEND, WP=WO+0.7, WEND=WP+WSEQ.length/FPS;
+const M0=WEND+0.5;
+const MONT=["Forms filled.","Translations prepared.","RFE responses drafted.","Filing packets assembled.","Client intake handled.","Deadlines on your calendar.","Day and night."].map((s,k)=>[M0+k*1.15,s]);
+const MEND=M0+MONT.length*1.15;
+const ASK0=-100, ASKQ="";
+const T0=3.5, U0=MEND+0.3, END=U0+4;
+CAPS.push([O0,WEND,"Outlook and Word add-ins."]);
+// "Introducing" plays first on its own, then the whole film runs exactly as before, OFF seconds later.
+const OFF=3.0;
+window.END=END+OFF;
+
+// Camera over the real frames: [frame, centre x, centre y, zoom]; it moves only while the cursor is still.
+const f=(k,d=0)=>MK[k]+d;
+const CAM=[[0,720,450,1],[f("home",60),720,450,1],[f("home",92),860,500,1.12],
+ [f("review",14),860,500,1.12],[f("review",64),990,420,1.42],[f("review",120),990,420,1.42],[f("review",176),990,610,1.42],[f("review",178),990,610,1.42],[f("review_move",-4),820,590,1.12],
+ [f("review_click",4),820,590,1.12],[f("review_click",44),740,700,1.55],[f("sent_on",8),740,700,1.55],[f("sent_on",62),720,450,1],[f("overview",10),720,450,1],[f("overview",70),620,480,1.24],
+ [f("docs",4),620,480,1.24],[f("docs",50),760,540,1.24],[f("ev",4),760,540,1.24],[f("drafts",6),760,540,1.24],[f("drafts",40),740,460,1.12],
+ [f("fact_move",-2),740,460,1.12],[f("hover",-40),740,470,1.34],[f("end"),720,500,1.48]];
+function cam(fr){let i=0;while(i<CAM.length-1&&CAM[i+1][0]<=fr)i++;const a=CAM[i],b=CAM[Math.min(i+1,CAM.length-1)];const k=b[0]>a[0]?eio((fr-a[0])/(b[0]-a[0])):0;
+  let cx=lerp(a[1],b[1],k),cy=lerp(a[2],b[2],k),z=lerp(a[3],b[3],k);const s=K*z,hw=L.fw/2/s,hh=L.fh/2/s;cx=Math.min(1440-hw,Math.max(hw,cx));cy=Math.min(900-hh,Math.max(hh,cy));return{cx,cy,s};}
+
+function rise(el,t,a,b,step){[...el.children].forEach((s,k)=>{const n=e4(seg(t,a+k*step,a+k*step+0.8)),o=eio(seg(t,b-0.4,b));const i=s.firstChild;i.style.transform="translateY("+((1-n)*108-o*108)+"%)";if(i.dataset.n)i.textContent=Math.round(Number(i.dataset.n)*eo(seg(t,a+k*step,a+k*step+1.2)))+" ";});}
+let capNow=-1,montNow=-1,lastSrc="",lastO="",lastW="";
+async function render(t){
+  set($("intro0"),{opacity:e4(seg(t,0.3,1.5))*(1-eio(seg(t,2.3,2.8)))});
+  await render0(Math.max(0,t-OFF));
+}
+async function render0(t){
+  const fr=Math.round((t-A)*FPS);
+  // Lines
+  const ci=CAPS.findIndex(([a,b])=>t>=a&&t<b);if(ci!==capNow){capNow=ci;$("cap").innerHTML=ci<0?"":words(CAPS[ci][2]);}
+  if(ci>=0){const[a,b]=CAPS[ci];$("cap").style.opacity=e4(seg(t,a,a+1.2))*(1-eio(seg(t,b-0.5,b)));[...$("cap").children].forEach(s=>{const i=s.firstChild;i.style.transform="none";if(i.dataset.n)i.textContent=i.dataset.n+" ";});}
+  set($("intro"),{opacity:e4(seg(t,0.3,1.5))*(1-eio(seg(t,2.8,3.3)))});
+  set($("mark"),{opacity:seg(t,3.4,3.9)*(1-seg(t,U0-0.5,U0))});
+  // The client's file, and Lincoln working it
+  const mi=e4(seg(t,8.0,9.0)),mo=eio(seg(t,14.200000000000001,14.9)),wi=e4(seg(t,11.3,12.2));
+  set($("mail"),{opacity:mi*(1-mo),transform:"translate("+((1-wi)*(TALL?0:200))+"px,"+((1-mi)*40-mo*30)+"px)"});
+  set($("work"),{opacity:wi*(1-mo),transform:"translateY("+((1-wi)*30-mo*30)+"px)"});
+  [...$("steps").children].forEach((r,k)=>{const a=12.0+k*0.36,on=seg(t,a,a+0.3),done=seg(t,a+0.32,a+0.44);r.style.opacity=on;r.style.transform="translateY("+((1-eo(on))*6)+"px)";r.querySelector(".spin").style.opacity=1-done;r.querySelector(".spin").style.transform="rotate("+(t*540)+"deg)";const tk=r.querySelector(".tick");tk.style.opacity=done;tk.style.transform="scale("+(0.7+0.3*eo(done))+")";});
+  $("wstate").textContent=t>14.3?"Done":"Working";
+  // The app
+  const fi=e4(seg(t,A-0.2,A+0.5)),fo=eio(seg(t,AEND-0.2,AEND+0.4));
+  set($("frame"),{opacity:fi*(1-fo),transform:"translateY("+((1-fi)*40)+"px)"});
+  if(t>=A-0.25&&t<AEND+0.45){const k=Math.max(0,Math.min(AN-1,fr)),[src,mx,my]=SEQ[k],c=cam(k);
+    if(src!==lastSrc){lastSrc=src;$("app").src="frames/"+src;await $("app").decode().catch(()=>{});}
+    $("app").style.transform="translate("+(L.fw/2-c.cx*c.s)+"px,"+(L.fh/2-c.cy*c.s)+"px) scale("+c.s+")";
+    const cs=24*Math.sqrt(c.s/K),vis=seg(k,MK.home+40,MK.home+56);
+    set($("cursor"),{width:cs+"px",height:cs*21/17+"px",opacity:vis,transform:"translate("+(L.fw/2+(mx-c.cx)*c.s-cs*0.07)+"px,"+(L.fh/2+(my-c.cy)*c.s-cs*0.06)+"px)"});}
+  // Everything else, one line at a time
+  const mj=MONT.findIndex(([a],k)=>t>=a&&t<(MONT[k+1]?MONT[k+1][0]:MEND));
+  if(mj!==montNow){montNow=mj;$("mline").innerHTML=mj<0?"":words(MONT[mj][1]);}
+  if(mj>=0)rise($("mline"),t,MONT[mj][0],MONT[mj+1]?MONT[mj+1][0]:MEND,0.05);
+  // Ask
+  const ai=e4(seg(t,ASK0+0.2,ASK0+0.8)),ao=eio(seg(t,ASK0+3,ASK0+3.5));
+  set($("ask"),{opacity:ai*(1-ao),transform:"translateY("+((1-ai)*30)+"px)"});
+  const typed=Math.round(ASKQ.length*seg(t,ASK0+0.9,ASK0+2.4));
+  $("asktext").innerHTML=typed===0?'<span style="color:#a09d95">Ask Lincoln anything</span>':ASKQ.slice(0,typed)+(t<ASK0+2.6&&Math.floor(t*3)%2===0?"|":"");
+  $("asksend").style.opacity=0.25+0.75*seg(t,ASK0+2.3,ASK0+2.5);
+  // Outlook, then Word: each with the real Lincoln pane, the mouse coming to rest on the button it would press
+  const oi=e4(seg(t,O0,O0+0.7)),oo=eio(seg(t,WO-0.3,WO+0.3));
+  set($("owin"),{opacity:oi*(1-oo),transform:"translateY("+((1-oi)*30)+"px)"});
+  if(t>=O0&&t<WO+0.4){const k=Math.max(0,Math.min(OSEQ.length-1,Math.round((t-OP)*FPS))),[src,mx,my]=OSEQ[k];
+    if(src!==lastO){lastO=src;$("oimg").src="oframes/"+src;await $("oimg").decode().catch(()=>{});}
+    set($("ocursor"),{width:"20px",height:(20*21/17)+"px",opacity:seg(k,40,56),transform:"translate("+(mx*0.947-1.4)+"px,"+(my*0.947-1.2)+"px)"});}
+  const wi2=e4(seg(t,WO-0.2,WO+0.4)),wo2=eio(seg(t,WEND-0.2,WEND+0.4));
+  set($("wwin"),{opacity:wi2*(1-wo2)});
+  if(t>=WO-0.3&&t<WEND+0.5){const k=Math.max(0,Math.min(WSEQ.length-1,Math.round((t-WP)*FPS))),[src,mx,my]=WSEQ[k];
+    if(src!==lastW){lastW=src;$("wimg").src="wframes/"+src;await $("wimg").decode().catch(()=>{});}
+    set($("wcursor"),{width:"20px",height:(20*21/17)+"px",opacity:seg(k,40,56),transform:"translate("+(mx*0.947-1.4)+"px,"+(my*0.947-1.2)+"px)"});}
+  // The tools
+  [...$("logos").children].forEach((x,k)=>{const i=e4(seg(t,T0+0.5+k*0.07,T0+1.2+k*0.07)),o=eio(seg(t,T0+3.7,T0+4.2));x.style.opacity=i*(1-o);x.style.display=t<9?"flex":"none";x.style.transform="translateY("+((1-i)*30)+"px)";});
+  // The close
+  set($("outro"),{opacity:e4(seg(t,U0,U0+1.2))});
+}
+window.render=render;
+</script></body></html>

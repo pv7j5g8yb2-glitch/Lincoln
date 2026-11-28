@@ -1,0 +1,67 @@
+import Link from "next/link";
+import clsx from "clsx";
+import { ChevronLeft } from "lucide-react";
+import ApprovalPanel from "@/components/ApprovalPanel";
+import { Empty, PageHead, btn } from "@/components/ui";
+import { requireUser } from "@/lib/session";
+import { FILING_APPROVALS, isLawyerRole } from "@/lib/roles";
+import { approvalById, approvalsPage, messageById } from "@/lib/queries";
+import { ago, inDays } from "@/lib/format";
+import { packetPlan } from "@/lib/packet";
+
+export const metadata = { title: "Review" };
+
+const PAGE = 100;
+
+export default async function Review({ searchParams }: { searchParams: Promise<{ id?: string; n?: string }> }) {
+  const { user, firm, viewer } = await requireUser();
+  const { id, n } = await searchParams;
+  const limit = Math.min(Math.max(Number(n) || PAGE, PAGE), 5000);
+  const { rows: pending, more } = approvalsPage(firm.id, viewer, limit);
+  const picked = id ? approvalById(firm.id, id, viewer) : undefined;
+  const sel = picked && picked.status === "pending" ? picked : pending[0];
+  const payload = sel ? (sel.kind === "packet" ? packetPlan(firm.id, sel.case_id) : JSON.parse(sel.payload)) : null;
+  const message = payload?.messageId ? messageById(firm.id, payload.messageId) : null;
+
+  return (
+    <div className="rise">
+      <PageHead title="Review" />
+      {pending.length === 0 ? (
+        <Empty page>Nothing for review yet</Empty>
+      ) : (
+        <div className="grid gap-10 lg:grid-cols-[260px_1fr]">
+          <ul className={clsx("flex-col border-t border-line", id ? "hidden lg:flex" : "flex")}>
+            {pending.map((a) => (
+              <li key={a.id} data-row={a.id} className="border-b border-line">
+                <Link href={`/approvals?id=${a.id}${limit > PAGE ? `&n=${limit}` : ""}`} scroll={false} className={clsx("relative block py-3 pl-3 pr-2 transition hover:bg-side", sel?.id === a.id && "bg-side")}>
+                  {sel?.id === a.id && <span className="absolute inset-y-2 left-0 w-[2px] bg-ink" />}
+                  <div className="text-[13.5px] font-medium leading-snug">{a.title}</div>
+                  <div className="mt-0.5 truncate text-[12px] text-muted">{a.client}{a.due ? ` · due ${inDays(a.due)}` : ""}</div>
+                </Link>
+              </li>
+            ))}
+            {more && <li className="flex justify-center py-4"><Link href={`/approvals?n=${limit + PAGE}${id ? `&id=${id}` : ""}`} scroll={false} className={btn.secondary}>Show more</Link></li>}
+          </ul>
+          {sel && (
+            <div key={sel.id} data-item className={clsx("item-in min-w-0 max-w-[760px]", !id && "hidden lg:block")}>
+              <Link href="/approvals" className="mb-4 inline-flex items-center gap-1 text-[12.5px] text-muted lg:hidden"><ChevronLeft size={14} /> Review</Link>
+              <p className="mb-1 text-[12.5px] text-muted"><Link href={`/cases/${sel.case_id}`} className="hover:text-ink hover:underline">{sel.client}</Link> · {sel.type_code} · {ago(sel.created_at)}</p>
+              <h2 className="serif mb-2 text-[23px] font-light leading-snug tracking-[-0.015em]">{sel.title}</h2>
+              <p className="max-w-[640px] text-[13.5px] leading-relaxed">{sel.brief}</p>
+              {(sel.least_sure || sel.if_wrong) && (
+                <dl className="mt-3 grid max-w-[640px] gap-1.5 text-[13px] leading-relaxed">
+                  {sel.least_sure && <div className="flex gap-3"><dt className="w-[110px] shrink-0 text-faint">Lowest confidence</dt><dd>{sel.least_sure}</dd></div>}
+                  {sel.if_wrong && <div className="flex gap-3"><dt className="w-[110px] shrink-0 text-faint">Risk if wrong</dt><dd>{sel.if_wrong}</dd></div>}
+                </dl>
+              )}
+              <div className="mt-7">
+                <ApprovalPanel key={sel.id} id={sel.id} caseId={sel.case_id} kind={sel.kind} payload={payload} canApprove={isLawyerRole(user.role) || !FILING_APPROVALS.includes(sel.kind)} message={message ? { party: message.party, party_role: message.party_role, subject: message.subject, body: message.body } : null} />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+    </div>
+  );
+}

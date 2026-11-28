@@ -1,0 +1,43 @@
+Pass 2: assess eligibility using only the pass 1 tables.
+
+Legal frame: 8 CFR 214.2(o)(3)(iii). Either a one time major internationally recognised award under
+(o)(3)(iii)(A), or at least three of the eight criteria in (o)(3)(iii)(B)(1) to (8), or comparable
+evidence under (o)(3)(iii)(C) if a criterion does not readily apply. Then a final merits review of all
+the evidence together (USCIS Policy Manual, Volume 2, Part M): does it show sustained national or
+international acclaim and that the beneficiary is among the small percentage at the very top of the
+field, on a preponderance of the evidence.
+
+Apply each criterion's own standard strictly, and give its citation:
+(B)(1) Prizes or awards: nationally or internationally recognised, for excellence in the field. Internal,
+  local or purchasable awards do not qualify. Note the selection process and number of nominees.
+(B)(2) Membership: the association must require outstanding achievements, judged by recognised national
+  or international experts. Read the association's own rules; a higher grade such as Fellow can qualify
+  where ordinary membership does not. Open or paid membership does not qualify.
+(B)(3) Published material about the beneficiary and her work, in professional or major trade
+  publications or major media, with title, date and author. Pieces written by the beneficiary, by her
+  employer, or paid for do not count here. Circulation or readership evidence matters.
+(B)(4) Judging the work of others in the same or an allied field. Selective journals and conferences are
+  strong; predatory journals and local events are not.
+(B)(5) Original contributions of major significance: impact beyond her employer (adoption by others,
+  citations, independent letters with specifics, measured results). Pending patents alone are not enough.
+(B)(6) Scholarly articles in professional journals or major media.
+(B)(7) Critical or essential role for organisations with a distinguished reputation: both the role and
+  the reputation must be shown; employer statements alone are weak.
+(B)(8) High salary: compare the pay for the O-1 role with reliable data for the same title, field and
+  location. At or below the median does not meet it.
+
+For each: claim, do not claim, or claim only with more evidence; supporting documents with pages; main
+weakness; strength (strong, moderate, weak). Weigh letters by independence and disclose any relationship.
+For co-authored work, use the author contribution statements to say exactly what the beneficiary did.
+
+Then check the filing requirements and mark each present, missing, inadequate or unclear:
+* written advisory opinion (consultation) from an appropriate peer group, labour or management
+  organisation, 8 CFR 214.2(o)(2)(ii)(D) and (o)(5); a letter from someone connected to the petitioner
+  is not a peer group consultation;
+* copy of the contract, or a summary of an oral agreement, (o)(2)(ii)(B);
+* explanation of the events or activities with dates, and an itinerary where needed, (o)(2)(ii)(C);
+* certified English translations of every foreign language document, 8 CFR 103.2(b)(3);
+* Form I-129 with the O supplement, filing fee, Form G-28;
+* passport valid for the requested period, current status and I-94 expiry, and the filing deadline that
+  follows from them;
+* evidence that the beneficiary's name is consistent across documents, or an explanation.

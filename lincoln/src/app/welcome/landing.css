@@ -1,0 +1,49 @@
+@keyframes hero-in { from { opacity: 0; transform: translateY(18px); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
+.hero-in { animation: hero-in 1.1s cubic-bezier(.2,.8,.2,1) both; }
+/* The courthouse rises into its frame and settles. */
+@keyframes hero-photo { from { clip-path: inset(100% 0 0 0 round 20px); } to { clip-path: inset(0 0 0 0 round 20px); } }
+@keyframes hero-photo-img { from { transform: scale(1.18); } to { transform: scale(1); } }
+.hero-photo { animation: hero-photo 1.4s cubic-bezier(.7,0,.2,1) .25s both; }
+.hero-photo-img { animation: hero-photo-img 2.4s cubic-bezier(.2,.8,.2,1) .25s both; }
+@media (prefers-reduced-motion: reduce) { .hero-in, .hero-photo, .hero-photo-img { animation: none; } }
+/* The hero title sits on two lines at every width: its size follows the column it lives in.
+   9.6 is the title's width at 1px of type, with a little room to spare. */
+.hero-title { font-size: max(30px, min(calc((100vw - 32px) / 9.6), 60px)); }
+@media (min-width: 768px) {
+  .hero-title { font-size: min(calc((100vw - 64px) / 9.6), 64px); }
+}
+@media (min-width: 1024px) {
+  .hero-title { font-size: min(calc((min(100vw, 1200px) - 64px) / 9.6), 76px); }
+}
+/* Get In Touch: a dropdown opens with a short fade; the tick on the thank you draws once, then stays. */
+@keyframes dropdown-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.dropdown-in { animation: dropdown-in .16s ease-out both; }
+@keyframes tick-pop { 0% { opacity: 0; transform: scale(.6); } 60% { opacity: 1; transform: scale(1.08); } 100% { transform: scale(1); } }
+@keyframes tick-draw { to { stroke-dashoffset: 0; } }
+.tick { animation: tick-pop .5s cubic-bezier(.2,.8,.2,1) both; }
+.tick-ring { stroke-dasharray: 208; stroke-dashoffset: 208; animation: tick-draw .55s ease-out .1s forwards; }
+.tick-mark { stroke-dasharray: 44; stroke-dashoffset: 44; animation: tick-draw .35s ease-out .55s forwards; }
+@media (prefers-reduced-motion: reduce) { .dropdown-in, .tick { animation: none; } .tick-ring, .tick-mark { animation: none; stroke-dashoffset: 0; } }
+/* The case types drift. */
+@keyframes marquee { to { transform: translateX(-50%); } }
+.marquee { animation: marquee 60s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .marquee { animation: none; } }
+/* The public pages never move sideways, on any phone (iOS Safari can pan wider content even when it is clipped). */
+html:has(.landing-root), body:has(.landing-root) { overflow-x: hidden; overscroll-behavior-x: none; }
+/* The public pages are pitch black edge to edge, also when a phone pulls past the top or bottom. */
+html:has(.landing-root), body:has(.landing-root) { background: #000; color-scheme: dark; }
+.landing-root { touch-action: pan-y pinch-zoom; }
+/* Links within the page (How it works and the rest) glide down to their section rather than jumping. */
+@media (prefers-reduced-motion: no-preference) { html:has(.landing-root) { scroll-behavior: smooth; } }
+/* Get In Touch, one question at a time: each step slides in (from the right going on, from the left going back) and its
+   options rise in one after another. */
+@keyframes step-in { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes step-back { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+@keyframes option-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.step-in { animation: step-in .42s cubic-bezier(.2,.8,.2,1) both; }
+.step-back { animation: step-back .42s cubic-bezier(.2,.8,.2,1) both; }
+.option-in { animation: option-in .4s cubic-bezier(.2,.8,.2,1) both; }
+@media (prefers-reduced-motion: reduce) { .step-in, .step-back, .option-in { animation: none; } }
+/* The public pages are square and black: focus shows as a square white outline, never the app's rounded dark one. */
+.landing-root :focus-visible { border-radius: 0; outline-color: #fff; }
+.landing-root input:focus-visible, .landing-root textarea:focus-visible { outline: none; }

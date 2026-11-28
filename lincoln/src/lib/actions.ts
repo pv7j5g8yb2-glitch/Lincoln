@@ -1,0 +1,1019 @@
+"use server";
+
+import { cookies } from "next/headers";
+import { forgetFirmSessions } from "./client-intake";
+import { FILING_APPROVALS, ROLES, isLawyerRole } from "./roles";
+import { acceptInvite, createInvite, findInvite, inviteUrl, isOps, setUpFirm } from "./invites";
+import { hashPassword, initialsOf, limited, newToken, sha, validEmail, validPassword, verifyPassword } from "./auth";
+import { mailConfigured as systemMailConfigured, sendSystemMail } from "./mailer";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import fs from "node:fs";
+import path from "node:path";
+import { dataDir, db, resetDemo, uid } from "./db";
+import { COOKIE, MFA_COOKIE, requireUser } from "./session";
+import { clientIp, securityEvent } from "./audit";
+import { beginChallenge, createSession } from "./login";
+import { verify as verifyTotp } from "./totp";
+import { open as openSecret } from "./secret";
+import { DEMO_USER } from "./seed";
+import { approvalById, caseById, kv, messageById, setKv } from "./queries";
+import { buildHalaszLetter } from "./letter";
+import { EVENTS } from "./demo-events";
+import type { Question } from "./halasz";
+import { draftForCase, processCase } from "./intake";
+import { fileKind } from "./pdf";
+import { breached } from "./pwned";
+import { llmConfigured } from "./llm";
+import { approveAndSend, takeInstruction } from "./agent";
+import { randomBytes } from "node:crypto";
+import { newSecret as newTotpSecret } from "./totp";
+import { seal as sealSecret } from "./secret";
+import { deleteCaseFiles, forgetFirmKey } from "./storage";
+import { toast } from "./toast";
+import { appUrl } from "./integrations/http";
+
+const now = () => new Date().toISOString();
+const day = (n: number) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+
+const startSession = createSession;
+const clientKey = clientIp;
+
+export async function signInDemo() {
+  if (limited(`demo:${await clientKey()}`, 20)) redirect("/signin?error=limited");
+  await startSession(DEMO_USER);
+  redirect("/");
+}
+
+export async function signIn(form: FormData) {
+  const email = String(form.get("email") ?? "").trim().toLowerCase().slice(0, 200);
+  const password = String(form.get("password") ?? "").slice(0, 200);
+  if (limited(`in:${email}`) || limited(`in:${await clientKey()}`, 30)) redirect("/signin?error=limited");
+  const u = db().prepare("SELECT id, firm_id, password_hash, totp_enc FROM users WHERE email = ?").get(email) as { id: string; firm_id: string; password_hash: string | null; totp_enc: string | null } | undefined;
+  if (!verifyPassword(password, u?.password_hash ?? null) || !u) {
+    if (u) await securityEvent(u.firm_id, u.id, "sign_in_failed");
+    redirect("/signin?error=invalid");
+  }
+  if (u.totp_enc) {
+    // Password correct; the second step decides. The challenge lasts five minutes and five tries.
+    redirect(await beginChallenge(u.id));
+  }
+  await securityEvent(u.firm_id, u.id, "sign_in");
+  await startSession(u.id);
+  redirect("/");
+}
+
+export async function verifySignInCode(form: FormData) {
+  const jar = await cookies();
+  const token = jar.get(MFA_COOKIE)?.value ?? "";
+  const d = db();
+  const ch = d.prepare("SELECT user_id, expires_at, attempts FROM login_challenges WHERE token_hash = ?").get(sha(token)) as { user_id: string; expires_at: string; attempts: number } | undefined;
+  if (!ch || ch.expires_at < now() || ch.attempts >= 5) {
+    if (ch) d.prepare("DELETE FROM login_challenges WHERE token_hash = ?").run(sha(token));
+    jar.delete(MFA_COOKIE);
+    redirect("/signin?error=expired");
+  }
+  d.prepare("UPDATE login_challenges SET attempts = attempts + 1 WHERE token_hash = ?").run(sha(token));
+  const u = d.prepare("SELECT id, firm_id, totp_enc, totp_last_step, recovery FROM users WHERE id = ?").get(ch.user_id) as { id: string; firm_id: string; totp_enc: string; totp_last_step: number | null; recovery: string | null };
+  const code = String(form.get("code") ?? "").trim().slice(0, 40);
+  const step = verifyTotp(openSecret(u.totp_enc), code, u.totp_last_step);
+  let ok = step !== null;
+  if (ok) d.prepare("UPDATE users SET totp_last_step = ? WHERE id = ?").run(step, u.id);
+  else {
+    // A recovery code works once.
+    const codes = JSON.parse(u.recovery ?? "[]") as string[];
+    const h = sha(code.toUpperCase().replace(/[^A-Z0-9]/g, ""));
+    if (codes.includes(h)) {
+      ok = true;
+      d.prepare("UPDATE users SET recovery = ? WHERE id = ?").run(JSON.stringify(codes.filter((c) => c !== h)), u.id);
+      await securityEvent(u.firm_id, u.id, "recovery_code_used", `${codes.length - 1} left`);
+    }
+  }
+  if (!ok) {
+    await securityEvent(u.firm_id, u.id, "sign_in_code_failed");
+    redirect("/signin/code?error=code");
+  }
+  d.prepare("DELETE FROM login_challenges WHERE token_hash = ?").run(sha(token));
+  jar.delete(MFA_COOKIE);
+  await securityEvent(u.firm_id, u.id, "sign_in", "with two step code");
+  await startSession(u.id);
+  redirect("/");
+}
+
+/** Joining a firm through an invite link: the person sets their name, role and password. */
+export async function joinFirm(token: string, form: FormData) {
+  const inv = findInvite(token);
+  if (!inv) redirect(`/join/${token}?error=expired`);
+  const name = String(form.get("name") ?? "").trim().slice(0, 100);
+  const role = String(form.get("role") ?? "");
+  const password = String(form.get("password") ?? "");
+  if (limited(`join:${await clientKey()}`, 10)) redirect(`/join/${token}?error=limited`);
+  if (!name || !ROLES.includes(role)) redirect(`/join/${token}?error=fields`);
+  if (!validPassword(password)) redirect(`/join/${token}?error=password`);
+  if (await breached(password)) redirect(`/join/${token}?error=breached`);
+  const userId = acceptInvite(inv, name, password, role);
+  if (!userId) redirect(`/join/${token}?error=exists`);
+  await securityEvent(inv.firm_id, userId, "account_created");
+  await startSession(userId);
+  redirect("/");
+}
+
+/** An admin invites someone to the firm, with their role and whether they are an admin. */
+/** The account password, asked again before a sensitive change. Always required: an account without one (signed
+ *  up with Google or Microsoft) must set one in Settings first. Tries are limited. */
+function passwordCheck(userId: string, given: unknown): "ok" | "wrong" | "none" {
+  const row = db().prepare("SELECT password_hash FROM users WHERE id = ?").get(userId) as { password_hash: string | null } | undefined;
+  if (!row?.password_hash) return "none";
+  if (limited(`confirm:${userId}`, 10)) return "wrong";
+  return verifyPassword(String(given ?? ""), row.password_hash) ? "ok" : "wrong";
+}
+const passwordError = (r: "wrong" | "none") => (r === "none" ? "Set a password first" : "Wrong password");
+
+export async function inviteMember(form: FormData) {
+  const { user, firm } = await requireUser();
+  if (firm.demo || !user.admin) redirect("/settings?tab=firm&error=1");
+  // Making someone an admin hands them the firm: the password is asked again.
+  if (form.get("admin") === "on") { const pw = passwordCheck(user.id, form.get("confirm_password")); if (pw !== "ok") redirect(`/settings?tab=firm&error=${pw === "none" ? "nopassword" : "password"}`); }
+  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  const role = String(form.get("role") ?? "");
+  if (!validEmail(email) || !ROLES.includes(role)) redirect("/settings?tab=firm&error=invite");
+  if (limited(`invite:${user.id}`, 30, 60 * 60_000)) redirect("/settings?tab=firm&error=limited");
+  if (db().prepare("SELECT 1 FROM users WHERE email = ?").get(email)) redirect("/settings?tab=firm&error=member");
+  const token = createInvite(firm.id, email, { role, admin: form.get("admin") === "on", by: user.id });
+  let sent = false;
+  if (systemMailConfigured()) {
+    try { await sendSystemMail(email, `${user.name} invited you to ${firm.name} on Lincoln`, `${user.name} invited you to join ${firm.name} on Lincoln.\n\nJoin here: ${inviteUrl(token)}\n\nThe link works once and expires in 14 days.`); sent = true; } catch { sent = false; }
+  }
+  await securityEvent(firm.id, user.id, "member_invited", email);
+  revalidatePath("/settings");
+  if (sent) { await toast("Invited"); redirect("/settings?tab=firm"); }
+  redirect(`/settings?tab=firm&invite=${encodeURIComponent(token)}`);
+}
+
+export async function revokeInvite(form: FormData) {
+  const { user, firm } = await requireUser();
+  if (firm.demo || !user.admin) redirect("/settings?tab=firm&error=1");
+  db().prepare("DELETE FROM invites WHERE firm_id = ? AND token_hash = ? AND used_at IS NULL").run(firm.id, String(form.get("id") ?? ""));
+  revalidatePath("/settings");
+  await toast("Removed");
+  redirect("/settings?tab=firm");
+}
+
+/** Lincoln staff make a backup on demand. */
+/** A one time code for connecting the Word add-in; shown once. */
+export async function newWordCodeAction(password?: string) {
+  const { user, firm } = await requireUser();
+  if (firm.demo) return { code: null };
+  // The code opens every case this person can see from Word: the password is asked again.
+  const pw = passwordCheck(user.id, password);
+  if (pw !== "ok") return { code: null, error: passwordError(pw) };
+  const { newWordCode } = await import("./word");
+  return { code: newWordCode(firm.id, user.id) };
+}
+
+export async function disconnectWordAction(app: "word" | "outlook" = "word") {
+  const { user } = await requireUser();
+  const { endWord } = await import("./word");
+  endWord(user.id, app === "outlook" ? "outlook" : "word");
+}
+
+export async function updateLawAction() {
+  const { user } = await requireUser();
+  if (!isOps(user.email)) redirect("/");
+  const { syncLaw } = await import("./law");
+  const r = await syncLaw();
+  await toast(r.errors.length ? "Update failed" : "Updated");
+  redirect("/ops");
+}
+
+export async function backUpNowAction() {
+  const { user } = await requireUser();
+  if (!isOps(user.email)) redirect("/");
+  const { backupNow } = await import("./backup");
+  const r = await backupNow();
+  await toast(r.ok ? "Backed up" : "Backup failed");
+  redirect("/ops");
+}
+
+/** Lincoln staff set up a firm for the person who contacted us. Returns their admin invite link. */
+export async function setUpFirmAction(form: FormData) {
+  const { user } = await requireUser();
+  if (!isOps(user.email)) redirect("/");
+  const name = String(form.get("firm") ?? "").trim().slice(0, 120);
+  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  if (!name || !validEmail(email)) redirect("/ops?error=fields");
+  if (db().prepare("SELECT 1 FROM users WHERE email = ?").get(email)) redirect("/ops?error=exists");
+  const { token } = setUpFirm(name, email);
+  redirect(`/ops?invite=${encodeURIComponent(token)}&firm=${encodeURIComponent(name)}`);
+}
+
+export async function requestReset(form: FormData) {
+  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  if (limited(`fp:${email}`, 5) || limited(`fp:${await clientKey()}`, 15)) redirect("/forgot?error=limited");
+  const u = db().prepare("SELECT id FROM users WHERE email = ? AND password_hash IS NOT NULL").get(email) as { id: string } | undefined;
+  let preview = "";
+  if (u) {
+    const token = newToken();
+    db().prepare("INSERT INTO password_resets (token_hash, user_id, expires_at) VALUES (?, ?, ?)").run(sha(token), u.id, new Date(Date.now() + 3600_000).toISOString());
+    const link = `${appUrl()}/reset/${token}`;
+    const firm = (db().prepare("SELECT firm_id FROM users WHERE id = ?").get(u.id) as { firm_id: string }).firm_id;
+    await securityEvent(firm, u.id, "password_reset_requested");
+    if (systemMailConfigured()) {
+      try { await sendSystemMail(email, "Reset your Lincoln password", `A password reset was requested for your Lincoln account.\n\nThis link works once, for one hour:\n${link}\n\nIf you did not ask for this, ignore this email; nothing changes.`); } catch { /* the page says the same either way */ }
+    } else if (process.env.NODE_ENV !== "production") {
+      // Development only: with no mail provider the link is shown so the flow can be tested.
+      // In production it is never shown, or anyone could reset anyone's password.
+      preview = `&preview=${token}`;
+    }
+  }
+  redirect(`/forgot?sent=1${preview}`);
+}
+
+export async function resetPassword(form: FormData) {
+  const token = String(form.get("token") ?? "");
+  const password = String(form.get("password") ?? "");
+  if (!validPassword(password)) redirect(`/reset/${encodeURIComponent(token)}?error=password`);
+  if (await breached(password)) redirect(`/reset/${encodeURIComponent(token)}?error=breached`);
+  const d = db();
+  if (limited(`rs:${await clientKey()}`, 20)) redirect("/forgot?error=limited");
+  const r = d.prepare("SELECT user_id FROM password_resets WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?").get(sha(token), now()) as { user_id: string } | undefined;
+  if (!r) redirect("/forgot?error=expired");
+  const fid = (d.prepare("SELECT firm_id FROM users WHERE id = ?").get(r.user_id) as { firm_id: string }).firm_id;
+  await securityEvent(fid, r.user_id, "password_reset");
+  d.transaction(() => {
+    d.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hashPassword(password), r.user_id);
+    d.prepare("UPDATE password_resets SET used_at = ? WHERE user_id = ? AND used_at IS NULL").run(now(), r.user_id);
+    d.prepare("DELETE FROM sessions WHERE user_id = ?").run(r.user_id);
+    d.prepare("DELETE FROM push_subs WHERE user_id = ?").run(r.user_id);
+  })();
+  redirect("/signin?reset=1");
+}
+
+export async function signOut() {
+  const jar = await cookies();
+  const sid = jar.get(COOKIE)?.value;
+  // A signed out device stops receiving notifications.
+  if (sid) { db().prepare("DELETE FROM sessions WHERE id = ?").run(sha(sid)); db().prepare("DELETE FROM push_subs WHERE session = ?").run(sha(sid)); }
+  jar.delete(COOKIE);
+  jar.delete(MFA_COOKIE);
+  redirect("/signin");
+}
+
+function log(firm: string, caseId: string | null, actor: string, kind: string, text: string, minutes = 0) {
+  db().prepare("INSERT INTO activity (id, firm_id, case_id, at, actor, kind, text, minutes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").run(uid(), firm, caseId, now(), actor, kind, text, minutes);
+}
+
+export async function answerQuestion(approvalId: string, qid: string, answer: "yes" | "no" | "change", note?: string) {
+  const { firm, viewer } = await requireUser();
+  const a = approvalById(firm.id, approvalId, viewer);
+  if (!a || a.status !== "pending" || a.kind !== "decisions") return;
+  const payload = JSON.parse(a.payload) as { questions: Question[] };
+  const q = payload.questions.find((x) => x.id === qid);
+  if (!q) return;
+  q.answer = answer;
+  q.note = (note ?? "").slice(0, 500);
+  db().prepare("UPDATE approvals SET payload = ? WHERE firm_id = ? AND id = ?").run(JSON.stringify(payload), firm.id, approvalId);
+  revalidatePath("/", "layout");
+}
+
+/** Which folder is the client's: one of those found (by index), or Lincoln's own (-1). */
+export async function chooseFolder(approvalId: string, pick: number) {
+  const { user, firm, viewer } = await requireUser();
+  const a = approvalById(firm.id, approvalId, viewer);
+  if (!a || a.status !== "pending" || a.kind !== "folder") return;
+  const p = JSON.parse(a.payload) as { conn: string; options: { id: string; name: string; url: string }[] };
+  const o = pick >= 0 ? p.options[pick] : null;
+  if (pick >= 0 && !o) return;
+  const w = await import("./workspace");
+  w.setClientFolder(firm.id, a.case_id, p.conn, o ? { id: o.id, url: o.url } : null);
+  const d = db();
+  d.prepare("UPDATE approvals SET status = 'approved', decided_at = ?, decided_by = ? WHERE firm_id = ? AND id = ?").run(new Date().toISOString(), user.id, firm.id, approvalId);
+  d.prepare("INSERT INTO activity (id, firm_id, case_id, at, actor, kind, text, minutes) VALUES (?, ?, ?, ?, ?, 'decide', ?, 0)").run(uid(), firm.id, a.case_id, new Date().toISOString(), user.name, o ? `Chose the client's folder: ${o.name}.` : "Kept the client's files in Lincoln's folder.");
+  const left = d.prepare("SELECT COUNT(*) AS n FROM approvals WHERE firm_id = ? AND case_id = ? AND status = 'pending'").get(firm.id, a.case_id) as { n: number };
+  d.prepare("UPDATE cases SET state = ? WHERE firm_id = ? AND id = ?").run(left.n > 0 ? "needs_you" : "moving", firm.id, a.case_id);
+  if (o) void w.resaveApproved(firm.id, a.case_id).catch(() => undefined);
+  await toast("Saved");
+  revalidatePath("/", "layout");
+}
+
+export async function acceptAllRecommended(approvalId: string) {
+  const { firm, viewer } = await requireUser();
+  const a = approvalById(firm.id, approvalId, viewer);
+  if (!a || a.status !== "pending" || a.kind !== "decisions") return;
+  const payload = JSON.parse(a.payload) as { questions: Question[] };
+  for (const q of payload.questions) if (!q.answer) q.answer = q.recommend;
+  db().prepare("UPDATE approvals SET payload = ? WHERE firm_id = ? AND id = ?").run(JSON.stringify(payload), firm.id, approvalId);
+  revalidatePath("/", "layout");
+}
+
+export async function decideApproval(approvalId: string, decision: "approved" | "rejected", quiet = false) {
+  const { user, firm, viewer } = await requireUser();
+  const d = db();
+  const a = approvalById(firm.id, approvalId, viewer);
+  if (!a || a.status !== "pending") return;
+  // Filing packets, legal drafts and strategy decisions are signed off by a lawyer only; anyone may send them back.
+  if (decision === "approved" && FILING_APPROVALS.includes(a.kind) && !isLawyerRole(user.role)) return { error: "Attorney approval only" };
+  const F = firm.id;
+  const payload = JSON.parse(a.payload);
+
+  // A real email is approved only once it has actually gone out; if not, it stays in Review with the reason.
+  if (a.kind === "message" && decision === "approved" && !firm.demo) {
+    const r = await approveAndSend(F, approvalId, { id: user.id, name: user.name });
+    if (!quiet) await toast(r.sent ? "Sent" : "Not sent");
+    revalidatePath("/", "layout");
+    return r.sent ? { ok: true as const, sent: true } : { error: `Not sent. ${r.reason}.` };
+  }
+
+  // Two cases that may be one person: the same matter becomes one case, another matter is linked as the same client;
+  // different people are never asked about again.
+  if (a.kind === "same_person") {
+    const m = await import("./merge");
+    if (decision === "approved") {
+      const here = d.prepare("SELECT type_code FROM cases WHERE firm_id = ? AND id = ?").get(F, a.case_id) as { type_code: string } | undefined;
+      const other = d.prepare("SELECT type_code FROM cases WHERE firm_id = ? AND id = ?").get(F, String(payload.otherId)) as { type_code: string } | undefined;
+      if (!here || !other) return { error: "Not found" };
+      d.prepare("UPDATE approvals SET status = 'approved', decided_at = ?, decided_by = ? WHERE id = ?").run(now(), user.id, a.id);
+      if (m.sameMatter(here, other)) {
+        const kept = m.mergeCases(F, a.case_id, String(payload.otherId), `${user.name} confirmed they are the same person`, user.name);
+        if (!quiet) await toast(kept ? "Merged" : "Merging");
+      } else {
+        m.link(F, a.case_id, String(payload.otherId), "same_person");
+        log(F, a.case_id, user.name, "decide", "Linked as the same client.");
+        if (!quiet) await toast("Linked");
+      }
+    } else {
+      m.link(F, a.case_id, String(payload.otherId), "different");
+      d.prepare("UPDATE approvals SET status = 'rejected', decided_at = ?, decided_by = ? WHERE id = ?").run(now(), user.id, a.id);
+      d.prepare("UPDATE issues SET status = 'resolved', resolution = 'Different people.', resolved_at = ? WHERE firm_id = ? AND case_id = ? AND title = 'Same name as another client' AND status = 'open'").run(now(), F, a.case_id);
+      if (!quiet) await toast("Saved");
+    }
+    revalidatePath("/", "layout");
+    return { ok: true as const };
+  }
+
+  // An approved date goes into the calendar before the item closes; if it cannot, it stays in Review.
+  if (a.kind === "calendar" && decision === "approved" && !firm.demo) {
+    const r = await (await import("./agent")).addApprovedDate(F, payload);
+    if ("error" in r) { const e = r.error ?? "Not added"; if (!quiet) await toast(e); return { error: e }; }
+  }
+
+  if (a.kind === "decisions" && decision === "approved" && (payload.questions as Question[]).some((q) => !q.answer)) return { error: "Answer every decision first." };
+  const tx = d.transaction(() => {
+    // A returned email is never sent.
+    if (a.kind === "message" && payload.messageId) {
+      if (decision === "rejected") d.prepare("UPDATE messages SET state = 'returned' WHERE firm_id = ? AND id = ? AND state = 'needs_approval'").run(F, payload.messageId);
+    }
+    if (a.kind === "decisions" && decision === "approved") {
+      const qs = payload.questions as Question[];
+      if (qs.some((q) => !q.answer)) throw new Error("Every decision must be answered first.");
+      const answers = Object.fromEntries(qs.map((q) => [q.id, q.answer as string]));
+      log(F, a.case_id, user.name, "decide", `Answered ${qs.length} strategy decisions.`);
+      // criteria follow the attorney's answers
+      for (const q of qs.filter((x) => /^B\d$/.test(x.id))) {
+        const row = d.prepare("SELECT id, evidence FROM criteria WHERE firm_id = ? AND case_id = ? AND code = ?").get(F, a.case_id, q.id) as { id: string; evidence: string } | undefined;
+        if (!row) continue;
+        const ev = (JSON.parse(row.evidence) as { grade: number }[]).map((e) => (q.answer === "yes" && e.grade === 4 ? { ...e, grade: 5 } : e));
+        d.prepare("UPDATE criteria SET recommendation = ?, evidence = ? WHERE id = ?").run(q.answer === "yes" ? "claim" : q.answer === "no" ? "no" : "more", JSON.stringify(ev), row.id);
+      }
+      if (answers.FIG === "yes") d.prepare("UPDATE issues SET status = 'resolved', resolution = ?, resolved_at = ? WHERE firm_id = ? AND case_id = ? AND id IN ('i_title','i_citations','i_stars','i_headcount')").run(`Decided by ${user.name}: use the dated or signed source.`, now(), F, a.case_id);
+      if (answers.OUT === "yes") d.prepare("UPDATE issues SET status = 'resolved', resolution = ?, resolved_at = ? WHERE firm_id = ? AND case_id = ? AND id = 'i_ferrante'").run(`Decided by ${user.name}: the unsigned draft is left out.`, now(), F, a.case_id);
+      d.prepare("UPDATE issues SET status = 'resolved', resolution = 'Handled in the letter: stated exactly as the source says.', resolved_at = ? WHERE firm_id = ? AND case_id = ? AND id IN ('i_kinome','i_w2','i_delaney')").run(now(), F, a.case_id);
+
+      if (a.case_id === "c_halasz") {
+        const letter = buildHalaszLetter(answers);
+        const draftId = uid();
+        d.prepare("INSERT INTO drafts (id, firm_id, case_id, title, kind, status, version, content, updated_at) VALUES (?, ?, ?, 'Petition support letter', 'letter', 'for_review', 1, ?, ?)").run(draftId, F, a.case_id, JSON.stringify(letter), now());
+        log(F, a.case_id, "Lincoln", "draft", `Wrote the support letter from ${user.name.split(" ")[0]}'s decisions: ${letter.claimed.length} criteria argued, ${letter.facts} facts each linked to its page, ${letter.calls} judgment calls marked.`, 240);
+        d.prepare("INSERT INTO approvals (id, firm_id, case_id, kind, title, brief, least_sure, if_wrong, payload, status, assignee_id, created_at, due) VALUES (?, ?, ?, 'draft_review', ?, ?, ?, ?, ?, 'pending', ?, ?, ?)").run(
+          uid(), F, a.case_id, "Support letter for review",
+          `Drafted from ${qs.length} recorded decisions: ${letter.facts} sourced facts, ${letter.calls} judgment calls, ${letter.notes} attorney notes.`,
+          "The final merits paragraph: the one place where the argument is Lincoln's wording, not a fact from the file.",
+          null,
+          JSON.stringify({ draftId }), user.id, now(), day(3));
+        d.prepare("UPDATE cases SET stage = 'Review', summary = ?, waiting_on = ? WHERE firm_id = ? AND id = ?").run(`Support letter written from ${user.name.split(" ")[0]}'s decisions and waiting for review. The consultation and the passport renewal are still open.`, `${user.name}: review the letter`, F, a.case_id);
+      }
+    } else if (a.kind === "message" && decision === "approved" && !firm.demo) {
+      log(F, a.case_id, user.name, "decide", `Approved: ${a.title}.`);
+    } else if (a.kind === "message" && decision === "approved") {
+      const m = messageById(F, payload.messageId);
+      if (m) {
+        d.prepare("UPDATE messages SET state = 'sent', at = ?, lincoln_note = ? WHERE firm_id = ? AND id = ?").run(now(), `Approved by ${user.name} and sent.`, F, m.id);
+        log(F, a.case_id, "Lincoln", "send", `Sent "${m.subject}" to ${m.party} after ${user.name.split(" ")[0]} approved it.`, 5);
+      }
+    } else if ((a.kind === "draft_review" || a.kind === "translation") && decision === "approved") {
+      d.prepare("UPDATE drafts SET status = 'approved', updated_at = ? WHERE firm_id = ? AND id = ?").run(now(), F, payload.draftId);
+      log(F, a.case_id, user.name, "decide", `Approved: ${a.title}.`);
+      if (firm.demo) d.prepare("UPDATE cases SET summary = 'Support letter approved. The consultation and the passport renewal are still open.', waiting_on = 'Peer group: advisory opinion' WHERE firm_id = ? AND id = ?").run(F, a.case_id);
+    } else if (a.kind === "calendar" && decision === "approved") {
+      log(F, a.case_id, user.name, "decide", `Approved: ${a.title}.`);
+    } else if (a.kind === "redline" && decision === "approved") {
+      log(F, a.case_id, user.name, "decide", `Reviewed: ${a.title}.`);
+    } else if (a.kind === "packet" && decision === "approved") {
+      log(F, a.case_id, user.name, "decide", "Approved the filing packet.");
+      d.prepare("UPDATE cases SET stage = 'Ready to file', waiting_on = ? WHERE firm_id = ? AND id = ?").run(`${user.name}: file the packet`, F, a.case_id);
+    } else if (decision === "rejected") {
+      log(F, a.case_id, user.name, "decide", `Sent back: ${a.title}.`);
+    }
+    d.prepare("UPDATE approvals SET status = ?, decided_at = ?, decided_by = ? WHERE firm_id = ? AND id = ?").run(decision, now(), user.id, F, approvalId);
+    const left = d.prepare("SELECT COUNT(*) AS n FROM approvals WHERE firm_id = ? AND case_id = ? AND status = 'pending'").get(F, a.case_id) as { n: number };
+    d.prepare("UPDATE cases SET state = ? WHERE firm_id = ? AND id = ?").run(left.n > 0 ? "needs_you" : "moving", F, a.case_id);
+  });
+  tx();
+  // Approved work goes into the client's folder in the firm's Drive or OneDrive; a returned email's draft is removed.
+  if (decision === "approved" && !firm.demo && ["draft_review", "translation", "packet", "redline"].includes(a.kind)) void import("./workspace").then((w) => w.saveApproved(F, a.case_id, a.kind, payload)).catch(() => undefined);
+  if (decision === "rejected" && a.kind === "message" && payload.messageId && !firm.demo) void import("./maildrafts").then((m) => m.dropDraft(F, payload.messageId)).catch(() => undefined);
+  // An approved email says "Sent!" on its own button, so the page refreshes once that has been seen.
+  if (quiet) return { ok: true as const, sent: true };
+  await toast(decision === "rejected" ? "Returned" : a.kind === "message" ? "Sent" : "Approved");
+  revalidatePath("/", "layout");
+}
+
+export async function advanceDemo() {
+  const { firm } = await requireUser();
+  if (firm.demo !== 1) return;
+  const step = Number(kv(firm.id, "demo_step") ?? "0");
+  const ev = EVENTS[step];
+  if (!ev) return;
+  const d = db();
+  d.transaction(() => {
+    ev.run({ d, firm: firm.id, now: now(), day });
+    setKv(firm.id, "demo_step", String(step + 1));
+  })();
+  revalidatePath("/", "layout");
+}
+
+export async function resetDemoAction() {
+  const { firm } = await requireUser();
+  if (firm.demo !== 1) return;
+  resetDemo(firm.id);
+  (await cookies()).delete(COOKIE);
+  redirect("/signin");
+}
+
+/** New case from one prompt: Lincoln reads what was typed and any files, then opens and works the case. */
+export async function startCase(form: FormData) {
+  const { user, firm, viewer } = await requireUser();
+  const text = String(form.get("text") ?? "").trim().slice(0, 8000);
+  const names = form.getAll("file").filter((f): f is File => f instanceof File && f.size > 0).map((f) => f.name.slice(0, 120));
+  if (firm.demo) redirect("/cases/new?error=sample");
+  if (limited(`case:${user.id}`, 20)) redirect("/cases/new?error=limited");
+  const got = await uploads(form, true);
+  if (got === "size") redirect("/cases/new?error=size");
+  if (got === "type") redirect("/cases/new?error=type");
+  if (!text && !got.length) redirect("/cases/new");
+  if (!llmConfigured()) redirect("/cases/new?error=model");
+  let caseId: string | null = null;
+  try {
+    // From a case's own chat, the files and words belong to that case.
+    const scoped = String(form.get("case") ?? "");
+    const only = scoped ? caseById(firm.id, scoped, viewer) : undefined;
+    const open = only ? [{ id: only.id, ref: only.ref, client: only.client, client_email: only.client_email ?? null, counterpart: only.counterpart, type_code: only.type_code }] : undefined;
+    const r = await takeInstruction(firm.id, { id: user.id, name: user.name, role: user.role }, { text: only ? `About ${only.client} (case ${only.id}): ${text}` : text, files: got.map((data, i) => ({ name: names[i] ?? `file ${i + 1}`, data })), via: "app" }, open);
+    caseId = r.caseId;
+    void r.work;
+  } catch (e) {
+    redirect(`/cases/new?error=${e instanceof Error && /budget/i.test(e.message) ? "budget" : "failed"}`);
+  }
+  revalidatePath("/", "layout");
+  if (!caseId) redirect(`/assistant?q=${encodeURIComponent(text)}`);
+  redirect(`/cases/${caseId}`);
+}
+
+export async function requestDraft(caseId: string, form: FormData) {
+  const { firm, viewer } = await requireUser();
+  if (!caseById(firm.id, caseId, viewer)) redirect("/cases");
+  const request = String(form.get("request") ?? "").trim().slice(0, 600);
+  const c = db().prepare("SELECT pages FROM cases WHERE firm_id = ? AND id = ?").get(firm.id, caseId) as { pages: number } | undefined;
+  if (!c || !request || c.pages < 1) return;
+  const draftId = uid();
+  db().prepare("INSERT INTO drafts (id, firm_id, case_id, title, kind, status, version, content, updated_at) VALUES (?, ?, ?, ?, 'generic', 'drafting', 1, ?, ?)").run(draftId, firm.id, caseId, request.slice(0, 160), JSON.stringify({ sections: [], facts: 0, calls: 0, notes: 0, claimed: [], generic: true }), now());
+  void draftForCase(firm.id, caseId, draftId, request);
+  revalidatePath("/", "layout");
+  redirect(`/cases/${caseId}?tab=drafts&draft=${draftId}`);
+}
+
+/** The sample workspace is shared by every visitor: no uploads, connections or profile changes. */
+function notInSample(firm: { demo: number }, back: string) {
+  if (firm.demo) redirect(`${back}${back.includes("?") ? "&" : "?"}error=sample`);
+}
+
+const otherAdmins = (firmId: string, userId: string) => (db().prepare("SELECT COUNT(*) AS n FROM users WHERE firm_id = ? AND id != ? AND admin = 1").get(firmId, userId) as { n: number }).n;
+
+/** Changes who a case is with. Admins and the case's attorney may; the attorney must hold a lawyer's role.
+ *  Approvals still waiting move to the new attorney. */
+export async function setCaseTeam(caseId: string, attorneyId: string, paralegalId: string) {
+  const { user, firm, viewer } = await requireUser();
+  const c = caseById(firm.id, caseId, viewer);
+  if (!c || firm.demo || !(user.admin || c.attorney_id === user.id)) return { error: "Not changed" };
+  const d = db();
+  const person = (id: string) => d.prepare("SELECT id, name, role FROM users WHERE id = ? AND firm_id = ?").get(id, firm.id) as { id: string; name: string; role: string } | undefined;
+  const att = person(attorneyId), par = person(paralegalId);
+  if (!att || !par) return { error: "Not changed" };
+  if (!isLawyerRole(att.role)) return { error: "Attorney must be a lawyer" };
+  d.prepare("UPDATE cases SET attorney_id = ?, paralegal_id = ? WHERE firm_id = ? AND id = ?").run(att.id, par.id, firm.id, c.id);
+  if (att.id !== c.attorney_id) d.prepare("UPDATE approvals SET assignee_id = ? WHERE firm_id = ? AND case_id = ? AND status = 'pending' AND assignee_id IS ?").run(att.id, firm.id, c.id, c.attorney_id);
+  log(firm.id, c.id, user.name, "assign", `Assigned the case to ${att.name}${par.id !== att.id ? ` with ${par.name}` : ""}.`);
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/** An admin sets anyone's role at the firm. */
+export async function setMemberRole(userId: string, role: string) {
+  const { user, firm } = await requireUser();
+  if (firm.demo || !user.admin || !ROLES.includes(role)) return { error: "Not changed" };
+  const target = db().prepare("SELECT id, name FROM users WHERE id = ? AND firm_id = ?").get(userId, firm.id) as { id: string; name: string } | undefined;
+  if (!target) return { error: "Not changed" };
+  db().prepare("UPDATE users SET role = ? WHERE id = ?").run(role, target.id);
+  await securityEvent(firm.id, user.id, "role_changed", `${target.name}: ${role}`);
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/** An admin makes someone an admin, or takes it away. A firm always keeps at least one admin. */
+export async function setMemberAdmin(userId: string, on: boolean, password?: string) {
+  const { user, firm } = await requireUser();
+  if (firm.demo || !user.admin) return { error: "Not changed" };
+  const pw = passwordCheck(user.id, password);
+  if (pw !== "ok") return { error: passwordError(pw) };
+  const target = db().prepare("SELECT id, name, admin FROM users WHERE id = ? AND firm_id = ?").get(userId, firm.id) as { id: string; name: string; admin: number } | undefined;
+  if (!target) return { error: "Not changed" };
+  if (!on && target.admin && otherAdmins(firm.id, target.id) === 0) return { error: "A firm needs one admin" };
+  db().prepare("UPDATE users SET admin = ? WHERE id = ?").run(on ? 1 : 0, target.id);
+  await securityEvent(firm.id, user.id, on ? "admin_given" : "admin_removed", target.name);
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/** First run, step one: name, role and photo. */
+export async function saveSetupProfile(form: FormData) {
+  const { user, firm } = await requireUser({ setup: true });
+  if (firm.demo) redirect("/");
+  const name = String(form.get("name") ?? "").trim().slice(0, 100);
+  const role = String(form.get("role") ?? "").trim();
+  if (!name || !ROLES.includes(role)) redirect("/setup?step=profile&error=name");
+  const d = db();
+  d.prepare("UPDATE users SET name = ?, initials = ?, role = ? WHERE id = ?").run(name, initialsOf(name), role, user.id);
+  const avatar = String(form.get("avatar") ?? "");
+  if (avatar === "remove") d.prepare("UPDATE users SET avatar = NULL WHERE id = ?").run(user.id);
+  else if (/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(avatar) && avatar.length < 400_000) d.prepare("UPDATE users SET avatar = ? WHERE id = ?").run(avatar, user.id);
+  setKv(firm.id, `setup:${user.id}`, "1");
+  // Someone who connected an account before (by signing in with it) is done.
+  if (d.prepare("SELECT 1 FROM mailboxes WHERE firm_id = ? AND user_id = ?").get(firm.id, user.id)) {
+    d.prepare("UPDATE users SET setup_at = ? WHERE id = ?").run(now(), user.id);
+    redirect("/");
+  }
+  redirect("/setup");
+}
+
+export async function updateProfile(form: FormData) {
+  const { user, firm } = await requireUser();
+  notInSample(firm, "/settings?tab=profile");
+  const name = String(form.get("name") ?? "").trim().slice(0, 100);
+  const typed = String(form.get("role") ?? "").trim().slice(0, 60);
+  // A job title from the list; admin rights are separate and not changed here.
+  const role = ROLES.includes(typed) ? typed : user.role;
+  const avatar = String(form.get("avatar") ?? "");
+  if (!name) redirect("/settings?tab=profile&error=name");
+  const d = db();
+  d.prepare("UPDATE users SET name = ?, initials = ?, role = ?, bar_number = ?, bar_state = ? WHERE id = ?").run(name, initialsOf(name), role, String(form.get("bar_number") ?? "").trim().slice(0, 40) || null, String(form.get("bar_state") ?? "").trim().slice(0, 40) || null, user.id);
+  if (avatar === "remove") d.prepare("UPDATE users SET avatar = NULL WHERE id = ?").run(user.id);
+  else if (/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(avatar) && avatar.length < 400_000) d.prepare("UPDATE users SET avatar = ? WHERE id = ?").run(avatar, user.id);
+  revalidatePath("/", "layout");
+  await toast("Saved");
+  redirect("/settings?tab=profile");
+}
+
+export async function changePassword(form: FormData) {
+  const { user } = await requireUser({ setup: true });
+  const current = String(form.get("current") ?? "");
+  const next = String(form.get("next") ?? "");
+  if (limited(`pw:${user.id}`, 6)) redirect("/settings?tab=security&error=limited");
+  const row = db().prepare("SELECT password_hash FROM users WHERE id = ?").get(user.id) as { password_hash: string | null };
+  if (!row.password_hash) {
+    // An account created with Google or Microsoft sets its first password here; sample accounts cannot.
+    const f = db().prepare("SELECT demo FROM firms WHERE id = ?").get(user.firm_id) as { demo: number };
+    if (f.demo) redirect("/settings?tab=security&error=sample");
+    if (!validPassword(next)) redirect("/settings?tab=security&error=password");
+    if (await breached(next)) redirect("/settings?tab=security&error=breached");
+    db().prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hashPassword(next), user.id);
+    await securityEvent(user.firm_id, user.id, "password_changed", "first password set");
+    await toast("Password changed");
+    redirect("/settings?tab=security");
+  }
+  if (!verifyPassword(current, row.password_hash)) redirect("/settings?tab=security&error=current");
+  if (!validPassword(next)) redirect("/settings?tab=security&error=password");
+  if (await breached(next)) redirect("/settings?tab=security&error=breached");
+  const sid = (await cookies()).get(COOKIE)?.value ?? "";
+  const d = db();
+  d.transaction(() => {
+    d.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hashPassword(next), user.id);
+    // every other device is signed out
+    d.prepare("DELETE FROM sessions WHERE user_id = ? AND id != ?").run(user.id, sha(sid));
+    d.prepare("DELETE FROM push_subs WHERE user_id = ? AND (session IS NULL OR session != ?)").run(user.id, sha(sid));
+  })();
+  await securityEvent(user.firm_id, user.id, "password_changed", "other devices signed out");
+  await toast("Password changed");
+  redirect("/settings?tab=security");
+}
+
+export async function updateFirm(form: FormData) {
+  const { user, firm } = await requireUser();
+  notInSample(firm, "/settings?tab=firm");
+  const name = String(form.get("firm") ?? "").trim().slice(0, 120);
+  if (!name || !user.admin) redirect("/settings?tab=firm&error=1");
+  const opt = (k: string, n: number) => String(form.get(k) ?? "").trim().slice(0, n) || null;
+  db().prepare("UPDATE firms SET name = ?, address = ?, phone = ?, email = ? WHERE id = ?").run(name, opt("address", 200), opt("phone", 40), opt("email", 120), firm.id);
+  revalidatePath("/", "layout");
+  await toast("Saved");
+  redirect("/settings?tab=firm");
+}
+
+export async function renameChat(id: string, title: string) {
+  const { user, firm } = await requireUser();
+  const t = title.replace(/\s+/g, " ").trim().slice(0, 80);
+  if (!t) return;
+  db().prepare("UPDATE chat_threads SET title = ? WHERE firm_id = ? AND user_id = ? AND id = ?").run(t, firm.id, user.id, id);
+  revalidatePath("/assistant");
+}
+
+export async function deleteChat(id: string) {
+  const { user, firm } = await requireUser();
+  const d = db();
+  const t = d.prepare("SELECT case_id FROM chat_threads WHERE firm_id = ? AND user_id = ? AND id = ?").get(firm.id, user.id, id) as { case_id: string | null } | undefined;
+  if (!t) return;
+  d.prepare("DELETE FROM chat WHERE firm_id = ? AND user_id = ? AND thread_id = ?").run(firm.id, user.id, id);
+  d.prepare("DELETE FROM chat_threads WHERE firm_id = ? AND user_id = ? AND id = ?").run(firm.id, user.id, id);
+  await toast("Deleted");
+  redirect(t.case_id ? `/assistant?case=${t.case_id}` : "/assistant");
+}
+
+export async function disconnectMailbox() {
+  const { user, firm } = await requireUser();
+  db().prepare("DELETE FROM mailboxes WHERE firm_id = ? AND user_id = ?").run(firm.id, user.id);
+  revalidatePath("/settings");
+}
+
+/** Issues a new secret forwarding address for the firm. The old one stops working. */
+export async function newInboundAddress() {
+  const { user, firm } = await requireUser();
+  if (!user.admin || firm.demo) return;
+  const token = newToken();
+  setKv(firm.id, "inbound_hash", sha(token));
+  redirect(`/integrations?inbound=${token}`);
+}
+
+/** Readable files (see fileKind) from a form, checked by content. "size" over 25 MB in total, "type" for anything else. */
+async function uploads(form: FormData, words = false): Promise<Uint8Array[] | "size" | "type"> {
+  const files = form.getAll("file").filter((f): f is File => f instanceof File && f.size > 0).slice(0, 40);
+  if (files.reduce((s, f) => s + f.size, 0) > 25 * 1024 * 1024) return "size";
+  const out: Uint8Array[] = [];
+  for (const f of files) {
+    const bytes = new Uint8Array(await f.arrayBuffer());
+    if (!fileKind(bytes) && !(words && /\.docx$/i.test(f.name) && bytes[0] === 0x50 && bytes[1] === 0x4b)) return "type";
+    out.push(bytes);
+  }
+  return out;
+}
+
+export async function addFile(caseId: string, form: FormData) {
+  const { user, firm, viewer } = await requireUser();
+  if (!caseById(firm.id, caseId, viewer)) redirect("/cases");
+  const c = db().prepare("SELECT processing FROM cases WHERE firm_id = ? AND id = ?").get(firm.id, caseId) as { processing: number } | undefined;
+  notInSample(firm, `/cases/${caseId}?tab=documents`);
+  const got = await uploads(form);
+  if (!c || c.processing || typeof got === "string" || !got.length) redirect(`/cases/${caseId}?tab=documents${typeof got === "string" ? `&error=${got}` : ""}`);
+  db().prepare("UPDATE cases SET processing = 1, note = NULL WHERE firm_id = ? AND id = ?").run(firm.id, caseId);
+  log(firm.id, caseId, user.name, "file", `Added ${got.length === 1 ? "a file" : `${got.length} files`}.`);
+  void processCase(firm.id, caseId, got, { append: true });
+  revalidatePath("/", "layout");
+  redirect(`/cases/${caseId}`);
+}
+
+export async function disconnect(form: FormData) {
+  const { user, firm } = await requireUser();
+  const provider = String(form.get("provider") ?? "");
+  const c = db().prepare("SELECT refresh_enc FROM mailboxes WHERE firm_id = ? AND user_id = ? AND provider = ?").get(firm.id, user.id, provider) as { refresh_enc: string } | undefined;
+  if (c) await revokeAccess(provider, c.refresh_enc);
+  db().prepare("DELETE FROM mailboxes WHERE firm_id = ? AND user_id = ? AND provider = ?").run(firm.id, user.id, provider);
+  await securityEvent(firm.id, user.id, "disconnected", provider);
+  await toast("Disconnected");
+  revalidatePath("/", "layout");
+}
+
+/** An integration Lincoln does not connect to yet: the firm's request is recorded for the Lincoln team. */
+export async function requestIntegration(form: FormData) {
+  const { user, firm } = await requireUser();
+  const name = String(form.get("name") ?? "").trim().slice(0, 40);
+  if (!/^[\w .-]+$/.test(name)) return;
+  setKv(firm.id, `wants:${name}`, JSON.stringify({ by: user.id, at: now() }));
+  await toast("Requested");
+  revalidatePath("/integrations");
+}
+
+export async function setChatSpace(form: FormData) {
+  const { user, firm } = await requireUser();
+  if (firm.demo) return;
+  const [space, ...name] = String(form.get("space") ?? "").split("|");
+  const c = db().prepare("SELECT id, settings FROM mailboxes WHERE firm_id = ? AND user_id = ? AND provider = 'google'").get(firm.id, user.id) as { id: string; settings: string | null } | undefined;
+  if (!c) return;
+  const s = JSON.parse(c.settings ?? "{}");
+  if (/^spaces\/[\w-]+$/.test(space)) {
+    s.gchat = { space, name: name.join("|") };
+    // Items for review and requests from this moment on.
+    setKv(firm.id, `teams:${c.id}`, new Date().toISOString());
+  }
+  else delete s.gchat;
+  db().prepare("UPDATE mailboxes SET settings = ? WHERE id = ?").run(JSON.stringify(s), c.id);
+  revalidatePath("/integrations");
+}
+
+export async function setTeamsChannel(form: FormData) {
+  const { user, firm } = await requireUser();
+  if (firm.demo) return;
+  const [teamId, channelId, ...name] = String(form.get("channel") ?? "").split("|");
+  const c = db().prepare("SELECT id, settings FROM mailboxes WHERE firm_id = ? AND user_id = ? AND provider = 'microsoft'").get(firm.id, user.id) as { id: string; settings: string | null } | undefined;
+  if (!c) return;
+  const s = JSON.parse(c.settings ?? "{}");
+  if (teamId && channelId) {
+    s.teams = { teamId, channelId, name: name.join("|") };
+    // Items for review from this moment on are posted.
+    setKv(firm.id, `teams:${c.id}`, new Date().toISOString());
+  }
+  else delete s.teams;
+  db().prepare("UPDATE mailboxes SET settings = ? WHERE id = ?").run(JSON.stringify(s), c.id);
+  revalidatePath("/settings");
+}
+
+/** Reads a PDF from Google Drive, OneDrive or SharePoint into a case. */
+export async function importFromCloud(caseId: string, provider: string, fileId: string, name: string) {
+  const { user, firm, viewer } = await requireUser();
+  if (!caseById(firm.id, caseId, viewer)) redirect("/cases");
+  notInSample(firm, `/cases/${caseId}`);
+  const { connection, download, isProvider } = await import("./integrations");
+  const c = db().prepare("SELECT processing FROM cases WHERE firm_id = ? AND id = ?").get(firm.id, caseId) as { processing: number } | undefined;
+  if (!c || c.processing || !isProvider(provider)) redirect(`/cases/${caseId}`);
+  const conn = connection(firm.id, user.id, provider);
+  if (!conn) redirect("/integrations");
+  const bytes = new Uint8Array(await download(conn, fileId));
+  if (!fileKind(bytes) || bytes.length > 25 * 1024 * 1024) redirect(`/cases/${caseId}/import?from=${provider}&error=1`);
+  db().prepare("UPDATE cases SET processing = 1, note = NULL WHERE firm_id = ? AND id = ?").run(firm.id, caseId);
+  log(firm.id, caseId, user.name, "file", `Imported ${name.slice(0, 120)} from ${provider === "google" ? "Google Drive" : "OneDrive"}.`);
+  void processCase(firm.id, caseId, [bytes], { append: true });
+  revalidatePath("/", "layout");
+  redirect(`/cases/${caseId}`);
+}
+
+/** Tells Google to revoke Lincoln's access (Microsoft has no revoke endpoint; the user can remove the app in their account). */
+async function revokeAccess(provider: string, refreshEnc: string) {
+  if (provider !== "google") return;
+  try { await fetch(`https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(openSecret(refreshEnc))}`, { method: "POST" }); } catch { /* best effort */ }
+}
+
+// Two step sign in
+
+export async function startTwoStep() {
+  const { user, firm } = await requireUser({ setup: true });
+  notInSample(firm, "/settings?tab=security");
+  db().prepare("UPDATE users SET totp_pending_enc = ? WHERE id = ?").run(sealSecret(newTotpSecret()), user.id);
+  redirect("/settings?tab=security&setup=1");
+}
+
+export async function confirmTwoStep(form: FormData) {
+  const { user, firm } = await requireUser({ setup: true });
+  const row = db().prepare("SELECT totp_pending_enc FROM users WHERE id = ?").get(user.id) as { totp_pending_enc: string | null };
+  if (!row.totp_pending_enc) redirect("/settings?tab=security");
+  if (limited(`2fa:${user.id}`, 10)) redirect("/settings?tab=security&setup=1&error=limited");
+  const secret = openSecret(row.totp_pending_enc);
+  const step = verifyTotp(secret, String(form.get("code") ?? ""), null);
+  if (step === null) redirect("/settings?tab=security&setup=1&error=code");
+  const codes = Array.from({ length: 8 }, () => randomBytes(5).toString("hex").toUpperCase());
+  db().prepare("UPDATE users SET totp_enc = ?, totp_pending_enc = NULL, totp_last_step = ?, recovery = ? WHERE id = ?").run(sealSecret(secret), step, JSON.stringify(codes.map((c) => sha(c))), user.id);
+  await securityEvent(firm.id, user.id, "two_step_on");
+  // Shown once, never stored in readable form.
+  await toast("Two step sign in on");
+  redirect(`/settings?tab=security&codes=${codes.join("-")}`);
+}
+
+export async function disableTwoStep(form: FormData) {
+  const { user, firm } = await requireUser();
+  if (firm.require_2fa) redirect("/settings?tab=security&error=required");
+  const row = db().prepare("SELECT password_hash FROM users WHERE id = ?").get(user.id) as { password_hash: string | null };
+  if (limited(`2fa:${user.id}`, 10) || !verifyPassword(String(form.get("password") ?? ""), row.password_hash)) redirect("/settings?tab=security&error=current");
+  db().prepare("UPDATE users SET totp_enc = NULL, totp_pending_enc = NULL, recovery = NULL WHERE id = ?").run(user.id);
+  await securityEvent(firm.id, user.id, "two_step_off");
+  await toast("Two step sign in off");
+  redirect("/settings?tab=security");
+}
+
+export async function signOutSession(form: FormData) {
+  const { user, firm, sessionId } = await requireUser({ setup: true });
+  const target = String(form.get("session") ?? "");
+  if (target === "others") {
+    db().prepare("DELETE FROM sessions WHERE user_id = ? AND id != ?").run(user.id, sessionId);
+    db().prepare("DELETE FROM push_subs WHERE user_id = ? AND (session IS NULL OR session != ?)").run(user.id, sessionId);
+  } else {
+    // One device can hold several sign ins: all of them end together, never this one.
+    for (const id of target.split(",").map((x) => x.trim()).filter((x) => x && x !== sessionId).slice(0, 50)) {
+      db().prepare("DELETE FROM sessions WHERE user_id = ? AND id = ?").run(user.id, id);
+      db().prepare("DELETE FROM push_subs WHERE user_id = ? AND session = ?").run(user.id, id);
+    }
+  }
+  await securityEvent(firm.id, user.id, "sessions_signed_out", target === "others" ? "all other devices" : "one device");
+  await toast("Signed out");
+  revalidatePath("/settings");
+}
+
+/** Administrators can require two step sign in for everyone in the firm, once their own is on. */
+export async function setTwoStepRequired(form: FormData) {
+  const { user, firm, twoStep } = await requireUser();
+  if (firm.demo || !user.admin) redirect("/settings?tab=security&error=admin");
+  const on = form.get("on") === "1";
+  if (on && !twoStep) redirect("/settings?tab=security&error=selffirst");
+  // Turning the firm's requirement off weakens everyone's sign in: the password is asked again.
+  if (!on) { const pw = passwordCheck(user.id, form.get("confirm_password")); if (pw !== "ok") redirect(`/settings?tab=security&error=${pw === "none" ? "nopassword" : "current"}`); }
+  db().prepare("UPDATE firms SET require_2fa = ? WHERE id = ?").run(on ? 1 : 0, firm.id);
+  await securityEvent(firm.id, user.id, on ? "two_step_required" : "two_step_optional");
+  await toast("Saved");
+  redirect("/settings?tab=security");
+}
+
+/**
+ * An administrator removes a member from the firm (Ismael, 2026-11-26: only admins delete a firm or a member; nobody
+ * deletes their own account). Their sign ins, mail connections, add-ins and chats go; the cases stay with the firm,
+ * unassigned from them, and the record of what they did is kept. The password is asked again.
+ */
+export async function removeMember(form: FormData) {
+  const { user, firm } = await requireUser();
+  if (firm.demo || !user.admin) redirect("/settings?tab=firm&error=1");
+  const pw = passwordCheck(user.id, form.get("confirm_password"));
+  if (pw !== "ok") redirect(`/settings?tab=firm&error=${pw === "none" ? "nopassword" : "current"}`);
+  const target = String(form.get("user") ?? "");
+  const d = db();
+  const m = d.prepare("SELECT id, name FROM users WHERE id = ? AND firm_id = ?").get(target, firm.id) as { id: string; name: string } | undefined;
+  if (!m || m.id === user.id) redirect("/settings?tab=firm");
+  const conns = d.prepare("SELECT provider, refresh_enc FROM mailboxes WHERE user_id = ?").all(m.id) as { provider: string; refresh_enc: string }[];
+  for (const c of conns) await revokeAccess(c.provider, c.refresh_enc);
+  d.transaction(() => {
+    for (const t of ["sessions", "push_subs", "password_resets", "addin_codes", "addin_tokens", "chat", "chat_threads", "mailboxes", "identities", "login_challenges", "known_devices"]) d.prepare(`DELETE FROM ${t} WHERE user_id = ?`).run(m.id);
+    d.prepare("UPDATE cases SET attorney_id = NULL WHERE firm_id = ? AND attorney_id = ?").run(firm.id, m.id);
+    d.prepare("UPDATE cases SET paralegal_id = NULL WHERE firm_id = ? AND paralegal_id = ?").run(firm.id, m.id);
+    d.prepare("UPDATE approvals SET assignee_id = NULL WHERE firm_id = ? AND assignee_id = ?").run(firm.id, m.id);
+    d.prepare("DELETE FROM users WHERE id = ? AND firm_id = ?").run(m.id, firm.id);
+  })();
+  await securityEvent(firm.id, user.id, "member_removed", m.name);
+  await toast("Removed");
+  revalidatePath("/settings");
+  redirect("/settings?tab=firm");
+}
+
+/** An administrator chooses Automatic or Approval for a rule on the Automation page. */
+export async function setAutomation(rule: string, value: string) {
+  const { user, firm } = await requireUser();
+  if (firm.demo) return { error: "Not available in the sample workspace." };
+  if (!user.admin) return { error: "Administrators only." };
+  if (!["reminders", "calendar"].includes(rule) || !["auto", "approval"].includes(value)) return { error: "Not changed" };
+  setKv(firm.id, `auto:${rule}`, value);
+  revalidatePath("/settings");
+  return { ok: true as const };
+}
+
+/** Permanently deletes the firm: every case, file, message, connection and account. Administrators only. */
+export async function deleteFirm(form: FormData) {
+  const { user, firm } = await requireUser();
+  if (firm.demo || !user.admin) redirect("/settings?tab=firm&error=1");
+  const row = db().prepare("SELECT password_hash FROM users WHERE id = ?").get(user.id) as { password_hash: string | null };
+  if (limited(`del:${user.id}`, 5) || !verifyPassword(String(form.get("password") ?? ""), row.password_hash) || String(form.get("confirm") ?? "").trim() !== firm.name) redirect("/settings?tab=firm&error=delete");
+  const d = db();
+  const conns = d.prepare("SELECT provider, refresh_enc FROM mailboxes WHERE firm_id = ?").all(firm.id) as { provider: string; refresh_enc: string }[];
+  for (const c of conns) await revokeAccess(c.provider, c.refresh_enc);
+  const caseIds = (d.prepare("SELECT id FROM cases WHERE firm_id = ?").all(firm.id) as { id: string }[]).map((c) => c.id);
+  const jobs = d.prepare("SELECT id FROM read_jobs WHERE firm_id = ?").all(firm.id) as { id: string }[];
+  forgetFirmSessions(firm.id);
+  d.transaction(() => {
+    for (const t of ["redlines", "case_status", "memory_edits", "addin_codes", "addin_tokens", "invites", "intake_sessions", "intake_links", "push_subs", "chat_threads", "forms", "security_events", "chat", "drafts", "messages", "approvals", "activity", "dates", "issues", "rfe_points", "criteria", "documents", "cases", "kv", "usage", "access_log", "case_keys", "case_links", "inbound_firm_seen", "read_jobs"]) d.prepare(`DELETE FROM ${t} WHERE firm_id = ?`).run(firm.id);
+    d.prepare("DELETE FROM inbound_seen WHERE mailbox_id IN (SELECT id FROM mailboxes WHERE firm_id = ?)").run(firm.id);
+    d.prepare("DELETE FROM mailboxes WHERE firm_id = ?").run(firm.id);
+    d.prepare("DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE firm_id = ?)").run(firm.id);
+    d.prepare("DELETE FROM password_resets WHERE user_id IN (SELECT id FROM users WHERE firm_id = ?)").run(firm.id);
+    d.prepare("DELETE FROM login_challenges WHERE user_id IN (SELECT id FROM users WHERE firm_id = ?)").run(firm.id);
+    d.prepare("DELETE FROM users WHERE firm_id = ?").run(firm.id);
+    d.prepare("DELETE FROM firms WHERE id = ?").run(firm.id);
+  })();
+  for (const id of caseIds) deleteCaseFiles(id);
+  // Files kept for a reading in progress go too.
+  for (const j of jobs) fs.rmSync(path.join(dataDir(), "jobs", j.id.replace(/[^\w-]/g, "")), { recursive: true, force: true });
+  forgetFirmKey(firm.id);
+  (await cookies()).delete(COOKIE);
+  redirect("/signin?deleted=1");
+}
+
+/** The attorney closes an open issue. A date rule's issue stays closed after that. */
+export async function resolveIssue(issueId: string) {
+  const { user, firm, viewer } = await requireUser();
+  const d = db();
+  const row = d.prepare("SELECT case_id, title FROM issues WHERE firm_id = ? AND id = ? AND status = 'open'").get(firm.id, issueId) as { case_id: string; title: string } | undefined;
+  if (!row || !caseById(firm.id, row.case_id, viewer)) return;
+  d.prepare("UPDATE issues SET status = 'resolved', resolution = ?, resolved_at = ? WHERE firm_id = ? AND id = ?").run(`Resolved by ${user.name}.`, now(), firm.id, issueId);
+  log(firm.id, row.case_id, user.name, "decide", `Resolved: ${row.title}.`);
+  await toast("Resolved");
+  revalidatePath("/", "layout");
+}
+
+/** Mail Lincoln could not match goes to the case a person chooses, or out of the Inbox. */
+export async function sortMessage(form: FormData) {
+  const { user, firm, viewer } = await requireUser();
+  const d = db();
+  const messageId = String(form.get("message") ?? "");
+  const caseId = String(form.get("case") ?? "");
+  const m = d.prepare("SELECT id, party, subject FROM messages WHERE firm_id = ? AND id = ? AND state = 'unsure'").get(firm.id, messageId) as { id: string; party: string; subject: string } | undefined;
+  if (!m) return;
+  if (caseId === "none") {
+    d.prepare("DELETE FROM messages WHERE firm_id = ? AND id = ?").run(firm.id, m.id);
+    await toast("Deleted");
+  } else if (caseById(firm.id, caseId, viewer)) {
+    d.prepare("UPDATE messages SET case_id = ?, state = 'filed', lincoln_note = ? WHERE firm_id = ? AND id = ?").run(caseId, `Filed by ${user.name}.`, firm.id, m.id);
+    log(firm.id, caseId, user.name, "file", `Filed an email from ${m.party}: ${m.subject}.`);
+    await toast("Filed");
+  }
+  revalidatePath("/", "layout");
+}
+
+/** An admin removes one of the writing preferences Lincoln learned. */
+export async function removeStyleRule(kind: "draft" | "email", index: number) {
+  const { user, firm } = await requireUser();
+  if (!user.admin) return;
+  const { removeRule } = await import("./memory");
+  removeRule(firm.id, kind, index);
+  await toast("Removed");
+  revalidatePath("/settings");
+}
+
+/** The firm's version of a draft, saved as its next version. Lincoln learns the firm's preferences from the changes. */
+export async function saveDraftEdit(draftId: string, sections: { heading: string; paras: string[] }[]) {
+  const { firm, viewer } = await requireUser();
+  const d = db();
+  const dr = d.prepare("SELECT case_id FROM drafts WHERE firm_id = ? AND id = ?").get(firm.id, draftId) as { case_id: string } | undefined;
+  if (!dr || !caseById(firm.id, dr.case_id, viewer)) return { error: "Not saved" };
+  const { applyDraftEdit } = await import("./memory");
+  if (!applyDraftEdit(firm.id, draftId, sections, !firm.demo)) return { error: "Not saved" };
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/** The attorney's edits to a drafted email, saved before it is approved. */
+export async function saveMessage(approvalId: string, subject: string, body: string) {
+  const { firm, viewer } = await requireUser();
+  const a = approvalById(firm.id, approvalId, viewer);
+  if (!a || a.status !== "pending" || a.kind !== "message") return;
+  const messageId = (JSON.parse(a.payload) as { messageId?: string }).messageId;
+  if (!messageId || !body.trim()) return;
+  const was = db().prepare("SELECT body FROM messages WHERE firm_id = ? AND id = ?").get(firm.id, messageId) as { body: string } | undefined;
+  if (was && !firm.demo) {
+    const { recordEdit } = await import("./memory");
+    const split = (t: string) => t.split(/\n\s*\n/).map((x) => x.trim()).filter(Boolean);
+    recordEdit(firm.id, "email", split(was.body), split(body));
+  }
+  db().prepare("UPDATE messages SET subject = ?, body = ? WHERE firm_id = ? AND id = ? AND state = 'needs_approval'").run(subject.trim().slice(0, 200) || "(no subject)", body.trim().slice(0, 20000), firm.id, messageId);
+  void import("./maildrafts").then((m) => m.pushEdit(firm.id, messageId)).catch(() => undefined);
+  await toast("Saved");
+  revalidatePath("/", "layout");
+}
+
+/** The attorney's changes to a filled form: edited answers and blanks filled by hand. */
+export async function saveFormAnswers(formId: string, changes: { name: string; value: string }[]) {
+  const { firm, viewer } = await requireUser();
+  const d = db();
+  const f = d.prepare("SELECT case_id, layout, answers FROM forms WHERE firm_id = ? AND id = ?").get(firm.id, formId) as { case_id: string; layout: string; answers: string } | undefined;
+  if (!f || !caseById(firm.id, f.case_id, viewer)) return;
+  const layout = JSON.parse(f.layout) as { name: string; label: string }[];
+  const answers = new Map((JSON.parse(f.answers) as { name: string; label: string; value: string; source: string }[]).map((a) => [a.name, a]));
+  for (const c of changes.slice(0, 2000)) {
+    const field = layout.find((x) => x.name === c.name);
+    if (!field) continue;
+    const value = String(c.value ?? "").slice(0, 500);
+    if (!value.trim()) answers.delete(c.name);
+    else answers.set(c.name, { name: c.name, label: field.label, value, source: "edited" });
+  }
+  const ordered = layout.map((x) => answers.get(x.name)).filter(Boolean);
+  d.prepare("UPDATE forms SET answers = ?, updated_at = ? WHERE id = ?").run(JSON.stringify(ordered), now(), formId);
+  await toast("Saved");
+  revalidatePath(`/cases/${f.case_id}`);
+}
+
+/** Fills the case's forms again from the file as it now stands. */
+export async function refillForms(caseId: string) {
+  const { firm, viewer } = await requireUser();
+  if (!caseById(firm.id, caseId, viewer) || firm.demo) return;
+  const { prepareForms } = await import("./fill");
+  db().prepare("UPDATE forms SET status = 'filling' WHERE firm_id = ? AND case_id = ? AND status != 'no_template'").run(firm.id, caseId);
+  void prepareForms(firm.id, caseId, { refill: true, now: true });
+  revalidatePath(`/cases/${caseId}`);
+}
+
+
+/** Cases matching what is typed in a case picker: the closest few, never the whole firm. */
+export async function pickCases(q: string) {
+  const { firm, viewer } = await requireUser();
+  const { findCases } = await import("./queries");
+  return findCases(firm.id, viewer, String(q ?? "").slice(0, 80)).map((c) => ({ id: c.id, client: c.client, type_code: c.type_code, ref: c.ref }));
+}
