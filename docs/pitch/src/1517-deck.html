@@ -43,6 +43,10 @@ h1 em, .it { font-style: italic; font-weight: 300; }
 .pill { display: inline-block; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: #f0eee9; color: #4a4843; }
 .btn { display: inline-block; background: var(--ink); color: #fff; font-size: 14px; font-weight: 600; padding: 9px 15px; border-radius: 6px; }
 table { border-collapse: separate; border-spacing: 0; width: 100%; }
+.yes, .no, .part { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; font-weight: 700; }
+.yes { background: var(--ink); color: #fff; }
+.no { background: #f0eee9; color: #b3afa7; }
+.part { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
 </style>
 </head>
 <body>
@@ -57,6 +61,25 @@ table { border-collapse: separate; border-spacing: 0; width: 100%; }
   <div class="crop" style="position:absolute;left:700px;top:120px;width:700px;height:560px;border-radius:16px;box-shadow:0 0 0 1px #262626"><img src="img/case.png" style="width:1000px;left:-10px;top:-10px"></div>
   <img src="img/phone-review.png" style="position:absolute;left:1120px;top:250px;width:250px;border-radius:34px;border:7px solid #1f1f1f;box-shadow:0 30px 80px rgba(0,0,0,0.6)">
   <div style="position:absolute;left:96px;bottom:48px;font-size:13px;letter-spacing:0.12em;font-weight:600;color:#6a6a6a">PRE-SEED · NOVEMBER 2026</div>
+</section>
+
+<!-- 2 Founder -->
+<section class="slide">
+  <div class="kicker">Founder</div>
+  <h1>Ismael Kirmi</h1>
+  <div class="sub">Designed and built every part of Lincoln.</div>
+  <div style="position:absolute;left:80px;right:80px;top:300px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+    <div class="ink" style="padding:28px;height:200px;display:flex;flex-direction:column;justify-content:space-between"><div class="big" style="font-size:64px">237</div><div class="cap" style="color:#9a9a9a">Case types covered</div></div>
+    <div class="card" style="padding:28px;height:200px;display:flex;flex-direction:column;justify-content:space-between"><div class="big" style="font-size:64px">13</div><div class="cap" style="color:var(--muted)">Google and Microsoft integrations</div></div>
+    <div class="card" style="padding:28px;height:200px;display:flex;flex-direction:column;justify-content:space-between"><div class="big" style="font-size:64px">90%</div><div class="cap" style="color:var(--muted)">Match with USCIS's findings</div></div>
+    <div class="card" style="padding:28px;height:200px;display:flex;flex-direction:column;justify-content:space-between"><div class="big" style="font-size:64px">14</div><div class="cap" style="color:var(--muted)">Immigration practice areas</div></div>
+  </div>
+  <div style="position:absolute;left:80px;right:80px;top:524px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+    <div class="soft" style="padding:22px 26px;height:150px"><div class="cap" style="color:var(--muted)">Before Lincoln</div><div class="serif" style="font-size:22px;margin-top:10px">Hopkins</div><div class="p" style="font-size:15.5px;margin-top:6px">AI content app for estate agents, grown on its own Instagram audience</div></div>
+    <div class="soft" style="padding:22px 26px;height:150px"><div class="cap" style="color:var(--muted)">First hire</div><div class="serif" style="font-size:22px;margin-top:10px">Seller from legal tech</div><div class="p" style="font-size:15.5px;margin-top:6px">Brings in the first firms and runs their onboarding</div></div>
+    <div class="soft" style="padding:22px 26px;height:150px"><div class="cap" style="color:var(--muted)">First hire</div><div class="serif" style="font-size:22px;margin-top:10px">Immigration attorney</div><div class="p" style="font-size:15.5px;margin-top:6px">Reviews Lincoln's work on every case type and sets its standard</div></div>
+  </div>
+  <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
 </section>
 
 <!-- 2 The problem -->
@@ -91,6 +114,27 @@ table { border-collapse: separate; border-spacing: 0; width: 100%; }
         <div class="ui"><div class="m">To draft</div><div style="margin-top:6px;line-height:1.7">Support letter<br>Form I-129<br>Reply to the client</div></div>
         <div class="serif" style="font-size:26px">Draft</div>
       </div>
+    </div>
+  </div>
+  <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
+</section>
+
+<!-- 4 Why now -->
+<section class="slide black">
+  <div class="kicker">Why now</div>
+  <h1>Law firms are buying AI, and the category is moving to agents.</h1>
+  <div style="position:absolute;left:80px;right:80px;top:300px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+    <div class="card" style="color:var(--ink);padding:30px;height:390px;display:flex;flex-direction:column;justify-content:space-between">
+      <div class="cap" style="color:var(--muted)">The money is in</div>
+      <div><div class="big" style="font-size:78px">$4.6B</div><div class="p" style="margin-top:14px">raised by legal tech in 2025, a record</div></div>
+    </div>
+    <div class="card" style="color:var(--ink);padding:30px;height:390px;display:flex;flex-direction:column;justify-content:space-between">
+      <div class="cap" style="color:var(--muted)">Firms already pay</div>
+      <div><div class="big" style="font-size:78px">$15.5B</div><div class="p" style="margin-top:14px">Harvey's valuation, with Legora at a reported $8.8B, both for AI that waits to be prompted</div></div>
+    </div>
+    <div class="ink" style="padding:30px;height:390px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 0 0 1px #2c2c2c">
+      <div class="cap" style="color:#9a9a9a">The next step</div>
+      <div><div class="serif" style="font-size:40px;line-height:1.15">Agents that do the work</div><div class="p" style="margin-top:14px">Legora and Filevine now sell agents, built for general practice rather than immigration firms.</div></div>
     </div>
   </div>
   <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
@@ -167,7 +211,7 @@ table { border-collapse: separate; border-spacing: 0; width: 100%; }
   <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
 </section>
 
-<!-- 6 Traction -->
+<!-- 8 Traction -->
 <section class="slide">
   <div style="display:flex;justify-content:space-between;align-items:flex-start">
     <div>
@@ -177,7 +221,7 @@ table { border-collapse: separate; border-spacing: 0; width: 100%; }
     </div>
     <div class="ink" style="width:300px;padding:26px 30px;text-align:center"><div class="big" style="font-size:96px">90%</div><div class="cap" style="color:#9a9a9a;margin-top:12px">of USCIS's findings</div></div>
   </div>
-  <div class="card" style="position:absolute;left:80px;right:80px;top:330px;height:370px;padding:36px 40px 26px;display:grid;grid-template-columns:repeat(10,1fr);gap:20px;align-items:end">
+  <div class="card" style="position:absolute;left:80px;right:420px;top:330px;height:370px;padding:36px 34px 26px;display:grid;grid-template-columns:repeat(10,1fr);gap:14px;align-items:end">
     <div class="center"><div style="height:228px;background:var(--ink);border-radius:8px 8px 0 0"></div><div class="cap" style="margin-top:14px;font-size:11.5px;color:var(--muted)">EB-1A</div></div>
     <div class="center"><div style="height:260px;background:var(--ink);border-radius:8px 8px 0 0"></div><div class="cap" style="margin-top:14px;font-size:11.5px;color:var(--muted)">O-1A</div></div>
     <div class="center"><div style="height:234px;background:var(--ink);border-radius:8px 8px 0 0"></div><div class="cap" style="margin-top:14px;font-size:11.5px;color:var(--muted)">NIW</div></div>
@@ -189,85 +233,81 @@ table { border-collapse: separate; border-spacing: 0; width: 100%; }
     <div class="center"><div style="height:260px;background:var(--ink);border-radius:8px 8px 0 0"></div><div class="cap" style="margin-top:14px;font-size:11.5px;color:var(--muted)">VAWA</div></div>
     <div class="center"><div style="height:156px;background:var(--ink);border-radius:8px 8px 0 0"></div><div class="cap" style="margin-top:14px;font-size:11.5px;color:var(--muted)">T visa</div></div>
   </div>
+  <div class="ink" style="position:absolute;right:80px;top:330px;width:320px;height:370px;padding:28px">
+    <div class="cap" style="color:#9a9a9a">Next 30 days</div>
+    <div style="margin-top:20px;display:grid;gap:18px;font-size:17px;line-height:1.4">
+      <div style="border-top:1px solid #2c2c2c;padding-top:16px">A fresh set of real USCIS decisions graded</div>
+      <div style="border-top:1px solid #2c2c2c;padding-top:16px">Zero retention agreements with the AI providers</div>
+      <div style="border-top:1px solid #2c2c2c;padding-top:16px">Company formed and contracts drafted</div>
+    </div>
+  </div>
   <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
 </section>
 
-<!-- 7 Landscape -->
+<!-- 9 Landscape -->
 <section class="slide white">
   <div class="center">
     <div class="kicker">The current landscape</div>
-    <h1>Lincoln is built to do the work itself.</h1>
+    <h1>Lincoln does all four.</h1>
   </div>
-  <div style="position:absolute;left:80px;right:80px;top:212px">
-    <table style="font-size:15.5px">
+  <div style="position:absolute;left:120px;right:120px;top:216px">
+    <table style="font-size:16px">
       <tr style="background:var(--ink);color:#fff">
-        <td style="padding:14px 20px;width:230px;border-radius:12px 0 0 0"></td>
-        <td style="padding:14px 20px" class="cap">What they built</td>
-        <td style="padding:14px 20px" class="cap">What is left to the firm</td>
-        <td style="padding:14px 20px;border-radius:0 12px 0 0" class="cap">The gap</td>
+        <td style="padding:16px 24px;width:300px;border-radius:12px 0 0 0"></td>
+        <td style="padding:16px 12px;text-align:center" class="cap">Works unprompted</td>
+        <td style="padding:16px 12px;text-align:center" class="cap">Built for immigration</td>
+        <td style="padding:16px 12px;text-align:center" class="cap">Drafts letters</td>
+        <td style="padding:16px 12px;text-align:center;border-radius:0 12px 0 0" class="cap">Fills USCIS forms</td>
       </tr>
       <tr style="background:var(--cream)">
-        <td style="padding:20px;font-family:Literata,serif;font-size:24px;font-weight:600">Lincoln</td>
-        <td style="padding:20px"><b style="font-weight:600">The autonomous layer</b><br><span style="color:#4a4843">Works every case type from the firm's inbox</span></td>
-        <td style="padding:20px;color:#4a4843">Approving the work</td>
-        <td style="padding:20px;color:#4a4843">The one doing the work</td>
+        <td style="padding:20px 24px;font-family:Literata,serif;font-size:26px;font-weight:600">Lincoln</td>
+        <td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="yes">✓</span></td>
       </tr>
-      <tr>
-        <td style="padding:20px;border-bottom:1px solid var(--line);font-size:19px;font-weight:600">Harvey · Legora</td>
-        <td style="padding:20px;border-bottom:1px solid var(--line)"><b style="font-weight:600">General legal AI</b><br><span style="color:#4a4843">Answers and drafts when prompted</span></td>
-        <td style="padding:20px;border-bottom:1px solid var(--line);color:#4a4843">Spotting the work, uploading the file, asking</td>
-        <td style="padding:20px;border-bottom:1px solid var(--line);color:#4a4843">Waits to be asked</td>
-      </tr>
-      <tr>
-        <td style="padding:20px;border-bottom:1px solid var(--line);font-size:19px;font-weight:600">Docketwise · INSZoom</td>
-        <td style="padding:20px;border-bottom:1px solid var(--line)"><b style="font-weight:600">Immigration case software</b><br><span style="color:#4a4843">Stores cases, fills forms from typed answers</span></td>
-        <td style="padding:20px;border-bottom:1px solid var(--line);color:#4a4843">Reading, chasing and drafting</td>
-        <td style="padding:20px;border-bottom:1px solid var(--line);color:#4a4843">A filing cabinet, not a worker</td>
-      </tr>
-      <tr>
-        <td style="padding:20px;border-bottom:1px solid var(--line);font-size:19px;font-weight:600">Clio · Filevine</td>
-        <td style="padding:20px;border-bottom:1px solid var(--line)"><b style="font-weight:600">Practice management</b><br><span style="color:#4a4843">Billing, calendars, documents</span></td>
-        <td style="padding:20px;border-bottom:1px solid var(--line);color:#4a4843">The immigration work itself</td>
-        <td style="padding:20px;border-bottom:1px solid var(--line);color:#4a4843">Not built around immigration</td>
-      </tr>
-      <tr>
-        <td style="padding:20px;font-size:19px;font-weight:600">Parley · CaseBlink</td>
-        <td style="padding:20px"><b style="font-weight:600">Drafting tools</b><br><span style="color:#4a4843">Help with single steps and visa types</span></td>
-        <td style="padding:20px;color:#4a4843">Everything around that step</td>
-        <td style="padding:20px;color:#4a4843">One step, not the case</td>
-      </tr>
+      <tr><td style="padding:20px 24px;border-bottom:1px solid var(--line);font-size:19px;font-weight:600">Harvey · Legora</td>
+        <td style="text-align:center;border-bottom:1px solid var(--line)"><span class="no">✕</span></td><td style="text-align:center;border-bottom:1px solid var(--line)"><span class="no">✕</span></td><td style="text-align:center;border-bottom:1px solid var(--line)"><span class="yes">✓</span></td><td style="text-align:center;border-bottom:1px solid var(--line)"><span class="no">✕</span></td></tr>
+      <tr><td style="padding:20px 24px;border-bottom:1px solid var(--line);font-size:19px;font-weight:600">Docketwise · INSZoom</td>
+        <td style="text-align:center;border-bottom:1px solid var(--line)"><span class="no">✕</span></td><td style="text-align:center;border-bottom:1px solid var(--line)"><span class="yes">✓</span></td><td style="text-align:center;border-bottom:1px solid var(--line)"><span class="part">~</span></td><td style="text-align:center;border-bottom:1px solid var(--line)"><span class="yes">✓</span></td></tr>
+      <tr><td style="padding:20px 24px;border-bottom:1px solid var(--line);font-size:19px;font-weight:600">Clio · Filevine</td>
+        <td style="text-align:center;border-bottom:1px solid var(--line)"><span class="part">~</span></td><td style="text-align:center;border-bottom:1px solid var(--line)"><span class="part">~</span></td><td style="text-align:center;border-bottom:1px solid var(--line)"><span class="part">~</span></td><td style="text-align:center;border-bottom:1px solid var(--line)"><span class="no">✕</span></td></tr>
+      <tr><td style="padding:20px 24px;font-size:19px;font-weight:600">Parley · CaseBlink</td>
+        <td style="text-align:center"><span class="no">✕</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="no">✕</span></td></tr>
     </table>
   </div>
   <div class="bar-foot" style="background:var(--cream)"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
 </section>
 
-<!-- 8 Business model -->
+<!-- 10 Business model -->
 <section class="slide">
   <div class="kicker">The business model</div>
   <h1>One price per firm, by caseload.</h1>
-  <div class="sub">Unlimited users, priced against the hours it saves.</div>
-  <div style="position:absolute;left:80px;right:80px;top:320px;display:grid;grid-template-columns:repeat(4,1fr);gap:22px">
-    <div class="card" style="height:370px;padding:28px;display:flex;flex-direction:column;justify-content:space-between">
+  <div class="sub">Every plan has every feature and unlimited users.</div>
+  <div style="position:absolute;left:80px;right:80px;top:290px;display:grid;grid-template-columns:repeat(4,1fr);gap:22px">
+    <div class="card" style="height:270px;padding:28px;display:flex;flex-direction:column;justify-content:space-between">
       <div class="cap" style="color:var(--muted)">Under 10 cases a month</div>
       <div><div class="big" style="font-size:60px">$1,500</div><div class="p" style="margin-top:10px">a month</div></div>
     </div>
-    <div class="card" style="height:370px;padding:28px;display:flex;flex-direction:column;justify-content:space-between">
+    <div class="card" style="height:270px;padding:28px;display:flex;flex-direction:column;justify-content:space-between">
       <div class="cap" style="color:var(--muted)">10 to 50 cases a month</div>
       <div><div class="big" style="font-size:60px">$3,500</div><div class="p" style="margin-top:10px">a month</div></div>
     </div>
-    <div class="ink" style="height:370px;padding:28px;display:flex;flex-direction:column;justify-content:space-between">
+    <div class="ink" style="height:270px;padding:28px;display:flex;flex-direction:column;justify-content:space-between">
       <div class="cap" style="color:#9a9a9a">51 to 100 cases a month</div>
       <div><div class="big" style="font-size:60px">$7,500</div><div class="p" style="margin-top:10px">a month</div></div>
     </div>
-    <div class="ink" style="height:370px;padding:28px;display:flex;flex-direction:column;justify-content:space-between">
+    <div class="ink" style="height:270px;padding:28px;display:flex;flex-direction:column;justify-content:space-between">
       <div class="cap" style="color:#9a9a9a">101 to 200 cases a month</div>
       <div><div class="big" style="font-size:60px">$13,000</div><div class="p" style="margin-top:10px">a month</div></div>
     </div>
   </div>
+  <div style="position:absolute;left:80px;right:80px;top:582px;height:120px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px">
+    <div class="soft" style="padding:20px 26px;display:flex;align-items:center;justify-content:space-between"><span class="cap" style="color:var(--muted)">Revenue per case</span><span class="big" style="font-size:44px">$65+</span></div>
+    <div class="soft" style="padding:20px 26px;display:flex;align-items:center;justify-content:space-between"><span class="cap" style="color:var(--muted)">AI cost per full case</span><span class="big" style="font-size:44px">$1.37</span></div>
+    <div class="ink" style="padding:20px 26px;display:flex;align-items:center;justify-content:space-between"><span class="cap" style="color:#9a9a9a">A paralegal hour</span><span class="big" style="font-size:44px">$29.70</span></div>
+  </div>
   <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
 </section>
 
-<!-- 9 Roadmap -->
+<!-- 11 Roadmap -->
 <section class="slide black">
   <div class="kicker">Roadmap</div>
   <h1>Product roadmap</h1>
@@ -291,39 +331,6 @@ table { border-collapse: separate; border-spacing: 0; width: 100%; }
       <div class="cap" style="color:var(--muted)">H2 2027</div>
       <div class="big" style="font-size:38px;margin-top:6px">$10k to $20k MRR</div>
       <div class="p" style="margin-top:14px;line-height:1.75;color:#b4b4b4">5 to 8 paying firms<br>Next practice area scoped</div>
-    </div>
-  </div>
-  <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
-</section>
-
-<!-- 10 Team -->
-<section class="slide">
-  <div class="center">
-    <div class="kicker">Team</div>
-    <h1>Founder and first hires</h1>
-  </div>
-  <div style="position:absolute;left:80px;right:80px;top:220px;display:grid;grid-template-columns:1.35fr 1fr;gap:22px;height:470px">
-    <div class="card" style="padding:34px;display:flex;flex-direction:column">
-      <div class="serif" style="font-size:40px">Ismael Kirmi</div>
-      <div class="cap" style="color:var(--muted);margin-top:8px">Founder · 15 · Dublin</div>
-      <div class="p" style="margin-top:18px;font-size:18px;max-width:520px">Designed and built all of Lincoln: the case engine, the Google and Microsoft integrations, the add-ins and the security.</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:auto">
-        <div class="soft" style="padding:20px;border-radius:14px"><div class="big" style="font-size:34px">13</div><div class="p" style="font-size:15px;margin-top:8px">Multiplayer game played across his school</div></div>
-        <div class="soft" style="padding:20px;border-radius:14px"><div class="big" style="font-size:34px">14</div><div class="p" style="font-size:15px;margin-top:8px">Hopkins, an AI app for estate agents</div></div>
-        <div class="ink" style="padding:20px;border-radius:14px"><div class="big" style="font-size:34px">15</div><div class="p" style="font-size:15px;margin-top:8px">Lincoln</div></div>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-rows:1fr 1fr;gap:22px">
-      <div class="card" style="padding:28px">
-        <div class="cap" style="color:var(--muted)">First hire</div>
-        <div class="serif" style="font-size:28px;margin-top:10px">Seller</div>
-        <div class="p" style="margin-top:10px">From legal tech, brings in the first firms and runs their onboarding</div>
-      </div>
-      <div class="card" style="padding:28px">
-        <div class="cap" style="color:var(--muted)">First hire</div>
-        <div class="serif" style="font-size:28px;margin-top:10px">Immigration attorney</div>
-        <div class="p" style="margin-top:10px">Part time, reviews Lincoln's work on every case type and sets its standard</div>
-      </div>
     </div>
   </div>
   <div class="bar-foot"><span>USELINCOLN.COM</span><span class="w">Lincoln</span></div>
