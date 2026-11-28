@@ -29,7 +29,7 @@ Every customer is a US immigration firm, the investors and the people I want to 
 
 ## Progress
 **How far along are you?**
-The product is built and works end to end on public documents and made up cases: mail from Gmail and Outlook is sorted into the right case, files of any length are read, drafts come out with page citations, and USCIS forms are filled. I tested it against ten real USCIS appeal decisions across ten case types, and it reached 90% of the findings USCIS itself made, with no serious error. No firm uses it on real cases yet. Next is the security minimum for client files and the first firms.
+The product is built and works end to end on public documents and made up cases: mail from Gmail and Outlook is sorted into the right case, files of any length are read, drafts come out with page citations, and USCIS forms are filled. I tested it against ten real USCIS appeal decisions across ten case types, and it reached 90% of the findings USCIS itself made, with no serious error. No firm uses it on real cases yet. Next: an external penetration test and the start of a SOC 2 Type 2 audit, then the first firms on real cases.
 
 **How long have each of you been working on this? How much of that has been full-time?**
 Since 9 November 2026. CHECK: I'm in Transition Year at school, so I work on Lincoln most afternoons, evenings and weekends, about [X] hours a week.
