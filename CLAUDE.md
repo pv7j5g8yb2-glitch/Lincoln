@@ -123,7 +123,11 @@ never captions or legends under images or text, never "sample workspace" notes. 
 rejected: find the balance. The model Ismael chose (2026-11-28): Cherub's $4.5M pre-seed deck, every slide a designed
 composition: a small section label, a serif headline with an italic line under it, colour blocks and cards with real
 product UI inside, a "what they built, what is left, the gap" table, a roadmap, a team slide with proof, a closing slide
-with the product. Source: `docs/pitch/src/1517-deck.html`.
+with the product. Every card (Ismael, 2026-11-28): text centred both ways, number, title and line clearly separated;
+one card colour per slide, never white and black cards together; investor grade wording ("3 firms", never "3 firms on
+real cases"). Screenshots show the whole interface or exactly one component captured on its own edges, never cut
+through the middle; phones in a real iPhone frame (Dynamic Island, status bar with 9:41, signal, Wi-Fi and battery,
+home indicator). Source: `docs/pitch/src/1517-deck.html`.
 
 **Landing page (Ismael, 2026-11-16).** It must be creative with a real wow factor, more expressive than the minimal app,
 and must not look like the typical AI built site (animated product demo hero, gradients, glass cards, bento grids); he
