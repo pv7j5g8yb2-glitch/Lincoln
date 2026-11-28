@@ -1259,3 +1259,14 @@ Look at these before redesigning the app interface, making a deck or a product v
 * Careful: the "Legal 70% exposed, 1.4M jobs" bar chart in the carousel is a third party chart (@willmhawkins, BLS
   2024 with Eloundou et al. 2023 exposure), not Anthropic's own figure, and the carousel's headline ("jobs that will
   be affected by AI in 2027") is not what the report says. Quote only from the report itself.
+
+## Security certifications by market (2026-11-28, from Ismael's research checked by Claude)
+* US immigration firms, up to about $3M ARR: SOC 2 Type 2 plus an annual external penetration test. Type 1 is not
+  required first (it is a quicker early proof while the 3 to 6 month Type 2 window runs). ISO 27001 not needed yet.
+* Not certifications but still needed: signed zero data retention terms with every AI provider, a data processing
+  agreement, cyber and technology errors and omissions insurance, SSO (SAML) for firms of about 30+ staff, a security
+  questionnaire pack, the breach plan, and GDPR compliance if the company is formed in Ireland.
+* Later practice areas: personal injury and employment add HIPAA (with BAAs); Am Law, M&A, litigation and Fortune 500
+  in house add ISO 27001 (and ISO 27701 for privacy). FedRAMP or CMMC only for government work.
+* Costs (estimates): first year SOC 2 Type 2 about $25k to $60k (compliance platform plus auditor); penetration test
+  about $5k to $30k depending on scope.
